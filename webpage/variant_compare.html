@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="VarSim - Variant Compare">
+    <meta name="author" content="John C. Mu">
+
+    <title>VarSim &#8212; Variant Compare</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<style>
+    body {
+        padding-top: 70px;
+    }
+    .btn-file {
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-file input[type=file] {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 100%;
+        min-height: 100%;
+        font-size: 999px;
+        text-align: right;
+        filter: alpha(opacity=0);
+        opacity: 0;
+        outline: none;
+        background: white;
+        cursor: inherit;
+        display: block;
+    }
+    .axis {
+        font: 10px sans-serif;
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    a.anchor {
+        display: block;
+        position: relative;
+        top: -70px;
+        visibility: hidden;
+    }
+</style>
+
+<body>
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">VarSim &#8212; Variant Compare</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#parameters">Parameters</a>
+                    </li>
+
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu" id="types_menu">
+
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:hide_all();show_id('about');scroll_to('a_about');">About</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:hide_all();show_id('help');scroll_to('a_help');">Help</a>
+                    </li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+
+    <div class="container">
+        <a id="parameters" class="anchor"></a>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button type="button" id="reset_button" class="btn btn-default">Clear plots</button>
+                <span class="btn btn-default btn-file">
+                    Add datasets (.json) <input type="file" id="files" name="files[]" multiple />
+                </span>
+
+                <span>
+                    &nbsp; Add dataset to see results
+                </span>
+                <p>
+                    <div id="file_name_list"></div>
+                </p>
+            </div>
+        </div>
+
+
+        <a id="a_help" class="anchor"></a>
+        <div id="help" style="padding-bottom: 400px;">
+            <div class="panel">
+                <h2>Quick Start</h2>
+                <p>This web application takes results from VarSim VCFcompare and displays them in an interactive plot. For instructions on how to run VCFcompare please see [add link]</p>
+                <p>Steps for basic usage
+                    <ol>
+                        <li>Run VCFcompare to generate one or more .json files that contains the variant accuracy results.</li>
+                        <li>Click "Add datasets" (above) and select the .json files you would like to compare.</li>
+                        <li>The resulting plots generated are grouped by the type of variant.</li>
+                    </ol>
+                </p>
+
+                <h2>Types of variants</h2>
+                <p>
+                    <ul>
+                        <li><b>SNP</b> &#8212; Simple SNP.</li>
+                        <li><b>Insertion</b> &#8212; Simple insertion.</li>
+                        <li><b>Deletion</b> &#8212; Simple deletion.</li>
+                        <li><b>Inversion</b> &#8212; Simple inversion of reference sequence.</li>
+                        <li><b>Tandem_Duplication</b> &#8212; Tandem duplication or other type of duplication</li>
+                        <li><b>Complex</b> &#8212; All other types of variants, including MNPs</li>
+
+                    </ul>
+                </p>
+
+                <h2>Validation Methodology</h2>
+                <p>Need to write this...</p>
+            </div>
+        </div>
+
+        <a id="a_about" class="anchor"></a>
+        <div id="about" style="padding-bottom: 400px;">
+            <div class="jumbotron">
+                <h1>VarSim &#8212; Variant Compare</h1>
+                <p>Display results for variant comparison.</p>
+                <p>
+                    Please read the <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">help</a> before use.
+                </p>
+                <p>
+                    Contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
+                </p>
+            </div>
+        </div>
+
+        <div id="types_var">
+
+        </div>
+
+        <!-- /container -->
+    </div>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+
+    <script>
+        // constants
+        var all_height = 700;
+        var all_width = 1000;
+        var tool_tip_height = 120;
+        var charts_y_start = tool_tip_height;
+        var ind_chart_height = 150;
+        var left_margin = 50;
+        var plot_width = 300;
+        var plot_y_gap = 15;
+        var sv_x_start = plot_width + 110;
+        var bar_labels = ['all', 'small', 'sv'];
+        var legend_x = 250;
+        var legend_y = 5;
+        var legend_x_margin = 20;
+        var legend_y_margin = 20;
+        var legend_labels = ['TP', 'FP', 'True'];
+        var legend_offsets = [30, 180, 330];
+
+
+         // style constants
+        var bar_back_style = "fill: rgba(0, 0, 0, 0.06)";
+        var bar_back_hl_style = "fill: rgba(0, 128, 0, 0.18)";
+        var line_back_style = "fill: rgba(0, 0, 0, 0)";
+        var line_back_hl_style = "fill: rgba(0, 128, 0, 0.18)";
+        var front_style = "fill: rgba(0, 0, 0, 0);";
+        var color_arr = ["#d82525", "#3a3ad1", "#28b128", "#383838", "#d132d1"]
+
+        var types_data = {};
+
+        function scroll_to(id) {
+            $("#" + id)[0].scrollIntoView();
+        }
+
+        function show_id(id) {
+            $('#' + id).show();
+        }
+
+        function hide_id(id) {
+            $('#' + id).hide();
+        }
+
+        function clear_plots_id(id) {
+            // clear the plots for the variants
+            $("#" + id + "_var").empty();
+            $("#" + id + "_menu").empty();
+        }
+
+        function hide_all() {
+            hide_id('about');
+            hide_id('help');
+            hide_id('types_var');
+        }
+
+         // processing functions
+        function compute_tpr(obj) {
+            if (obj == null) {
+                return [NaN, 0];
+            }
+
+            if (obj._T == 0 || obj._TP == 0) {
+                return [NaN, obj._TP];
+            }
+            return [obj._TP / obj._T, obj._TP];
+        }
+
+        function compute_fdr(obj) {
+            if (obj == null) {
+                return [NaN, 0];
+            }
+
+            if ((obj._TP + obj._FP) == 0) {
+                return [NaN, obj._FP];
+            }
+            return [obj._FP / (obj._TP + obj._FP), obj._FP];
+        }
+
+        function compute_ppv(obj) {
+            if (obj == null) {
+                return [NaN, 0];
+            }
+
+            if ((obj._TP + obj._FP) == 0) {
+                return [NaN, obj._FP];
+            }
+            return [obj._TP / (obj._TP + obj._FP), obj._FP];
+        }
+
+        function compute_log_true(obj) {
+            if (obj == null) {
+                return [NaN, 0];
+            }
+
+            if (obj._T == 0) {
+                return [NaN, obj._T];
+            }
+            return [Math.log(obj._T) / Math.log(10), obj._T];
+        }
+
+         ///////  end compute funtions
+
+
+        /**
+         *    returns the range of the data, sets to NaN useless values
+         *
+         *    @param {data} the data object loaded from JSON
+         *    @param {type} string for the variant type
+         *    @param {func} processing function, eg. compute_tpr, this function returns an array with 2 elements
+         *    @param {log_scale} boolean, whether the range is in log scale
+         *    @return {range} array of size 2, [lower, upper], optionally log scale
+         */
+        function compute_range(data, type, func, log_scale) {
+            var range = [Infinity, -Infinity];
+
+            for (var filename in data) {
+
+                if (!data[filename].hasOwnProperty(type)) {
+                    continue;
+                }
+
+                var contents = data[filename][type];
+
+                for (var idx in contents.bin_counts) {
+                    var obj = contents.bin_counts[idx];
+                    var val = func(obj)[0];
+
+                    if (isNaN(val)) {
+                        continue;
+                    }
+                    if (val < range[0]) {
+                        range[0] = val;
+                    }
+                    if (val > range[1]) {
+                        range[1] = val;
+                    }
+                }
+
+                var val = func(contents.sum_count)[0];
+                if (val > 0 && !isNaN(val)) {
+                    if (val < range[0]) {
+                        range[0] = val;
+                    }
+                    if (val > range[1]) {
+                        range[1] = val;
+                    }
+                }
+            }
+
+            if (!isFinite(range[0]) || !isFinite(range[1])) {
+                return [0, 1];
+            }
+
+            if (!log_scale) {
+                var diff = (range[1] - range[0]);
+                range[0] = Math.max(0, range[0] - (0.1 * diff) - 0.01);
+                range[1] = Math.min(1, range[1] + (0.1 * diff) + 0.01);
+            } else {
+                range[0] = 0;
+                if (range[0] == range[1]) {
+                    range[1] = range[0] + 1;
+                }
+            }
+
+            return range;
+        }
+
+
+         // get functions
+
+        function get_sum_count(obj) {
+            return obj.sum_count;
+        }
+
+         // the range is inclusive
+         // it returns things with any overlap in range
+        function get_range_sum_count(obj, lower, upper) {
+            var output = {
+                "_TP": 0,
+                "_FP": 0,
+                "_T": 0
+            };
+            for (var idx in obj.bin_counts) {
+                if ((obj.bin_counts[idx].lower >= lower && obj.bin_counts[idx].lower <= upper)) {
+                    output._TP += obj.bin_counts[idx]._TP;
+                    output._FP += obj.bin_counts[idx]._FP;
+                    output._T += obj.bin_counts[idx]._T;
+                }
+            }
+
+            return output;
+        }
+         // end get functions....
+
+
+        function compute_data_arr(data, type, get_func, proc_func) {
+            var data_arr = [];
+            for (var filename in data) {
+
+                if (data[filename].hasOwnProperty(type)) {
+                    var contents = data[filename][type];
+                    data_arr.push(proc_func(get_func(contents)));
+                } else {
+                    data_arr.push(proc_func(null));
+                }
+            }
+            return data_arr;
+        }
+
+        /**
+         * draws the line plot
+         * both ends inclusive
+         * domain is actually a range..
+         */
+        function draw_variant_line_range(parent, id, x_pos, y_pos, height, width, data, type, chart_idx,
+            str_label, color_arr, proc_func, domain, lower, upper) {
+            var x = d3.scale.ordinal()
+                .rangeRoundBands([x_pos, x_pos + width], .1, 0);
+
+            var xlabels = [];
+            var out_data = [];
+
+            // loop through bins
+
+            // use this since all the bins are the same (we check for this)
+            var first_one = null;
+            for (var filename in data) {
+                if (data[filename].hasOwnProperty(type)) {
+                    first_one = data[filename][type].bin_counts;
+                }
+            }
+
+            for (var bin_idx in first_one) {
+                var gen_label = true;
+                var label_str = null;
+                var mini_data = [];
+                if (first_one[bin_idx].lower < lower) {
+                    gen_label = false;
+                }
+
+                if (first_one[bin_idx].lower > upper) {
+                    gen_label = false;
+                }
+
+                // loop through the file and store data for first bin
+                for (var filename in data) {
+                    if (data[filename].hasOwnProperty(type)) {
+                        var contents = data[filename][type].bin_counts[bin_idx];
+                        mini_data.push(proc_func(contents));
+                    } else {
+                        mini_data.push(proc_func(null));
+                    }
+                }
+
+                // generate the string for the label
+                // and also store the data
+                if (gen_label) {
+                    low_str = String(first_one[bin_idx].lower);
+                    if (first_one[bin_idx].upper < 0) {
+                        up_str = "Inf";
+                    } else {
+                        up_str = first_one[bin_idx].upper;
+                    }
+
+                    xlabels.push(low_str + "\n-" + up_str);
+                    out_data.push(mini_data);
+                }
+            }
+
+            x.domain(xlabels);
+
+            // draw the plot as a bunch of lines, don't use path?
+            var num_bins = out_data.length;
+            var bin_width = x.rangeBand();
+
+            //console.log("num_bins: " + num_bins);
+
+            for (var bin_idx = 0; bin_idx < (num_bins - 1); bin_idx++) {
+                var x1 = x(xlabels[bin_idx]) + bin_width / 2;
+                var x2 = x(xlabels[bin_idx + 1]) + bin_width / 2;
+
+                var bin_data = out_data[bin_idx];
+                var next_bin_data = out_data[bin_idx + 1];
+
+                // draw the background
+                if (bin_idx == 0) {
+                    parent.append("rect")
+                        .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
+                        .attr("style", line_back_style)
+                        .attr("x", x(xlabels[bin_idx]))
+                        .attr("width", bin_width)
+                        .attr("y", y_pos)
+                        .attr("height", height);
+                }
+                parent.append("rect")
+                    .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                    .attr("style", line_back_style)
+                    .attr("x", x(xlabels[bin_idx + 1]))
+                    .attr("width", bin_width)
+                    .attr("y", y_pos)
+                    .attr("height", height);
+
+
+
+                for (var val_idx = 0; val_idx < bin_data.length; val_idx++) {
+                    var both_good = true;
+                    var y1 = NaN;
+                    var y2 = NaN;
+                    if (!isNaN(bin_data[val_idx][0])) {
+                        y1 = y_pos + height * (1 - ((bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
+                    } else {
+                        both_good = false;
+                    }
+
+                    if (!isNaN(next_bin_data[val_idx][0])) {
+                        y2 = y_pos + height * (1 - ((next_bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
+                    } else {
+                        both_good = false;
+                    }
+
+                    // plot the points
+
+                    // if good plot the line
+                    if (both_good) {
+                        parent.append("line")
+                            .attr("x1", x1)
+                            .attr("x2", x2)
+                            .attr("y1", y1)
+                            .attr("y2", y2)
+                            .attr("style", "stroke-opacity: 0.8; stroke: " + color_arr[val_idx] + "; stroke-width: 1.5;");
+                    }
+
+
+                    if (bin_idx == 0 && !isNaN(bin_data[val_idx][0])) {
+                        parent.append("path")
+                            .attr("transform", function (d) {
+                                return "translate(" + x1 + "," + y1 + ")";
+                            })
+                        //.attr("d", d3.svg.symbol().type('cross').size(32))
+                        //.attr("style", "fill: " + color_arr[val_idx] + ";")
+                        .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
+                            .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
+
+                    }
+                    if (!isNaN(next_bin_data[val_idx][0])) {
+                        parent.append("path")
+                            .attr("transform", function (d) {
+                                return "translate(" + x2 + "," + y2 + ")";
+                            })
+                        //.attr("d", d3.svg.symbol().type('cross').size(32))
+                        //.attr("style", "fill: " + color_arr[val_idx] + ";");
+                        .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
+                            .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
+                    }
+                }
+
+                // draw the foreground
+                if (bin_idx == 0) {
+                    parent.append("rect")
+                        .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
+                        .attr("style", front_style)
+                        .attr("x", x(xlabels[bin_idx]))
+                        .attr("width", bin_width)
+                        .attr("y", y_pos)
+                        .attr("height", height);
+
+                    // draw the popover text
+
+                    var idx = 0;
+                    for (var filename in data) {
+
+                        var legend_text = "";
+                        if (chart_idx != 2) {
+                            legend_text = legend_labels[chart_idx] + ": " + out_data[bin_idx][idx][1] + " (" + out_data[bin_idx][idx][0].toFixed(4) + ")";
+                        } else {
+                            legend_text = legend_labels[chart_idx] + ": " + out_data[bin_idx][idx][1];
+                        }
+
+                        parent.append("text")
+                            .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
+                            .attr("x", legend_x + legend_x_margin + legend_offsets[chart_idx] + 211)
+                            .attr("y", (legend_y + legend_y_margin + (idx * 15) + 5))
+                            .text(legend_text)
+                            .attr("font-family", "sans-serif")
+                            .attr("font-size", "12px")
+                            .attr("fill", "black")
+                            .style("display", "none");
+                        idx++;
+                    }
+
+                }
+                parent.append("rect")
+                    .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                    .attr("style", front_style)
+                    .attr("x", x(xlabels[bin_idx + 1]))
+                    .attr("width", bin_width)
+                    .attr("y", y_pos)
+                    .attr("height", height);
+
+                var idx = 0;
+                for (var filename in data) {
+
+                    var legend_text = "";
+                    if (chart_idx != 2) {
+                        legend_text = legend_labels[chart_idx] + ": " + out_data[bin_idx + 1][idx][1] + " (" + out_data[bin_idx + 1][idx][0].toFixed(4) + ")";
+                    } else {
+                        legend_text = legend_labels[chart_idx] + ": " + out_data[bin_idx + 1][idx][1];
+                    }
+
+                    parent.append("text")
+                        .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                        .attr("x", legend_x + legend_x_margin + legend_offsets[chart_idx] + 211)
+                        .attr("y", (legend_y + legend_y_margin + (idx * 15) + 5))
+                        .text(legend_text)
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "12px")
+                        .attr("fill", "black")
+                        .style("display", "none");
+                    idx++;
+                }
+            }
+            return xlabels
+        }
+
+
+        /**
+         * Draws the bar line chart
+         */
+        function draw_line_bar(parent, id_str, chart_idx, x, y, height, width, domain, data_arr, color_arr) {
+            var num_vals = data_arr.length;
+            var line_width = width / num_vals;
+
+            parent.append("rect")
+                .attr("id", "back_" + id_str)
+                .attr("style", bar_back_style)
+                .attr("x", x)
+                .attr("width", width)
+                .attr("y", y)
+                .attr("height", height);
+
+            for (var idx = 0; idx < num_vals; idx++) {
+                if (isNaN(data_arr[idx][0])) {
+                    continue;
+                }
+
+                var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
+
+                parent.append("line")
+                    .attr("x1", x)
+                    .attr("x2", x + width)
+                    .attr("y1", y + data_y)
+                    .attr("y2", y + data_y)
+                    .attr("style", "stroke-opacity: 0.1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
+            }
+
+            for (var idx = 0; idx < num_vals; idx++) {
+                if (isNaN(data_arr[idx][0])) {
+                    continue;
+                }
+
+                var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
+                parent.append("line")
+                    .attr("x1", x + (idx * line_width))
+                    .attr("x2", x + ((idx + 1) * line_width))
+                    .attr("y1", y + data_y)
+                    .attr("y2", y + data_y)
+                    .attr("style", "stroke-opacity: 1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
+            }
+
+            parent.append("rect")
+                .attr("id", id_str)
+                .attr("style", front_style)
+                .attr("x", x)
+                .attr("width", width)
+                .attr("y", y)
+                .attr("height", height);
+
+            // draw the popover text
+            for (var idx = 0; idx < num_vals; idx++) {
+                var legend_text = "";
+                if (chart_idx != 2) {
+                    legend_text = legend_labels[chart_idx] + ": " + data_arr[idx][1] + " (" + data_arr[idx][0].toFixed(4) + ")";
+                } else {
+                    legend_text = legend_labels[chart_idx] + ": " + data_arr[idx][1];
+                }
+
+                parent.append("text")
+                    .attr('id', "pop_" + id_str)
+                    .attr("x", legend_x + legend_x_margin + legend_offsets[chart_idx] + 211)
+                    .attr("y", (legend_y + legend_y_margin + (idx * 15) + 5))
+                    .text(legend_text)
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "12px")
+                    .attr("fill", "black")
+                    .style("display", "none");
+            }
+
+
+        }
+
+
+
+        function draw_y_axis(parent, x_pos, y_pos, height, domain, label, log_range) {
+            var y = null;
+            var yAxis = null;
+            if (!log_range) {
+                y = d3.scale.linear()
+                    .range([height, 0]);
+                yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .ticks(5, "%");
+                y.domain(domain);
+            } else {
+                y = d3.scale.log().base(10)
+                    .range([height, 0]);
+                yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .ticks(5);
+                y.domain([Math.pow(10, domain[0]), Math.pow(10, domain[1])]);
+            }
+
+            parent.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate(" + x_pos + "," + y_pos + ")")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("x", 0)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text(label);
+        }
+
+        function draw_x_axis(parent, x_pos, y_pos, width, xlabels, draw_labels) {
+            var x = d3.scale.ordinal()
+                .rangeRoundBands([0, 0 + width], .1, 0);
+
+            var xAxis = d3.svg.axis()
+                .scale(x)
+                .tickSize(5, 0)
+                .orient("bottom");
+
+            x.domain(xlabels);
+
+            if (draw_labels) {
+                parent.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + x_pos + "," + y_pos + ")")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", ".15em")
+                    .attr("transform", function (d) {
+                        return "rotate(-30)"
+                    });
+            } else {
+                parent.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + x_pos + "," + y_pos + ")")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .remove();
+            }
+
+        }
+
+
+        /**
+         * Draws one row of the chart with small variants and SVs
+         */
+        function draw_char_row(parent, id, label_str, big_data, type, chart_idx, max_chart_idx, color_arr, proc_func, draw_x, log_range, y_percent) {
+            var chart_y_idx_start = charts_y_start + ((ind_chart_height + plot_y_gap) * chart_idx);
+            var x_axis_y_bottom = charts_y_start + ((ind_chart_height + plot_y_gap) * max_chart_idx) - 15;
+            var x_axis_y = charts_y_start + ((ind_chart_height + plot_y_gap) * (chart_idx + 1)) - 15;
+
+            // define the axis range
+            var data_range = compute_range(big_data, type, proc_func, log_range);
+
+            // draw the y axis
+
+            draw_y_axis(parent, left_margin, chart_y_idx_start,
+                ind_chart_height, data_range, label_str, log_range);
+
+            // draw the x axis
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 20, x_axis_y_bottom, 40, ["All"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 20, x_axis_y, 40, ["All"], false);
+            }
+
+            // draw the total values (also draw tooltip)
+
+            var data_arr = compute_data_arr(big_data, type, get_sum_count, proc_func);
+            draw_line_bar(parent, id + '_' + type + "_all_c" + chart_idx, chart_idx, left_margin + 20,
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
+
+            // draw the small variants (also draw tooltip)
+            // when drawing the small variants, also record the label
+
+            // draw y and x axis
+            draw_y_axis(parent, left_margin + 110, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
+
+            var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
+                chart_y_idx_start, ind_chart_height, plot_width,
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, 49);
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
+            } else {
+                draw_x_axis(parent, left_margin + 170, x_axis_y, plot_width, xlabels, false)
+            }
+
+            var data_arr = compute_data_arr(big_data, type, function (obj) {
+                return get_range_sum_count(obj, 0, 49)
+            }, proc_func);
+
+            draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
+
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 110 + 20, x_axis_y_bottom, 40, ["All Small"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 110 + 20, x_axis_y, 40, ["All Small"], false);
+            }
+
+
+            // draw the SVs (also draw tooltip)
+            draw_y_axis(parent, left_margin + 110 + sv_x_start, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
+
+            var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
+                chart_y_idx_start, ind_chart_height, plot_width,
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, 50, 2000000);
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
+            } else {
+                draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y, plot_width, xlabels, false)
+            }
+            var data_arr = compute_data_arr(big_data, type, function (obj) {
+                return get_range_sum_count(obj, 50, 2000000)
+            }, proc_func);
+
+            draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
+
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y_bottom, 40, ["All SV"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y, 40, ["All SV"], false);
+            }
+        }
+
+
+
+        function draw_legend(parent, x, y, data, color_arr) {
+            var idx = 0;
+            for (filename in data) {
+                var text = filename.split('.')[0];
+
+                parent.append("path")
+                    .attr("transform", function (d) {
+                        return "translate(" + x + "," + (y + (idx * 15)) + ") rotate(-45)";
+                    })
+                    .attr("d", d3.svg.symbol().type('cross'))
+                    .attr("style", "fill: " + color_arr[idx] + ";");
+
+                parent.append("text")
+                    .attr("x", x + 11)
+                    .attr("y", (y + (idx * 15) + 5))
+                    .text(text)
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "12px")
+                    .attr("fill", "black");
+                idx++;
+            }
+        }
+
+
+        /**
+         *  all_data -- eg. canonical_data
+         *  id -- eg. canon
+         *  description -- eg. canonical
+         */
+        function redraw_plots(all_data, id, description, draw_ppv) {
+            clear_plots_id(id);
+            var body = d3.selectAll("body");
+
+            // get total types of variants
+            var all_types = Object.create(null);
+            for (var file_name in all_data) {
+                for (var type in all_data[file_name]) {
+                    all_types[type] = true;
+                }
+            }
+
+            // for each type of variant, plot it
+            for (var type in all_types) {
+                var div_area = body.select("#" + id + "_var");
+                var plot_menu = body.select("#" + id + "_menu");
+
+                // draw the anchor
+                div_area.append("a")
+                    .attr("id", type + "_" + id + "_menu")
+                    .attr("class", "anchor");
+
+                plot_menu.append('li')
+                    .append('a')
+                    .attr("href", "javascript:hide_all();show_id('" + id + "_var');scroll_to('" + type + "_" + id + "_menu');")
+                    .text(type);
+
+                // initialise the chart
+                var chart_height = all_height;
+
+                if (!draw_ppv) {
+                    chart_height -= ind_chart_height;
+                }
+
+                var parent = div_area.append('svg')
+                    .attr("id", type + "_" + id)
+                    .attr("width", all_width)
+                    .attr("height", chart_height)
+                    .attr("x", 0)
+                    .attr("y", 0);
+
+                // draw the title
+                parent.append('text')
+                    .attr("x", 10)
+                    .attr("y", 40)
+                    .text(type)
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "24px")
+                    .attr("fill", "black");
+
+                // draw description
+                parent.append('text')
+                    .attr("x", 10)
+                    .attr("y", 60)
+                    .text(description)
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "18px")
+                    .attr("fill", "#626262");
+
+
+                // the index of chart we are drawing
+                var chart_idx = 0;
+                var max_chart_idx = 0;
+
+                if (draw_ppv) {
+                    max_chart_idx = 3;
+                    // draw TP
+                    draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx, color_arr, compute_tpr, false, false, true);
+
+                    // draw FP
+                    draw_char_row(parent, id, "Precision", all_data, type, 1, max_chart_idx, color_arr, compute_ppv, false, false, true);
+
+                    // draw T
+                    draw_char_row(parent, id, "Number True", all_data, type, 2, max_chart_idx, color_arr, compute_log_true, true, true, false);
+                } else {
+                    max_chart_idx = 2;
+                    // draw TP
+                    draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx, color_arr, compute_tpr, false, false, true);
+
+                    // draw T
+                    draw_char_row(parent, id, "Number True", all_data, type, 1, max_chart_idx, color_arr, compute_log_true, true, true, false);
+                }
+
+                // draw legend/popover
+                parent.append("rect")
+                    .attr("style", "fill:rgba(255, 255, 255, 0);stroke:rgba(0, 0, 0, 0.09);stroke-width:1")
+                    .attr("rx", 20)
+                    .attr("ry", 20)
+                    .attr("x", legend_x)
+                    .attr("width", 700)
+                    .attr("y", legend_y)
+                    .attr("height", tool_tip_height - 15);
+                draw_legend(parent, legend_x + legend_x_margin, legend_y + legend_y_margin, all_data, color_arr);
+
+                // attach event listeners
+                for (var col_idx = 0; col_idx < 3; col_idx++) {
+                    $('[id^=' + id + '_' + type + '_' + bar_labels[col_idx] + '_c]')
+                        .mouseenter((function (id, col_label, type_label) {
+                            return function () {
+                                $('[id^=back_' + id + '_' + type_label + '_' + col_label + '_c]')
+                                    .attr('style', bar_back_hl_style);
+                                $('[id^=pop_' + id + '_' + type_label + '_' + col_label + '_c]')
+                                    .show();
+                            }
+                        })(id, bar_labels[col_idx], type));
+                    $('[id^=' + id + '_' + type + '_' + bar_labels[col_idx] + '_c]')
+                        .mouseleave((function (id, col_label, type_label) {
+                            return function () {
+                                $('[id^=back_' + id + '_' + type_label + '_' + col_label + '_c]')
+                                    .attr('style', bar_back_style);
+                                $('[id^=pop_' + id + '_' + type_label + '_' + col_label + '_c]')
+                                    .hide();
+                            }
+                        })(id, bar_labels[col_idx], type));
+                }
+
+
+                // .attr("id", "line_back_" + type + "_" + str_label + "_" + bin_idx + "_" + chart_idx)
+                for (var col_idx = 1; col_idx < 3; col_idx++) {
+                    //console.log($('[id^=' + type + '_' + bar_labels[col_idx] + ']'));
+
+                    // get number of columns
+
+                    var bin_select = $('[id^=line_back_' + id + '_' + type + '_' + bar_labels[col_idx] + '_b][id$=0]');
+                    var num_bins = bin_select.length;
+
+                    for (var bin_idx = 0; bin_idx < num_bins; bin_idx++) {
+                        $('[id^=line_' + id + '_' + type + '_' + bar_labels[col_idx] + '_b' + bin_idx + '_]')
+                            .mouseenter((function (id, col_label, type_label, bin_idx_label) {
+                                return function () {
+                                    $('[id^=line_back_' + id + '_' + type_label + '_' + col_label + '_b' + bin_idx_label + '_]')
+                                        .attr('style', line_back_hl_style);
+                                    $('[id^=pop_' + id + '_' + type_label + '_' + col_label + '_b' + bin_idx_label + '_]')
+                                        .show();
+                                }
+                            })(id, bar_labels[col_idx], type, bin_idx));
+
+                        $('[id^=line_' + id + '_' + type + '_' + bar_labels[col_idx] + '_b' + bin_idx + '_]')
+                            .mouseleave((function (id, col_label, type_label, bin_idx_label) {
+                                return function () {
+                                    $('[id^=line_back_' + id + '_' + type_label + '_' + col_label + '_b' + bin_idx_label + '_]')
+                                        .attr('style', line_back_style);
+                                    $('[id^=pop_' + id + '_' + type_label + '_' + col_label + '_b' + bin_idx_label + '_]')
+                                        .hide();
+                                }
+                            })(id, bar_labels[col_idx], type, bin_idx));
+                    }
+
+                }
+            }
+        }
+
+        function store_data(varsim_obj, file_name) {
+            // store the object data
+            types_data[file_name] = varsim_obj.num_true_correct.data;
+        }
+
+        function process_json(json_str, file) {
+            var pass_validation = true;
+            var param_str = file.name;
+            var varsim_obj = null;
+            var span = document.createElement('pre');
+
+            try {
+                varsim_obj = JSON.parse(json_str);
+            } catch (err) {
+                param_str += " : Invalid JSON file.";
+                pass_validation = false;
+            }
+
+            // if something is already loaded, do some consistency checks
+            if (pass_validation && Object.keys(types_data).length > 0) {
+                // check consistency of the bins
+                var orig_data = types_data[Object.keys(types_data)[0]];
+                orig_data = orig_data[Object.keys(orig_data)[0]].bin_counts;
+
+                var new_data = varsim_obj.num_true_correct.data;
+                new_data = new_data[Object.keys(new_data)[0]].bin_counts;
+
+                if (orig_data.length != new_data.length) {
+                    param_str += " : [Error] Inconsistent bins";
+                    pass_validation = false;
+                } else {
+                    for (var idx in orig_data) {
+                        if (orig_data[idx].lower != new_data[idx].lower) {
+                            param_str += " : [Error] Inconsistent bins";
+                            pass_validation = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (pass_validation && varsim_obj != null) {
+                try {
+                    var params = varsim_obj.params;
+                    param_str += "\n";
+                    param_str += "Ground truth : " + params.true_vcf_filename + "\n";
+                    param_str += "Input VCF    : " + params.new_vcf_filename + "\n";
+                    param_str += "Overlap %    : " + params.overlap_percent + "\n";
+                    param_str += "Wiggle       : " + params.wiggle + "\n";
+                    param_str += "BED file     : ";
+                    if (params.bed_filename.length == 0) {
+                        param_str += "None";
+                    } else {
+                        param_str += params.bed_filename;
+                    }
+                } catch (err) {
+                    param_str += "Error parsing JSON file.";
+                    pass_validation = false;
+                }
+            }
+
+            span.innerHTML = param_str;
+            document.getElementById('file_name_list').insertBefore(span, null);
+
+            if (pass_validation) {
+                store_data(varsim_obj, file.name);
+            }
+        }
+
+
+        function handleFileSelect(evt) {
+            var files = evt.target.files; // FileList object
+            var reader = new FileReader();
+
+            function readFile(idx) {
+
+                if (idx >= files.length) {
+                    return;
+                }
+
+                var f = files[idx];
+                reader.onloadend = (function (idx, file, last_one) {
+                    return function (e) {
+                        console.log(file);
+                        if (Object.keys(types_data).length >= 5) {
+                            alert("Maximum number of files is 5");
+                            last_one = true;
+                        } else {
+                            process_json(e.target.result, file);
+                        }
+                        if (last_one) {
+                            // draw variant types
+                            hide_all();
+                            redraw_plots(types_data, 'types', '', true);
+                            show_id('types_var');
+
+                            // draw all variants (but keep hidden)
+                        }
+                        if (!last_one) {
+                            readFile(idx + 1);
+                        }
+                    };
+                })(idx, f, (idx == files.length - 1));
+                reader.readAsText(f);
+            }
+            readFile(0);
+
+        }
+
+        function reset_all_plots() {
+            document.getElementById('file_name_list').innerHTML = "";
+            document.getElementById('types_var').innerHTML = "";
+            resetFormElement($('#files'));
+            types_data = {};
+            $("#types_menu").empty();
+        }
+
+        function resetFormElement(e) {
+            e.wrap('<form>').closest('form').get(0).reset();
+            e.unwrap();
+        }
+
+
+
+         // these are run after everything is setup
+
+        document.getElementById('files').addEventListener('change', handleFileSelect, false);
+        document.getElementById('reset_button').addEventListener('click', reset_all_plots, false);
+
+        hide_all();
+        show_id('about');
+        scroll_to('parameters');
+    </script>
+</body>
+
+</html>
+
