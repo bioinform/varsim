@@ -25,8 +25,9 @@ public class VCFcompare {
         runner.run(args);
     }
 
+    // end = true will add the indel to the end, other wise it will add to start
     private void add_indels(ArrayList<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
-                            Variant var, int curr_pos) {
+                            Variant var, int curr_pos, boolean end) {
         // add insertions or deletions for complex variants
         if (diff[0] == diff[1] && diff[0] != 0) {
             // homozygous
@@ -34,28 +35,54 @@ public class VCFcompare {
                 // insertion
                 if (Arrays.equals(alt[0], alt[1])) {
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
-                            new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                            phase, true, var.getVar_id(), ".", ""));
+
+                    if(end){
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }else {
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }
                 } else {
                     byte[] phase = {0, 0};
-                    phase[0] = 1;
-                    phase[1] = 0;
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
-                            new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                            phase, true, var.getVar_id(), ".", ""));
-                    phase[0] = 0;
-                    phase[1] = 1;
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
-                            new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
-                            phase, true, var.getVar_id(), ".", ""));
+                    if(end) {
+                        phase[0] = 1;
+                        phase[1] = 0;
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                        phase[0] = 0;
+                        phase[1] = 1;
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }else{
+                        phase[0] = 1;
+                        phase[1] = 0;
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                        phase[0] = 0;
+                        phase[1] = 1;
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }
                 }
             } else if (diff[0] < 0) {
                 // deletion
                 byte[] phase = {1, 1};
-                var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[0],
-                        Arrays.copyOfRange(ref, 0, -diff[0]), new FlexSeq[]{new FlexSeq()},
-                        phase, true, var.getVar_id(), ".", ""));
+                if(end) {
+                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt[0].length, -diff[0],
+                            Arrays.copyOfRange(ref, alt[0].length, alt[0].length-diff[0]), new FlexSeq[]{new FlexSeq()},
+                            phase, true, var.getVar_id(), ".", ""));
+                }else {
+                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[0],
+                            Arrays.copyOfRange(ref, 0, -diff[0]), new FlexSeq[]{new FlexSeq()},
+                            phase, true, var.getVar_id(), ".", ""));
+                }
             }
         } else {
             for (int a = 0; a < alt.length; a++) {
@@ -63,22 +90,44 @@ public class VCFcompare {
                     // insertion
                     byte[] phase = {0, 0};
                     phase[a] = 1;
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
-                            new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
-                            phase, true, var.getVar_id(), ".", ""));
+                    if(end) {
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }else{
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }
                 } else if (diff[a] < 0) {
                     // deletion
                     byte[] phase = {0, 0};
                     phase[a] = 1;
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[a],
-                            Arrays.copyOfRange(ref, 0, -diff[a]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, var.getVar_id(), ".", ""));
+                    if(end) {
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt[a].length, -diff[a],
+                                Arrays.copyOfRange(ref, alt[a].length, alt[a].length-diff[a]), new FlexSeq[]{new FlexSeq()},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }else {
+                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[a],
+                                Arrays.copyOfRange(ref, 0, -diff[a]), new FlexSeq[]{new FlexSeq()},
+                                phase, true, var.getVar_id(), ".", ""));
+                    }
                 }
             }
         }
     }
 
     private ArrayList<Variant> convert_var_to_var_list(Variant var) {
+        ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
+        ArrayList<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
+        if (var_list_end.size() < var_list.size()) {
+            var_list = var_list_end;
+        }
+        return var_list;
+    }
+
+    //if end = true, we add indels to the end
+    private ArrayList<Variant> convert_var_to_var_list(Variant var, boolean end) {
         ArrayList<Variant> var_list = new ArrayList<Variant>();
 
         //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
@@ -142,12 +191,24 @@ public class VCFcompare {
 
             int[] diff = {alt[0].length - ref.length, alt[1].length - ref.length};
 
-            add_indels(var_list, diff, ref, alt, var, curr_pos);
-
+            add_indels(var_list, diff, ref, alt, var, curr_pos,end);
 
             for (int i = 0; i < ref.length; i++, curr_pos++) {
 
-                int[] idx = {i + diff[0], i + diff[1]};
+                int[] idx = new int[2];
+                if(end){
+                    for(int j = 0;j<2;j++) {
+                        if(i < ref.length + diff[j]){
+                            idx[j] = i;
+                        }else{
+                            idx[j] = -1; // we are into deleted bases
+                        }
+                    }
+                }else{
+                    for(int j = 0;j<2;j++) {
+                        idx[j] = i + diff[j];
+                    }
+                }
 
                 if (idx[0] < 0 && idx[1] < 0) {
                     // both deleted
@@ -213,21 +274,43 @@ public class VCFcompare {
                         // insertion
                         byte[] phase = {0, 0};
                         phase[a] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        if(end){
+                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
+                                    phase, true, var.getVar_id(), ".", ""));
+                        }else {
+                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
+                                    phase, true, var.getVar_id(), ".", ""));
+                        }
                     } else if (diff < 0) {
                         // deletion
                         byte[] phase = {0, 0};
                         phase[a] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff,
-                                Arrays.copyOfRange(ref, 0, -diff),
-                                new FlexSeq[]{new FlexSeq()},
-                                phase, true, var.getVar_id(), ".", ""));
+                        if(end){
+                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt.length, -diff,
+                                    Arrays.copyOfRange(ref, alt.length, alt.length-diff),
+                                    new FlexSeq[]{new FlexSeq()},
+                                    phase, true, var.getVar_id(), ".", ""));
+                        }else {
+                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff,
+                                    Arrays.copyOfRange(ref, 0, -diff),
+                                    new FlexSeq[]{new FlexSeq()},
+                                    phase, true, var.getVar_id(), ".", ""));
+                        }
                     }
 
                     for (int i = 0; i < ref.length; i++) {
-                        int idx = i + diff;
+                        int idx;
+                        if(end) {
+                            if(i < ref.length + diff) {
+                                idx = i;
+                            }else{
+                                idx = -1; // we are in a deleted region
+                            }
+                        }else{
+                            idx = i + diff;
+                        }
 
                         if (idx >= 0 && alt[idx] != ref[i]) {
                             byte[] phase = {0, 0};
@@ -381,7 +464,7 @@ public class VCFcompare {
             for (Variant curr_var : var_list) {
                 int curr_len = curr_var.max_len();
 
-                if(curr_len > max_len){
+                if (curr_len > max_len) {
                     max_len = curr_len;
                 }
 
@@ -400,7 +483,7 @@ public class VCFcompare {
                 num_added++;
             }
 
-            if(max_len/total_len >= overlap_ratio && var_list.size() > 1){
+            if (total_len >= 50 && max_len / total_len >= overlap_ratio && var_list.size() > 1) {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
 
@@ -411,16 +494,16 @@ public class VCFcompare {
                     num_read++;
                 }
 
-            }else {
+            } else {
                 full_validated_total.add(total_len);
                 true_var_list.add(var);
                 num_read++;
             }
         }
 
-        System.err.println("Num read:  " + num_read);
-        System.err.println("Num added: " + num_added);
-        System.err.println("Num nodes: " + true_store.size());
+        log.info("Num read:  " + num_read);
+        log.info("Num added: " + num_added);
+        log.info("Num nodes: " + true_store.size());
 
         // this is for the split variants
         // set to true if the canonical original variant was validated true
@@ -449,7 +532,7 @@ public class VCFcompare {
         // for this case we add to false positives if the variant is not validated.
         // However, do don't add to true positives, those that computed later
 
-        System.err.println("Load New VCF");
+        log.info("Load New VCF");
         int num_new_vars = 0;
         // iterate over new VCF and collect stats
         VCFparser new_parser = new VCFparser(new_vcf_filename, null, false);
@@ -479,9 +562,22 @@ public class VCFcompare {
 
             double total_len = 0;
             double validated_len = 0;
+            double max_len = 0;
 
             for (Variant curr_var : var_list) {
                 total_len += curr_var.max_len();
+                if (max_len < curr_var.max_len()) {
+                    max_len = curr_var.max_len();
+                }
+            }
+
+            // split up variants that are basically one big variant and one small one
+            boolean compute_as_split = false;
+            if (total_len >= 50 && max_len / total_len >= overlap_ratio && var_list.size() > 1){
+                compute_as_split = true;
+            }
+
+            for (Variant curr_var : var_list) {
 
                 // get genotype
                 geno = curr_var.getGeno();
@@ -502,6 +598,9 @@ public class VCFcompare {
                         validated_true.set(idx.idx);
                         full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                         validated_len += curr_var.max_len();
+                    }else if(compute_as_split){
+                        output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                        FP_writer.println(var);
                     }
 
                 } else {
@@ -520,21 +619,20 @@ public class VCFcompare {
                     } else {
                         idx = comp.isMatch();
                     }
+
                     if (idx.idx >= 0) {
                         validated_true.set(idx.idx);
                         full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                         validated_len += curr_var.max_len();
+                    }else if(compute_as_split){
+                        output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                        FP_writer.println(var);
                     }
                 }
             }
 
-            if(validated_len/total_len < overlap_ratio){
+            if (!compute_as_split && validated_len / total_len < overlap_ratio) {
                 // this is a false positive!
-
-                if(curr_var_type == Variant.OverallType.Complex && var.max_len() <= 1){
-                    System.err.println("WTF var: " + var);
-                }
-
                 output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
                 FP_writer.println(var);
             }
@@ -542,7 +640,7 @@ public class VCFcompare {
             num_new_vars++;
         }
 
-        System.err.println("Num new variants read: " + num_new_vars);
+        log.info("Num new variants read: " + num_new_vars);
 
         // read through again and compute for the true variants
 
@@ -686,6 +784,14 @@ public class VCFcompare {
 
             return true;
         }
+
+        @Override
+        public String toString() {
+            return "dual_idx{" +
+                    "idx=" + idx +
+                    ", full_idx=" + full_idx +
+                    '}';
+        }
     }
 
     class result_comparator {
@@ -739,11 +845,11 @@ public class VCFcompare {
 
         public dual_idx isMatch() {
             dual_idx idx = isHomMatch();
-            if (idx.idx > 0) {
+            if (idx.idx >= 0) {
                 return idx;
             }
             idx = isHetMatch();
-            if (idx.idx > 0) {
+            if (idx.idx >= 0) {
                 return idx;
             }
             return idx;
@@ -766,6 +872,8 @@ public class VCFcompare {
             String chr_name = var.getChr_name();
 
             Interval1D orig_inter = var.get_var_interval(geno);
+
+            //System.err.println("Comparing: " + var);
 
             // sometimes MNPs are called as SNPs?
             if (type == Variant.Type.SNP) {
@@ -802,11 +910,8 @@ public class VCFcompare {
                                     matches_hom.add(new dual_idx(idx, full_idx));
                                 }
                                 has_snp = true;
-                            } else if (true_var.getType(true_var.paternal()) == Variant.Type.MNP) {
-                                // what to do?
                             }
                         } else {
-
                             for (int parent = 0; parent < 2; parent++) {
                                 int allele = true_var.get_allele(parent);
                                 if (allele > 0) {
@@ -818,8 +923,6 @@ public class VCFcompare {
                                             //type_het[parent].update(Variant.Type.SNP, 0);
                                         }
                                         has_snp = true;
-                                    } else if (true_var.getType(true_var.paternal()) == Variant.Type.MNP) {
-                                        // what to do?
                                     }
                                 }
                             }
