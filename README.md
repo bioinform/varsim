@@ -1,4 +1,4 @@
-VarSim: A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications
+VarSim: A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications (BETA)
 ===================
 # System Requirements
 <p>
@@ -13,7 +13,7 @@ For variant simulation and read generation:
 <p>
 For alignment and variant validation:
 <ul>
-<li>4GB free RAM</li>
+<li>8GB free RAM</li>
 </ul>
 </p>
 
