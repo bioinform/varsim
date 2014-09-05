@@ -688,6 +688,8 @@ public class VCFcompare {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        log.info("Done!"); // used to record the time
     }
 
     class CompareParams {
