@@ -355,6 +355,8 @@ public class SAMcompare {
         SEQ_FP_writer.close();
         TD_FP_writer.close();
         TUM_FP_writer.close();
+
+        log.info("Done!"); // used to record the time
     }
 
     /**

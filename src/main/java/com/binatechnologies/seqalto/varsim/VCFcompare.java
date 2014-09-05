@@ -510,7 +510,7 @@ public class VCFcompare {
         BitSet validated_true = new BitSet(num_added);
 
         // this is for the original variants
-        // cout of the number of bases validated for the original variant
+        // count of the number of bases validated for the original variant
         int[] full_validated_count = new int[num_read];
 
         // generate the output files
@@ -631,7 +631,7 @@ public class VCFcompare {
                 }
             }
 
-            if (!compute_as_split && validated_len / total_len < overlap_ratio) {
+            if (!compute_as_split && validated_len < (total_len*overlap_ratio)) {
                 // this is a false positive!
                 output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
                 FP_writer.println(var);
@@ -688,6 +688,8 @@ public class VCFcompare {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        log.info("Done!"); // used to record the time
     }
 
     class CompareParams {
