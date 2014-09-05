@@ -1,7 +1,7 @@
 VarSim: A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications (BETA)
 ===================
 # Website
-http://bioinform.github.io/varsim/
+For access to webapps http://bioinform.github.io/varsim/
 
 # System Requirements
 <p>
