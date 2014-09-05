@@ -1,5 +1,8 @@
 VarSim: A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications (BETA)
 ===================
+# Website
+http://bioinform.github.io/varsim/
+
 # System Requirements
 <p>
 For variant simulation and read generation:
@@ -134,7 +137,7 @@ java -jar target/build/vcfcompare.jar simu.truth.vcf [VCF from result of seconda
 ```
 
 <p>
-This will output a JSON file that can be used as input to the VCF Compare webapp [http://web.stanford.edu/group/wonglab/varsim/variant_compare.html]
+This will output a JSON file that can be used as input to the VCF Compare webapp [http://bioinform.github.io/varsim/webapp/variant_compare.html]
 </p>
 
 <p>
@@ -146,7 +149,7 @@ java -jar target/build/samcompare.jar [BAM files from result of secondary analys
 ```
 
 <p>
-This will output a JSON file that can be used as input to the Alignment Compare webapp [http://web.stanford.edu/group/wonglab/varsim/alignment_compare.html]
+This will output a JSON file that can be used as input to the Alignment Compare webapp [http://bioinform.github.io/varsim/webapp/alignment_compare.html]
 </p>
 
 # Testing
