@@ -647,6 +647,52 @@
                 file_idx++;
             }
 
+            // compute the AUC here
+            var AUC_vals = {};
+            
+            for (var filename in valid_data) {
+                var temp_data = valid_data[filename];
+                
+                if (!temp_data.hasOwnProperty(type)) {
+					continue;
+				}
+                
+                var AUC_data = [];
+                
+                for(var idx in temp_data[type]){
+                    AUC_data.push([compute_fpr(temp_data[type][idx]),compute_tpr(temp_data[type][idx])]);
+                }
+                //AUC_data.sort();
+                AUC_data.reverse();
+                
+                var curr_auc_val = 0;
+                var i = 0;
+                for(i = 0;i<AUC_data.length-2;i++){
+                    var fpr1 = AUC_data[i][0][0]; 
+                    var tpr1 = AUC_data[i][1][0]; 
+                    var fpr2 = AUC_data[i + 1][0][0]; 
+                    var tpr2 = AUC_data[i + 1][1][0]; 
+                    
+                    var width = Math.abs(fpr2-fpr1);
+                    var height_1 = Math.abs(tpr2-tpr1);
+                    var height_2 = Math.max(tpr2,tpr1);
+                    
+                    curr_auc_val += (height_2*width)-(0.5 * width * height_1);
+                }
+                
+                // add the last block in the AUC
+                var fpr2 = AUC_data[AUC_data.length-2][0][0]; 
+                var tpr2 = AUC_data[AUC_data.length-2][1][0]; 
+                curr_auc_val += (1-fpr2)*tpr2;
+                
+                AUC_vals[filename] = curr_auc_val;
+            }
+            
+            if (type != 'True_Unmapped') {
+                draw_auc(parent,legend_x + legend_x_margin, legend_y + legend_y_margin,AUC_vals);
+            }
+            //console.log(type + ":" + JSON.stringify(AUC_vals));
+
             var circle_arr = [];
             var legend_arr = [];
 
@@ -683,8 +729,6 @@
                     .attr("font-size", "12px")
                     .attr("fill", "black")
                     .style("visibility", "hidden")]);
-
-
                 file_idx++;
             }
 
@@ -723,6 +767,7 @@
                     return 'Closest MAPQ';
                 }
             }
+            
             var mode_text = parent.append("text")
                 .attr("x", 430)
                 .attr("y", 500)
@@ -894,6 +939,24 @@
 
 
 
+        function draw_auc(parent, x, y, data) {
+            var idx = 0;
+            for (val in data) {
+                
+                if(data[val] != null){
+                var text = data[val].toFixed(4);
+
+                parent.append("text")
+                    .attr("x", x + 111)
+                    .attr("y", (y + (idx * 15) + 5))
+                    .text(text)
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "12px")
+                    .attr("fill", "black");
+                }
+                idx++;
+            }
+        }
 
 
         function draw_legend(parent, x, y, data, color_arr) {
