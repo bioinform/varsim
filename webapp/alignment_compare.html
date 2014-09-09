@@ -322,7 +322,9 @@
         }
 
 
-         ///////  end compute funtions
+         ///////  end processing funtions
+        
+        
 
         /**
          *    returns the range of the data, sets to NaN useless values
@@ -444,7 +446,7 @@
         }
 
         /**
-         * We wnt to reject data points with less than 1/3 aligned, those are pretty noisy
+         * We want to reject data points with less than 1/3 aligned, those are pretty noisy
          */
         function get_valid_data(big_data) {
             var REJECT_RATIO = 0.3333;
@@ -539,8 +541,8 @@
             }else{
                 var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "Fall-out (FPR)")
             }
+            
             var file_array = {};
-
 
             // draw the line plot
             var file_idx = 0;
