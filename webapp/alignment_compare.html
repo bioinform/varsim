@@ -263,7 +263,7 @@
                 return [NaN, 0];
             }
 
-            if ((obj._TN + obj._FP) == 0) {
+            if ((obj._TP + obj._FP) == 0) {
                 return [NaN, obj._FP];
             }
             return [obj._FP / (obj._TP + obj._FP), obj._FP];
@@ -539,7 +539,7 @@
             if (type == 'True_Unmapped') {
                 var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "Number Correctly Unmapped")
             }else{
-                var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "False Discovery Rate FDR")
+                var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "False Discovery Rate (FDR)")
             }
             
             var file_array = {};
