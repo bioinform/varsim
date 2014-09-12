@@ -80,7 +80,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
     public void run(String[] args) {
         String usage = "RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX ratio_novel"
-                + " min_length_lim max_length_lim reference_file file.vcf\n"
+                + " min_length_lim max_length_lim [prop_het] reference_file file.vcf\n"
                 + "     seed            -- Seed for random number generator\n"
                 + "     num_SNP         -- Number of SNPs to generate\n"
                 + "     num_INS         -- Number of insertions to generate\n"
@@ -90,11 +90,12 @@ public class RandVCF2VCF extends randVCFgenerator {
                 + "     ratio_novel     -- Average ratio of SV that are novel [0,1]\n"
                 + "     min_length_lim  -- Minimum length variant to generate (inclusive)\n"
                 + "     max_length_lim  -- Maximum length variant to generate (inclusive)\n"
+                + "     prop_het        -- Proportion het, rest are hom\n"
                 + "     reference_file  -- Reference genome sequence, eg. b37\n"
                 + "     file.vcf        -- Input VCF file to sample from\n"
                 + "Outputs VCF to stdout. Randomly samples variants from VCF file.";
 
-        if (args.length != 11) {
+        if (args.length < 11 || args.length > 12) {
             System.err.println(usage);
             System.exit(1);
         }
@@ -108,8 +109,18 @@ public class RandVCF2VCF extends randVCFgenerator {
         double ratio_novel = Double.parseDouble(args[6]);
         int min_length_lim = Integer.parseInt(args[7]);
         int max_length_lim = Integer.parseInt(args[8]);
-        String reference_filename = args[9];
-        String vcf_filename = args[10];
+
+        double prop_het = 0.6;
+        String reference_filename;
+        String vcf_filename;
+        if(args.length == 12) {
+            prop_het = Double.parseDouble(args[9]);
+            reference_filename = args[10];
+            vcf_filename = args[11];
+        }else {
+            reference_filename = args[9];
+            vcf_filename = args[10];
+        }
 
         if (ratio_novel > 1 || ratio_novel < 0) {
             System.err.println(usage);
@@ -146,7 +157,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             int chr_idx = var.chromosome();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr_idx, num_alt, rand);
+            Genotypes geno = new Genotypes(chr_idx, num_alt, rand,prop_het);
             selected_geno.add(geno);
 
             if (prev_var.equals(var)) {

@@ -24,6 +24,7 @@ class Genotypes {
     // generate random genotypes
     // make sure het-hom ration is 1.5
 
+
     /**
      * generate random genotypes, make sure het-hom ration is 1.5
      *
@@ -32,13 +33,25 @@ class Genotypes {
      * @param rand    Random number generator
      */
     Genotypes(int chr_idx, int num_alt, Random rand) {
+        this(chr_idx,num_alt,rand,0.6);
+    }
+
+    /**
+     * generate random genotypes
+     *
+     * @param chr_idx Chromosome name in number format
+     * @param num_alt Number of alternate alleles possible
+     * @param rand    Random number generator
+     * @param prop_het proportion heterozygous, rest are homo
+     */
+    Genotypes(int chr_idx, int num_alt, Random rand, double prop_het) {
         geno = new byte[2];
 
         if (chr_idx == 24 || chr_idx == 25) {
             geno[0] = 1;
             geno[1] = 1;
         } else {
-            if (rand.nextDouble() > 0.6) {
+            if (rand.nextDouble() > prop_het) {
                 // hom
                 geno[0] = (byte) (rand.nextInt(num_alt) + 1);
                 geno[1] = geno[0];
