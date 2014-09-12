@@ -274,10 +274,10 @@
                 return [NaN, 0];
             }
 
-            if ((obj._TP + obj._FP) == 0) {
+            if ((obj._TN + obj._FP) == 0) {
                 return [NaN, obj._FP];
             }
-            return [obj._FP / (obj._TP + obj._FP), obj._FP];
+            return [obj._FP / (obj._TN + obj._FP), obj._FP];
         }
 
         function compute_ppv(obj) {
