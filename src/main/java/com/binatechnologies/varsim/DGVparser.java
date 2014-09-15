@@ -2,6 +2,8 @@ package com.binatechnologies.varsim;
 
 //--- Java imports ---
 
+
+import org.apache.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +13,7 @@ import java.io.InputStreamReader;
  * Reads a DGV database flat file... not really sure if this format is stable
  */
 public class DGVparser extends variantFileParser {
+    private final static Logger log = Logger.getLogger(DGVparser.class.getName());
 
     private SimpleReference _reference;
 
@@ -26,8 +29,8 @@ public class DGVparser extends variantFileParser {
             readLine(); // skip the first line
             readLine();
         } catch (IOException ex) {
-            System.err.println("Can't open file " + fileName);
-            System.err.println(ex.toString());
+            log.error("Can't open file " + fileName);
+            log.error(ex.toString());
         }
 
         _reference = reference;
@@ -77,7 +80,6 @@ public class DGVparser extends variantFileParser {
             } else if (variantsubtype.equals("Deletion")) {
                 type = Variant.Type.Deletion;
             } else {
-                // System.err.println("Unknown CNV Variant");
                 return null;
             }
         } else if (varianttype.equals("OTHER")) {
@@ -86,11 +88,9 @@ public class DGVparser extends variantFileParser {
             } else if (variantsubtype.equals("Inversion")) {
                 type = Variant.Type.Inversion;
             } else {
-                // System.err.println("Unknown OTHER Variant");
                 return null;
             }
         } else {
-            // System.err.println("Unknown Variant");
             return null;
         }
 
@@ -126,8 +126,8 @@ public class DGVparser extends variantFileParser {
                 if (temp != null) {
                     REF = new String(temp);
                 } else {
-                    System.err.println("Error: Invalid range");
-                    System.err.println(" " + line);
+                    log.error("Error: Invalid range");
+                    log.error(" " + line);
                     return null;
                 }
                 alts[0] = new FlexSeq();
@@ -174,8 +174,8 @@ public class DGVparser extends variantFileParser {
             // SNP
             return null; // TODO ?
         } else if (REF.length() == 0 && alts[0].length() == 0) {
-            System.err.println("Skipping invalid record:");
-            System.err.println(" " + line);
+            log.error("Skipping invalid record:");
+            log.error(" " + line);
             return null;
         }
 
