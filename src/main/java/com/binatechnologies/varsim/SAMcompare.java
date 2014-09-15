@@ -15,7 +15,10 @@ import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 import org.apache.log4j.Logger;
-
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -24,6 +27,20 @@ import java.util.List;
 
 public class SAMcompare {
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
+
+    @Argument(usage = "One or more BAM files",metaVar = "BAM_filename ...",required = true)
+    private ArrayList<String> bam_filename = new ArrayList<String>();
+
+    static final int WIGGLE_ARG = 20;
+    @Option(name = "-wig", usage = "Wiggle allowance in validation ["+WIGGLE_ARG+"]")
+    int wiggle = WIGGLE_ARG;
+
+    @Option(name = "-prefix", usage = "Prefix for output file [Required]",metaVar = "file",required = true)
+    String out_prefix;
+
+    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
+    String bed_filename = "";
+
     /**
      * @param args
      */
@@ -69,22 +86,29 @@ public class SAMcompare {
     }
 
     public void run(String[] args) {
-        String usage = "SAMcompare wiggle output_prefix [bed_file] bam_files ...\n" +
-                "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
+        String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
                 "bed_file restricts the analysis to the bed regions\n";
-        // TODO args4j!!!
-        if (args.length < 4) {
+
+        CmdLineParser parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        parser.setUsageWidth(80);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar samcompare.jar [options...] bam_files ...");
+            // print the list of available options
+            parser.printUsage(System.err);
             System.err.println(usage);
-            System.exit(1);
+            return;
         }
 
-        int wiggle = Integer.parseInt(args[0]);
-        String out_prefix = args[1];
 
-        String bed_filename = "";
         BedFile intersector = null;
 
-        bed_filename = args[2];
         boolean bed_exists = false;
         // check if the file exists
         try{
@@ -99,13 +123,6 @@ public class SAMcompare {
         if(bed_exists) {
             intersector = new BedFile(bed_filename);
         }
-
-        // iterate to get all the bam files
-        ArrayList<String> bam_filename = new ArrayList<String>(1);
-        for(int i = 3;i<args.length;i++){
-            bam_filename.add(args[i]);
-        }
-
 
 
         /**
