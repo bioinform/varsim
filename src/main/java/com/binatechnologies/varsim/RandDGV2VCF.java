@@ -1,7 +1,9 @@
 package com.binatechnologies.varsim;
 
 import org.apache.log4j.Logger;
-
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -13,6 +15,46 @@ import java.util.Random;
 public class RandDGV2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
 
+    static final int SEED_ARG = 333;
+    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    int seed = SEED_ARG;
+
+    static final int NUM_INS_ARG = 2000;
+    @Option(name = "-num_ins", usage = "Number of insertion SV to sample ["+NUM_INS_ARG+"]")
+    int num_INS = NUM_INS_ARG;
+
+    static final int NUM_DEL_ARG = 2000;
+    @Option(name = "-num_del", usage = "Number of deletion SV to sample ["+NUM_DEL_ARG+"]")
+    int num_DEL = NUM_DEL_ARG;
+
+    static final int NUM_DUP_ARG = 500;
+    @Option(name = "-num_dup", usage = "Number of duplications to sample ["+NUM_DUP_ARG+"]")
+    int num_DUP = NUM_DUP_ARG;
+
+    static final int NUM_INV_ARG = 500;
+    @Option(name = "-num_inv", usage = "Number of inversions to sample ["+NUM_INV_ARG+"]")
+    int num_INV = NUM_INV_ARG;
+
+    static final double NOVEL_RATIO_ARG = 0.01;
+    @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
+    double ratio_novel = NOVEL_RATIO_ARG;
+
+    static final int MIN_LEN_ARG = 50;
+    @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
+    int min_length_lim = MIN_LEN_ARG;
+
+    static final int MAX_LEN_ARG = 1000000;
+    @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
+    int max_length_lim = MAX_LEN_ARG;
+
+    @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
+    String reference_filename;
+
+    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]",metaVar = "file",required = true)
+    String insert_filename;
+
+    @Option(name = "-dgv", usage = "DGV database flat file [Required]",metaVar = "file",required = true)
+    String dgv_filename;
 
     int num_novel_added = 0;
 
@@ -84,39 +126,27 @@ public class RandDGV2VCF extends randVCFgenerator {
 
 
     public void run(String[] args) {
-        String usage = "RandDGV2VCF seed num_INS num_DEL num_DUP num_INV ratio_novel min_length_lim max_length_lim "
-                + "reference_file insert_seq.txt dgv_file.txt\n"
-                + "     seed            -- Seed for random number generator\n"
-                + "     num_INS         -- Number of insertion SV to generate\n"
-                + "     num_DEL         -- Number of deletion SV to generate\n"
-                + "     num_DUP         -- Number of tandem duplication SV to generate\n"
-                + "     num_INV         -- Number of inversion SV to generate\n"
-                + "     ratio_novel     -- Average ratio of SV that are novel [0,1]\n"
-                + "     min_length_lim  -- Minimum length variant to generate (inclusive)\n"
-                + "     max_length_lim  -- Maximum length variant to generate (inclusive)\n"
-                + "     reference_file  -- Reference genome sequence, eg. b37\n"
-                + "     insert_seq      -- Single line concatenation of known insertion sequences\n"
-                + "     dgv_file        -- flat file from DGV database\n"
-                + "Outputs VCF to stdout. Randomly samples variants from DGV flat file.\n";
-        if (args.length != 11) {
+        String usage = "Outputs VCF to stdout. Randomly samples variants from DGV flat file.\n";
+
+        CmdLineParser parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        parser.setUsageWidth(80);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar randdgv2vcf.jar [options...]");
+            // print the list of available options
+            parser.printUsage(System.err);
             System.err.println(usage);
-            System.exit(1);
+            return;
         }
 
-        int seed = Integer.parseInt(args[0]);
-        int num_INS = Integer.parseInt(args[1]);
-        int num_DEL = Integer.parseInt(args[2]);
-        int num_DUP = Integer.parseInt(args[3]);
-        int num_INV = Integer.parseInt(args[4]);
-        double ratio_novel = Double.parseDouble(args[5]);
-        int min_length_lim = Integer.parseInt(args[6]);
-        int max_length_lim = Integer.parseInt(args[7]);
-        String reference_filename = args[8];
-        String insert_filename = args[9];
-        String dgv_filename = args[10];
-
         if (ratio_novel > 1 || ratio_novel < 0) {
-            System.err.println(usage);
+            System.err.println("Novel ratio out of range [0,1]");
             System.exit(1);
         }
 

@@ -36,16 +36,16 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
     int seed = 333;
 
-    @Option(name = "-ref", usage = "Reference Genome",metaVar = "file",required = true)
+    @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
     String reference_filename;
 
-    @Option(name = "-ins", usage = "Known Insertion Sequences",metaVar = "file",required = true)
+    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]",metaVar = "file",required = true)
     String insert_filename;
 
-    @Option(name = "-ins_bed", usage = "Known Insertion BED file",metaVar = "BED_file",required = true)
+    @Option(name = "-ins_bed", usage = "Known Insertion BED file [Required]",metaVar = "BED_file",required = true)
     String ins_bed_filename;
 
-    @Option(name = "-del_bed", usage = "Known Deletion BED file",metaVar = "BED_file",required = true)
+    @Option(name = "-del_bed", usage = "Known Deletion BED file [Required]",metaVar = "BED_file",required = true)
     String del_bed_filename;
 
     RandBED2VCF() {
@@ -159,16 +159,15 @@ public class RandBED2VCF extends randVCFgenerator {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
-            System.err.println("java -jar randbed2vcf [options...] arguments...");
+            System.err.println("java -jar randbed2vcf.jar [options...]");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
-            System.err.println();
             return;
         }
 
         if (max_length_lim < min_length_lim) {
-            log.error("Bad lengths");
+            log.error("Bad lengths, max < min");
         }
 
         rand = new Random(seed);

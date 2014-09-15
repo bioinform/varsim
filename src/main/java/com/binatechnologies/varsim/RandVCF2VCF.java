@@ -1,7 +1,9 @@
 package com.binatechnologies.varsim;
 
 import org.apache.log4j.Logger;
-
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -18,6 +20,53 @@ import java.util.Random;
 
 public class RandVCF2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandVCF2VCF.class.getName());
+
+    static final int SEED_ARG = 333;
+    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    int seed = SEED_ARG;
+
+    static final int NUM_SNP_ARG = 3000000;
+    @Option(name = "-num_snp", usage = "Number of SNPs to sample ["+NUM_SNP_ARG+"]")
+    int num_SNP = NUM_SNP_ARG;
+
+    static final int NUM_INS_ARG = 100000;
+    @Option(name = "-num_ins", usage = "Number of simple insertions to sample ["+NUM_INS_ARG+"]")
+    int num_INS = NUM_INS_ARG;
+
+    static final int NUM_DEL_ARG = 100000;
+    @Option(name = "-num_del", usage = "Number of simple deletions to sample ["+NUM_DEL_ARG+"]")
+    int num_DEL = NUM_DEL_ARG;
+
+    static final int NUM_MNP_ARG = 20000;
+    @Option(name = "-num_mnp", usage = "Number of MNPs to sample ["+NUM_MNP_ARG+"]")
+    int num_MNP = NUM_MNP_ARG;
+
+    static final int NUM_COMPLEX_ARG = 20000;
+    @Option(name = "-num_complex", usage = "Number of complex variants (other ones) to sample ["+NUM_COMPLEX_ARG+"]")
+    int num_COMPLEX = NUM_COMPLEX_ARG;
+
+    static final double NOVEL_RATIO_ARG = 0.01;
+    @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
+    double ratio_novel = NOVEL_RATIO_ARG;
+
+    static final int MIN_LEN_ARG = 50;
+    @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
+    int min_length_lim = MIN_LEN_ARG;
+
+    static final int MAX_LEN_ARG = 1000000;
+    @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
+    int max_length_lim = MAX_LEN_ARG;
+
+    static final double PROP_HET_ARG = 0.6;
+    @Option(name = "-prop_het", usage = "Average ratio of novel variants["+PROP_HET_ARG+"]")
+    double prop_het = PROP_HET_ARG;
+
+    @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
+    String reference_filename;
+
+    @Option(name = "-vcf", usage = "Known VCF file, eg. dbSNP [Required]",metaVar = "file",required = true)
+    String vcf_filename;
+
 
     int num_novel_added;
 
@@ -79,51 +128,27 @@ public class RandVCF2VCF extends randVCFgenerator {
     }
 
     public void run(String[] args) {
-        String usage = "RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX ratio_novel"
-                + " min_length_lim max_length_lim [prop_het] reference_file file.vcf\n"
-                + "     seed            -- Seed for random number generator\n"
-                + "     num_SNP         -- Number of SNPs to generate\n"
-                + "     num_INS         -- Number of insertions to generate\n"
-                + "     num_DEL         -- Number of deletions to generate\n"
-                + "     num_MNP         -- Number of MNPs to generate\n"
-                + "     num_COMPLEX     -- Number of complex/mixed variants to generate\n"
-                + "     ratio_novel     -- Average ratio of SV that are novel [0,1]\n"
-                + "     min_length_lim  -- Minimum length variant to generate (inclusive)\n"
-                + "     max_length_lim  -- Maximum length variant to generate (inclusive)\n"
-                + "     prop_het        -- Proportion het, rest are hom\n"
-                + "     reference_file  -- Reference genome sequence, eg. b37\n"
-                + "     file.vcf        -- Input VCF file to sample from\n"
-                + "Outputs VCF to stdout. Randomly samples variants from VCF file.";
+        String usage = "Outputs VCF to stdout. Randomly samples variants from VCF file.";
 
-        if (args.length < 11 || args.length > 12) {
+        CmdLineParser parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        parser.setUsageWidth(80);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar randvcf2vcf.jar [options...]");
+            // print the list of available options
+            parser.printUsage(System.err);
             System.err.println(usage);
-            System.exit(1);
-        }
-
-        int seed = Integer.parseInt(args[0]);
-        int num_SNP = Integer.parseInt(args[1]);
-        int num_INS = Integer.parseInt(args[2]);
-        int num_DEL = Integer.parseInt(args[3]);
-        int num_MNP = Integer.parseInt(args[4]);
-        int num_COMPLEX = Integer.parseInt(args[5]);
-        double ratio_novel = Double.parseDouble(args[6]);
-        int min_length_lim = Integer.parseInt(args[7]);
-        int max_length_lim = Integer.parseInt(args[8]);
-
-        double prop_het = 0.6;
-        String reference_filename;
-        String vcf_filename;
-        if(args.length == 12) {
-            prop_het = Double.parseDouble(args[9]);
-            reference_filename = args[10];
-            vcf_filename = args[11];
-        }else {
-            reference_filename = args[9];
-            vcf_filename = args[10];
+            return;
         }
 
         if (ratio_novel > 1 || ratio_novel < 0) {
-            System.err.println(usage);
+            System.err.println("Novel ratio out of range [0,1]");
             System.exit(1);
         }
 
