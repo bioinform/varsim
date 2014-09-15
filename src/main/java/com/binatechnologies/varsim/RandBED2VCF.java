@@ -1,7 +1,9 @@
 package com.binatechnologies.varsim;
 
 import org.apache.log4j.Logger;
-
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import java.io.*;
 import java.util.Random;
 
@@ -20,8 +22,31 @@ public class RandBED2VCF extends randVCFgenerator {
     int num_novel_added = 0;
     int var_idx = 0;
     byte[] insert_seq = null;
-    int min_length_lim = 50;
-    int max_length_lim = 1000000;
+
+    // parameters
+    static final int MIN_LEN_ARG = 50;
+    @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
+    int min_length_lim = MIN_LEN_ARG;
+
+    static final int MAX_LEN_ARG = 1000000;
+    @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
+    int max_length_lim = MAX_LEN_ARG;
+
+    static final int SEED_ARG = 333;
+    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    int seed = 333;
+
+    @Option(name = "-ref", usage = "Reference Genome",metaVar = "file",required = true)
+    String reference_filename;
+
+    @Option(name = "-ins", usage = "Known Insertion Sequences",metaVar = "file",required = true)
+    String insert_filename;
+
+    @Option(name = "-ins_bed", usage = "Known Insertion BED file",metaVar = "BED_file",required = true)
+    String ins_bed_filename;
+
+    @Option(name = "-del_bed", usage = "Known Deletion BED file",metaVar = "BED_file",required = true)
+    String del_bed_filename;
 
     RandBED2VCF() {
         super();
@@ -121,29 +146,26 @@ public class RandBED2VCF extends randVCFgenerator {
     }
 
     public void run(String[] args) {
-        String usage = "RandBED2VCF seed min_length_lim max_length_lim reference_file insert_seq.txt " +
-                "ins_file.bed del_file.bed\n"
-                + "     seed            -- Seed for random number generator (for random genotypes)\n"
-                + "     min_length_lim  -- Minimum length variant to generate (inclusive)\n"
-                + "     max_length_lim  -- Maximum length variant to generate (inclusive)\n"
-                + "     reference_file  -- Reference genome sequence, eg. b37\n"
-                + "     insert_seq      -- Single line concatenation of known insertion sequences\n"
-                + "     ins_file        -- BED file of insertions\n"
-                + "     del_file        -- BED file of deletions\n"
-                + "Generates a VCF file (to stdout) from an insertion and a deletion BED file. Insertions sequences\n"
+        String usage = "Generates a VCF file (to stdout) from an insertion and a deletion BED file. Insertions sequences\n"
                 + "are randomly sampled from the insert_seq file. This is designed for the Venter SV BED files. \n";
-        if (args.length != 7) {
-            System.err.println(usage);
-            System.exit(1);
-        }
 
-        int seed = Integer.parseInt(args[0]);
-        min_length_lim = Integer.parseInt(args[1]);
-        max_length_lim = Integer.parseInt(args[2]);
-        String reference_filename = args[3];
-        String insert_filename = args[4];
-        String ins_bed_filename = args[5];
-        String del_bed_filename = args[6];
+        CmdLineParser parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        parser.setUsageWidth(80);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar randbed2vcf [options...] arguments...");
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println(usage);
+            System.err.println();
+            return;
+        }
 
         if (max_length_lim < min_length_lim) {
             log.error("Bad lengths");
