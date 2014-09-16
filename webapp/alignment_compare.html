@@ -1153,18 +1153,19 @@
             var num_total = demo_files.length;
             for (i in demo_files) {
                 console.log(demo_files[i]);
-                $.getJSON(demo_files[i], function (d) {
-                    var filename = {"name":demo_files[i]};
+                $.getJSON(demo_files[i], (function(idx,file){
+                    return function (d) {
+                    var filename = {"name":file};
                     process_json(d, filename, true)
                     num_loaded++;
-                    console.log(stats_data);
+                    console.log(idx + ":" + stats_data);
                     console.log(num_loaded);
                     if (num_loaded == num_total) {
                         hide_all();
                         redraw_plots(stats_data, 'stats');
                         show_id('stats_plot');
                     }
-                })
+                }})(i,demo_files[i]))
             }
         }
 
