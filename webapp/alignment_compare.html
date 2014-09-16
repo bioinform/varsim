@@ -1152,6 +1152,7 @@
             var num_loaded = 0;
             var num_total = demo_files.length;
             for (i in demo_files) {
+                console.log(demo_files[i]);
                 $.getJSON(demo_files[i], function (d) {
                     var filename = {"name":demo_files[i]};
                     process_json(d, filename, true)
