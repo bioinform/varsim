@@ -51,6 +51,43 @@ public class VCF2diploid {
 
     public VCF2diploid() {
 
+
+
+    }
+
+    public void run(String[] args){
+        String VERSION = "vcf2diploid_bina - v0.2.6";
+
+        String usage = "Creater a diploid genome as associated files from a reference genome\n"
+                +"and some VCF files. \n";
+
+        CmdLineParser cmd_parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        cmd_parser.setUsageWidth(80);
+
+        try {
+            cmd_parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar vcf2diploid.jar [options...]");
+            // print the list of available options
+            cmd_parser.printUsage(System.err);
+            System.err.println(usage);
+            return;
+        }
+
+
+        if (_chrFiles.size() == 0) {
+            log.error("No chromosome file(s) is given!\n" + usage);
+            return;
+        }
+
+        if (_vcfFiles.size() == 0) {
+            log.error("No VCF file(s) is given!");
+        }
+
         for (int i = 0; i < _variants.length; i++) {
             _variants[i] = new ArrayList<Variant>(128);
         }
@@ -79,41 +116,6 @@ public class VCF2diploid {
             }
             System.out.println(_vcfFiles.get(i) + ": " + n_ev + " variants, "
                     + var_nucs + " variant bases");
-        }
-
-    }
-
-    public void run(String[] args){
-        String VERSION = "vcf2diploid_bina - v0.2.6";
-
-        String usage = "Creater a diploid genome as associated files from a reference genome\n"
-                +"and some VCF files. \n";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("java -jar vcf2diploid.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-
-        if (_chrFiles.size() == 0) {
-            log.error("No chromosome file(s) is given!\n" + usage);
-            return;
-        }
-
-        if (_vcfFiles.size() == 0) {
-            log.error("No VCF file(s) is given!");
         }
 
         makeDiploid();
