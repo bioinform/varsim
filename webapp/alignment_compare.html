@@ -1042,13 +1042,13 @@
 
         function process_json(json_str, file, use_obj) {
             var pass_validation = true;
-            var param_str = file.name;
-
+            
             if (use_obj) {
-                var ll = file.split('/');
-                param_str = ll[ll.length - 1];
+                var ll = file.name.split('/');
+                file.name = ll[ll.length - 1];
             }
-
+            
+            var param_str = file.name;
             var varsim_obj = null;
             var span = document.createElement('pre');
 
@@ -1153,7 +1153,8 @@
             var num_total = demo_files.length;
             for (i in demo_files) {
                 $.getJSON(demo_files[i], function (d) {
-                    process_json(d, demo_files[i], true)
+                    var filename = {"name":demo_files[i]};
+                    process_json(d, filename, true)
                     num_loaded++;
                     console.log(num_loaded);
                     if (num_loaded == num_total) {
