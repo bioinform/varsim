@@ -36,8 +36,8 @@ public class VCF2diploid {
     @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]",metaVar = "VCF_file",required = true)
     ArrayList<String> _vcfFiles = null;
 
-    @Option(name = "-id", usage = "ID of individual in VCF file [Optional]",required = true)
-    private String _id = null;
+    @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
+    private String _id = "varsim";
 
     @Option(name = "-pass", usage = "Only accept the PASS variants",required = true)
     private boolean _pass = false;
