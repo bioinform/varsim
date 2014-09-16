@@ -104,7 +104,7 @@
 						<input type="file" id="files" name="files[]" multiple />
 					</span>
 
-                <span> &nbsp; Add dataset to see results </span>
+                <span> &nbsp; Add dataset to see results or <a href="">load some demo data</a> </span>
 
                 <p>
                     <div id="file_name_list"></div>
@@ -1130,6 +1130,21 @@
 
             readFile(0);
 
+        }
+        
+        function load_demo(){
+            reset_all_plots();
+            
+            var demo_files = ["http://bioinform.github.io/varsim/webapp/demo/bwa_aln_report.json"
+                             ,"http://bioinform.github.io/varsim/webapp/demo/bwa_mem_report.json"
+                             ,"http://bioinform.github.io/varsim/webapp/demo/novo_report.json"];
+            
+            for (i in demo_files){
+                $.getJSON(demo_files[i],function(d){process_json(d,demo_files[i])})
+            }
+            hide_all();
+            redraw_plots(stats_data, 'stats');
+            show_id('stats_plot');
         }
 
         function reset_all_plots() {

@@ -3,6 +3,10 @@ VarSim: A high-fidelity simulation validation framework for high-throughput geno
 # Website
 For access to webapps http://bioinform.github.io/varsim/
 
+# Download
+
+Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
+
 # System Requirements
 <p>
 For variant simulation and read generation:
@@ -39,7 +43,7 @@ Create a directory `varsim_run`
 Download varsim to `varsim_run`
 
 ```
-wget http://web.stanford.edu/group/wonglab/varsim/varsim.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
 tar xfz varsim.tar.gz 
 ```
 
