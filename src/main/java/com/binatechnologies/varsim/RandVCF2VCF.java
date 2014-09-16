@@ -174,6 +174,9 @@ public class RandVCF2VCF extends randVCFgenerator {
         // to store an array of the variants for sampling without replacement
         while (parser_one.hasMoreInput()) {
             Variant var = parser_one.parseLine();
+
+            log.info(var);
+
             if (var == null) {
                 continue;
             }
@@ -189,7 +192,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                 continue;
             }
 
-            // this is ok because var is not changed
+            // this is ok because var is not changed later
             prev_var = var;
 
             if (var.max_len() > max_length_lim
