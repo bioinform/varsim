@@ -2,10 +2,15 @@ package com.binatechnologies.varsim;
 
 //--- Java imports ---
 
+import net.sf.picard.analysis.MetricAccumulationLevel;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.Argument;
 
 /**
  * Class to construct diploid genome from genome reference and genome variants
@@ -17,27 +22,41 @@ import java.util.*;
 public class VCF2diploid {
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
 
+    public enum GenderType {
+        FEMALE, MALE
+    }
+
+    // arguments
+    @Option(name = "-t", usage = "Gender of individual [MALE]")
+    GenderType _gender = GenderType.MALE;
+
+    @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]",metaVar = "FASTA_file",required = true)
+    ArrayList<String> _chrFiles = null;
+
+    @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]",metaVar = "VCF_file",required = true)
+    ArrayList<String> _vcfFiles = null;
+
+    @Option(name = "-id", usage = "ID of individual in VCF file [Optional]",required = true)
+    private String _id = null;
+
+    @Option(name = "-pass", usage = "Only accept the PASS variants",required = true)
+    private boolean _pass = false;
+
     private final static char DELETED_BASE = '~';
-    Type _gender;
-    private String[] _chrFiles = null, _vcfFiles = null;
-    private String _id = "";
+
+
+
     @SuppressWarnings("unchecked")
     private ArrayList<Variant>[] _variants = (ArrayList<Variant>[]) new ArrayList[25];
 
-    public VCF2diploid(String[] chrFiles, String[] vcfFiles, String id,
-                       boolean pass, Type gender) {
-        _gender = gender;
-        _chrFiles = chrFiles;
-        _vcfFiles = vcfFiles;
-        if (id != null)
-            _id = id;
+    public VCF2diploid() {
 
         for (int i = 0; i < _variants.length; i++) {
             _variants[i] = new ArrayList<Variant>(128);
         }
 
-        for (int i = 0; i < vcfFiles.length; i++) {
-            VCFparser parser = new VCFparser(vcfFiles[i], _id, pass);
+        for (int i = 0; i < _vcfFiles.size(); i++) {
+            VCFparser parser = new VCFparser(_vcfFiles.get(i), _id, _pass);
             int n_ev = 0, var_nucs = 0;
             while (parser.hasMoreInput()) {
                 Variant var = parser.parseLine();
@@ -58,89 +77,54 @@ public class VCF2diploid {
                 n_ev++;
                 var_nucs += var.variantBases();
             }
-            System.out.println(vcfFiles[i] + ": " + n_ev + " variants, "
+            System.out.println(_vcfFiles.get(i) + ": " + n_ev + " variants, "
                     + var_nucs + " variant bases");
         }
 
-        // for (int i = 0;i < _variants.length;i++)
-        // System.out.println((i + 1) + " " + _variants[i].size());
+    }
+
+    public void run(String[] args){
+        String VERSION = "vcf2diploid_bina - v0.2.6";
+
+        String usage = "Creater a diploid genome as associated files from a reference genome\n"
+                +"and some VCF files. \n";
+
+        CmdLineParser parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        parser.setUsageWidth(80);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar vcf2diploid.jar [options...]");
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println(usage);
+            return;
+        }
+
+
+        if (_chrFiles.size() == 0) {
+            log.error("No chromosome file(s) is given!\n" + usage);
+            return;
+        }
+
+        if (_vcfFiles.size() == 0) {
+            log.error("No VCF file(s) is given!");
+        }
+
+        makeDiploid();
     }
 
     /**
      * Main function.
      */
     public static void main(String[] args) {
-        String VERSION = "vcf2diploid_bina - v0.2.6";
-
-        ArrayList<String> chrFiles = new ArrayList<String>(1);
-        ArrayList<String> vcfFiles = new ArrayList<String>(1);
-        String id = "";
-        boolean pass = false;
-        Type gender = null;
-
-        String usage = "Usage:\n";
-        usage += "\tvcf2diploid -t <male/female> -id <sample_id> [-pass] ";
-        usage += "-chr <file.fa> ... ";
-        usage += "[-vcf <file.vcf> ...]\n";
-        usage += "\tvcf2diploid -version\n";
-
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-vcf")) {
-                while (++i < args.length)
-                    if (args[i].charAt(0) != '-')
-                        vcfFiles.add(args[i]);
-                    else {
-                        i--;
-                        break;
-                    }
-            } else if (args[i].equals("-chr")) {
-                while (++i < args.length)
-                    if (args[i].charAt(0) != '-')
-                        chrFiles.add(args[i]);
-                    else {
-                        i--;
-                        break;
-                    }
-            } else if (args[i].equals("-id")) {
-                if (++i < args.length)
-                    id = args[i];
-            } else if (args[i].equals("-t")) {
-                if (++i < args.length) {
-                    if (args[i].equalsIgnoreCase("male")) {
-                        gender = Type.MALE;
-                    } else if (args[i].equalsIgnoreCase("female")) {
-                        gender = Type.FEMALE;
-                    } else {
-                        log.error("Invalid gender\n");
-                        log.error(usage);
-                        return;
-                    }
-                }
-            } else if (args[i].equals("-version")) {
-                System.out.println(VERSION);
-                return;
-            } else if (args[i].equals("-pass")) {
-                pass = true;
-            }
-        }
-
-        if (id.length() <= 0) {
-            log.error("No sample id is given.\n" + usage);
-            return;
-        }
-
-        if (chrFiles.size() == 0) {
-            log.error("No chromosome file(s) is given!\n" + usage);
-            return;
-        }
-
-        if (vcfFiles.size() == 0) {
-            log.error("No VCF file(s) is given!");
-        }
-
-        VCF2diploid maker = new VCF2diploid(chrFiles.toArray(new String[0]),
-                vcfFiles.toArray(new String[0]), id, pass, gender);
-        maker.makeDiploid();
+        VCF2diploid runner = new VCF2diploid();
+        runner.run(args);
     }
 
     // This is the main function that makes the diploid genome
@@ -153,8 +137,8 @@ public class VCF2diploid {
 
         // This is the loop if chromosomes exist in separate files
         SimpleReference all_seqs = new SimpleReference();
-        for (int f = 0; f < _chrFiles.length; f++) {
-            all_seqs.addReference(_chrFiles[f]);
+        for (int f = 0; f < _chrFiles.size(); f++) {
+            all_seqs.addReference(_chrFiles.get(f));
         }
 
         // This is the loop through each chromosome
@@ -173,12 +157,12 @@ public class VCF2diploid {
             boolean output_maternal = true;
             boolean output_both = output_paternal && output_maternal;
 
-            if (_gender == Type.FEMALE) {
+            if (_gender == GenderType.FEMALE) {
                 if (index == VCFparser.Y) {
                     output_paternal = false;
                     output_maternal = false;
                 }
-            } else if (_gender == Type.MALE) {
+            } else if (_gender == GenderType.MALE) {
                 // only male and female
                 if (index == VCFparser.X) {
                     output_paternal = false;
@@ -1054,9 +1038,7 @@ public class VCF2diploid {
         return (name + "_paternal");
     }
 
-    private enum Type {
-        FEMALE, MALE
-    }
+
 
     //"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
     // this is more like a struct :)

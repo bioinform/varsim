@@ -28,7 +28,7 @@ import java.util.List;
 public class SAMcompare {
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
 
-    @Argument(usage = "One or more BAM files",metaVar = "BAM_filename ...",required = true)
+    @Argument(usage = "One or more BAM files",metaVar = "bam_files ...",required = true)
     private ArrayList<String> bam_filename = new ArrayList<String>();
 
     static final int WIGGLE_ARG = 20;
