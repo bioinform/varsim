@@ -49,11 +49,11 @@ public class RandVCF2VCF extends randVCFgenerator {
     @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
     double ratio_novel = NOVEL_RATIO_ARG;
 
-    static final int MIN_LEN_ARG = 50;
+    static final int MIN_LEN_ARG = 1;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
-    static final int MAX_LEN_ARG = 1000000;
+    static final int MAX_LEN_ARG = 49;
     @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 
@@ -174,9 +174,6 @@ public class RandVCF2VCF extends randVCFgenerator {
         // to store an array of the variants for sampling without replacement
         while (parser_one.hasMoreInput()) {
             Variant var = parser_one.parseLine();
-
-            log.info(var);
-
             if (var == null) {
                 continue;
             }
