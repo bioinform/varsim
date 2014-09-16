@@ -1043,6 +1043,12 @@
         function process_json(json_str, file, use_obj) {
             var pass_validation = true;
             var param_str = file.name;
+
+            if (use_obj) {
+                var ll = file.split('/');
+                param_str = ll[ll.length - 1];
+            }
+
             var varsim_obj = null;
             var span = document.createElement('pre');
 
@@ -1116,7 +1122,7 @@
                             alert("Maximum number of files is 5");
                             last_one = true;
                         } else {
-                            process_json(e.target.result, file,false);
+                            process_json(e.target.result, file, false);
                         }
                         if (last_one) {
                             // draw the plots
@@ -1143,14 +1149,20 @@
                              , "http://bioinform.github.io/varsim/webapp/demo/bwa_mem_report.json"
                              , "http://bioinform.github.io/varsim/webapp/demo/novo_report.json"];
 
+            var num_loaded = 0;
+            var num_total = demo_files.length;
             for (i in demo_files) {
                 $.getJSON(demo_files[i], function (d) {
-                    process_json(d, demo_files[i],true)
+                    process_json(d, demo_files[i], true)
+                    num_loaded++;
+                    console.log(num_loaded);
+                    if (num_loaded == num_total) {
+                        hide_all();
+                        redraw_plots(stats_data, 'stats');
+                        show_id('stats_plot');
+                    }
                 })
             }
-            hide_all();
-            redraw_plots(stats_data, 'stats');
-            show_id('stats_plot');
         }
 
         function reset_all_plots() {
