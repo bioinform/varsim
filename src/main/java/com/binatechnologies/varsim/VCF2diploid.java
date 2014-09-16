@@ -10,7 +10,7 @@ import java.util.*;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.Argument;
+
 
 /**
  * Class to construct diploid genome from genome reference and genome variants

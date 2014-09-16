@@ -3,7 +3,10 @@ package com.binatechnologies.varsim;
 /**
  *
  */
-
+import org.apache.log4j.Logger;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -201,7 +204,15 @@ class Parent_record {
 }
 
 public class VCFstats {
+    private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
+
     BedFile bed_file;
+
+    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
+    String bed_filename = null;
+
+    @Option(name = "-vcf", usage = "VCF file to analyse [Required]",metaVar = "VCF_file",required = true)
+    String vcf_filename;
 
     /**
      * @param args command line parameters
@@ -212,23 +223,31 @@ public class VCFstats {
     }
 
     private void run(String[] args) {
-        String params = "VCFstats vcf_file [bed_file]\n"
-                + "     vcf_file   -- VCF file to compute stats for\n"
-                + "     bed_file   -- BED file of regions to compute stats for\n"
-                + "Compute the distribution of variants in a VCF file\n"
+        String usage = "Compute the distribution of variants in a VCF file\n"
                 + "Assume that there is only one sample in the VCF file\n";
 
-        if (args.length < 1 || args.length > 2) {
-            System.err.println(params);
-            System.exit(1);
+        CmdLineParser cmd_parser = new CmdLineParser(this);
+
+        // if you have a wider console, you could increase the value;
+        // here 80 is also the default
+        cmd_parser.setUsageWidth(80);
+
+        try {
+            cmd_parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("java -jar vcfstats.jar [options...]");
+            // print the list of available options
+            cmd_parser.printUsage(System.err);
+            System.err.println(usage);
+            return;
         }
 
-        String vcf_filename = args[0];
+
         bed_file = null;
-        String bed_filename = null;
-        if (args.length == 2) {
-            bed_filename = args[1];
-            System.err.println("Reading BED file...");
+
+        if (bed_filename != null) {
+            log.info("Reading BED file...");
             bed_file = new BedFile(bed_filename);
         }
 
