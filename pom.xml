@@ -46,7 +46,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.VCF2diploid
+                                    <mainClass>com.binatechnologies.varsim.VCF2diploid
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -64,7 +64,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.RandVCF2VCF
+                                    <mainClass>com.binatechnologies.varsim.RandVCF2VCF
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -82,7 +82,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.RandDGV2VCF
+                                    <mainClass>com.binatechnologies.varsim.RandDGV2VCF
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -100,7 +100,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.VCFstats
+                                    <mainClass>com.binatechnologies.varsim.VCFstats
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -118,7 +118,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.VCFcompare
+                                    <mainClass>com.binatechnologies.varsim.VCFcompare
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -136,7 +136,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.SAMcompare
+                                    <mainClass>com.binatechnologies.varsim.SAMcompare
                                     </mainClass>
                                 </transformer>
                             </transformers>
@@ -154,7 +154,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.binatechnologies.seqalto.varsim.RandBED2VCF
+                                    <mainClass>com.binatechnologies.varsim.RandBED2VCF
                                     </mainClass>
                                 </transformer>
                             </transformers>
