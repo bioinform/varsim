@@ -1158,8 +1158,6 @@
                     var filename = {"name":file};
                     process_json(d, filename, true)
                     num_loaded++;
-                    console.log(idx + ":" + stats_data);
-                    console.log(num_loaded);
                     if (num_loaded == num_total) {
                         hide_all();
                         redraw_plots(stats_data, 'stats');
