@@ -106,7 +106,7 @@
                 </span>
 
                 <span>
-                    &nbsp; Add dataset to see results or <a href="">load some demo data</a>
+                    &nbsp; Add dataset to see results or <a href="javascript:load_demo()">load some demo data</a>
                 </span>
                 <p>
                     <div id="file_name_list"></div>
@@ -411,8 +411,8 @@
             return data_arr;
         }
 
-        function get_legend_text(chart_idx, leg_idx,out_data, idx) {
-            
+        function get_legend_text(chart_idx, leg_idx, out_data, idx) {
+
             if (leg_idx == 0) {
                 if (chart_idx != 2) {
                     legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(2) + "%)";
@@ -426,7 +426,7 @@
                     legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1];
                 }
             }
-            
+
             return legend_text;
         }
 
@@ -593,7 +593,7 @@
                     var idx = 0;
                     for (var filename in data) {
 
-                        var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx] , idx);
+                        var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx], idx);
 
                         parent.append("text")
                             .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
@@ -805,7 +805,7 @@
 
             var data_arr = compute_data_arr(big_data, type, get_sum_count, proc_func);
             draw_line_bar(parent, id + '_' + type + "_all_c" + chart_idx, chart_idx, left_margin + 20,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr,leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
 
             // draw the small variants (also draw tooltip)
             // when drawing the small variants, also record the label
@@ -815,7 +815,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, 49,leg_idx);
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, 49, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -827,7 +827,7 @@
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr,leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
 
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 110 + 20, x_axis_y_bottom, 40, ["All Small"], true);
@@ -841,7 +841,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, 50, 2000000,leg_idx);
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, 50, 2000000, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -852,7 +852,7 @@
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr,leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
 
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y_bottom, 40, ["All SV"], true);
@@ -1048,17 +1048,27 @@
             types_data[file_name] = varsim_obj.num_true_correct.data;
         }
 
-        function process_json(json_str, file) {
+        function process_json(json_str, file, use_obj) {
             var pass_validation = true;
+
+            if (use_obj) {
+                var ll = file.name.split('/');
+                file.name = ll[ll.length - 1];
+            }
+
             var param_str = file.name;
             var varsim_obj = null;
             var span = document.createElement('pre');
 
-            try {
-                varsim_obj = JSON.parse(json_str);
-            } catch (err) {
-                param_str += " : Invalid JSON file.";
-                pass_validation = false;
+            if (use_obj) {
+                varsim_obj = json_str;
+            } else {
+                try {
+                    varsim_obj = JSON.parse(json_str);
+                } catch (err) {
+                    param_str += " : [Error] Invalid JSON file.";
+                    pass_validation = false;
+                }
             }
 
             // if something is already loaded, do some consistency checks
@@ -1166,6 +1176,36 @@
         function resetFormElement(e) {
             e.wrap('<form>').closest('form').get(0).reset();
             e.unwrap();
+        }
+
+        function load_demo() {
+            reset_all_plots();
+
+            var demo_files = ["http://bioinform.github.io/varsim/webapp/demo/bwa_aln_hc_report2.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/bwa_mem_fb_report2.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/bwa_mem_hc_report2.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/bwa_mem_ug_report2.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/novo_hc_report2.json"];
+
+            var num_loaded = 0;
+            var num_total = demo_files.length;
+            for (i in demo_files) {
+                console.log(demo_files[i]);
+                $.getJSON(demo_files[i], (function (idx, file) {
+                    return function (d) {
+                        var filename = {
+                            "name": file
+                        };
+                        process_json(d, filename, true)
+                        num_loaded++;
+                        if (num_loaded == num_total) {
+                            hide_all();
+                            redraw_plots(stats_data, 'stats');
+                            show_id('stats_plot');
+                        }
+                    }
+                })(i, demo_files[i]))
+            }
         }
 
 
