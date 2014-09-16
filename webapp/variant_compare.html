@@ -1200,8 +1200,9 @@
                         num_loaded++;
                         if (num_loaded == num_total) {
                             hide_all();
-                            redraw_plots(stats_data, 'stats');
-                            show_id('stats_plot');
+                            redraw_plots(types_data, 'types', 'Detail', true);
+                            redraw_plots(types_data, 'sum_types', 'Summary', false);
+                            show_id('sum_types_var');
                         }
                     }
                 })(i, demo_files[i]))
