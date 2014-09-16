@@ -155,7 +155,6 @@ public class VCF2diploid {
 
             boolean output_paternal = true;
             boolean output_maternal = true;
-            boolean output_both = output_paternal && output_maternal;
 
             if (_gender == GenderType.FEMALE) {
                 if (index == VCFparser.Y) {
@@ -252,11 +251,6 @@ public class VCF2diploid {
 
             writeDiploid(ref_seq, paternal_seq, maternal_seq, pat_ins_seq,
                     mat_ins_seq, output_paternal, output_maternal);
-
-            //if (output_both) {
-            //writeMap(ref_seq, paternal_seq, maternal_seq, pat_ins_seq,
-            //            mat_ins_seq);
-            //}
 
             if (output_paternal) {
                 paternal_chains.append(makeChains(ref_seq.getName(),
@@ -698,123 +692,6 @@ public class VCF2diploid {
         sb.append(curr_rec);
         sb.append('\n');
 
-    }
-
-    private void writeMap(Sequence ref_seq, byte[] paternal, byte[] maternal,
-                          Hashtable<Integer, byte[]> ins_seq_pat,
-                          Hashtable<Integer, byte[]> ins_seq_mat) {
-        if (paternal.length != maternal.length) {
-            log.error("Paternal and maternal genomes are of "
-                    + "different lengths. Making map aborted.");
-            return;
-        }
-
-        boolean[] ins_flag_pat = new boolean[paternal.length];
-        Enumeration<Integer> enm = ins_seq_pat.keys();
-        while (enm.hasMoreElements()) {
-            Integer key = enm.nextElement();
-            ins_flag_pat[key.intValue() - 1] = true;
-        }
-
-        boolean[] ins_flag_mat = new boolean[maternal.length];
-        enm = ins_seq_mat.keys();
-        while (enm.hasMoreElements()) {
-            Integer key = (Integer) enm.nextElement();
-            ins_flag_mat[key.intValue() - 1] = true;
-        }
-
-        int NOT_IN_GENOME = 0;
-        String file_name = ref_seq.getName() + "_" + _id + ".map";
-        try {
-            FileWriter fw = new FileWriter(new File(file_name));
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            bw.write("#REF\tPAT\tMAT");
-
-            bw.newLine();
-            int ri = 1, pi = 1, mi = 1;
-            int pr = NOT_IN_GENOME, pp = NOT_IN_GENOME, pm = NOT_IN_GENOME;
-            for (int p = 0; p < paternal.length; p++) {
-                boolean for_pat = ins_flag_pat[p];
-                boolean for_mat = ins_flag_mat[p];
-                boolean for_both = for_pat && for_mat;
-                if (for_both) {
-                    for_both = Arrays.equals(ins_seq_pat.get(p + 1), ins_seq_mat.get(p + 1));
-                }
-                if (for_pat || for_mat || for_both) {
-                    if (pr > 0 || pp > 0 || pm > 0) {
-                        bw.write(pr + "\t" + pp + "\t" + pm);
-                        bw.newLine();
-                        pr = pp = pm = 0;
-                    }
-                }
-
-                if (for_both) {
-                    byte[] new_seq = ins_seq_pat.get(p + 1);
-                    if (new_seq != null) {
-                        bw.write(NOT_IN_GENOME + "\t" + pi + "\t" + mi);
-                        bw.newLine();
-                        for (int i = 0; i < new_seq.length; i++) {
-                            pi++;
-                            mi++;
-                        }
-                    }
-                } else {
-                    if (for_pat) {
-                        byte[] new_seq = ins_seq_pat.get(p + 1);
-                        if (new_seq != null) {
-                            bw.write(NOT_IN_GENOME + "\t" + pi + "\t"
-                                    + NOT_IN_GENOME);
-                            bw.newLine();
-                            for (int i = 0; i < new_seq.length; i++) {
-                                pi++;
-                            }
-                        }
-                    }
-                    if (for_mat) {
-                        byte[] new_seq = ins_seq_mat.get(p + 1);
-                        if (new_seq != null) {
-                            bw.write(NOT_IN_GENOME + "\t" + NOT_IN_GENOME
-                                    + "\t" + mi);
-                            bw.newLine();
-                            for (int i = 0; i < new_seq.length; i++)
-                                mi++;
-                        }
-                    }
-                }
-                int ref = ri++, pat = NOT_IN_GENOME, mat = NOT_IN_GENOME;
-                if (paternal[p] != DELETED_BASE)
-                    pat = pi++;
-                if (maternal[p] != DELETED_BASE)
-                    mat = mi++;
-                if (pr == NOT_IN_GENOME && pp == NOT_IN_GENOME
-                        && pm == NOT_IN_GENOME) { // Initiation
-                    pr = ref;
-                    pp = pat;
-                    pm = mat;
-                } else {
-                    boolean cand = ((pat == NOT_IN_GENOME && pp == NOT_IN_GENOME) || ref
-                            - pr == pat - pp)
-                            && ((mat == NOT_IN_GENOME && pm == NOT_IN_GENOME) || ref
-                            - pr == mat - pm);
-                    if (!cand) {
-                        bw.write(pr + "\t" + pp + "\t" + pm);
-                        bw.newLine();
-                        pr = ref;
-                        pp = pat;
-                        pm = mat;
-                    }
-                }
-            }
-            if (pr > 0 || pp > 0 || pm > 0) {
-                bw.write(pr + "\t" + pp + "\t" + pm);
-                bw.newLine();
-            }
-            bw.close();
-            fw.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
     }
 
     private void writeDiploid(Sequence ref_seq, byte[] paternal,
