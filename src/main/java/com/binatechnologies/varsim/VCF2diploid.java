@@ -39,7 +39,7 @@ public class VCF2diploid {
     @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
     private String _id = "varsim";
 
-    @Option(name = "-pass", usage = "Only accept the PASS variants",required = true)
+    @Option(name = "-pass", usage = "Only accept the PASS variants")
     private boolean _pass = false;
 
     private final static char DELETED_BASE = '~';
