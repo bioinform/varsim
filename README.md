@@ -123,7 +123,7 @@ varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
 --sv_max_length_lim 1000000 --nlanes 3 --total_coverage 30 \
 --art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
---dwgsim ART/art_bin_VanillaIceCream/art_illumina --simulator art  \
+--simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]
 ```
 
