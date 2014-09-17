@@ -223,7 +223,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                         total_num_COMPLEX++;
                         break;
                     default:
-                        log.error(i + ":" + geno.geno[i] + ":" + var.getType(geno.geno[i]) + " : OTHER: " + var);
+                        //log.error(i + " : " + geno.geno[i] + " : " + var.getType(geno.geno[i]) + " : OTHER : " + var);
                         total_num_other++;
                 }
 
