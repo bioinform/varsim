@@ -95,13 +95,13 @@ dwgsim_group = main_parser.add_argument_group("DWGSIM options")
 dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base", default=0.0001, type=float)
 dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help="Error rate on the last base", default=0.0015, type=float)
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
-dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=True)
+dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=False, default=None)
 
 art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
-art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=True)
+art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=False, default=None)
 
 args = main_parser.parse_args()
 
@@ -125,7 +125,6 @@ def monitor_multiprocesses(processes, logger):
       logger.error("Process with pid %d failed with exit code %d" % (p.pid, pid.exitcode))
     else:
       logger.info("Process with pid %d finished successfully" % (p.pid))
-
 
 def monitor_processes(processes, logger):
   while processes:
@@ -155,6 +154,25 @@ def monitor_processes(processes, logger):
       sys.exit(1)
     processes = processes_running
   return []
+
+def check_executable(fpath):
+  if not os.path.isfile(fpath):
+    sys.stderr.write("ERROR: File %s does not exist\n" % (fpath))
+    sys.exit(1)
+  if not os.access(fpath, os.X_OK):
+    sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
+    sys.exit(1)
+
+if args.simulator == "dwgsim":
+  if args.dwgsim is None:
+    sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
+    sys.exit(1)
+  check_executable(args.dwgsim.name)
+if args.simulator == "art":
+  if args.art is None:
+    sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
+    sys.exit(1)
+  check_executable(args.art.name)
 
 processes = []
 
