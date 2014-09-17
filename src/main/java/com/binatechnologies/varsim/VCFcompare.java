@@ -509,13 +509,14 @@ public class VCFcompare {
                 }
 
                 total_len += curr_len;
-
+                Interval1D curr_var_reg = null;
                 try {
-                    Interval1D curr_var_reg = curr_var.get_geno_var_interval();
+                    curr_var_reg = curr_var.get_geno_var_interval();
                 }catch(Exception e){
                     e.printStackTrace();
                     log.error("Original variant: " + var);
                     log.error("Bad variant: " + curr_var);
+                    System.exit(1);
                 }
                 curr_var.idx = num_added;
                 curr_var.full_idx = num_read;
