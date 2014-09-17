@@ -115,7 +115,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                     break;
                 }
 
-                log.info(time_out + " : " + var.deletion());
+                //log.info(time_out + " : " + var.deletion());
 
                 time_out++;
             }

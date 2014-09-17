@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class SAMcompare {
-    private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
+    private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
 
     @Argument(usage = "One or more BAM files",metaVar = "bam_files ...",required = true)
     private ArrayList<String> bam_filename = new ArrayList<String>();

@@ -204,7 +204,7 @@ class Parent_record {
 }
 
 public class VCFstats {
-    private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
+    private final static Logger log = Logger.getLogger(VCFstats.class.getName());
 
     BedFile bed_file;
 
