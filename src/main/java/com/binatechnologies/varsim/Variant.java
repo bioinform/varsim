@@ -115,12 +115,8 @@ public class Variant {
         // replace ref
         int len = _ref.length;
 
-        log.info("Setting Novel: len:" + len + ", pos: " + pos);
-
         if (len > 0) {
             byte[] temp_ref = ref.byteRange(_chr, pos, pos + len);
-
-            log.info("chr: " +_chr+ " temp_ref: " + temp_ref[0]);
 
             for (byte b : temp_ref) {
                 if (b == 'N') {
@@ -155,9 +151,6 @@ public class Variant {
         if (len > 0) {
             try {
                 byte[] deleted_temp = ref.byteRange(_chr, pos - len, pos);
-
-                log.info("chr: " +_chr+ " deleted_temp: " + deleted_temp[0]);
-
                 _ref_deleted = new String(deleted_temp, "US-ASCII");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

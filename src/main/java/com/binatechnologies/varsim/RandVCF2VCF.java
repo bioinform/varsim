@@ -97,8 +97,6 @@ public class RandVCF2VCF extends randVCFgenerator {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
 
-            log.info("NOVEL: " + var);
-
             int chr_len = ref.getRefLen(chr_idx);
             int buffer = Math.max(
                     10,
@@ -117,16 +115,12 @@ public class RandVCF2VCF extends randVCFgenerator {
                     break;
                 }
 
-                //rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 //log.info(time_out + " : " + var.deletion());
 
                 time_out++;
             }
             num_novel_added++;
-
-            log.info("AFTER NOVEL: " + var);
-
-            log.info("Novel_" + num_novel_added);
 
             var.setVarID("Novel_" + num_novel_added);
         }
