@@ -114,8 +114,13 @@ public class Variant {
 
         // replace ref
         int len = _ref.length;
+
+        log.info("Setting Novel: len:" + len + ", pos: " + pos);
+
         if (len > 0) {
             byte[] temp_ref = ref.byteRange(_chr, pos, pos + len);
+
+            log.info("chr: " +_chr+ " temp_ref: " + temp_ref[0]);
 
             for (byte b : temp_ref) {
                 if (b == 'N') {
@@ -127,11 +132,18 @@ public class Variant {
 
             for (FlexSeq f : _alts) {
                 if (f.getSeq() != null) {
-                    if (f.equals(temp_ref)) {
-                        // reference is the same as alt
-                        log.warn("Same ref at alt at " + pos + " to " + (pos + len));
-                        return false;
+                    // make sure there is no prefix the same
+                    for(int i = 0;i<temp_ref.length;i++){
+                        if(i < f.getSeq().length){
+                            if(temp_ref[i] == f.getSeq()[i]){
+                                log.warn("Same ref at alt at " + pos + " to " + (pos + len));
+                                return false;
+                            }else{
+                                break;
+                            }
+                        }
                     }
+
                 }
             }
 
@@ -143,6 +155,9 @@ public class Variant {
         if (len > 0) {
             try {
                 byte[] deleted_temp = ref.byteRange(_chr, pos - len, pos);
+
+                log.info("chr: " +_chr+ " deleted_temp: " + deleted_temp[0]);
+
                 _ref_deleted = new String(deleted_temp, "US-ASCII");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

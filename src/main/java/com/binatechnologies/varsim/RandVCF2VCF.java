@@ -117,6 +117,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                     break;
                 }
 
+                //rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 //log.info(time_out + " : " + var.deletion());
 
                 time_out++;
