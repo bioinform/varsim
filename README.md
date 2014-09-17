@@ -137,7 +137,7 @@ After running the alignment and variant calling we can evaluate the results. In 
 </p>
 
 ```
-java -jar target/build/vcfcompare.jar simu.truth.vcf [VCF from result of secondary analysis] simu 0.8 20
+java -jar target/build/vcfcompare.jar -true_vcf simu.truth.vcf -new_vcf [VCF from result of secondary analysis] -prefix simu
 ```
 
 <p>
@@ -149,7 +149,7 @@ In order to validate the alignments run the following command:
 </p>
 
 ```
-java -jar target/build/samcompare.jar [BAM files from result of secondary analysis] 20 simu
+java -jar target/build/samcompare.jar -prefix simu [BAM files from result of secondary analysis]
 ```
 
 <p>
