@@ -34,7 +34,7 @@ public class VCFcompare {
     String out_prefix;
 
     static final double OVERLAP_ARG = 0.8;
-    @Option(name = "-wig", usage = "Reciprocal overlap ratio allowance in validation ["+OVERLAP_ARG+"]")
+    @Option(name = "-over", usage = "Reciprocal overlap ratio allowance in validation ["+OVERLAP_ARG+"]")
     double overlap_ratio = OVERLAP_ARG;
 
     static final int WIGGLE_ARG = 20;
