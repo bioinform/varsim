@@ -97,19 +97,21 @@ public class RandVCF2VCF extends randVCFgenerator {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
 
+            log.info("NOVEL: " + var);
+
             int chr_len = ref.getRefLen(chr_idx);
             int buffer = Math.max(
-                    100000,
+                    10,
                     Math.max(var.max_len(geno.geno[0]),
                             var.max_len(geno.geno[1])));
             int start_val = Math.min(buffer, Math.max(chr_len - buffer, 0));
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            while (!var.setNovelPosition(rand.nextInt(end_val - start_val + 1)
-                    + start_val + 1, ref)) {
+            int rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            while (!var.setNovelPosition(rand_pos, ref)) {
                 if (time_out > 100) {
-                    log.warn("Error, cannot set novel position: " + (end_val - start_val + 1));
+                    log.warn("Error: cannot set novel position: " + (end_val - start_val + 1));
                     log.warn(var.deletion());
                     log.warn(var);
                     break;
@@ -120,6 +122,11 @@ public class RandVCF2VCF extends randVCFgenerator {
                 time_out++;
             }
             num_novel_added++;
+
+            log.info("AFTER NOVEL: " + var);
+
+            log.info("Novel_" + num_novel_added);
+
             var.setVarID("Novel_" + num_novel_added);
         }
 

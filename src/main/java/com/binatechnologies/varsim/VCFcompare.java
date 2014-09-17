@@ -361,9 +361,7 @@ public class VCFcompare {
     }
 
     private void run(String[] args) {
-        String usage = "VCFcompare true_vcf new_vcf out_prefix overlap_ratio wiggle [bed_file]\n" +
-                "Reciprocal overlap\n";
-        // TODO use args4j or something similar
+        String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
         boolean compare_genotypes = false;
 
         // these are the statistics we "ideally" want to collect
@@ -383,7 +381,7 @@ public class VCFcompare {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
-            System.err.println("java -jar vcfcompare.jar [options...] bam_files ...");
+            System.err.println("java -jar vcfcompare.jar [options...]");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
