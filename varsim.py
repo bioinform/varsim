@@ -163,16 +163,17 @@ def check_executable(fpath):
     sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
     sys.exit(1)
 
-if args.simulator == "dwgsim":
-  if args.dwgsim is None:
-    sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
-    sys.exit(1)
-  check_executable(args.dwgsim.name)
-if args.simulator == "art":
-  if args.art is None:
-    sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
-    sys.exit(1)
-  check_executable(args.art.name)
+if not args.disable_sim:
+  if args.simulator == "dwgsim":
+    if args.dwgsim is None:
+      sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
+      sys.exit(1)
+    check_executable(args.dwgsim.name)
+  if args.simulator == "art":
+    if args.art is None:
+      sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
+      sys.exit(1)
+    check_executable(args.art.name)
 
 processes = []
 
