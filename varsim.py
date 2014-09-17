@@ -54,6 +54,7 @@ main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help=
 main_parser.add_argument("--vcfs", metavar="vcfs", help="VCF list", nargs="+", default=[])
 main_parser.add_argument("--liftover_jar", metavar="liftover_jar", help="LiftOver jar", type=file, default=default_liftover, required=require_liftover)
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
+main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
 main_parser.add_argument("--vcfstats_jar", metavar="JAR", help="VCFStats jar", type=file, default=default_vcfstats, required=require_vcfstats)
 
@@ -74,6 +75,7 @@ rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help=
 rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
 rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=50, type=int)
 rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=True)
+rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6, type=float)
 rand_vcf_group.add_argument("--rand_vcf_jar", metavar="rand_vcf_jar", help="RandVCF2VCF jar", type=file, default=default_randvcf2vcf, required=require_randvcf2vcf)
 
 #RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
@@ -169,7 +171,7 @@ if not args.disable_rand_vcf:
                  "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
                  "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel", str(args.vc_percent_novel),
                  "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref", os.path.realpath(args.reference.name),
-                 "-vcf", os.path.realpath(args.vc_in_vcf.name)]
+                 "-prop_het", str(args.vc_prop_het), "-vcf", os.path.realpath(args.vc_in_vcf.name)]
 
   p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
   logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
@@ -210,7 +212,8 @@ if not args.disable_vcf2diploid:
   vcf2diploid_stdout = open(os.path.join(args.out_dir, "vcf2diploid.out"), "w")
   vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
   vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
-  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name)] + vcf_arg_list
+  filter_arg_list = ["-pass"] if args.filter else []
+  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
 
   p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr, cwd=args.out_dir)
   logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))
