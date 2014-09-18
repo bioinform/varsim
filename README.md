@@ -44,7 +44,7 @@ Download varsim to `varsim_run`
 
 ```
 wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
-tar xfz varsim.tar.gz 
+tar xfz varsim-0.2-beta.tar.gz
 ```
 
 <p>
@@ -104,9 +104,8 @@ The structure of `varsim_run` should look like
 - insert_seq.txt  
 - \samtools  
 - - samtools files...
-- \varsim  
-- - varsim files ...
-- varsim.tar.gz
+- varsim files ...
+- varsim-0.2-beta.tar.gz
 ```
 
 <p>
@@ -114,7 +113,7 @@ Run the following command to generate the simulated genome and reads to 30x dept
 </p>
 
 ```
-varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
+./varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
 --reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
 --vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
@@ -128,7 +127,7 @@ varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 ```
 
 <p>
-The reads will be generated in the out directory.  Run the secondary analysis tools (alignment and variant calling) on those.
+The reads will be generated in the out directory. A script quickstart.sh is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
 The ground truth VCF file is also in the out directory called simu.truth.vcf 
 </p>
 
