@@ -34,7 +34,7 @@ public class VCFcompare {
     String out_prefix;
 
     static final double OVERLAP_ARG = 0.8;
-    @Option(name = "-wig", usage = "Reciprocal overlap ratio allowance in validation ["+OVERLAP_ARG+"]")
+    @Option(name = "-over", usage = "Reciprocal overlap ratio allowance in validation ["+OVERLAP_ARG+"]")
     double overlap_ratio = OVERLAP_ARG;
 
     static final int WIGGLE_ARG = 20;
@@ -361,9 +361,8 @@ public class VCFcompare {
     }
 
     private void run(String[] args) {
-        String usage = "VCFcompare true_vcf new_vcf out_prefix overlap_ratio wiggle [bed_file]\n" +
-                "Reciprocal overlap\n";
-        // TODO use args4j or something similar
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+        String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
         boolean compare_genotypes = false;
 
         // these are the statistics we "ideally" want to collect
@@ -382,8 +381,9 @@ public class VCFcompare {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar vcfcompare.jar [options...] bam_files ...");
+            System.err.println("java -jar vcfcompare.jar [options...]");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
@@ -509,8 +509,15 @@ public class VCFcompare {
                 }
 
                 total_len += curr_len;
-
-                Interval1D curr_var_reg = curr_var.get_geno_var_interval();
+                Interval1D curr_var_reg = null;
+                try {
+                    curr_var_reg = curr_var.get_geno_var_interval();
+                }catch(Exception e){
+                    e.printStackTrace();
+                    log.error("Original variant: " + var);
+                    log.error("Bad variant: " + curr_var);
+                    System.exit(1);
+                }
                 curr_var.idx = num_added;
                 curr_var.full_idx = num_read;
                 curr_var.original_type = orig_type;

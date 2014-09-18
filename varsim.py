@@ -54,6 +54,7 @@ main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help=
 main_parser.add_argument("--vcfs", metavar="vcfs", help="VCF list", nargs="+", default=[])
 main_parser.add_argument("--liftover_jar", metavar="liftover_jar", help="LiftOver jar", type=file, default=default_liftover, required=require_liftover)
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
+main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
 main_parser.add_argument("--vcfstats_jar", metavar="JAR", help="VCFStats jar", type=file, default=default_vcfstats, required=require_vcfstats)
 
@@ -74,6 +75,7 @@ rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help=
 rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
 rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=50, type=int)
 rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=True)
+rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6, type=float)
 rand_vcf_group.add_argument("--rand_vcf_jar", metavar="rand_vcf_jar", help="RandVCF2VCF jar", type=file, default=default_randvcf2vcf, required=require_randvcf2vcf)
 
 #RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
@@ -93,13 +95,13 @@ dwgsim_group = main_parser.add_argument_group("DWGSIM options")
 dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base", default=0.0001, type=float)
 dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help="Error rate on the last base", default=0.0015, type=float)
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
-dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=True)
+dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=False, default=None)
 
 art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
-art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=True)
+art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=False, default=None)
 
 args = main_parser.parse_args()
 
@@ -123,7 +125,6 @@ def monitor_multiprocesses(processes, logger):
       logger.error("Process with pid %d failed with exit code %d" % (p.pid, pid.exitcode))
     else:
       logger.info("Process with pid %d finished successfully" % (p.pid))
-
 
 def monitor_processes(processes, logger):
   while processes:
@@ -154,6 +155,26 @@ def monitor_processes(processes, logger):
     processes = processes_running
   return []
 
+def check_executable(fpath):
+  if not os.path.isfile(fpath):
+    sys.stderr.write("ERROR: File %s does not exist\n" % (fpath))
+    sys.exit(1)
+  if not os.access(fpath, os.X_OK):
+    sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
+    sys.exit(1)
+
+if not args.disable_sim:
+  if args.simulator == "dwgsim":
+    if args.dwgsim is None:
+      sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
+      sys.exit(1)
+    check_executable(args.dwgsim.name)
+  if args.simulator == "art":
+    if args.art is None:
+      sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
+      sys.exit(1)
+    check_executable(args.art.name)
+
 processes = []
 
 t_s = time.time()
@@ -165,11 +186,11 @@ if not args.disable_rand_vcf:
   rand_vcf_stderr = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
 
-  rand_vcf_command = ["java", "-jar", os.path.realpath(args.rand_vcf_jar.name), str(args.seed),
-                 str(args.vc_num_snp), str(args.vc_num_ins), str(args.vc_num_del),
-                 str(args.vc_num_mnp), str(args.vc_num_complex), str(args.vc_percent_novel),
-                 str(args.vc_min_length_lim), str(args.vc_max_length_lim), os.path.realpath(args.reference.name),
-                 os.path.realpath(args.vc_in_vcf.name)]
+  rand_vcf_command = ["java", "-jar", os.path.realpath(args.rand_vcf_jar.name), "-seed", str(args.seed),
+                 "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
+                 "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel", str(args.vc_percent_novel),
+                 "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref", os.path.realpath(args.reference.name),
+                 "-prop_het", str(args.vc_prop_het), "-vcf", os.path.realpath(args.vc_in_vcf.name)]
 
   p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
   logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
@@ -180,10 +201,10 @@ if not args.disable_rand_dgv:
   rand_dgv_stderr = open(os.path.join(args.log_dir, "RandDGV2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
 
-  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.rand_dgv_jar.name), str(args.seed),
-                    str(args.sv_num_ins), str(args.sv_num_del), str(args.sv_num_dup), str(args.sv_num_inv),
-                    str(args.sv_percent_novel), str(args.sv_min_length_lim), str(args.sv_max_length_lim), os.path.realpath(args.reference.name),
-                    os.path.realpath(args.sv_insert_seq.name), os.path.realpath(args.sv_dgv.name)]
+  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.rand_dgv_jar.name), "-seed", str(args.seed),
+                    "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup", str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
+                    "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len", str(args.sv_max_length_lim), "-ref", os.path.realpath(args.reference.name),
+                    "-ins", os.path.realpath(args.sv_insert_seq.name), "-dgv", os.path.realpath(args.sv_dgv.name)]
 
   p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
   logger.info("Executing command " + " ".join(rand_dgv_command) + " with pid " + str(p_rand_dgv.pid))
@@ -200,7 +221,7 @@ for in_vcf in args.vcfs:
   out_prefix = os.path.basename(in_vcf)
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), in_vcf]
+  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), "-vcf", in_vcf]
   p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   processes.append(p_vcfstats)
@@ -209,7 +230,9 @@ if not args.disable_vcf2diploid:
   args.vcfs.reverse()
   vcf2diploid_stdout = open(os.path.join(args.out_dir, "vcf2diploid.out"), "w")
   vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
-  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name), "-vcf"] + args.vcfs
+  vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
+  filter_arg_list = ["-pass"] if args.filter else []
+  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
 
   p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr, cwd=args.out_dir)
   logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))

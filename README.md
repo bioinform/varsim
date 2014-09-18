@@ -123,7 +123,7 @@ varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
 --sv_max_length_lim 1000000 --nlanes 3 --total_coverage 30 \
 --art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
---dwgsim ART/art_bin_VanillaIceCream/art_illumina --simulator art  \
+--simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]
 ```
 
@@ -137,7 +137,7 @@ After running the alignment and variant calling we can evaluate the results. In 
 </p>
 
 ```
-java -jar target/build/vcfcompare.jar simu.truth.vcf [VCF from result of secondary analysis] simu 0.8 20
+java -jar target/build/vcfcompare.jar -true_vcf simu.truth.vcf -new_vcf [VCF from result of secondary analysis] -prefix simu
 ```
 
 <p>
@@ -149,7 +149,7 @@ In order to validate the alignments run the following command:
 </p>
 
 ```
-java -jar target/build/samcompare.jar [BAM files from result of secondary analysis] 20 simu
+java -jar target/build/samcompare.jar -prefix simu [BAM files from result of secondary analysis]
 ```
 
 <p>

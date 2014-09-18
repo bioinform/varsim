@@ -204,7 +204,8 @@ class Parent_record {
 }
 
 public class VCFstats {
-    private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+    private final static Logger log = Logger.getLogger(VCFstats.class.getName());
 
     BedFile bed_file;
 
@@ -235,6 +236,7 @@ public class VCFstats {
         try {
             cmd_parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar vcfstats.jar [options...]");
             // print the list of available options

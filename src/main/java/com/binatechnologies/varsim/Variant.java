@@ -5,8 +5,11 @@ package com.binatechnologies.varsim;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Random;
+import org.apache.log4j.Logger;
 
 public class Variant {
+    private final static Logger log = Logger.getLogger(Variant.class.getName());
+
     // use a seed for reproducibility, should be an option or global
     private static final Random _rand = new Random(3333l);
 
@@ -111,23 +114,32 @@ public class Variant {
 
         // replace ref
         int len = _ref.length;
+
         if (len > 0) {
             byte[] temp_ref = ref.byteRange(_chr, pos, pos + len);
 
             for (byte b : temp_ref) {
                 if (b == 'N') {
                     // don't allow N's
-                    System.err.println("No N's");
+                    log.warn("N found at " + pos + " to " + (pos + len));
                     return false;
                 }
             }
 
             for (FlexSeq f : _alts) {
                 if (f.getSeq() != null) {
-                    if (f.equals(temp_ref)) {
-                        // refernce is the same as alt
-                        return false;
+                    // make sure there is no prefix the same
+                    for(int i = 0;i<temp_ref.length;i++){
+                        if(i < f.getSeq().length){
+                            if(temp_ref[i] == f.getSeq()[i]){
+                                log.warn("Same ref at alt at " + pos + " to " + (pos + len));
+                                return false;
+                            }else{
+                                break;
+                            }
+                        }
                     }
+
                 }
             }
 

@@ -99,27 +99,29 @@ public class RandVCF2VCF extends randVCFgenerator {
 
             int chr_len = ref.getRefLen(chr_idx);
             int buffer = Math.max(
-                    100000,
+                    10,
                     Math.max(var.max_len(geno.geno[0]),
                             var.max_len(geno.geno[1])));
             int start_val = Math.min(buffer, Math.max(chr_len - buffer, 0));
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            while (!var.setNovelPosition(rand.nextInt(end_val - start_val + 1)
-                    + start_val + 1, ref)) {
+            int rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            while (!var.setNovelPosition(rand_pos, ref)) {
                 if (time_out > 100) {
-                    log.warn("Error, cannot set novel position: " + (end_val - start_val + 1));
+                    log.warn("Error: cannot set novel position: " + (end_val - start_val + 1));
                     log.warn(var.deletion());
                     log.warn(var);
                     break;
                 }
 
-                log.info(time_out + " : " + var.deletion());
+                rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                //log.info(time_out + " : " + var.deletion());
 
                 time_out++;
             }
             num_novel_added++;
+
             var.setVarID("Novel_" + num_novel_added);
         }
 
@@ -128,6 +130,7 @@ public class RandVCF2VCF extends randVCFgenerator {
     }
 
     public void run(String[] args) {
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Outputs VCF to stdout. Randomly samples variants from VCF file.";
 
         CmdLineParser parser = new CmdLineParser(this);
@@ -139,6 +142,7 @@ public class RandVCF2VCF extends randVCFgenerator {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar randvcf2vcf.jar [options...]");
             // print the list of available options
@@ -223,7 +227,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                         total_num_COMPLEX++;
                         break;
                     default:
-                        log.error(i + ":" + geno.geno[i] + ":" + var.getType(geno.geno[i]) + " : OTHER: " + var);
+                        //log.error(i + " : " + geno.geno[i] + " : " + var.getType(geno.geno[i]) + " : OTHER : " + var);
                         total_num_other++;
                 }
 
