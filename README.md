@@ -7,7 +7,7 @@ For access to webapps http://bioinform.github.io/varsim/
 
 Pre-built JARs
 
-Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
+Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
 
 # System Requirements
 <p>
@@ -43,7 +43,7 @@ Create a directory `varsim_run`
 Download varsim to `varsim_run`
 
 ```
-wget https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
 tar xfz varsim.tar.gz 
 ```
 
