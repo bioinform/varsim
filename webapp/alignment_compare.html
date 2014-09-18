@@ -104,7 +104,7 @@
 						<input type="file" id="files" name="files[]" multiple />
 					</span>
 
-                <span> &nbsp; Add dataset to see results </span>
+                <span> &nbsp; Add dataset to see results or <a href="javascript:load_demo()">load some demo data</a> </span>
 
                 <p>
                     <div id="file_name_list"></div>
@@ -301,7 +301,7 @@
             }
             return [Math.log(obj._T) / Math.log(10), obj._T];
         }
-        
+
         function compute_true(obj) {
             if (obj == null) {
                 return [NaN, 0];
@@ -312,7 +312,7 @@
             }
             return [obj._T, obj._T];
         }
-        
+
         function compute_true_negative(obj) {
             if (obj == null) {
                 return [NaN, 0];
@@ -323,8 +323,8 @@
 
 
          ///////  end processing funtions
-        
-        
+
+
 
         /**
          *    returns the range of the data, sets to NaN useless values
@@ -375,16 +375,16 @@
             if (!log_range) {
                 var diff = (range[1] - range[0]);
                 range[0] = Math.max(0, range[0] - (0.01 * diff) - 0.001);
-                if(limit_range){
+                if (limit_range) {
                     range[1] = Math.min(1, range[1] + (0.01 * diff) + 0.001);
-                }else{
+                } else {
                     range[1] = range[1] + (0.01 * diff) + 0.001;
                 }
             } else {
                 range[0] *= 0.5;
-                if(limit_range){
+                if (limit_range) {
                     range[1] = Math.min(1, range[1] * 2);
-                }else{
+                } else {
                     range[1] = range[1] * 2;
                 }
             }
@@ -520,11 +520,11 @@
                 var y_compute = compute_tpr;
                 var x_compute = compute_fdr;
             }
-            
+
             // define the x_axis and y_axis range
             if (type == 'True_Unmapped') {
                 var x_range = compute_range(valid_data, type, x_compute, true, false); // FDR
-            }else{
+            } else {
                 var x_range = compute_range(valid_data, type, x_compute, true, true); // FDR
             }
             var y_range = compute_range(valid_data, type, y_compute, false, true); // sensitivity (recall)
@@ -538,10 +538,10 @@
             // draw the x axis
             if (type == 'True_Unmapped') {
                 var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "Number Correctly Unmapped")
-            }else{
+            } else {
                 var x_scale = draw_x_axis(parent, left_margin, chart_area_y, chart_width, x_range, "False Discovery Rate (FDR)")
             }
-            
+
             var file_array = {};
 
             // draw the line plot
@@ -568,8 +568,8 @@
                         'x_val': x_val,
                         'y_val': y_val,
                         'T': data_arr[idx]._T,
-                        'P': data_arr[idx]._TP+data_arr[idx]._FN,
-                        'N': data_arr[idx]._TN+data_arr[idx]._FP,
+                        'P': data_arr[idx]._TP + data_arr[idx]._FN,
+                        'N': data_arr[idx]._TN + data_arr[idx]._FP,
                         'mapq': data_arr[idx].upper
                     });
 
@@ -618,8 +618,8 @@
                             'x_val': x2_val,
                             'y_val': y2_val,
                             'T': contents._T,
-                            'P': contents._TP+contents._FN,
-                            'N': contents._TN+contents._FP,
+                            'P': contents._TP + contents._FN,
+                            'N': contents._TN + contents._FP,
                             'mapq': contents.upper
                         });
 
@@ -649,47 +649,47 @@
 
             // compute the AUC here
             var AUC_vals = {};
-            
+
             for (var filename in valid_data) {
                 var temp_data = valid_data[filename];
-                
+
                 if (!temp_data.hasOwnProperty(type)) {
-					continue;
-				}
-                
+                    continue;
+                }
+
                 var AUC_data = [];
-                
-                for(var idx in temp_data[type]){
-                    AUC_data.push([compute_fdr(temp_data[type][idx]),compute_tpr(temp_data[type][idx])]);
+
+                for (var idx in temp_data[type]) {
+                    AUC_data.push([compute_fdr(temp_data[type][idx]), compute_tpr(temp_data[type][idx])]);
                 }
                 //AUC_data.sort();
                 AUC_data.reverse();
-                
+
                 var curr_auc_val = 0;
                 var i = 0;
-                for(i = 0;i<AUC_data.length-2;i++){
-                    var fdr1 = AUC_data[i][0][0]; 
-                    var tpr1 = AUC_data[i][1][0]; 
-                    var fdr2 = AUC_data[i + 1][0][0]; 
-                    var tpr2 = AUC_data[i + 1][1][0]; 
-                    
-                    var width = Math.abs(fdr2-fdr1);
-                    var height_1 = Math.abs(tpr2-tpr1);
-                    var height_2 = Math.max(tpr2,tpr1);
-                    
-                    curr_auc_val += (height_2*width)-(0.5 * width * height_1);
+                for (i = 0; i < AUC_data.length - 2; i++) {
+                    var fdr1 = AUC_data[i][0][0];
+                    var tpr1 = AUC_data[i][1][0];
+                    var fdr2 = AUC_data[i + 1][0][0];
+                    var tpr2 = AUC_data[i + 1][1][0];
+
+                    var width = Math.abs(fdr2 - fdr1);
+                    var height_1 = Math.abs(tpr2 - tpr1);
+                    var height_2 = Math.max(tpr2, tpr1);
+
+                    curr_auc_val += (height_2 * width) - (0.5 * width * height_1);
                 }
-                
+
                 // add the last block in the AUC
-                var fdr2 = AUC_data[AUC_data.length-2][0][0]; 
-                var tpr2 = AUC_data[AUC_data.length-2][1][0]; 
-                curr_auc_val += (1-fdr2)*tpr2;
-                
+                var fdr2 = AUC_data[AUC_data.length - 2][0][0];
+                var tpr2 = AUC_data[AUC_data.length - 2][1][0];
+                curr_auc_val += (1 - fdr2) * tpr2;
+
                 AUC_vals[filename] = curr_auc_val;
             }
-            
+
             if (type != 'True_Unmapped') {
-                draw_auc(parent,legend_x + legend_x_margin, legend_y + legend_y_margin,AUC_vals);
+                draw_auc(parent, legend_x + legend_x_margin, legend_y + legend_y_margin, AUC_vals);
             }
             //console.log(type + ":" + JSON.stringify(AUC_vals));
 
@@ -767,7 +767,7 @@
                     return 'Closest MAPQ';
                 }
             }
-            
+
             var mode_text = parent.append("text")
                 .attr("x", 430)
                 .attr("y", 500)
@@ -882,15 +882,15 @@
                             .text('TP/P: ' + best_points[idx].y_val[1] + ' / ' + best_points[idx].P + ' (' + (best_points[idx].y_val[0] * 100).toFixed(2) + '%)')
                             .style("visibility", "visible");
                     }
-                    
+
                     if (type == 'True_Unmapped') {
-                    legend_arr[idx][2]
-                        .text('T: ' + best_points[idx].x_val[0] )
-                        .style("visibility", "visible");    
-                    }else{
-                    legend_arr[idx][2]
-                        .text('FP: ' + best_points[idx].x_val[1] + ' (' + best_points[idx].x_val[0].toExponential(2) + ')')
-                        .style("visibility", "visible");
+                        legend_arr[idx][2]
+                            .text('T: ' + best_points[idx].x_val[0])
+                            .style("visibility", "visible");
+                    } else {
+                        legend_arr[idx][2]
+                            .text('FP: ' + best_points[idx].x_val[1] + ' (' + best_points[idx].x_val[0].toExponential(2) + ')')
+                            .style("visibility", "visible");
                     }
                 }
 
@@ -942,17 +942,17 @@
         function draw_auc(parent, x, y, data) {
             var idx = 0;
             for (val in data) {
-                
-                if(data[val] != null){
-                var text = data[val].toFixed(4);
 
-                parent.append("text")
-                    .attr("x", x + 111)
-                    .attr("y", (y + (idx * 15) + 5))
-                    .text(text)
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "12px")
-                    .attr("fill", "black");
+                if (data[val] != null) {
+                    var text = data[val].toFixed(4);
+
+                    parent.append("text")
+                        .attr("x", x + 111)
+                        .attr("y", (y + (idx * 15) + 5))
+                        .text(text)
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "12px")
+                        .attr("fill", "black");
                 }
                 idx++;
             }
@@ -1040,17 +1040,27 @@
             stats_data[file_name] = varsim_obj.stats.data;
         }
 
-        function process_json(json_str, file) {
+        function process_json(json_str, file, use_obj) {
             var pass_validation = true;
+            
+            if (use_obj) {
+                var ll = file.name.split('/');
+                file.name = ll[ll.length - 1];
+            }
+            
             var param_str = file.name;
             var varsim_obj = null;
             var span = document.createElement('pre');
 
-            try {
-                varsim_obj = JSON.parse(json_str);
-            } catch (err) {
-                param_str += " : [Error] Invalid JSON file.";
-                pass_validation = false;
+            if (use_obj) {
+                varsim_obj = json_str;
+            } else {
+                try {
+                    varsim_obj = JSON.parse(json_str);
+                } catch (err) {
+                    param_str += " : [Error] Invalid JSON file.";
+                    pass_validation = false;
+                }
             }
 
             // if something is already loaded, do some consistency checks
@@ -1112,7 +1122,7 @@
                             alert("Maximum number of files is 5");
                             last_one = true;
                         } else {
-                            process_json(e.target.result, file);
+                            process_json(e.target.result, file, false);
                         }
                         if (last_one) {
                             // draw the plots
@@ -1130,6 +1140,31 @@
 
             readFile(0);
 
+        }
+
+        function load_demo() {
+            reset_all_plots();
+
+            var demo_files = ["http://bioinform.github.io/varsim/webapp/demo/bwa_aln_report.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/bwa_mem_report.json"
+                             , "http://bioinform.github.io/varsim/webapp/demo/novo_report.json"];
+
+            var num_loaded = 0;
+            var num_total = demo_files.length;
+            for (i in demo_files) {
+                console.log(demo_files[i]);
+                $.getJSON(demo_files[i], (function(idx,file){
+                    return function (d) {
+                    var filename = {"name":file};
+                    process_json(d, filename, true)
+                    num_loaded++;
+                    if (num_loaded == num_total) {
+                        hide_all();
+                        redraw_plots(stats_data, 'stats');
+                        show_id('stats_plot');
+                    }
+                }})(i,demo_files[i]))
+            }
         }
 
         function reset_all_plots() {
