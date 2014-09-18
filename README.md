@@ -5,6 +5,8 @@ For access to webapps http://bioinform.github.io/varsim/
 
 # Download
 
+Pre-built JARs
+
 Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
 
 # System Requirements
@@ -28,8 +30,6 @@ For alignment and variant validation:
 <p>VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.</p>
 
 <p>To build, execute `mvn package`</p>
-
-<p>Contact us if you would like pre-built JARs</p>
 
 # Quick Start
 <p>
