@@ -56,7 +56,7 @@ public class VCF2diploid {
     }
 
     public void run(String[] args){
-        String VERSION = "vcf2diploid_bina - v0.2.6";
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
         String usage = "Creater a diploid genome as associated files from a reference genome\n"
                 +"and some VCF files. \n";
@@ -70,6 +70,7 @@ public class VCF2diploid {
         try {
             cmd_parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar vcf2diploid.jar [options...]");
             // print the list of available options

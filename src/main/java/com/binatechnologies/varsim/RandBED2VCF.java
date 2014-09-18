@@ -146,6 +146,7 @@ public class RandBED2VCF extends randVCFgenerator {
     }
 
     public void run(String[] args) {
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Generates a VCF file (to stdout) from an insertion and a deletion BED file. Insertions sequences\n"
                 + "are randomly sampled from the insert_seq file. This is designed for the Venter SV BED files. \n";
 
@@ -158,6 +159,7 @@ public class RandBED2VCF extends randVCFgenerator {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar randbed2vcf.jar [options...]");
             // print the list of available options

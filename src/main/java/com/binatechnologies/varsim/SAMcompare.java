@@ -86,6 +86,7 @@ public class SAMcompare {
     }
 
     public void run(String[] args) {
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
                 "bed_file restricts the analysis to the bed regions\n";
 
@@ -98,6 +99,7 @@ public class SAMcompare {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar samcompare.jar [options...] bam_files ...");
             // print the list of available options

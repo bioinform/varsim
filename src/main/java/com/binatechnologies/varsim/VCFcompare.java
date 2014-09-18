@@ -361,6 +361,7 @@ public class VCFcompare {
     }
 
     private void run(String[] args) {
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
         boolean compare_genotypes = false;
 
@@ -380,6 +381,7 @@ public class VCFcompare {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar vcfcompare.jar [options...]");
             // print the list of available options

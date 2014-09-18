@@ -126,6 +126,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
 
     public void run(String[] args) {
+        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Outputs VCF to stdout. Randomly samples variants from DGV flat file.\n";
 
         CmdLineParser parser = new CmdLineParser(this);
@@ -137,6 +138,7 @@ public class RandDGV2VCF extends randVCFgenerator {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar randdgv2vcf.jar [options...]");
             // print the list of available options
