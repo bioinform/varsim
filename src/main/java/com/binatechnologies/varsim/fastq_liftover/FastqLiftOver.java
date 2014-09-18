@@ -13,6 +13,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FastqLiftOver {
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
     @Option(name = "-map", usage = "Map file", metaVar = "file")
     private File mapFile;
@@ -73,6 +75,7 @@ public class FastqLiftOver {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
+            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java FastqLiftOver [options...] arguments...");
             // print the list of available options
