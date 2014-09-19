@@ -27,18 +27,18 @@ For alignment and variant validation:
 </p>
 
 # Building
-<p>VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.</p>
+VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.
 
-<p>To build, execute `mvn package`</p>
+To build, execute `mvn package`
 
 # Quick Start
-<p>
-This quick start guide will provide steps for generating a random genome with pre-specified and random variants. Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
-</p>
 
-<p>
+This quick start guide will provide steps for generating a random genome with pre-specified and random variants. Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
+
+
+
 <b>Step 1:</b> Create a directory `varsim_run`
-</p>
+
 
 Download varsim to `varsim_run`
 
@@ -47,8 +47,9 @@ wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-b
 tar xfz varsim-0.2-beta.tar.gz
 ```
 
-<p>
+
 <b>Step 2:</b> Download the following files to `varsim_run`:
+
 <ol>
 <li>Reference genome in FASTA format <a href='http://goo.gl/lgT18V'>[hs37d5.fa.gz]</a></li>
 <li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a></li>
@@ -56,7 +57,7 @@ tar xfz varsim-0.2-beta.tar.gz
 <li>dbSNP 141 file <a href='http://goo.gl/NUG0dy'>[All.vcf.gz]</a></li>
 <li>(optional) Extra variants to include in simulation variants.vcf</li>
 </ol>
-</p>
+
 
 by running the following commands
 
@@ -108,9 +109,9 @@ The structure of `varsim_run` should look like
 - varsim-0.2-beta.tar.gz
 ```
 
-<p>
+
 <b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
-</p>
+
 
 ```
 ./varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
@@ -126,37 +127,37 @@ The structure of `varsim_run` should look like
 --vcfs [Optional VCF file to include, variants.vcf]
 ```
 
-<p>
+
 The reads will be generated in the `out` directory. A script `quickstart.sh` is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
 The ground truth VCF file is also in the `out` directory called `simu.truth.vcf`
-</p>
 
-<p>
+
+
 <b>Step 6:</b> After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
-</p>
+
 
 ```
 java -jar target/build/vcfcompare.jar -true_vcf simu.truth.vcf -new_vcf [VCF from result of secondary analysis] -prefix simu
 ```
 
-<p>
-This will output a JSON file that can be used as input to the VCF Compare webapp [http://bioinform.github.io/varsim/webapp/variant_compare.html]
-</p>
 
-<p>
+This will output a JSON file that can be used as input to the VCF Compare webapp [http://bioinform.github.io/varsim/webapp/variant_compare.html]
+
+
+
 <b>Step 7:</b> In order to validate the alignments run the following command:
-</p>
+
 
 ```
 java -jar target/build/samcompare.jar -prefix simu [BAM files from result of secondary analysis]
 ```
 
-<p>
+
 This will output a JSON file that can be used as input to the Alignment Compare webapp [http://bioinform.github.io/varsim/webapp/alignment_compare.html]
-</p>
+
 
 # Testing
-<p>example.sh is a sample run of VarSim</p>
+`example.sh` is a sample run of VarSim
 
 # Running
 Type `varsim.py -h` for help.
