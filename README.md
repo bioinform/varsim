@@ -16,7 +16,7 @@ For variant simulation and read generation:
 <li>32GB free RAM</li>
 <li>Enough free disk space to store twice the number of reads generated</li>
 <li>ART or dwgsim installed</li>
-<li>python 2.x</li>
+<li>python 2.7 with argparse package</li>
 </ul>
 </p>
 <p>
@@ -37,7 +37,7 @@ This quick start guide will provide steps for generating a random genome with pr
 </p>
 
 <p>
-Create a directory `varsim_run`
+<b>Step 1:</b> Create a directory `varsim_run`
 </p>
 
 Download varsim to `varsim_run`
@@ -48,7 +48,7 @@ tar xfz varsim-0.2-beta.tar.gz
 ```
 
 <p>
-Download the following files to `varsim_run`:
+<b>Step 2:</b> Download the following files to `varsim_run`:
 <ol>
 <li>Reference genome in FASTA format <a href='http://goo.gl/lgT18V'>[hs37d5.fa.gz]</a></li>
 <li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a></li>
@@ -68,7 +68,7 @@ wget http://goo.gl/NUG0dy
 gunzip hs37d5.fa.gz
 ```
 
-Download Samtools to index the reference genome
+<b>Step 3:</b> Download Samtools to index the reference genome
 
 ```
 mkdir samtools
@@ -79,7 +79,7 @@ cd ..
 samtools/samtools-bcftools-htslib-1.0_x64-linux/bin/samtools faidx hs37d5.fa
 ```
 
-Dowload ART to `varsim_run` under an the directory ART by running
+<b>Step 4:</b> Dowload ART to `varsim_run` under an the directory ART by running
 
 ```
 mkdir ART
@@ -109,7 +109,7 @@ The structure of `varsim_run` should look like
 ```
 
 <p>
-Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
 </p>
 
 ```
@@ -127,12 +127,12 @@ Run the following command to generate the simulated genome and reads to 30x dept
 ```
 
 <p>
-The reads will be generated in the out directory. A script quickstart.sh is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
-The ground truth VCF file is also in the out directory called simu.truth.vcf 
+The reads will be generated in the `out` directory. A script `quickstart.sh` is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
+The ground truth VCF file is also in the `out` directory called `simu.truth.vcf`
 </p>
 
 <p>
-After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
+<b>Step 6:</b> After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
 </p>
 
 ```
@@ -144,7 +144,7 @@ This will output a JSON file that can be used as input to the VCF Compare webapp
 </p>
 
 <p>
-In order to validate the alignments run the following command:
+<b>Step 7:</b> In order to validate the alignments run the following command:
 </p>
 
 ```
