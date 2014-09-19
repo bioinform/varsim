@@ -156,9 +156,6 @@ java -jar target/build/samcompare.jar -prefix simu [BAM files from result of sec
 This will output a JSON file that can be used as input to the Alignment Compare webapp [http://bioinform.github.io/varsim/webapp/alignment_compare.html]
 
 
-# Testing
-`example.sh` is a sample run of VarSim
-
 # Running
 Type `varsim.py -h` for help.
 
