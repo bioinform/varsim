@@ -90,11 +90,11 @@ class Stats_record {
     }
 }
 
-class Type_record {
-    HashMap<Variant.Type, Stats_record> data;
+class Type_record<T extends Enum> {
+    HashMap<T, Stats_record> data;
 
     Type_record() {
-        data = new HashMap<Variant.Type, Stats_record>();
+        data = new HashMap<T, Stats_record>();
     }
 
     /**
@@ -103,7 +103,7 @@ class Type_record {
      * @param type type of bin
      * @param val  value to be incremented
      */
-    public void add(Variant.Type type, int val) {
+    public void add(T type, int val) {
         if (data.containsKey(type)) {
             Stats_record rec = data.get(type);
             rec.add(val);
@@ -116,9 +116,7 @@ class Type_record {
 
     public int getTotal_nonref() {
         int total = 0;
-        for (Map.Entry<Variant.Type, Stats_record> entry : data.entrySet()) {
-            if (entry.getKey() == Variant.Type.Reference)
-                continue;
+        for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
             total += entry.getValue().getTotal_count();
         }
         return total;
@@ -126,10 +124,7 @@ class Type_record {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Variant.Type, Stats_record> entry : data.entrySet()) {
-            if (entry.getKey() == Variant.Type.Reference)
-                continue;
-
+        for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
             if (entry.getKey() == Variant.Type.SNP) {
                 sb.append(entry.getKey().name());
                 sb.append('\n');
@@ -151,13 +146,15 @@ class Parent_record {
     // 0 = paternal, 1 = maternal
     public final static int PATERNAL = 0;
     public final static int MATERNAL = 1;
-    Type_record[] data;
+    Type_record<Variant.Type>[] data;
+    Type_record<Variant.OverallType> overall_data;
     int total_count;
 
     Parent_record() {
         data = new Type_record[2];
         data[PATERNAL] = new Type_record();
         data[MATERNAL] = new Type_record();
+        overall_data = new Type_record<Variant.OverallType>();
         total_count = 0;
     }
 
@@ -177,6 +174,13 @@ class Parent_record {
             data[MATERNAL].add(var.getType(maternal_allele), var.max_len(maternal_allele));
             added = true;
         }
+
+        if (bed_file == null
+                || bed_file.contains(var.getChr_name(), var.get_geno_interval())) {
+            overall_data.add(var.getType(), var.max_len());
+            added = true;
+        }
+
         if (added) {
             total_count++;
         }
@@ -198,6 +202,12 @@ class Parent_record {
         sb.append(data[MATERNAL].getTotal_nonref());
         sb.append("\n");
         sb.append(data[MATERNAL]);
+        sb.append("\n");
+        sb.append("Overall\n");
+        sb.append("Total: ");
+        sb.append(overall_data.getTotal_nonref());
+        sb.append("\n");
+        sb.append(overall_data);
         sb.append("\n");
         return sb.toString();
     }
