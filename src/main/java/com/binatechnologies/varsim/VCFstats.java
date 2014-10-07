@@ -125,13 +125,12 @@ class Type_record<T extends Enum> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
-            if (entry.getKey() == Variant.Type.SNP) {
-                sb.append(entry.getKey().name());
-                sb.append('\n');
+            sb.append(entry.getKey().name());
+            sb.append("Total: " + entry.getValue().getTotal_count());
+            sb.append('\n');
+            if (entry.getKey() == Variant.Type.SNP){
                 sb.append(entry.getValue().toString(1));
             } else {
-                sb.append(entry.getKey().name());
-                sb.append('\n');
                 sb.append(entry.getValue());
             }
         }
