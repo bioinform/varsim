@@ -140,8 +140,6 @@ class Type_record<T extends Enum> {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
             sb.append(entry.getKey().name() + "\n");
-            sb.append("Total: " + entry.getValue().getTotal_count() + "\n");
-            sb.append("Total (>="+ Stats_record.SV_LIM +"): " + entry.getValue().getsvTotal_count() + "\n");
             sb.append('\n');
             if (entry.getKey() == Variant.Type.SNP) {
                 sb.append(entry.getValue().toString(1));
