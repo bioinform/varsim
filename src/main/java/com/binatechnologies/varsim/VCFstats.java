@@ -3,10 +3,12 @@ package com.binatechnologies.varsim;
 /**
  *
  */
+
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +17,11 @@ import java.util.Map;
  */
 
 class Stats_record {
+    public static final int SV_LIM = 50; // >= this val is an SV
+
     int[] bin_counts; // the last bin is for anything larger
     int total_count;
+    int sv_total_count;
     int[] bin_breaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
     int num_bins;
@@ -25,6 +30,7 @@ class Stats_record {
         num_bins = bin_breaks.length + 1;
         bin_counts = new int[num_bins];
         total_count = 0;
+        sv_total_count = 0;
     }
 
     /**
@@ -34,6 +40,8 @@ class Stats_record {
      */
     public void add(int val) {
         total_count++;
+        if (val >= SV_LIM) sv_total_count++;
+
         for (int i = 0; i < bin_breaks.length; i++) {
             if (val <= bin_breaks[i]) {
                 bin_counts[i]++;
@@ -47,12 +55,18 @@ class Stats_record {
         return total_count;
     }
 
+    public int getsvTotal_count() {
+        return sv_total_count;
+    }
+
     public String toString() {
         return toString(bin_breaks[bin_breaks.length - 1] + 1);
     }
 
     public String toString(int max_len) {
         StringBuilder sb = new StringBuilder();
+        sb.append("Total: " + getTotal_count() + "\n");
+        sb.append("Total (>=" + SV_LIM + "): " + getsvTotal_count() + "\n");
         sb.append("[");
         sb.append(1);
         sb.append(",");
@@ -125,10 +139,11 @@ class Type_record<T extends Enum> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
-            sb.append(entry.getKey().name());
-            sb.append(" total: " + entry.getValue().getTotal_count());
+            sb.append(entry.getKey().name() + "\n");
+            sb.append("Total: " + entry.getValue().getTotal_count() + "\n");
+            sb.append("Total (>="+ Stats_record.SV_LIM +"): " + entry.getValue().getsvTotal_count() + "\n");
             sb.append('\n');
-            if (entry.getKey() == Variant.Type.SNP){
+            if (entry.getKey() == Variant.Type.SNP) {
                 sb.append(entry.getValue().toString(1));
             } else {
                 sb.append(entry.getValue());
@@ -218,10 +233,10 @@ public class VCFstats {
 
     BedFile bed_file;
 
-    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
+    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = null;
 
-    @Option(name = "-vcf", usage = "VCF file to analyse [Required]",metaVar = "VCF_file",required = true)
+    @Option(name = "-vcf", usage = "VCF file to analyse [Required]", metaVar = "VCF_file", required = true)
     String vcf_filename;
 
     /**
