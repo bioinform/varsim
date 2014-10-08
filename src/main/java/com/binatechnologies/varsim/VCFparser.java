@@ -442,7 +442,7 @@ public class VCFparser extends variantFileParser {
 
             // Splitting
             String[] alts_str = ALT.split(",");
-            int n = alts_str.length;
+            int n = alts_str.length; // number of alts
 
             alts = new FlexSeq[n];
             for (int i = 0; i < n; i++) {
@@ -471,12 +471,13 @@ public class VCFparser extends variantFileParser {
 
             if (REF.length() > 0) {
                 boolean same = true;
-                for (int i = 0; i < n; i++)
+                for (int i = 0; i < n; i++) {
                     if (alts[i].length() == 0
                             || REF.charAt(0) != alts[i].charAt(0)) {
                         same = false;
                         break;
                     }
+                }
                 if (same) {
                     pos++;
                     ref_deleted = String.valueOf(REF.charAt(0));
@@ -492,24 +493,30 @@ public class VCFparser extends variantFileParser {
 
             // TODO this needs to be done
             // but if we want to preserve the original VCF record, then this
-            // needs
-            // modification
+            // needs modification
             if (REF.length() > 0) {
-                boolean same = true;
-                int indREF = REF.length() - 1;
+                int ref_len = REF.length();
+
+                int min_clip_len = Integer.MAX_VALUE;
                 for (int i = 0; i < n; i++) {
                     int len = alts[i].length();
-                    if (len == 0
-                            || REF.charAt(indREF) != alts[i].charAt(len - 1)) {
-                        same = false;
-                        break;
+                    int clip_len = 0;
+                    for(int j = 0;j<len;j++){
+                        if(REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j -1)){
+                            clip_len = j;
+                        }
+                    }
+
+                    if(min_clip_len > clip_len){
+                        min_clip_len = clip_len;
                     }
                 }
-                if (same) {
-                    REF = REF.substring(0, indREF);
+
+                if (min_clip_len > 0) {
+                    REF = REF.substring(0, ref_len - min_clip_len);
                     for (int i = 0; i < n; i++) {
                         alts[i] = new FlexSeq(alts[i].substring(0,
-                                alts[i].length() - 1));
+                                alts[i].length() - min_clip_len));
                     }
                 }
             }
