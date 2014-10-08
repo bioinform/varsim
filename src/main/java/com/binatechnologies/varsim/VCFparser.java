@@ -2,6 +2,8 @@ package com.binatechnologies.varsim;
 
 //--- Java imports ---
 
+import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
@@ -9,11 +11,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VCFparser extends variantFileParser {
+    private final static Logger log = Logger.getLogger(VCFparser.class.getName());
 
     private int _id_ind = -1;
     private String _id = null;
     private boolean _pass = false;
     private boolean chrom_exists = false;
+
+    private VCFparser(){
+        _id_ind = 10; // the first sample
+    }
 
     /**
      * Reads a VCF file line by line
@@ -27,8 +34,8 @@ public class VCFparser extends variantFileParser {
             _br = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
             readLine();
         } catch (Exception ex) {
-            System.err.println("Can't open file " + fileName);
-            System.err.println(ex.toString());
+            log.error("Can't open file " + fileName);
+            log.error(ex.toString());
         }
         _id = id;
         _pass = pass;
@@ -172,14 +179,7 @@ public class VCFparser extends variantFileParser {
     }
 
 
-    public Variant parseLine() {
-        String line = _line;
-        readLine();
-
-        if (line == null || line.length() == 0) {
-            System.err.println("blank line");
-            return null;
-        }
+    public Variant process_line(String line){
 
         // try to determine the column we should read for the genotype
         StringTokenizer toks = new StringTokenizer(line);
@@ -204,7 +204,7 @@ public class VCFparser extends variantFileParser {
             _id_ind = 10;
         } else if (_id_ind < 0) {
             _id_ind = 10;
-            System.err.println("Warning!!! ID (" + _id + ") does not exist... ");
+            log.warn("Warning!!! ID (" + _id + ") does not exist... ");
         }
 
 
@@ -251,12 +251,12 @@ public class VCFparser extends variantFileParser {
 
         // unknown chromosome
         if (chr < 0) {
-            System.err.println("unknown chromosome: " + line);
+            log.warn("unknown chromosome: " + line);
             return null;
         }
 
         if (_pass && FILTER.indexOf("PASS") < 0) {
-            System.err.println("not pass line" + line);
+            //log.warn("not pass line" + line);
             return null; // Filtered out
         }
         // parse the phase
@@ -283,8 +283,8 @@ public class VCFparser extends variantFileParser {
             if (is_cn_phased != is_phased) {
                 // TODO maybe don't throw error, this is not standard format
                 // anyways
-                System.err.println("Inconsistent copy number:");
-                System.err.println(line);
+                log.error("Inconsistent copy number:");
+                log.error(line);
                 return null;
             }
         }
@@ -322,9 +322,9 @@ public class VCFparser extends variantFileParser {
                 return new Variant(chr_name, chr, pos, inv_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
-                System.err.println("No length information for INV:");
-                System.err.println(line);
-                System.err.println("skipping...");
+                log.error("No length information for INV:");
+                log.error(line);
+                log.error("skipping...");
                 return null;
             }
         } else if (ALT.equals("<DUP>") || ALT.equals("<DUP:TANDEM>")) {
@@ -366,9 +366,9 @@ public class VCFparser extends variantFileParser {
                 return new Variant(chr_name, chr, pos, dup_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
-                System.err.println("No length information for DUP:");
-                System.err.println(line);
-                System.err.println("skipping...");
+                log.error("No length information for DUP:");
+                log.error(line);
+                log.error("skipping...");
                 return null;
             }
 
@@ -397,9 +397,9 @@ public class VCFparser extends variantFileParser {
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
-                System.err.println("No length information for INS:");
-                System.err.println(line);
-                System.err.println("skipping...");
+                log.error("No length information for INS:");
+                log.error(line);
+                log.error("skipping...");
                 return null;
             }
         } else if (ALT.equals("<DEL>")) {
@@ -429,14 +429,14 @@ public class VCFparser extends variantFileParser {
                 return new Variant(chr_name, chr, pos, del_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
-                System.err.println("No length information for DEL:");
-                System.err.println(line);
-                System.err.println("skipping...");
+                log.error("No length information for DEL:");
+                log.error(line);
+                log.error("skipping...");
                 return null;
             }
         } else if (ALT.indexOf('<') >= 0) {
             // inprecise variant
-            System.err.println("Imprecise line: " + line);
+            log.warn("Imprecise line: " + line);
             return null;
         } else {
 
@@ -458,8 +458,8 @@ public class VCFparser extends variantFileParser {
                 if (REF.length() == 1 && alts[i].length() == 1) {
                     // SNP
                 } else if (REF.length() == 0 || alts[i].length() == 0) {
-                    System.err.println("Skipping invalid record:");
-                    System.err.println(line);
+                    log.warn("Skipping invalid record:");
+                    log.warn(line);
                     return null;
                 }
             }
@@ -500,18 +500,20 @@ public class VCFparser extends variantFileParser {
                 int min_clip_len = Integer.MAX_VALUE;
                 for (int i = 0; i < n; i++) {
                     int len = alts[i].length();
+
                     int clip_len = 0;
                     for(int j = 0;j<len;j++){
 
                         // make sure there is at least something in alt
-                        if(ref_len - j - 1 <= 0 || len - j -1 <=0){
+                        if(ref_len - j<= 0 || len - j <=0){
+                            clip_len = j;
                             break;
                         }
-
                         if(REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j -1)){
                             clip_len = j;
                             break;
                         }
+                        clip_len = j+1;
                     }
 
                     if(min_clip_len > clip_len){
@@ -538,6 +540,28 @@ public class VCFparser extends variantFileParser {
             return new Variant(chr_name, chr, pos, refs.length, refs, alts,
                     phase_val, is_phased, var_id, FILTER, ref_deleted);
         }
+    }
+
+    public Variant parseLine() {
+        String line = _line;
+        readLine();
+
+        if (line == null || line.length() == 0) {
+            log.info("blank line");
+            return null;
+        }
+
+        return process_line(line);
+    }
+
+    public static void main(String args[]){
+        VCFparser runner = new VCFparser();
+        Variant v = runner.process_line("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
+        v = runner.process_line("12\t29557989\t.\tACTTT\tACGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
+        v = runner.process_line("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
 
     }
 
