@@ -502,6 +502,12 @@ public class VCFparser extends variantFileParser {
                     int len = alts[i].length();
                     int clip_len = 0;
                     for(int j = 0;j<len;j++){
+
+                        // make sure there is at least something in alt
+                        if(ref_len - j - 1 <= 0 || len - j -1 <=0){
+                            break;
+                        }
+
                         if(REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j -1)){
                             clip_len = j;
                             break;
