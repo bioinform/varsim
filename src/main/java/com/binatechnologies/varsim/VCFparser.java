@@ -301,17 +301,17 @@ public class VCFparser extends variantFileParser {
 
             int inv_lens[] = getSVLen(INFO);
             int end_loc = getEndInfo(INFO); // TODO may need to check
-            // inconsistency
-            // btw length and end location
+
+            ref_deleted = REF;
+            byte[] refs = new byte[0];
+            pos++;
+
             if (inv_lens.length > 0) {
                 alts = new FlexSeq[inv_lens.length];
                 for (int i = 0; i < inv_lens.length; i++) {
                     int len_val = Math.max(Math.abs(inv_lens[i]),1);
                     alts[i] = new FlexSeq(FlexSeq.Type.INV, len_val);
                 }
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
-
                 // TODO this assumes only one alt
                 return new Variant(chr_name, chr, pos, Math.abs(inv_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
@@ -319,8 +319,6 @@ public class VCFparser extends variantFileParser {
                 int inv_len = Math.max(Math.abs(end_loc - pos + 1),1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, inv_len);
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
                 return new Variant(chr_name, chr, pos, inv_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
@@ -334,6 +332,10 @@ public class VCFparser extends variantFileParser {
             int dup_lens[] = getSVLen(INFO);
             int end_loc = getEndInfo(INFO); // may need to check inconsistency
             // btw length and end location
+
+            ref_deleted = REF;
+            byte[] refs = new byte[0];
+            pos++;
 
             if (dup_lens.length > 0) {
                 alts = new FlexSeq[dup_lens.length];
@@ -352,8 +354,7 @@ public class VCFparser extends variantFileParser {
 
                     alts[i] = new FlexSeq(FlexSeq.Type.DUP, len_val,copy_val);
                 }
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
+
                 return new Variant(chr_name, chr, pos, Math.abs(dup_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else if (end_loc > 0) {
@@ -361,8 +362,7 @@ public class VCFparser extends variantFileParser {
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, dup_len, Math.max(
                         copy_num_val[0], copy_num_val[1]));
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
+
                 return new Variant(chr_name, chr, pos, dup_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
@@ -377,25 +377,24 @@ public class VCFparser extends variantFileParser {
 
             int ins_lens[] = getSVLen(INFO);
             int end_loc = getEndInfo(INFO); // TODO may need to check
-            // inconsistency
-            // btw length and end location
+
+            ref_deleted = REF;
+            byte[] refs = new byte[0];
+            pos++;
+
             if (ins_lens.length > 0) {
                 alts = new FlexSeq[ins_lens.length];
                 for (int i = 0; i < ins_lens.length; i++) {
                     int len_val = Math.max(Math.abs(ins_lens[i]),1);
                     alts[i] = new FlexSeq(FlexSeq.Type.INS,len_val);
                 }
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
-                return new Variant(chr_name, chr, pos + 1, 0, refs, alts,
+                return new Variant(chr_name, chr, pos, 0, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else if (end_loc > 0) {
-                int ins_len = Math.max(Math.abs(end_loc - pos + 1),1);
+                int ins_len = Math.max(Math.abs(end_loc - pos),1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, ins_len);
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
-                return new Variant(chr_name, chr, pos + 1, 0, refs, alts,
+                return new Variant(chr_name, chr, pos, 0, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
                 System.err.println("No length information for INS:");
@@ -409,24 +408,24 @@ public class VCFparser extends variantFileParser {
 
             int del_lens[] = getSVLen(INFO);
             int end_loc = getEndInfo(INFO); // TODO may need to check
-            // inconsistency
-            // btw length and end location
+
+            ref_deleted = REF;
+            byte[] refs = new byte[0];
+            pos++;
+
             if (del_lens.length > 0) {
                 alts = new FlexSeq[del_lens.length];
                 for (int i = 0; i < del_lens.length; i++) {
                     // deletion has no alt
                     alts[i] = new FlexSeq(FlexSeq.Type.DEL, 0);
                 }
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
+
                 return new Variant(chr_name, chr, pos, Math.abs(del_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else if (end_loc > 0) {
                 int del_len = end_loc - pos + 1;
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DEL, 0);
-                ref_deleted = REF;
-                byte[] refs = new byte[0];
                 return new Variant(chr_name, chr, pos, del_len, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted);
             } else {
@@ -455,7 +454,7 @@ public class VCFparser extends variantFileParser {
             }
 
             // Check
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++) {
                 if (REF.length() == 1 && alts[i].length() == 1) {
                     // SNP
                 } else if (REF.length() == 0 || alts[i].length() == 0) {
@@ -463,6 +462,7 @@ public class VCFparser extends variantFileParser {
                     System.err.println(line);
                     return null;
                 }
+            }
 
             // Adjustment of first base
             // TODO This need to updated to account for multiple matching
