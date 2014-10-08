@@ -504,6 +504,7 @@ public class VCFparser extends variantFileParser {
                     for(int j = 0;j<len;j++){
                         if(REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j -1)){
                             clip_len = j;
+                            break;
                         }
                     }
 
