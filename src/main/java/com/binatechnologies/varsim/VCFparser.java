@@ -562,7 +562,8 @@ public class VCFparser extends variantFileParser {
         System.err.println(v);
         v = runner.process_line("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
         System.err.println(v);
-
+        v = runner.process_line("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
+        System.err.println(v); // TODO this one fails for now
     }
 
 }
