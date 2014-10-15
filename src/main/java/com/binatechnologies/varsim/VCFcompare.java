@@ -629,7 +629,7 @@ public class VCFcompare {
                 result_comparator comp = new result_comparator(true_store, overlap_ratio, wiggle);
 
                 if (curr_var.isHom()) {
-                    comp.compare_variant(curr_var, geno.geno[0], validated_true);
+                    int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
 
                     dual_idx idx;
                     if (compare_genotypes) {
@@ -639,8 +639,9 @@ public class VCFcompare {
                     }
 
                     if (idx.idx >= 0) {
+                        // validated
                         validated_true.set(idx.idx);
-                        full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
+                        full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
                         validated_len += curr_var.max_len();
                     }else if(compute_as_split){
                         output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
@@ -650,10 +651,14 @@ public class VCFcompare {
                 } else {
                     // het
                     boolean matched = false;
+                    int max_true_len = 0;
                     for (int i = 0; i < 2; i++) {
                         byte allele = geno.geno[i];
                         if (allele > 0) {
-                            comp.compare_variant(curr_var, allele, validated_true);
+                            int len = comp.compare_variant(curr_var, allele, validated_true);
+                            if(len > max_true_len){
+                                max_true_len = len;
+                            }
                         }
                     }
 
@@ -910,13 +915,16 @@ public class VCFcompare {
          * @param var       variant we want to compare
          * @param geno      allele of the variant to compare
          * @param validated BitSet that records the true variants that have already been validated
+         * @return The maximum length of all true variants
          */
-        public void compare_variant(Variant var, int geno, BitSet validated) {
+        public int compare_variant(Variant var, int geno, BitSet validated) {
             double overlap_ratio = _overlap_ratio;
             // consider type to change overlap percent
             Variant.Type type = var.getType(geno);
             String chr_name = var.getChr_name();
             Interval1D orig_inter = var.get_var_interval(geno);
+
+            int max_true_var_len = 0;
 
             // sometimes MNPs are called as SNPs?
             if (type == Variant.Type.SNP) {
@@ -958,12 +966,10 @@ public class VCFcompare {
                             for (int parent = 0; parent < 2; parent++) {
                                 int allele = true_var.get_allele(parent);
                                 if (allele > 0) {
-                                    //byte[] alt = true_var.getAlt(allele).getSeq();
                                     if (true_var.getType(allele) == Variant.Type.SNP
                                             && var.position() == true_var.position()) {
                                         if (val == true_var.getAlt(allele).getSeq()[0]) {
                                             matches_het.get(parent).add(new dual_idx(idx, full_idx));
-                                            //type_het[parent].update(Variant.Type.SNP, 0);
                                         }
                                         has_snp = true;
                                     }
@@ -973,6 +979,7 @@ public class VCFcompare {
 
                         if (has_snp) {
                             num_matches++;
+                            max_true_var_len = 1;
                         }
                     }
 
@@ -990,7 +997,7 @@ public class VCFcompare {
 
                 if (out == null) {
                     // nothing found
-                    return;
+                    return max_true_var_len;
                 }
 
                 for (Variant true_var : out) {
@@ -1024,9 +1031,21 @@ public class VCFcompare {
                             continue;
                         }
 
+                        boolean matched = false;
+
                         if(type == Variant.Type.Insertion && _ignore_ins_len){
                             // this is the case where we want to ignore insertion lengths when comparing
+                            // just do a check of the start position
 
+                            if(Math.abs(true_var.position() - var.position()) <= _wiggle){
+                                // Matches!
+                                if (true_var.isHom()) {
+                                    matches_hom.add(new dual_idx(idx, full_idx));
+                                } else {
+                                    matches_het.get(parent).add(new dual_idx(idx, full_idx));
+                                }
+                                matched = true;
+                            }
                         }else {
                             // this is the normal case
                             // check if the variant interval matches
@@ -1044,7 +1063,15 @@ public class VCFcompare {
                                     } else {
                                         matches_het.get(parent).add(new dual_idx(idx, full_idx));
                                     }
+                                    matched = true;
                                 }
+                            }
+                        }
+
+                        if(matched){
+                            int len = true_var.max_len(allele);
+                            if(len > max_true_var_len){
+                                max_true_var_len = len;
                             }
                         }
                     }
@@ -1052,7 +1079,7 @@ public class VCFcompare {
 
             }
 
-
+            return max_true_var_len;
         }
     }
 
