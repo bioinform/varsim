@@ -89,7 +89,7 @@ public class RandBED2VCF extends randVCFgenerator {
         String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
         int len = 1;
-        if(meta[0] == "seq"){
+        if(meta[0].equals("seq")){
             // this is an insertion and we have the insertion sequence
             try {
                 ins_seq = meta[1].getBytes("US-ASCII");
