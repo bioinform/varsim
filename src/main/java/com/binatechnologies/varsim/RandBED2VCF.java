@@ -48,6 +48,9 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-del_bed", usage = "Known Deletion BED file [Required]",metaVar = "BED_file",required = true)
     String del_bed_filename;
 
+    @Option(name = "-dup_bed", usage = "Known Duplication BED file [Required]",metaVar = "BED_file",required = true)
+    String dup_bed_filename;
+
     RandBED2VCF() {
         super();
         num_novel_added = 0;
@@ -83,7 +86,19 @@ public class RandBED2VCF extends randVCFgenerator {
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
         int pos = Integer.parseInt(ll[1]);
         int end = Integer.parseInt(ll[2]);
-        int len = Integer.parseInt(ll[3]);
+        String[] meta = ll[3].split("\t");
+        byte[] ins_seq = null;
+        int len = 1;
+        if(meta[0] == "seq"){
+            // this is an insertion and we have the insertion sequence
+            try {
+                ins_seq = meta[1].getBytes("US-ASCII");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }else{
+            len = Integer.parseInt(meta[0]);
+        }
 
         if (len > max_length_lim || len < min_length_lim) return null;
 
@@ -93,10 +108,18 @@ public class RandBED2VCF extends randVCFgenerator {
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
-            ref_seq = ref.byteRange(chr_idx, pos, end);
+            ref_seq = ref.byteRange(chr_idx, pos, pos+len);
         } else if (type == Variant.Type.Insertion) {
-            alts[0] = new FlexSeq(FlexSeq.Type.INS, len);
+            if(ins_seq != null) {
+                alts[0] = new FlexSeq(ins_seq);
+            }else{
+                alts[0] = new FlexSeq(FlexSeq.Type.INS, len);
+            }
             var_idx_str = "ins_";
+            ref_seq = new byte[0];
+        } else if (type == Variant.Type.Tandem_Duplication) {
+            alts[0] = new FlexSeq(FlexSeq.Type.DUP, len,2);
+            var_idx_str = "dup_";
             ref_seq = new byte[0];
         } else {
             log.error("Bad type!");
@@ -191,10 +214,13 @@ public class RandBED2VCF extends randVCFgenerator {
 
         BufferedReader ins_bed_reader = null;
         BufferedReader del_bed_reader = null;
+        BufferedReader dup_bed_reader = null;
 
+        // try to open each of them to make sure the file can open
         try {
             ins_bed_reader = new BufferedReader(new FileReader(ins_bed_filename));
             del_bed_reader = new BufferedReader(new FileReader(del_bed_filename));
+            dup_bed_reader = new BufferedReader(new FileReader(dup_bed_filename));
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -220,6 +246,7 @@ public class RandBED2VCF extends randVCFgenerator {
         try {
             process_bed(out, del_bed_reader, Variant.Type.Deletion);
             process_bed(out, ins_bed_reader, Variant.Type.Insertion);
+            process_bed(out, dup_bed_reader, Variant.Type.Tandem_Duplication);
 
             out.flush();
             out.close();
