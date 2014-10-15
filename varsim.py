@@ -74,7 +74,7 @@ rand_vcf_group.add_argument("--vc_num_complex", metavar="num_complex", help="Num
 rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
 rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=50, type=int)
-rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=True)
+rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=False)
 rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6, type=float)
 rand_vcf_group.add_argument("--rand_vcf_jar", metavar="rand_vcf_jar", help="RandVCF2VCF jar", type=file, default=default_randvcf2vcf, required=require_randvcf2vcf)
 
@@ -87,8 +87,8 @@ rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of i
 rand_dgv_group.add_argument("--sv_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=50, type=int)
 rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length lim", default=1000000, type=int)
-rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=True)
-rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=True)
+rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=False)
+rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=False)
 rand_dgv_group.add_argument("--rand_dgv_jar", metavar="rand_dgv_jar", help="RandDGV2VCF jar", type=file, default=default_randdgv2vcf, required=require_randdgv2vcf)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
