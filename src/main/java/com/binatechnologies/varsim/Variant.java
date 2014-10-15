@@ -270,6 +270,7 @@ public class Variant {
             log.error("ind: " + ind);
             log.error("max_len(ind): " + max_len(ind));
             log.error(e.getStackTrace());
+            return null;
         }
     }
 
