@@ -269,7 +269,7 @@ public class Variant {
             log.error("_pos: " + _pos);
             log.error("ind: " + ind);
             log.error("max_len(ind): " + max_len(ind));
-            log.error(e.getStackTrace());
+            e.printStackTrace();
             return null;
         }
     }

@@ -405,7 +405,7 @@ public class VCFcompare {
                 bed_exists = true;
             }
         }catch (Exception e){
-            log.error(e.getStackTrace());
+            e.printStackTrace();
         }
 
         if(bed_exists) {
@@ -922,7 +922,13 @@ public class VCFcompare {
             // consider type to change overlap percent
             Variant.Type type = var.getType(geno);
             String chr_name = var.getChr_name();
-            Interval1D orig_inter = var.get_var_interval(geno);
+            Interval1D orig_inter;
+            if(type == Variant.Type.Insertion && _ignore_ins_len){
+                orig_inter = new Interval1D(var.position(),var.position());
+            }else{
+                orig_inter = var.get_var_interval(geno);
+            }
+
 
             int max_true_var_len = 0;
 
