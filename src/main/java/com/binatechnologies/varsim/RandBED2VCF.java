@@ -86,7 +86,7 @@ public class RandBED2VCF extends randVCFgenerator {
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
         int pos = Integer.parseInt(ll[1]);
         int end = Integer.parseInt(ll[2]);
-        String[] meta = ll[3].split("\t");
+        String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
         int len = 1;
         if(meta[0] == "seq"){
