@@ -41,6 +41,9 @@ public class VCFcompare {
     @Option(name = "-wig", usage = "Wiggle allowance in validation ["+WIGGLE_ARG+"]")
     int wiggle = WIGGLE_ARG;
 
+    @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
+    boolean ignore_ins_len;
+
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
     String bed_filename = "";
 

@@ -78,22 +78,14 @@ public class RandBED2VCF extends randVCFgenerator {
     // remember BED is 0-based
     Variant parse_bed_line(String line, Variant.Type type) {
         String[] ll = line.split("\t");
-        if (ll.length < 4) {
-            return new Variant();
-        }
-
-//        String chr_name, int chr, int pos, int del, byte[] ref,
-//        FlexSeq[] alts, byte[] phase, String var_id, String filter,
-//                String ref_deleted
+        if (ll.length < 4) return new Variant();
 
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
         int pos = Integer.parseInt(ll[1]);
         int end = Integer.parseInt(ll[2]);
         int len = Integer.parseInt(ll[3]);
 
-        if (len > max_length_lim || len < min_length_lim) {
-            return null;
-        }
+        if (len > max_length_lim || len < min_length_lim) return null;
 
         FlexSeq[] alts = new FlexSeq[1];
         String var_idx_str = "";
