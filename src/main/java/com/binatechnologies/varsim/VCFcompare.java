@@ -626,7 +626,7 @@ public class VCFcompare {
             for (Variant curr_var : var_list) {
                 // get genotype
                 geno = curr_var.getGeno();
-                result_comparator comp = new result_comparator(true_store, overlap_ratio, wiggle);
+                result_comparator comp = new result_comparator(true_store, overlap_ratio, wiggle,ignore_ins_len);
 
                 if (curr_var.isHom()) {
                     int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
