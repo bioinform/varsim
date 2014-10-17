@@ -385,7 +385,12 @@ public class VCFparser extends variantFileParser {
             if (ins_lens.length > 0) {
                 alts = new FlexSeq[ins_lens.length];
                 for (int i = 0; i < ins_lens.length; i++) {
-                    int len_val = Math.max(Math.abs(ins_lens[i]),1);
+                    int len_val = 0;
+                    if(ins_lens[i] == 0) {
+                        len_val = Integer.MAX_VALUE;
+                    } else{
+                        len_val = Math.max(Math.abs(ins_lens[i]), 1);
+                    }
                     alts[i] = new FlexSeq(FlexSeq.Type.INS,len_val);
                 }
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
