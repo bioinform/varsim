@@ -726,6 +726,7 @@ public class Variant {
     }
 
     // type for one allele
+
     public enum Type {
         Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Complex;
     }

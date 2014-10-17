@@ -5,7 +5,9 @@ For access to webapps http://bioinform.github.io/varsim/
 
 # Download
 
-Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
+Pre-built JARs
+
+Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
 
 # System Requirements
 <p>
@@ -14,7 +16,7 @@ For variant simulation and read generation:
 <li>32GB free RAM</li>
 <li>Enough free disk space to store twice the number of reads generated</li>
 <li>ART or dwgsim installed</li>
-<li>python 2.x</li>
+<li>python 2.7 with argparse package</li>
 </ul>
 </p>
 <p>
@@ -25,30 +27,29 @@ For alignment and variant validation:
 </p>
 
 # Building
-<p>VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.</p>
+VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.
 
-<p>To build, execute `mvn package`</p>
-
-<p>Contact us if you would like pre-built JARs</p>
+To build, execute `mvn package`
 
 # Quick Start
-<p>
-This quick start guide will provide steps for generating a random genome with pre-specified and random variants. Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
-</p>
 
-<p>
-Create a directory `varsim_run`
-</p>
+This quick start guide will provide steps for generating a random genome with pre-specified and random variants. Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
+
+
+
+<b>Step 1:</b> Create a directory `varsim_run`
+
 
 Download varsim to `varsim_run`
 
 ```
-wget https://github.com/bioinform/varsim/releases/download/0.1/varsim.tar.gz
-tar xfz varsim.tar.gz 
+wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
+tar xfz varsim-0.2-beta.tar.gz
 ```
 
-<p>
-Download the following files to `varsim_run`:
+
+<b>Step 2:</b> Download the following files to `varsim_run`:
+
 <ol>
 <li>Reference genome in FASTA format <a href='http://goo.gl/lgT18V'>[hs37d5.fa.gz]</a></li>
 <li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a></li>
@@ -56,7 +57,7 @@ Download the following files to `varsim_run`:
 <li>dbSNP 141 file <a href='http://goo.gl/NUG0dy'>[All.vcf.gz]</a></li>
 <li>(optional) Extra variants to include in simulation variants.vcf</li>
 </ol>
-</p>
+
 
 by running the following commands
 
@@ -68,7 +69,7 @@ wget http://goo.gl/NUG0dy
 gunzip hs37d5.fa.gz
 ```
 
-Download Samtools to index the reference genome
+<b>Step 3:</b> Download Samtools to index the reference genome
 
 ```
 mkdir samtools
@@ -79,7 +80,7 @@ cd ..
 samtools/samtools-bcftools-htslib-1.0_x64-linux/bin/samtools faidx hs37d5.fa
 ```
 
-Dowload ART to `varsim_run` under an the directory ART by running
+<b>Step 4:</b> Dowload ART to `varsim_run` under an the directory ART by running
 
 ```
 mkdir ART
@@ -104,17 +105,16 @@ The structure of `varsim_run` should look like
 - insert_seq.txt  
 - \samtools  
 - - samtools files...
-- \varsim  
-- - varsim files ...
-- varsim.tar.gz
+- varsim files ...
+- varsim-0.2-beta.tar.gz
 ```
 
-<p>
-Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
-</p>
+
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
+
 
 ```
-varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
+./varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
 --reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
 --vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
@@ -127,37 +127,34 @@ varsim/varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --vcfs [Optional VCF file to include, variants.vcf]
 ```
 
-<p>
-The reads will be generated in the out directory.  Run the secondary analysis tools (alignment and variant calling) on those.
-The ground truth VCF file is also in the out directory called simu.truth.vcf 
-</p>
 
-<p>
-After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
-</p>
+The reads will be generated in the `out` directory. A script `quickstart.sh` is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
+The ground truth VCF file is also in the `out` directory called `simu.truth.vcf`
+
+
+
+<b>Step 6:</b> After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
+
 
 ```
 java -jar target/build/vcfcompare.jar -true_vcf simu.truth.vcf -new_vcf [VCF from result of secondary analysis] -prefix simu
 ```
 
-<p>
-This will output a JSON file that can be used as input to the VCF Compare webapp [http://bioinform.github.io/varsim/webapp/variant_compare.html]
-</p>
 
-<p>
-In order to validate the alignments run the following command:
-</p>
+This will output a JSON file that can be used as input to the VCF Compare webapp [http://bioinform.github.io/varsim/webapp/variant_compare.html]
+
+
+
+<b>Step 7:</b> In order to validate the alignments run the following command:
+
 
 ```
 java -jar target/build/samcompare.jar -prefix simu [BAM files from result of secondary analysis]
 ```
 
-<p>
-This will output a JSON file that can be used as input to the Alignment Compare webapp [http://bioinform.github.io/varsim/webapp/alignment_compare.html]
-</p>
 
-# Testing
-<p>example.sh is a sample run of VarSim</p>
+This will output a JSON file that can be used as input to the Alignment Compare webapp [http://bioinform.github.io/varsim/webapp/alignment_compare.html]
+
 
 # Running
 Type `varsim.py -h` for help.
