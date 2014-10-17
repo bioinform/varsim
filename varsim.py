@@ -267,7 +267,7 @@ if not args.disable_vcf2diploid:
 
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.truth.vcf.stats" %  (args.id)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.truth.vcf.vcfstats.err" %  (args.id)), "w")
-  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), "-vcf", merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   monitor_processes([p_vcfstats], logger) 
 
