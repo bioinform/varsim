@@ -85,7 +85,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
         int pos = Integer.parseInt(ll[1]);
-        int end = Integer.parseInt(ll[2]);
+        //int end = Integer.parseInt(ll[2]);
         String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
         int len = 1;
@@ -108,7 +108,7 @@ public class RandBED2VCF extends randVCFgenerator {
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
-            ref_seq = ref.byteRange(chr_idx, pos, end);
+            ref_seq = ref.byteRange(chr_idx, pos, pos + len);
         } else if (type == Variant.Type.Insertion) {
             if(ins_seq != null) {
                 alts[0] = new FlexSeq(ins_seq);
