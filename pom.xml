@@ -4,7 +4,7 @@
 
     <groupId>com.binatechnologies.seqalto.varsim</groupId>
     <artifactId>varsim</artifactId>
-    <version>0.2-beta</version>
+    <version>0.2.1-beta</version>
     <packaging>jar</packaging>
 
     <name>varsim</name>
@@ -34,6 +34,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>2.5</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -222,6 +223,7 @@
             <artifactId>tribble</artifactId>
             <version>46</version>
         </dependency>
+
         <dependency>
             <groupId>args4j</groupId>
             <artifactId>args4j</artifactId>

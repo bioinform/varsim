@@ -258,11 +258,20 @@ public class Variant {
     gets the interval for the variant, accounting for variant size
     */
     public Interval1D get_var_interval(int ind) {
-        if (ind == 0) {
-            return new Interval1D(_pos, _pos);
-        }
+        try {
+            if (ind == 0) {
+                return new Interval1D(_pos, _pos);
+            }
 
-        return new Interval1D(_pos, _pos + max_len(ind) - 1);
+            return new Interval1D(_pos, _pos + max_len(ind) - 1);
+        }catch(RuntimeException e){
+            log.error("Bad variant interval: " + toString());
+            log.error("_pos: " + _pos);
+            log.error("ind: " + ind);
+            log.error("max_len(ind): " + max_len(ind));
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // union of intervals from the genotypes
@@ -726,6 +735,7 @@ public class Variant {
     }
 
     // type for one allele
+
     public enum Type {
         Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Complex;
     }
