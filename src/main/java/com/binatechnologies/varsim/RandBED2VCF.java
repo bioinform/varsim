@@ -91,21 +91,24 @@ public class RandBED2VCF extends randVCFgenerator {
         int end = Integer.parseInt(ll[2]);
         int len = Integer.parseInt(ll[3]);
 
-        if (len > max_length_lim || len < min_length_lim) {
+        if (pos == 0 || len > max_length_lim || len < min_length_lim) {
             return null;
         }
 
         FlexSeq[] alts = new FlexSeq[1];
         String var_idx_str = "";
         byte[] ref_seq;
+        char ref_deleted;
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
             ref_seq = ref.byteRange(chr_idx, pos, end);
+            ref_deleted = ref.charAt(chr_idx, pos - 1);
         } else if (type == Variant.Type.Insertion) {
             alts[0] = new FlexSeq(FlexSeq.Type.INS, len);
             var_idx_str = "ins_";
             ref_seq = new byte[0];
+            ref_deleted = ref.charAt(chr_idx, pos - 1);
         } else {
             log.error("Bad type!");
             return null;
@@ -116,7 +119,7 @@ public class RandBED2VCF extends randVCFgenerator {
         Genotypes geno = new Genotypes(chr_idx, 1, rand);
 
         return new Variant(ll[0], chr_idx, pos, ref_seq.length, ref_seq, alts,
-                geno.geno, false, var_idx_str, "PASS", "");
+                geno.geno, false, var_idx_str, "PASS", String.valueOf(ref_deleted));
 
     }
 

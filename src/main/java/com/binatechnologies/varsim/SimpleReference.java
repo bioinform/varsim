@@ -113,6 +113,14 @@ public class SimpleReference {
         }
     }
 
+    char charAt(int chr_idx, int loc){
+        return (char)byteAt(chr_idx,loc);
+    }
+
+    char charAt(String chr_name, int loc){
+        return (char)byteAt(chr_name,loc);
+    }
+
     // 1-based, inclusive start, exclusive end
 
     /**
