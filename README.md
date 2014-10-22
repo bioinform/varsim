@@ -121,7 +121,7 @@ The structure of `varsim_run` should look like
 --sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
 --vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
---sv_max_length_lim 1000000 --nlanes 3 --total_coverage 30 \
+--sv_max_length_lim 1000000 --nlanes 3 --total_coverage 1 \
 --art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
 --simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]
