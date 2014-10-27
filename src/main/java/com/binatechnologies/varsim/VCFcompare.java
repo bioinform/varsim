@@ -674,7 +674,10 @@ public class VCFcompare {
                         full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                         validated_len += curr_var.max_len();
                     }else if(compute_as_split){
-                        output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                        output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
+                        if(curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1){
+                            log.warn("SNP with bad length: " + curr_var);
+                        }
                         FP_writer.println(var);
                     }
                 }
@@ -683,6 +686,9 @@ public class VCFcompare {
             if (!compute_as_split && validated_len < (total_len*overlap_ratio)) {
                 // this is a false positive!
                 output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
+                if(curr_var_type == Variant.OverallType.SNP && var.max_len() > 1){
+                    log.warn("SNP with bad length: " + var);
+                }
                 FP_writer.println(var);
             }
 
