@@ -193,6 +193,14 @@ abstract public class randVCFgenerator {
     void output_vcf_record(BufferedWriter bw, Variant var, int geno0, int geno1)
             throws IOException {
 
+        // ignore ACTGN
+        String ref = var.getOrig_Ref().toUpperCase();
+        String alt = var.alt_string().toString().toUpperCase();
+
+        if(!ref.matches("[ACTGN]*") || !alt.matches("[ACTGN,]*")){
+            return; // don't output if it is not ACTGN
+        }
+
         // chromosome name
         bw.write(var.getChr_name());
         bw.write("\t");
@@ -203,10 +211,10 @@ abstract public class randVCFgenerator {
         bw.write(var.getVar_id());
         bw.write("\t");
         // ref allele
-        bw.write(var.getOrig_Ref());
+        bw.write(ref);
         bw.write("\t");
         // alt alleles
-        bw.write(var.alt_string().toString());
+        bw.write(alt);
         bw.write("\t");
         // variant quality
         bw.write(".\t");
