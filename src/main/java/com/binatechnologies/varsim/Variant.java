@@ -263,7 +263,12 @@ public class Variant {
                 return new Interval1D(_pos, _pos);
             }
 
-            return new Interval1D(_pos, _pos + max_len(ind) - 1);
+            // TODO hmm unsafe
+            if(max_len(ind) == Integer.MAX_VALUE){
+                return new Interval1D(_pos, _pos);
+            }else {
+                return new Interval1D(_pos, _pos + max_len(ind) - 1);
+            }
         }catch(RuntimeException e){
             log.error("Bad variant interval: " + toString());
             log.error("_pos: " + _pos);
