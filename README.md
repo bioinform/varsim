@@ -110,7 +110,7 @@ The structure of `varsim_run` should look like
 ```
 
 
-<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input. 
 
 
 ```
