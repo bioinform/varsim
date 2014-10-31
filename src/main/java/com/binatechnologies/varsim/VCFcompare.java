@@ -507,7 +507,12 @@ public class VCFcompare {
 
             // add to interval tree
             for (Variant curr_var : var_list) {
+
+                log.info("curr_var: " + curr_var);
+
                 int curr_len = curr_var.max_len();
+
+                log.info("curr_len: " + curr_len);
 
                 if (curr_len > max_len) {
                     max_len = curr_len;
