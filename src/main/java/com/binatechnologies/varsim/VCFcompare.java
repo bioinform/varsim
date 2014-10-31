@@ -710,14 +710,15 @@ public class VCFcompare {
                 int total_len = full_validated_total.get(num_read);
                 int validated_len = full_validated_count[num_read];
 
-                if(var.getType() == Variant.OverallType.Complex){
-                    log.info("Var: " + var);
-                    log.info("validated_len: " + validated_len);
-                    log.info("validated_len: " + total_len);
-                }
-
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
+
+                    if(var.getType() == Variant.OverallType.Complex){
+                        log.info("Var: " + var);
+                        log.info("validated_len: " + validated_len);
+                        log.info("total_len: " + total_len);
+                    }
+
                     output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
                     TP_writer.println(var);
                 } else {
