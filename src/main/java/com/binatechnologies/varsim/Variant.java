@@ -11,7 +11,7 @@ public class Variant {
     private final static Logger log = Logger.getLogger(Variant.class.getName());
 
     // use a seed for reproducibility, should be an option or global
-    private static final Random _rand = new Random(3333l);
+    private Random _rand = null;
 
     public int idx = 0; // this is hopefully a unique index, for the split variants
     public int full_idx = 0; // this is hopefully a unique index, for the whole variants
@@ -31,13 +31,22 @@ public class Variant {
     // if it is the same as the first alt base
     private String _ref_deleted;
 
-    public Variant() {
+    public Variant(Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
+        _rand = rand;
     }
 
     public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
+        this(chr_name,chr,pos,del,ref,alts,phase,isPhased,var_id,filter,ref_deleted,null);
+    }
+
+    public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
+                   FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
+                   String ref_deleted, Random rand) {
+        this(rand);
+
         _filter = filter;
         _chr_name = chr_name;
         _var_id = var_id;
@@ -84,6 +93,7 @@ public class Variant {
         _paternal = var._paternal;
         _maternal = var._maternal;
         _isPhased = var._isPhased;
+        _rand = var._rand;
     }
 
     /**
@@ -560,12 +570,31 @@ public class Variant {
     }
 
     public void randomizeHaplotype() {
+        if(_rand == null){
+            log.error("Cannot randomize haplotype");
+            log.error(toString());
+            System.exit(1);
+        }
+
         if (_rand.nextDouble() > 0.5) {
             return;
         }
         byte tmp = _paternal;
         _paternal = _maternal;
         _maternal = tmp;
+        return;
+    }
+
+    public void randomizeGenotype() {
+        if(_rand == null){
+            log.error("Cannot randomize genotype");
+            log.error(toString());
+            System.exit(1);
+        }
+
+        Genotypes g = new Genotypes(_chr,_alts.length,_rand);
+        _paternal = g.geno[0];
+        _maternal = g.geno[1];
         return;
     }
 

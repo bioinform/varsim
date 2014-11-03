@@ -101,20 +101,20 @@ class Genotypes {
 
 abstract public class randVCFgenerator {
 
-    Random rand;
+    Random _rand;
 
     /**
      * This sets a default seed, ideally different between different runs
      */
     randVCFgenerator() {
-        rand = new Random(3333);
+        _rand = new Random(3333);
     }
 
     /**
      * @param seed User specified seed for random numbers
      */
     randVCFgenerator(long seed) {
-        rand = new Random(seed);
+        _rand = new Random(seed);
     }
 
 
@@ -130,7 +130,7 @@ abstract public class randVCFgenerator {
     byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
                          int num_total) {
         if (seen_added.added_num < num_sample) {
-            double rand_num = rand.nextDouble();
+            double rand_num = _rand.nextDouble();
             if ((num_total - seen_added.seen_num) * rand_num >= (num_sample - seen_added.added_num)) {
                 seen_added.seen_num++;
                 return 0;
@@ -162,13 +162,13 @@ abstract public class randVCFgenerator {
                     int seg_len = (int) Math.ceil(insert_seq.length / 10.0);
                     for (int i = 0; i < len; i += seg_len) {
                         // choose random start loc
-                        int rand_start = rand.nextInt(new_seq.length - seg_len);
+                        int rand_start = _rand.nextInt(new_seq.length - seg_len);
                         for (int j = i; (j < len && j < (i + seg_len)); j++) {
                             new_seq[j] = insert_seq[rand_start + j - i];
                         }
                     }
                 } else {
-                    int rand_start = rand.nextInt(insert_seq.length - len);
+                    int rand_start = _rand.nextInt(insert_seq.length - len);
                     for (int j = 0; j < len; j++) {
                         new_seq[j] = insert_seq[rand_start + j];
                     }

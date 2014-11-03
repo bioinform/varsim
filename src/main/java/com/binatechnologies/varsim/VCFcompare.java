@@ -508,11 +508,7 @@ public class VCFcompare {
             // add to interval tree
             for (Variant curr_var : var_list) {
 
-                log.info("curr_var: " + curr_var);
-
                 int curr_len = curr_var.max_len();
-
-                log.info("curr_len: " + curr_len);
 
                 if (curr_len > max_len) {
                     max_len = curr_len;
@@ -717,12 +713,6 @@ public class VCFcompare {
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
-
-                    if(var.getType() == Variant.OverallType.Complex){
-                        log.info("Var: " + var);
-                        log.info("validated_len: " + validated_len);
-                        log.info("total_len: " + total_len);
-                    }
 
                     output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
                     TP_writer.println(var);
