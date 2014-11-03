@@ -291,15 +291,15 @@ public class Variant {
 
     // union of intervals from the genotypes
     public Interval1D get_geno_interval() {
-        return get_interval(_paternal).union(get_interval(_maternal));
+        return get_interval(getgood_paternal()).union(get_interval(getgood_maternal()));
     }
 
     public Interval1D get_geno_var_interval() {
-        return get_var_interval(_paternal).union(get_var_interval(_maternal));
+        return get_var_interval(getgood_paternal()).union(get_var_interval(getgood_maternal()));
     }
 
     public Genotypes getGeno() {
-        return new Genotypes(_paternal, _maternal);
+        return new Genotypes(getgood_paternal(), getgood_maternal());
     }
 
     /*
@@ -309,9 +309,9 @@ public class Variant {
      */
     public int get_allele(int parent) {
         if (parent == 0) {
-            return _paternal;
+            return getgood_paternal();
         } else if (parent == 1) {
-            return _maternal;
+            return getgood_maternal();
         }
         return -1;
     }
@@ -726,9 +726,9 @@ public class Variant {
         }
 
         if (hasCN()) {
-            sbStr.append(String.valueOf(getCN(paternal())));
+            sbStr.append(String.valueOf(getCN(getgood_paternal())));
             sbStr.append("|");
-            sbStr.append(String.valueOf(getCN(maternal())));
+            sbStr.append(String.valueOf(getCN(getgood_maternal())));
             sbStr.append(":");
         }
 
@@ -743,9 +743,9 @@ public class Variant {
         buildVCFstr(sbStr);
 
 
-        sbStr.append(paternal());
+        sbStr.append(getgood_paternal());
         sbStr.append("|");
-        sbStr.append(maternal());
+        sbStr.append(getgood_maternal());
 
         return sbStr.toString();
     }
@@ -761,11 +761,27 @@ public class Variant {
         buildVCFstr(sbStr);
 
         // for this one we need to work out which one is added
-        sbStr.append(_paternal);
+        sbStr.append(paternal);
         sbStr.append("|");
-        sbStr.append(_maternal);
+        sbStr.append(maternal);
 
         return sbStr.toString();
+    }
+
+    byte getgood_paternal(){
+        if(_paternal < 0){
+            return 1;
+        }else{
+            return _paternal;
+        }
+    }
+
+    byte getgood_maternal(){
+        if(_maternal < 0){
+            return 1;
+        }else{
+            return _maternal;
+        }
     }
 
     // type for one allele
