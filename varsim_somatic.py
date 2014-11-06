@@ -198,7 +198,7 @@ if not args.disable_rand_vcf:
 processes = monitor_processes(processes, logger)
 
 processes = []
-for in_vcf in args.vcfs:
+for in_vcf in vcf_files:
   out_prefix = os.path.basename(in_vcf)
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
