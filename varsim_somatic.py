@@ -250,9 +250,8 @@ processes = monitor_processes(processes, logger)
 
 # grep out the cosmic variants
 # This is a bit dodgy
-
-grep -v "COS" art_cosmic/out/sv.truth.vcf > out/sv_norm.vcf &
-grep  "COS" art_cosmic/out/sv.truth.vcf > out/sv_cosmic.vcf &
+# grep -v "COS" art_cosmic/out/sv.truth.vcf > out/sv_norm.vcf &
+# grep  "COS" art_cosmic/out/sv.truth.vcf > out/sv_cosmic.vcf &
 
 grep_norm_stdout = open(os.path.join(args.out_dir, str(args.id) + "_norm.vcf"), "w")
 grep_norm_stderr = open(os.path.join(args.log_dir, str(args.id) + "_norm.err"), "w")
