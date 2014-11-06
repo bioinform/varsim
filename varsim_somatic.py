@@ -212,7 +212,7 @@ for in_vcf in vcf_files:
 varsim_stdout = open(os.path.join(args.log_dir, "som_varsim.out"), "w")
 varsim_stderr = open(os.path.join(args.log_dir, "som_varsim.log"), "w")
 
-vcf_arg_list = ["-vcfs",  vcf_files]
+vcf_arg_list = ["-vcfs"] + vcf_files
 
 # need to fix the store true ones
 filter_arg_list = ["--filter"] if args.filter else []
