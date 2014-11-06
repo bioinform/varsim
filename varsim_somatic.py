@@ -39,7 +39,7 @@ if not os.path.isfile(default_vcfstats):    default_vcfstats    = None
 if not os.path.isfile(default_varsim):      require_varsim      = None
 
 main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="out")
+main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="somatic_out")
 main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="work")
 main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False, default="log")
 main_parser.add_argument("--reference", metavar="Reference", help="Reference file", required=True, type=file)
@@ -54,7 +54,7 @@ main_parser.add_argument("--total_coverage", metavar="total_coverage", help="Tot
 main_parser.add_argument("--mean_fragment_size", metavar="mean_fragment_size", help="Mean fragment size", default=350, type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help="Standard deviation of fragment size", default=50, type=int)
 main_parser.add_argument("--cosmic_vcf", metavar="cosmic_vcf", help="COSMIC database VCF", default=[], required=True)
-main_parser.add_argument("--normal_vcf", metavar="normal_vcf", help="Normal VCF from VarSim", default=[], required=True)
+main_parser.add_argument("--normal_vcf", metavar="normal_vcf", help="Normal VCF from previous VarSim run", default=[], required=True)
 main_parser.add_argument("--liftover_jar", metavar="liftover_jar", help="LiftOver jar", type=file, default=default_liftover, required=require_liftover)
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
