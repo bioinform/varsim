@@ -214,7 +214,6 @@ varsim_stderr = open(os.path.join(args.log_dir, "som_varsim.log"), "w")
 
 vcf_arg_list = sum([["-vcf", v] for v in vcf_files], [])
 
-
 # need to fix the store true ones
 filter_arg_list = ["--filter"] if args.filter else []
 disable_sim_arg_list = ["--disable_sim"] if args.disable_sim else []
@@ -248,9 +247,9 @@ varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--art_options", str(args.art_options), 
                   "--disable_rand_vcf",
                   "--disable_rand_dgv" ] + vcf_arg_list + filter_arg_list + disable_sim_arg_list + force_five_base_encoding_arg_list + keep_temp_arg_list + dwgsim_arg_list + profile_1_arg_list + profile_2_arg_list + art_arg_list
-p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
-logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
-processes.append(p_rand_vcf)
+p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_stderr)
+logger.info("Executing command " + " ".join(varsim_command) + " with pid " + str(p_varsim.pid))
+processes.append(p_varsim)
 
 
 processes = monitor_processes(processes, logger)
