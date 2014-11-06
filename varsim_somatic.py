@@ -179,10 +179,17 @@ if not args.disable_rand_vcf:
   vcf_files.insert(0,os.path.realpath(rand_vcf_stdout.name))
 
   rand_vcf_command = ["java", "-jar", os.path.realpath(args.rand_vcf_jar.name), "-seed", str(args.seed),
-                 "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
-                 "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel", str(args.vc_percent_novel),
-                 "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref", os.path.realpath(args.reference.name),
-                 "-prop_het", str(args.vc_prop_het), "-vcf", os.path.realpath(args.cosmic_vcf)]
+                 "-num_snp", str(args.som_num_snp), 
+                 "-num_ins", str(args.som_num_ins), 
+                 "-num_del", str(args.som_num_del),
+                 "-num_mnp", str(args.som_num_mnp), 
+                 "-num_complex", str(args.som_num_complex), 
+                 "-novel", str(args.som_percent_novel),
+                 "-min_len", str(args.som_min_length_lim), 
+                 "-max_len", str(args.som_max_length_lim), 
+                 "-ref", os.path.realpath(args.reference.name),
+                 "-prop_het", str(args.som_prop_het), 
+                 "-vcf", os.path.realpath(args.cosmic_vcf)]
 
   p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
   logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
