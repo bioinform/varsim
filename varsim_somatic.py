@@ -40,8 +40,8 @@ if not os.path.isfile(default_varsim):      require_varsim      = None
 
 main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="somatic_out")
-main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="work")
-main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False, default="log")
+main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="somatic_work")
+main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False, default="somatic_log")
 main_parser.add_argument("--reference", metavar="Reference", help="Reference file", required=True, type=file)
 main_parser.add_argument("--seed", metavar="seed", help="Random number seed", type=int, default=0)
 main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/female)", required=False, type=str, choices=["male", "female"], default="male")
@@ -225,9 +225,9 @@ profile_1_arg_list = ["--profile_1", args.profile_1] if args.profile_1 is not No
 profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not None else []
 art_arg_list = ["--art", args.art] if args.art is not None else []
 varsim_command = ["python", os.path.realpath(args.varsim_py.name), 
-				  "--out_dir", str(args.out_dir) + "_cosmic",
-                  "--work_dir", str(args.work_dir) + "_cosmic", 
-                  "--log_dir", str(args.log_dir) + "_cosmic", 
+				  "--out_dir", str(args.out_dir),
+                  "--work_dir", str(args.work_dir), 
+                  "--log_dir", str(args.log_dir), 
                   "--reference", str(args.reference),
                   "--seed", str(args.seed), 
                   "--sex", str(args.sex), 
@@ -263,7 +263,7 @@ processes = monitor_processes(processes, logger)
 grep_norm_stdout = open(os.path.join(args.out_dir, str(args.id) + "_norm.vcf"), "w")
 grep_norm_stderr = open(os.path.join(args.log_dir, str(args.id) + "_norm.err"), "w")
 
-grep_norm_command = ["grep", "-v", "COS", os.path.realpath(str(args.out_dir) + "_cosmic/" + str(args.id) +  ".truth.vcf")]
+grep_norm_command = ["grep", "-v", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) +  ".truth.vcf")]
 
 p_grep_norm = subprocess.Popen(grep_norm_command, stdout=grep_norm_stdout, stderr=grep_norm_stderr)
 logger.info("Executing command " + " ".join(grep_norm_command) + " with pid " + str(p_grep_norm.pid))
@@ -272,7 +272,7 @@ processes.append(p_grep_norm)
 grep_cos_stdout = open(os.path.join(args.out_dir, str(args.id) + "_somatic.vcf"), "w")
 grep_cos_stderr = open(os.path.join(args.log_dir, str(args.id) + "_somatic.err"), "w")
 
-grep_cos_command = ["grep", "COS", os.path.realpath(str(args.out_dir) + "_cosmic/" + str(args.id) +  ".truth.vcf")]
+grep_cos_command = ["grep", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) +  ".truth.vcf")]
 
 p_grep_cos = subprocess.Popen(grep_cos_command, stdout=grep_cos_stdout, stderr=grep_cos_stderr)
 logger.info("Executing command " + " ".join(grep_cos_command) + " with pid " + str(p_grep_cos.pid))
@@ -280,6 +280,20 @@ processes.append(p_grep_cos)
 
 
 processes = monitor_processes(processes, logger)
+
+vcfstats_stdout = open(os.path.join(args.out_dir, "%s.norm.vcf.stats" %  (args.id)), "w")
+vcfstats_stderr = open(os.path.join(args.log_dir, "%s.norm.vcf.vcfstats.err" %  (args.id)), "w")
+p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), "-vcf", os.path.join(args.out_dir, str(args.id) + "_norm.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
+processes.append(p_vcfstats)
+
+vcfstats_stdout = open(os.path.join(args.out_dir, "%s.somatic.vcf.stats" %  (args.id)), "w")
+vcfstats_stderr = open(os.path.join(args.log_dir, "%s.somatic.vcf.vcfstats.err" %  (args.id)), "w")
+p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), "-vcf", os.path.join(args.out_dir, str(args.id) + "_somatic.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
+processes.append(p_vcfstats)
+
+monitor_processes(processes, logger) 
 
 
 if not args.keep_temp:
