@@ -171,7 +171,7 @@ processes = []
 
 t_s = time.time()
 
-vcf_files = [os.path.realpath(normal_vcf)]
+vcf_files = [os.path.realpath(args.normal_vcf)]
 
 if not args.disable_rand_vcf:
   rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
