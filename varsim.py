@@ -36,7 +36,7 @@ if not os.path.isfile(default_vcf2diploid): default_vcf2diploid = None
 if not os.path.isfile(default_liftover):    default_liftover    = None
 if not os.path.isfile(default_vcfstats):    default_vcfstats    = None
 
-main_parser = argparse.ArgumentParser(description="VarSim: An accurate reads simulator", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+main_parser = argparse.ArgumentParser(description="VarSim: An accurate variant and reads simulator", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="out")
 main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="work")
 main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False, default="log")
@@ -232,7 +232,10 @@ if not args.disable_vcf2diploid:
   vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
   vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
   filter_arg_list = ["-pass"] if args.filter else []
-  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
+  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), 
+  						 "-t", args.sex, 
+  						 "-id", args.id, 
+  						 "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
 
   p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr, cwd=args.out_dir)
   logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))
