@@ -176,7 +176,7 @@ vcf_files = [os.path.realpath(args.normal_vcf)]
 if not args.disable_rand_vcf:
   rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
   rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-  vcf_files.insert(0,os.path.realpath(rand_vcf_stdout))
+  vcf_files.insert(0,os.path.realpath(rand_vcf_stdout.name))
 
   rand_vcf_command = ["java", "-jar", os.path.realpath(args.rand_vcf_jar.name), "-seed", str(args.seed),
                  "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
