@@ -222,7 +222,7 @@ keep_temp_arg_list = ["--keep_temp"] if args.keep_temp else []
 dwgsim_arg_list = ["--dwgsim", args.dwgsim] if args.dwgsim is not None else []
 profile_1_arg_list = ["--profile_1", args.profile_1] if args.profile_1 is not None else []
 profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not None else []
-art_arg_list = ["--art", args.art] if args.art is not None else []
+art_arg_list = ["--art", args.art.name] if args.art is not None else []
 varsim_command = ["python", os.path.realpath(args.varsim_py.name), 
 				  "--out_dir", str(args.out_dir),
                   "--work_dir", str(args.work_dir), 
