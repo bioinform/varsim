@@ -293,8 +293,4 @@ processes.append(p_vcfstats)
 
 monitor_processes(processes, logger) 
 
-
-if not args.keep_temp:
-  for f in tmp_files:
-    os.remove(f)
 logger.info("Done! (%g hours)" % ((time.time() - t_s)/3600.0))
