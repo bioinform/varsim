@@ -115,6 +115,11 @@ public class RandBED2VCF extends randVCFgenerator {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
             ref_seq = ref.byteRange(chr_idx, pos, pos + len);
+
+            if(ref_seq == null){
+                log.error("Range error: " + line);
+            }
+
         } else if (type == Variant.Type.Insertion) {
             if(ins_seq != null) {
                 alts[0] = new FlexSeq(ins_seq);

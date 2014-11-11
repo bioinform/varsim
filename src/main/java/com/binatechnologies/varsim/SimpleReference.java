@@ -7,6 +7,7 @@ package com.binatechnologies.varsim;
 
 import net.sf.picard.reference.FastaSequenceFile;
 import net.sf.picard.reference.ReferenceSequence;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.HashMap;
 
 
 public class SimpleReference {
+    private final static Logger log = Logger.getLogger(SimpleReference.class.getName());
+
     // chr_idx -> reference_string
     HashMap<Integer, Sequence> data;
 
@@ -147,7 +150,7 @@ public class SimpleReference {
 
         Sequence contig = data.get(chr_idx);
         if (contig == null) {
-            System.err.println("Contig not found: " + chr_idx);
+            log.error("Contig not found: " + chr_idx);
             return null;
         } else {
             return contig.subSeq(start_loc, end_loc);
