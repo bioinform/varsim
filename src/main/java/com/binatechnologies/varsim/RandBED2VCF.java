@@ -90,6 +90,11 @@ public class RandBED2VCF extends randVCFgenerator {
         if (ll.length < 4) return new Variant(_rand);
 
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
+
+        if(chr_idx <= 0){
+            return null;
+        }
+
         int pos = Integer.parseInt(ll[1]);
         //int end = Integer.parseInt(ll[2]);
         String[] meta = ll[3].split(",");
