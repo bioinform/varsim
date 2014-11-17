@@ -95,7 +95,7 @@ public class RandBED2VCF extends randVCFgenerator {
             return null;
         }
 
-        int pos = Integer.parseInt(ll[1]);
+        int pos = Integer.parseInt(ll[1]) + 1; //0-indexed
         //int end = Integer.parseInt(ll[2]);
         String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
