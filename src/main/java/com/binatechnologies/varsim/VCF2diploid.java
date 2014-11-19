@@ -22,6 +22,8 @@ import org.kohsuke.args4j.Option;
 public class VCF2diploid {
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
 
+    private Random _rand = null;
+
     public enum GenderType {
         FEMALE, MALE
     }
@@ -42,6 +44,10 @@ public class VCF2diploid {
     @Option(name = "-pass", usage = "Only accept the PASS variants")
     private boolean _pass = false;
 
+    static final long SEED_ARG = 3333;
+    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    long seed = 3333;
+
     private final static char DELETED_BASE = '~';
 
 
@@ -51,14 +57,14 @@ public class VCF2diploid {
 
     public VCF2diploid() {
 
-
+        _rand = new Random(seed);
 
     }
 
     public void run(String[] args){
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
-        String usage = "Creater a diploid genome as associated files from a reference genome\n"
+        String usage = "Create a diploid genome as associated files from a reference genome\n"
                 +"and some VCF files. \n";
 
         CmdLineParser cmd_parser = new CmdLineParser(this);
@@ -94,7 +100,7 @@ public class VCF2diploid {
         }
 
         for (int i = 0; i < _vcfFiles.size(); i++) {
-            VCFparser parser = new VCFparser(_vcfFiles.get(i), _id, _pass);
+            VCFparser parser = new VCFparser(_vcfFiles.get(i), _id, _pass, _rand);
             int n_ev = 0, var_nucs = 0;
             while (parser.hasMoreInput()) {
                 Variant var = parser.parseLine();
@@ -106,6 +112,12 @@ public class VCF2diploid {
                     log.warn("Not maternal nor paternal");
                     continue;
                 }
+
+                if (var.maternal() < 0 || var.paternal() < 0) {
+                    // randomize the genotype
+                    var.randomizeGenotype();
+                }
+
                 int chr = var.chromosome();
                 if (chr <= 0 || chr > _variants.length) {
                     log.warn("Chr out of range, probably unplaced");
@@ -203,10 +215,8 @@ public class VCF2diploid {
                 maternal_seq[c - 1] = paternal_seq[c - 1] = ref_seq.byteAt(c);
             }
 
-            Hashtable<Integer, FlexSeq> pat_ins_seq = new Hashtable<Integer, FlexSeq>(
-                    150);
-            Hashtable<Integer, FlexSeq> mat_ins_seq = new Hashtable<Integer, FlexSeq>(
-                    150);
+            Hashtable<Integer, FlexSeq> pat_ins_seq = new Hashtable<Integer, FlexSeq>(150);
+            Hashtable<Integer, FlexSeq> mat_ins_seq = new Hashtable<Integer, FlexSeq>(150);
 
             int n_var_pat = 0, n_var_mat = 0;
             int n_base_pat = 0, n_base_mat = 0;
