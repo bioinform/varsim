@@ -167,19 +167,19 @@ public class VCFcompare {
         if (var.getType() == Variant.OverallType.SNP) {
             no_split = true;
         }
-        if (var.paternal() == 0 && var.maternal() == 0) {
+        if (var.getgood_paternal() == 0 && var.getgood_maternal() == 0) {
             no_split = true;
         }
-        if (var.paternal() > 0 && var.getAlt(var.paternal()).getType() != FlexSeq.Type.SEQ) {
+        if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).getType() != FlexSeq.Type.SEQ) {
             no_split = true;
         }
-        if (var.maternal() > 0 && var.getAlt(var.maternal()).getType() != FlexSeq.Type.SEQ) {
+        if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).getType() != FlexSeq.Type.SEQ) {
             no_split = true;
         }
-        if (var.paternal() > 0 && var.getAlt(var.paternal()).length() == 0 && var.getRef().length == 0) {
+        if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).length() == 0 && var.getRef().length == 0) {
             no_split = true;
         }
-        if (var.maternal() > 0 && var.getAlt(var.maternal()).length() == 0 && var.getRef().length == 0) {
+        if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).length() == 0 && var.getRef().length == 0) {
             no_split = true;
         }
 
@@ -189,8 +189,8 @@ public class VCFcompare {
         }
 
 
-        if (var.getType(var.paternal()) != Variant.Type.Reference
-                && var.getType(var.maternal()) != Variant.Type.Reference) {
+        if (var.getType(var.getgood_paternal()) != Variant.Type.Reference
+                && var.getType(var.getgood_maternal()) != Variant.Type.Reference) {
 
             int[] allele = {var.get_allele(0), var.get_allele(1)};
             byte[][] alt = {var.getAlt(allele[0]).getSeq(), var.getAlt(allele[1]).getSeq()};
@@ -507,6 +507,7 @@ public class VCFcompare {
 
             // add to interval tree
             for (Variant curr_var : var_list) {
+
                 int curr_len = curr_var.max_len();
 
                 if (curr_len > max_len) {
@@ -674,7 +675,10 @@ public class VCFcompare {
                         full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                         validated_len += curr_var.max_len();
                     }else if(compute_as_split){
-                        output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                        output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
+                        if(curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1){
+                            log.warn("SNP with bad length: " + curr_var);
+                        }
                         FP_writer.println(var);
                     }
                 }
@@ -683,6 +687,9 @@ public class VCFcompare {
             if (!compute_as_split && validated_len < (total_len*overlap_ratio)) {
                 // this is a false positive!
                 output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
+                if(curr_var_type == Variant.OverallType.SNP && var.max_len() > 1){
+                    log.warn("SNP with bad length: " + var);
+                }
                 FP_writer.println(var);
             }
 
@@ -706,6 +713,7 @@ public class VCFcompare {
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
+
                     output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
                     TP_writer.println(var);
                 } else {
@@ -961,9 +969,9 @@ public class VCFcompare {
                         // check genotype
                         if (true_var.isHom()) {
                             // position is correct, check genotype
-                            if (true_var.getType(true_var.paternal()) == Variant.Type.SNP
+                            if (true_var.getType(true_var.getgood_paternal()) == Variant.Type.SNP
                                     && var.position() == true_var.position()) {
-                                if (val == true_var.getAlt(true_var.paternal()).getSeq()[0]) {
+                                if (val == true_var.getAlt(true_var.getgood_paternal()).getSeq()[0]) {
                                     matches_hom.add(new dual_idx(idx, full_idx));
                                 }
                                 has_snp = true;
