@@ -171,8 +171,8 @@ class Parent_record {
     }
 
     public void add(Variant var, BedFile bed_file) {
-        int paternal_allele = var.paternal();
-        int maternal_allele = var.maternal();
+        int paternal_allele = var.getgood_paternal();
+        int maternal_allele = var.getgood_maternal();
 
         boolean added = false;
         if (bed_file == null
@@ -284,7 +284,7 @@ public class VCFstats {
             if (var == null) {
                 continue;
             }
-            if (var.maternal() == 0 && var.paternal() == 0) {
+            if (var.getgood_maternal() == 0 && var.getgood_paternal() == 0) {
                 continue;
             }
             data.add(var, bed_file);

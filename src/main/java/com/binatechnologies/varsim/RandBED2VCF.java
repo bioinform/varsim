@@ -32,9 +32,9 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 
-    static final int SEED_ARG = 333;
+    static final long SEED_ARG = 333;
     @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
-    int seed = 333;
+    static long seed = 333;
 
     @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
     String reference_filename;
@@ -53,6 +53,12 @@ public class RandBED2VCF extends randVCFgenerator {
 
     RandBED2VCF() {
         super();
+        num_novel_added = 0;
+        var_idx = 0;
+    }
+
+    RandBED2VCF(long seed) {
+        super(seed);
         num_novel_added = 0;
         var_idx = 0;
     }
@@ -81,11 +87,16 @@ public class RandBED2VCF extends randVCFgenerator {
     // remember BED is 0-based
     Variant parse_bed_line(String line, Variant.Type type) {
         String[] ll = line.split("\t");
-        if (ll.length < 4) return new Variant();
+        if (ll.length < 4) return new Variant(_rand);
 
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
-        int pos = Integer.parseInt(ll[1]);
-        int end = Integer.parseInt(ll[2]);
+
+        if(chr_idx <= 0){
+            return null;
+        }
+
+        int pos = Integer.parseInt(ll[1]) + 1; //0-indexed
+        //int end = Integer.parseInt(ll[2]);
         String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
         int len = 1;
@@ -108,7 +119,12 @@ public class RandBED2VCF extends randVCFgenerator {
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
-            ref_seq = ref.byteRange(chr_idx, pos, end);
+            ref_seq = ref.byteRange(chr_idx, pos, pos + len);
+
+            if(ref_seq == null){
+                log.error("Range error: " + line);
+            }
+
         } else if (type == Variant.Type.Insertion) {
             if(ins_seq != null) {
                 alts[0] = new FlexSeq(ins_seq);
@@ -128,11 +144,11 @@ public class RandBED2VCF extends randVCFgenerator {
         var_idx_str += var_idx;
         var_idx++;
 
-        Genotypes geno = new Genotypes(chr_idx, 1, rand);
+        Genotypes geno = new Genotypes(chr_idx, 1, _rand);
 
         return new Variant(ll[0], chr_idx, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
-                .charAt(chr_idx, pos - 1)));
+                .charAt(chr_idx, pos - 1)),_rand);
 
     }
 
@@ -188,7 +204,7 @@ public class RandBED2VCF extends randVCFgenerator {
             log.error("Bad lengths, max < min");
         }
 
-        rand = new Random(seed);
+        _rand = new Random(seed);
 
         log.info("Reading reference");
         ref = new SimpleReference(reference_filename);
