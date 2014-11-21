@@ -7,7 +7,7 @@ For access to webapps http://bioinform.github.io/varsim/
 
 Pre-built JARs
 
-Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
+Latest version (BETA): https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
 
 # System Requirements
 <p>
@@ -43,8 +43,8 @@ This quick start guide will provide steps for generating a random genome with pr
 Download varsim to `varsim_run`
 
 ```
-wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
-tar xfz varsim-0.2-beta.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
+tar xfz varsim-0.3.tar.gz
 ```
 
 
