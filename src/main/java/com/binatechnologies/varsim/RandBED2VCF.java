@@ -174,6 +174,8 @@ public class RandBED2VCF extends randVCFgenerator {
             try {
                 if (!var.isRef()) {
                     rand_output_vcf_record(out, var);
+                }else{
+                    //log.error("Reference variant: " + line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

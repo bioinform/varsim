@@ -598,6 +598,21 @@ public class Variant {
         return;
     }
 
+
+    /*
+    Tests if all of the alternate alleles with sequence are ACTGN
+     */
+    public boolean is_alt_ACTGN(){
+        for(FlexSeq a : _alts){
+            if(a.isSeq()){
+                if(!a.toString().matches("[ACTGN]*")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /*
     Returns true if the variant is homozygous
      */
