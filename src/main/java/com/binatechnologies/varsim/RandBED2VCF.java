@@ -166,7 +166,7 @@ public class RandBED2VCF extends randVCFgenerator {
         while ((line = bed_reader.readLine()) != null) {
             Variant var = parse_bed_line(line, type);
             if (var == null) {
-                // System.err.println("Bad variant or not a variant line");
+                log.error("Bad variant or not a variant line: " + line);
                 continue;
             }
 
