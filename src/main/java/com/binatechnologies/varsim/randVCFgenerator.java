@@ -197,7 +197,7 @@ abstract public class randVCFgenerator {
         String ref = var.getOrig_Ref().toUpperCase();
         String alt = var.alt_string().toString().toUpperCase();
 
-        if(!ref.matches("[ACTGN]*") || !alt.matches("[ACTGN,]*")){
+        if(!ref.matches("[ACTGN]*") || (!var.is_alt_ACTGN())){
             return; // don't output if it is not ACTGN
         }
 

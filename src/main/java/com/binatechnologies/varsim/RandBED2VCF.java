@@ -51,6 +51,9 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-dup_bed", usage = "Known Duplication BED file [Required]",metaVar = "BED_file",required = true)
     String dup_bed_filename;
 
+    @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]",metaVar = "BED_file",required = true)
+    String inv_bed_filename;
+
     RandBED2VCF() {
         super();
         num_novel_added = 0;
@@ -137,6 +140,10 @@ public class RandBED2VCF extends randVCFgenerator {
             alts[0] = new FlexSeq(FlexSeq.Type.DUP, len,2);
             var_idx_str = "dup_";
             ref_seq = new byte[0];
+        } else if (type == Variant.Type.Inversion) {
+            alts[0] = new FlexSeq(FlexSeq.Type.INV, len);
+            var_idx_str = "inv_";
+            ref_seq = new byte[0];
         } else {
             log.error("Bad type!");
             return null;
@@ -159,7 +166,7 @@ public class RandBED2VCF extends randVCFgenerator {
         while ((line = bed_reader.readLine()) != null) {
             Variant var = parse_bed_line(line, type);
             if (var == null) {
-                // System.err.println("Bad variant or not a variant line");
+                log.error("Bad variant or not a variant line: " + line);
                 continue;
             }
 
@@ -167,6 +174,8 @@ public class RandBED2VCF extends randVCFgenerator {
             try {
                 if (!var.isRef()) {
                     rand_output_vcf_record(out, var);
+                }else{
+                    //log.error("Reference variant: " + line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -232,12 +241,14 @@ public class RandBED2VCF extends randVCFgenerator {
         BufferedReader ins_bed_reader = null;
         BufferedReader del_bed_reader = null;
         BufferedReader dup_bed_reader = null;
+        BufferedReader inv_bed_reader = null;
 
         // try to open each of them to make sure the file can open
         try {
             ins_bed_reader = new BufferedReader(new FileReader(ins_bed_filename));
             del_bed_reader = new BufferedReader(new FileReader(del_bed_filename));
             dup_bed_reader = new BufferedReader(new FileReader(dup_bed_filename));
+            inv_bed_reader = new BufferedReader(new FileReader(inv_bed_filename));
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -264,6 +275,7 @@ public class RandBED2VCF extends randVCFgenerator {
             process_bed(out, del_bed_reader, Variant.Type.Deletion);
             process_bed(out, ins_bed_reader, Variant.Type.Insertion);
             process_bed(out, dup_bed_reader, Variant.Type.Tandem_Duplication);
+            process_bed(out, inv_bed_reader, Variant.Type.Inversion);
 
             out.flush();
             out.close();
