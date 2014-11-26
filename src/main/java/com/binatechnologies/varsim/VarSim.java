@@ -65,6 +65,7 @@ public class VarSim {
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);
+                System.err.println(usage);
                 break;
         }
 
