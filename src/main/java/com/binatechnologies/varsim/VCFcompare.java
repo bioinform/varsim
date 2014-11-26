@@ -365,7 +365,7 @@ public class VCFcompare {
         return var_list;
     }
 
-    private void run(String[] args) {
+    public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
         boolean compare_genotypes = false;

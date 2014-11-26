@@ -245,7 +245,7 @@ public class VCFstats {
         runner.run(args);
     }
 
-    private void run(String[] args) {
+    public void run(String[] args) {
         String usage = "Compute the distribution of variants in a VCF file\n"
                 + "Assume that there is only one sample in the VCF file\n";
 
