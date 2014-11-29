@@ -119,7 +119,38 @@ abstract public class randVCFgenerator {
 
 
     /**
-     * This is for sampling without replacement. If the genotype is not sampled, it is repalced with zero
+     * This is for sampling without replacement. If the genotype is not sampled, it is replaced with zero
+     *
+     * @param geno       previous genotype
+     * @param seen_added params for sampling
+     * @param num_sample number that we want to sample
+     * @param num_total  total number of such variants
+     * @param output_all Don't sample, just output everything
+     * @return
+     */
+    byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
+                         int num_total, boolean output_all) {
+        if(!output_all) {
+            if (seen_added.added_num < num_sample) {
+                double rand_num = _rand.nextDouble();
+                if ((num_total - seen_added.seen_num) * rand_num >= (num_sample - seen_added.added_num)) {
+                    seen_added.seen_num++;
+                    return 0;
+                } else {
+                    seen_added.seen_num++;
+                    seen_added.added_num++;
+                    return geno;
+                }
+            }
+        }else{
+            return geno;
+        }
+        return 0;
+    }
+
+
+    /**
+     * This is for sampling without replacement. If the genotype is not sampled, it is replaced with zero
      *
      * @param geno       previous genotype
      * @param seen_added params for sampling
@@ -129,18 +160,7 @@ abstract public class randVCFgenerator {
      */
     byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
                          int num_total) {
-        if (seen_added.added_num < num_sample) {
-            double rand_num = _rand.nextDouble();
-            if ((num_total - seen_added.seen_num) * rand_num >= (num_sample - seen_added.added_num)) {
-                seen_added.seen_num++;
-                return 0;
-            } else {
-                seen_added.seen_num++;
-                seen_added.added_num++;
-                return geno;
-            }
-        }
-        return 0;
+        return sample_genotype(geno, seen_added, num_sample, num_total,false);
     }
 
     /**

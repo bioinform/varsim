@@ -15,6 +15,9 @@ import java.util.Random;
 public class RandDGV2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
 
+    @Option(name = "-all", usage = "Output all variants")
+    boolean output_all;
+
     static final int SEED_ARG = 333;
     @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
     static int seed = SEED_ARG;
@@ -221,7 +224,6 @@ public class RandDGV2VCF extends randVCFgenerator {
 
             prev_var = var;
 
-
             if (var.max_len() > max_length_lim
                     || var.min_len() < min_length_lim) {
                 total_out_of_range++;
@@ -253,11 +255,8 @@ public class RandDGV2VCF extends randVCFgenerator {
                     default:
                         total_num_other++;
                 }
-
             }
-
             total_num++;
-
         }
 
         log.info("total_num_INS: " + total_num_INS);
@@ -314,8 +313,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
             prev_var = new Variant(var);
 
-            if (var.max_len() > max_length_lim
-                    || var.min_len() < min_length_lim) {
+            if (var.max_len() > max_length_lim || var.min_len() < min_length_lim) {
                 continue;
             }
 
@@ -333,19 +331,19 @@ public class RandDGV2VCF extends randVCFgenerator {
                 switch (var.getType(geno.geno[i])) {
                     case Insertion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INS_params,
-                                num_INS, total_num_INS);
+                                num_INS, total_num_INS,output_all);
                         break;
                     case Deletion:
                         geno.geno[i] = sample_genotype(geno.geno[i], DEL_params,
-                                num_DEL, total_num_DEL);
+                                num_DEL, total_num_DEL,output_all);
                         break;
                     case Tandem_Duplication:
                         geno.geno[i] = sample_genotype(geno.geno[i], DUP_params,
-                                num_DUP, total_num_DUP);
+                                num_DUP, total_num_DUP,output_all);
                         break;
                     case Inversion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INV_params,
-                                num_INV, total_num_INV);
+                                num_INV, total_num_INV,output_all);
                         break;
                     default:
                         break;
