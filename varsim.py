@@ -171,7 +171,7 @@ if not args.disable_rand_vcf:
   rand_vcf_stderr = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
 
-  rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), " randvcf2vcf " ," -seed", str(args.seed),
+  rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf" ,"-seed", str(args.seed),
                  "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
                  "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel", str(args.vc_percent_novel),
                  "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref", os.path.realpath(args.reference.name),
@@ -186,7 +186,7 @@ if not args.disable_rand_dgv:
   rand_dgv_stderr = open(os.path.join(args.log_dir, "RandDGV2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
 
-  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.varsim_jar.name), " randdgv2vcf " , " -seed", str(args.seed),
+  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.varsim_jar.name), "randdgv2vcf" , "-seed", str(args.seed),
                     "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup", str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
                     "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len", str(args.sv_max_length_lim), "-ref", os.path.realpath(args.reference.name),
                     "-ins", os.path.realpath(args.sv_insert_seq.name), "-dgv", os.path.realpath(args.sv_dgv.name)]
@@ -206,7 +206,7 @@ for in_vcf in args.vcfs:
   out_prefix = os.path.basename(in_vcf)
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), " vcfstats " ," -vcf", in_vcf]
+  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", in_vcf]
   p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   processes.append(p_vcfstats)
@@ -217,7 +217,7 @@ if not args.disable_vcf2diploid:
   vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
   vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
   filter_arg_list = ["-pass"] if args.filter else []
-  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), " vcf2diploid ",
+  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "vcf2diploid",
   						 "-t", args.sex, 
   						 "-id", args.id, 
   						 "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
@@ -255,7 +255,7 @@ if not args.disable_vcf2diploid:
 
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.truth.vcf.stats" %  (args.id)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.truth.vcf.vcfstats.err" %  (args.id)), "w")
-  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), " vcfstats " ,"-vcf", merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   monitor_processes([p_vcfstats], logger) 
 

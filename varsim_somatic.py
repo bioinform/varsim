@@ -163,7 +163,7 @@ if not args.disable_rand_vcf:
   rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
   vcf_files.insert(0,os.path.realpath(rand_vcf_stdout.name))
 
-  rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), " randvcf2vcf ", "-seed", str(args.seed),
+  rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                  "-num_snp", str(args.som_num_snp), 
                  "-num_ins", str(args.som_num_ins), 
                  "-num_del", str(args.som_num_del),
@@ -187,7 +187,7 @@ for in_vcf in vcf_files:
   out_prefix = os.path.basename(in_vcf)
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), " vcfstats ", "-vcf", in_vcf]
+  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf", in_vcf]
   p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   processes.append(p_vcfstats)
@@ -264,13 +264,13 @@ processes = monitor_processes(processes, logger)
 
 vcfstats_stdout = open(os.path.join(args.out_dir, "%s.norm.vcf.stats" %  (args.id)), "w")
 vcfstats_stderr = open(os.path.join(args.log_dir, "%s.norm.vcf.vcfstats.err" %  (args.id)), "w")
-p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), " vcfstats " ,"-vcf", os.path.join(args.out_dir, str(args.id) + "_norm.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", os.path.join(args.out_dir, str(args.id) + "_norm.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
 logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
 processes.append(p_vcfstats)
 
 vcfstats_stdout = open(os.path.join(args.out_dir, "%s.somatic.vcf.stats" %  (args.id)), "w")
 vcfstats_stderr = open(os.path.join(args.log_dir, "%s.somatic.vcf.vcfstats.err" %  (args.id)), "w")
-p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), " vcfstats " ,"-vcf", os.path.join(args.out_dir, str(args.id) + "_somatic.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", os.path.join(args.out_dir, str(args.id) + "_somatic.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
 logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
 processes.append(p_vcfstats)
 
