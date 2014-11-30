@@ -34,6 +34,7 @@ public class VarSim {
                 + "\n";
         if(args.length == 0){
             System.err.println(usage);
+            System.exit(1);
         }
 
         String[] pass_args = Arrays.copyOfRange(args,1,args.length);
@@ -66,6 +67,7 @@ public class VarSim {
             default:
                 log.error("Unknown tool: " + args[0]);
                 System.err.println(usage);
+                System.exit(1);
                 break;
         }
 
