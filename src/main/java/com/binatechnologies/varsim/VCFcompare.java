@@ -31,7 +31,7 @@ public class VCFcompare {
     String true_vcf_filename;
 
     @Argument(usage = "One or more VCF files from secondary analysis",metaVar = "vcf_files ...",required = true)
-    private ArrayList<String> new_vcf_filename = new ArrayList<String>();
+    private ArrayList<String> new_vcf_filename = new ArrayList<>();
 
     @Option(name = "-prefix", usage = "Prefix for output file [Required]",metaVar = "file",required = true)
     String out_prefix;
@@ -389,7 +389,7 @@ public class VCFcompare {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar vcfcompare.jar [options...]");
+            System.err.println("java -jar vcfcompare.jar [options...] vcf_files ...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);

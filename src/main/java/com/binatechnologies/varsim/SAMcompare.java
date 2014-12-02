@@ -29,7 +29,7 @@ public class SAMcompare {
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
 
     @Argument(usage = "One or more BAM files",metaVar = "bam_files ...",required = true)
-    private ArrayList<String> bam_filename = new ArrayList<String>();
+    private ArrayList<String> bam_filename = new ArrayList<>();
 
     static final int WIGGLE_ARG = 20;
     @Option(name = "-wig", usage = "Wiggle allowance in validation ["+WIGGLE_ARG+"]")
