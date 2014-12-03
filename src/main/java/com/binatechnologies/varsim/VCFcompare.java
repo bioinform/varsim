@@ -389,7 +389,7 @@ public class VCFcompare {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar vcfcompare.jar [options...] vcf_files ...");
+            System.err.println("java -jar VarSim.jar vcfcompare [options...] vcf_files ...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);

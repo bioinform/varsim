@@ -101,7 +101,7 @@ public class SAMcompare {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar samcompare.jar [options...] bam_files ...");
+            System.err.println("java -jar VarSim.jar samcompare [options...] bam_files ...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
