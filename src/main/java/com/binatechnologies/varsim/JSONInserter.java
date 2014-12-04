@@ -64,10 +64,14 @@ public class JSONInserter {
 
             // construct string to insert
             String jsonStr = StringEscapeUtils.escapeEcmaScript(FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", ""));
-            TreeMap lookup = new TreeMap<>();
-            lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
-            FileUtils.writeStringToFile(outFile, new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html));
+            FileUtils.writeStringToFile(outFile, insertJSON(varsim_html,jsonStr));
         }
+    }
+
+    public static String insertJSON(String varsim_html, String jsonStr){
+        TreeMap lookup = new TreeMap<>();
+        lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
+        return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
     }
 
     public static void main(String[] args) throws IOException{

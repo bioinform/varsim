@@ -9,17 +9,20 @@ package com.binatechnologies.varsim;
 import com.binatechnologies.varsim.fastq_liftover.GenomeLocation;
 import com.binatechnologies.varsim.fastq_liftover.MapBlock;
 import com.binatechnologies.varsim.fastq_liftover.SimulatedRead;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +43,9 @@ public class SAMcompare {
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
     String bed_filename = "";
+
+    @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]",metaVar = "HTML_file", hidden = true)
+    File html_file = null;
 
     /**
      * @param args
@@ -360,10 +366,22 @@ public class SAMcompare {
 
         // output a JSON object
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+        String jsonStr = "";
         try {
-            JSON_writer.print(mapper.writeValueAsString(output_blob));
+            jsonStr = mapper.writeValueAsString(output_blob);
+            JSON_writer.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if(html_file != null) {
+            try {
+                FileUtils.writeStringToFile(new File(out_prefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(html_file), jsonStr));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         JSON_writer.close();
