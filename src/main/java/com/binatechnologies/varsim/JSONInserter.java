@@ -58,7 +58,7 @@ public class JSONInserter {
             }else{
                 prefix = prefixes[0];
             }
-            String outName = html_file.getName() + prefix;
+            String outName = prefix + "_" + html_file.getName();
             File outFile = new File(outName);
 
             // construct string to insert
