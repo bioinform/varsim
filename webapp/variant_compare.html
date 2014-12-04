@@ -1214,6 +1214,17 @@
         }
 
 
+		// check for existence of varsim_data
+		if(typeof varsim_data != undefined){
+			// load the data if the variable exists
+			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
+            process_json(varsim_data, filename, true)
+            hide_all();
+            redraw_plots(types_data, 'types', 'Detail', true);
+            redraw_plots(types_data, 'sum_types', 'Summary', false);
+            show_id('sum_types_var');
+            
+		}
 
          // these are run after everything is setup
 
