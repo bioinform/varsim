@@ -1186,7 +1186,16 @@
 
          // these are run after everything is setup
          
-         // check for existence of varsim_data
+         
+
+        document.getElementById('files').addEventListener('change', handleFileSelect, false);
+        document.getElementById('reset_button').addEventListener('click', reset_all_plots, false);
+
+        hide_all();
+        show_id('about');
+        scroll_to('parameters');
+        
+        // check for existence of varsim_data
 		if(typeof varsim_data != undefined){
 			// load the data if the variable exists
 			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
@@ -1195,13 +1204,6 @@
             redraw_plots(stats_data, 'stats');
             show_id('stats_plot');
 		}
-
-        document.getElementById('files').addEventListener('change', handleFileSelect, false);
-        document.getElementById('reset_button').addEventListener('click', reset_all_plots, false);
-
-        hide_all();
-        show_id('about');
-        scroll_to('parameters');
     </script>
 </body>
 
