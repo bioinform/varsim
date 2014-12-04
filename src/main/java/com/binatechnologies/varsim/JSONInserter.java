@@ -1,5 +1,6 @@
 package com.binatechnologies.varsim;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -62,7 +63,7 @@ public class JSONInserter {
             File outFile = new File(outName);
 
             // construct string to insert
-            String jsonStr = FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", "");
+            String jsonStr = StringEscapeUtils.escapeEcmaScript(FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", ""));
             TreeMap lookup = new TreeMap<>();
             lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
             FileUtils.writeStringToFile(outFile, new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html));
