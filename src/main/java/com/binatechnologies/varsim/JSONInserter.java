@@ -62,7 +62,7 @@ public class JSONInserter {
             File outFile = new File(outName);
 
             // construct string to insert
-            String jsonStr = FileUtils.readFileToString(new File(filename));
+            String jsonStr = FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", "");
             TreeMap lookup = new TreeMap<>();
             lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
             FileUtils.writeStringToFile(outFile, new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html));
