@@ -1190,7 +1190,7 @@
 		if(typeof varsim_data != undefined){
 			// load the data if the variable exists
 			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
-            process_json(varsim_data, filename, true)
+            process_json(varsim_data, filename, false)
             hide_all();
             redraw_plots(stats_data, 'stats');
             show_id('stats_plot');
