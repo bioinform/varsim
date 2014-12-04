@@ -1,5 +1,6 @@
 package com.binatechnologies.varsim;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -10,6 +11,9 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by johnmu on 12/3/14.
@@ -18,7 +22,7 @@ public class JSONInserter {
     private final static Logger log = Logger.getLogger(JSONInserter.class.getName());
 
     @Argument(usage = "One or more JSON files from VarSim",metaVar = "json_files ...",required = true)
-    private ArrayList<String> json_filename = new ArrayList<>();
+    private ArrayList<String> jsonFilename = new ArrayList<>();
 
     @Option(name = "-html", usage = "VarSim HTML to insert the JSON into" ,metaVar = "file",required = true)
     File html_file;
@@ -45,12 +49,16 @@ public class JSONInserter {
 
         String varsim_html = FileUtils.readFileToString(html_file);
 
-        for(String filename : json_filename){
+        for(String filename : jsonFilename){
             // generate output_filename
             String outName = html_file.getName() + filename.split(".")[0];
-            File file = new File(outName);
+            File outFile = new File(outName);
 
-            FileUtils.writeStringToFile(file, blah);
+            // construct string to insert
+            String jsonStr = FileUtils.readFileToString(new File(filename));
+            TreeMap lookup = new TreeMap<>();
+            lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
+            FileUtils.writeStringToFile(outFile, new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html));
         }
     }
 
