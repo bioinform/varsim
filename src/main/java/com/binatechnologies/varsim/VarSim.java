@@ -62,7 +62,10 @@ public class VarSim {
                 new RandBED2VCF().run(pass_args);
                 break;
             case "fastq_liftover":
-                new FastqLiftOver().doMain(pass_args);
+                new FastqLiftOver().run(pass_args);
+                break;
+            case "json_inserter":
+                new JSONInserter().run(pass_args);
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);

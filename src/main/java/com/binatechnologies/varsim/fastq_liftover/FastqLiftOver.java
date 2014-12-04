@@ -34,7 +34,7 @@ public class FastqLiftOver {
     private boolean forceFiveBaseEncoding = false;
 
     public static void main(String[] args) throws IOException {
-        new FastqLiftOver().doMain(args);
+        new FastqLiftOver().run(args);
     }
 
     public InputStream decompressStream(final File inputFile) throws IOException {
@@ -65,7 +65,7 @@ public class FastqLiftOver {
         return ps;
     }
 
-    public void doMain(String[] args) throws IOException {
+    public void run(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
         // if you have a wider console, you could increase the value;
