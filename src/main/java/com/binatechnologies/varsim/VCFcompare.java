@@ -2,6 +2,7 @@ package com.binatechnologies.varsim;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -10,6 +11,7 @@ import org.kohsuke.args4j.Option;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +51,9 @@ public class VCFcompare {
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
     String bed_filename = "";
+
+    @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]",metaVar = "HTML_file", hidden = true)
+    File html_file = null;
 
 
     public static void main(String[] args) {
@@ -736,10 +741,20 @@ public class VCFcompare {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
+        String jsonStr = "";
         try {
-            mapper.writeValue(JSON_writer, output_blob);
+            jsonStr = mapper.writeValueAsString(output_blob);
+            JSON_writer.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if(html_file != null) {
+            try {
+                FileUtils.writeStringToFile(new File(out_prefix + "_varcomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(html_file), jsonStr));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         try {
