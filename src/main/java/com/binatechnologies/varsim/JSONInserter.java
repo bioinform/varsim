@@ -70,7 +70,7 @@ public class JSONInserter {
 
     public static String insertJSON(String varsim_html, String jsonStr){
         TreeMap lookup = new TreeMap<>();
-        lookup.put("varsim_data", "var varsim_data = \"" + jsonStr + "\";");
+        lookup.put("varsim_data", "var varsim_data = \"" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\";");
         return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
     }
 
