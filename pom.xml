@@ -120,6 +120,11 @@
             <version>3.3.1</version>
         </dependency>
         <dependency>
+            <groupId>org.seqdoop</groupId>
+            <artifactId>htsjdk</artifactId>
+            <version>1.118</version>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>

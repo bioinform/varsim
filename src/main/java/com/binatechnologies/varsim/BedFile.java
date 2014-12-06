@@ -54,7 +54,7 @@ public class BedFile {
             int start = Integer.parseInt(ll[1]);
             int end = Integer.parseInt(ll[2]);
 
-            bedST.put(chr_name, new Interval1D(start, end), 0);
+            bedST.put(chr_name, new Interval1D(start, end - 1), 0);
         }
     }
 
