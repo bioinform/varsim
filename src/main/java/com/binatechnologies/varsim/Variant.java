@@ -256,28 +256,28 @@ public class Variant {
     /*
     gets the interval enclosing the variant on the reference genome
     */
-    public Interval1D get_interval(int ind) {
+    public SimpleInterval1D get_interval(int ind) {
         if (ind == 0 || _del == 0) {
-            return new Interval1D(_pos, _pos);
+            return new SimpleInterval1D(_pos, _pos);
         }
 
-        return new Interval1D(_pos, _pos + _del - 1);
+        return new SimpleInterval1D(_pos, _pos + _del - 1);
     }
 
     /*
     gets the interval for the variant, accounting for variant size
     */
-    public Interval1D get_var_interval(int ind) {
+    public SimpleInterval1D get_var_interval(int ind) {
         try {
             if (ind == 0) {
-                return new Interval1D(_pos, _pos);
+                return new SimpleInterval1D(_pos, _pos);
             }
 
             // TODO hmm unsafe
             if(max_len(ind) == Integer.MAX_VALUE){
-                return new Interval1D(_pos, _pos);
+                return new SimpleInterval1D(_pos, _pos);
             }else {
-                return new Interval1D(_pos, _pos + max_len(ind) - 1);
+                return new SimpleInterval1D(_pos, _pos + max_len(ind) - 1);
             }
         }catch(RuntimeException e){
             log.error("Bad variant interval: " + toString());
@@ -290,11 +290,11 @@ public class Variant {
     }
 
     // union of intervals from the genotypes
-    public Interval1D get_geno_interval() {
+    public SimpleInterval1D get_geno_interval() {
         return get_interval(getgood_paternal()).union(get_interval(getgood_maternal()));
     }
 
-    public Interval1D get_geno_var_interval() {
+    public SimpleInterval1D get_geno_var_interval() {
         return get_var_interval(getgood_paternal()).union(get_var_interval(getgood_maternal()));
     }
 

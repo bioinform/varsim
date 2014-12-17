@@ -48,29 +48,29 @@ public class IntervalTree<Key extends Interval1D> {
      * @param args
      */
     public static void main(String args[]) {
-        IntervalTree<Interval1D> test_tree = new IntervalTree<Interval1D>();
+        IntervalTree test_tree = new IntervalTree();
         System.out.println("Adding...");
-        test_tree.add(new Interval1D(10, 20));
-        test_tree.add(new Interval1D(5, 10));
-        test_tree.add(new Interval1D(5, 20));
-        test_tree.add(new Interval1D(15, 20));
-        test_tree.testGetOverlap(new Interval1D(10, 10));
-        test_tree.testGetOverlap(new Interval1D(11, 15));
+        test_tree.add(new SimpleInterval1D(10, 20));
+        test_tree.add(new SimpleInterval1D(5, 10));
+        test_tree.add(new SimpleInterval1D(5, 20));
+        test_tree.add(new SimpleInterval1D(15, 20));
+        test_tree.testGetOverlap(new SimpleInterval1D(10, 10));
+        test_tree.testGetOverlap(new SimpleInterval1D(11, 15));
 
         // test out the rotation
         // keep adding to the right and see if it balances
-        test_tree.add(new Interval1D(15, 20));
-        test_tree.add(new Interval1D(20, 20));
-        test_tree.add(new Interval1D(20, 21));
-        test_tree.add(new Interval1D(20, 24));
-        test_tree.add(new Interval1D(30, 34));
-        test_tree.add(new Interval1D(31, 34));
-        test_tree.add(new Interval1D(35, 35));
-        test_tree.add(new Interval1D(45, 45));
-        test_tree.add(new Interval1D(55, 55));
-        test_tree.add(new Interval1D(65, 65));
-        test_tree.add(new Interval1D(75, 75));
-        test_tree.add(new Interval1D(85, 85));
+        test_tree.add(new SimpleInterval1D(15, 20));
+        test_tree.add(new SimpleInterval1D(20, 20));
+        test_tree.add(new SimpleInterval1D(20, 21));
+        test_tree.add(new SimpleInterval1D(20, 24));
+        test_tree.add(new SimpleInterval1D(30, 34));
+        test_tree.add(new SimpleInterval1D(31, 34));
+        test_tree.add(new SimpleInterval1D(35, 35));
+        test_tree.add(new SimpleInterval1D(45, 45));
+        test_tree.add(new SimpleInterval1D(55, 55));
+        test_tree.add(new SimpleInterval1D(65, 65));
+        test_tree.add(new SimpleInterval1D(75, 75));
+        test_tree.add(new SimpleInterval1D(85, 85));
 
         // see what the tree looks like
         System.out.println("Print test tree...");
@@ -78,22 +78,22 @@ public class IntervalTree<Key extends Interval1D> {
 
         // keep adding to the left and see if it balances
 
-        test_tree.add(new Interval1D(-10, -10));
-        test_tree.add(new Interval1D(-20, -20));
-        test_tree.add(new Interval1D(-30, -30));
-        test_tree.add(new Interval1D(-40, -40));
-        test_tree.add(new Interval1D(-50, -50));
-        test_tree.add(new Interval1D(-60, -60));
-        test_tree.add(new Interval1D(-70, -70));
+        test_tree.add(new SimpleInterval1D(-10, -10));
+        test_tree.add(new SimpleInterval1D(-20, -20));
+        test_tree.add(new SimpleInterval1D(-30, -30));
+        test_tree.add(new SimpleInterval1D(-40, -40));
+        test_tree.add(new SimpleInterval1D(-50, -50));
+        test_tree.add(new SimpleInterval1D(-60, -60));
+        test_tree.add(new SimpleInterval1D(-70, -70));
 
 
         // see what the tree looks like
         System.out.println("Print test tree...");
         test_tree.printTree();
 
-        test_tree.testGetOverlap(new Interval1D(20, 20));
-        test_tree.testGetOverlap(new Interval1D(21, 22));
-        test_tree.testGetOverlap(new Interval1D(30, 31));
+        test_tree.testGetOverlap(new SimpleInterval1D(20, 20));
+        test_tree.testGetOverlap(new SimpleInterval1D(21, 22));
+        test_tree.testGetOverlap(new SimpleInterval1D(30, 31));
 
         System.out.println("Do some rotation");
         System.out.println("**Rotate right: " + test_tree.rotateRight());
@@ -109,12 +109,12 @@ public class IntervalTree<Key extends Interval1D> {
         System.out.println("**Rotate left: " + test_tree.rotateLeft());
         System.out.println("**Rotate left: " + test_tree.rotateLeft());
 
-        test_tree.testGetOverlap(new Interval1D(20, 20));
-        test_tree.testGetOverlap(new Interval1D(21, 22));
-        test_tree.testGetOverlap(new Interval1D(30, 31));
+        test_tree.testGetOverlap(new SimpleInterval1D(20, 20));
+        test_tree.testGetOverlap(new SimpleInterval1D(21, 22));
+        test_tree.testGetOverlap(new SimpleInterval1D(30, 31));
 
-        test_tree.testContains(new Interval1D(20, 20));
-        test_tree.testContains(new Interval1D(-45, -45));
+        test_tree.testContains(new SimpleInterval1D(20, 20));
+        test_tree.testContains(new SimpleInterval1D(-45, -45));
     }
 
     private static void printList(final ArrayList<?> x) {
@@ -203,11 +203,11 @@ public class IntervalTree<Key extends Interval1D> {
         return balanceFactorChange;
     }
 
-    public ArrayList<Key> getOverlaps(Key k) {
+    public ArrayList<Key> getOverlaps(Interval1D k) {
         return getOverlaps(root, k, 0, 0);
     }
 
-    public ArrayList<Key> getOverlaps(Key k, double reciprocalRatio) {
+    public ArrayList<Key> getOverlaps(Interval1D k, double reciprocalRatio) {
         return getOverlaps(root, k, reciprocalRatio, 0);
     }
 
@@ -219,7 +219,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param wiggle
      * @return ArrayList of keys that overlap the given Key
      */
-    public ArrayList<Key> getOverlaps(Key k, double reciprocalRatio, int wiggle) {
+    public ArrayList<Key> getOverlaps(Interval1D k, double reciprocalRatio, int wiggle) {
         return getOverlaps(root, k, reciprocalRatio, wiggle);
     }
 
@@ -229,7 +229,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param k key to search for
      * @return List of Keys that overlap the given key
      */
-    private ArrayList<Key> getOverlaps(IntervalTreeNode<Key> head, Key k, double reciprocalRatio, int wiggle) {
+    private ArrayList<Key> getOverlaps(IntervalTreeNode<Key> head, Interval1D k, double reciprocalRatio, int wiggle) {
         if (head == null) {
             return new ArrayList<Key>();
         }
@@ -246,11 +246,11 @@ public class IntervalTree<Key extends Interval1D> {
         return retVal;
     }
 
-    public boolean contains(Key k) {
+    public boolean contains(Interval1D k) {
         return contains(root, k, 0, 0);
     }
 
-    public boolean contains(Key k, double reciprocalRatio) {
+    public boolean contains(Interval1D k, double reciprocalRatio) {
         return contains(root, k, reciprocalRatio,0);
     }
 
@@ -260,7 +260,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param wiggle
      * @return true if k overlaps and key in tree
      */
-    public boolean contains(Key k, double reciprocalRatio, int wiggle) {
+    public boolean contains(Interval1D k, double reciprocalRatio, int wiggle) {
         return contains(root, k, reciprocalRatio, wiggle);
     }
 
@@ -269,7 +269,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param k    Key to search for
      * @return true if k overlaps and key from the tree rooted at head
      */
-    private boolean contains(IntervalTreeNode<Key> head, Key k, double reciprocalRatio, int wiggle) {
+    private boolean contains(IntervalTreeNode<Key> head, Interval1D k, double reciprocalRatio, int wiggle) {
         if (head == null) {
             return false;
         }
@@ -441,13 +441,13 @@ public class IntervalTree<Key extends Interval1D> {
         }
     }
 
-    private void testGetOverlap(Key k) {
+    private void testGetOverlap(Interval1D k) {
         System.out.println("Getting..." + k);
         //System.out.println(StringUtils.join(output, ','));
         printList(getOverlaps(k));
     }
 
-    private void testContains(Key k) {
+    private void testContains(Interval1D k) {
         System.out.println("Contains..." + k + " -- " + contains(k));
     }
 }

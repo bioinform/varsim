@@ -94,7 +94,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param k key to check
      * @return 0 if it overlaps center, -1 for completely on left, 1 for completely on right
      */
-    public int checkKey(final Key k) {
+    public int checkKey(final Interval1D k) {
         // check if the key overlaps the center cut
         if (overlapCenter(k)) {
             return 0;
@@ -106,7 +106,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         }
     }
 
-    public final boolean overlapCenter(final Key k) {
+    public final boolean overlapCenter(final Interval1D k) {
         return k.contains(centerCut);
     }
 
@@ -118,7 +118,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param k
      * @return All intervals that overlap at least one base with the provided one
      */
-    public final ArrayList<Key> getOverlaps(final Key k) {
+    public final ArrayList<Key> getOverlaps(final Interval1D k) {
         return getOverlaps(k, 0, 0);
     }
 
@@ -126,7 +126,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param k key to search for
      * @return true if the node contains the key
      */
-    public final boolean contains(final Key k) {
+    public final boolean contains(final Interval1D k) {
         return contains(k, 0, 0);
     }
 
@@ -136,7 +136,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param reciprocalRatio
      * @return
      */
-    public final ArrayList<Key> getOverlaps(final Key k, double reciprocalRatio) {
+    public final ArrayList<Key> getOverlaps(final Interval1D k, double reciprocalRatio) {
         return getOverlaps(k, reciprocalRatio, 0);
     }
 
@@ -146,7 +146,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param reciprocalRatio
      * @return
      */
-    public final boolean contains(final Key k, double reciprocalRatio) {
+    public final boolean contains(final Interval1D k, double reciprocalRatio) {
         return contains(k, reciprocalRatio, 0);
     }
 
@@ -157,7 +157,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param wiggle Try to shift the interval within this wiggle
      * @return All intervals that overlap with the provided one matching the criteria
      */
-    public final ArrayList<Key> getOverlaps(final Key k, double reciprocalRatio, int wiggle) {
+    public final ArrayList<Key> getOverlaps(final Interval1D k, double reciprocalRatio, int wiggle) {
         ArrayList<Key> retVal = new ArrayList<Key>();
         for (Key centerKey : center) {
             if (centerKey.intersects(k, reciprocalRatio, wiggle)) {
@@ -174,37 +174,13 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @param wiggle Try to shift the interval within this wiggle
      * @return True if node contains the key with specified criteria
      */
-    public final boolean contains(final Key k, double reciprocalRatio, int wiggle) {
-        for (Key centerKey : center) {
+    public final boolean contains(final Interval1D k, double reciprocalRatio, int wiggle) {
+        for (Interval1D centerKey : center) {
             if (centerKey.intersects(k, reciprocalRatio, wiggle)) {
                 return true;
             }
         }
         return false;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        IntervalTreeNode that = (IntervalTreeNode) o;
-
-        if (centerCut != that.centerCut) return false;
-        if (center != null ? !center.equals(that.center) : that.center != null) return false;
-        if (left != null ? !left.equals(that.left) : that.left != null) return false;
-        if (right != null ? !right.equals(that.right) : that.right != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = left != null ? left.hashCode() : 0;
-        result = 31 * result + (right != null ? right.hashCode() : 0);
-        result = 31 * result + (center != null ? center.hashCode() : 0);
-        result = 31 * result + (int) (centerCut ^ (centerCut >>> 32));
-        return result;
     }
 
     public IntervalTreeNode<Key> getLeft() {
@@ -245,7 +221,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         sb.append(" bf: ");
         sb.append(balanceFactor);
         sb.append(" -- ");
-        for (Key val : center) {
+        for (Interval1D val : center) {
             sb.append(val + ",");
         }
         return sb.toString();

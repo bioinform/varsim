@@ -5,7 +5,7 @@ package com.binatechnologies.varsim;
  *
  * @author johnmu
  */
-public class ValueInterval1D<Value> extends Interval1D {
+public class ValueInterval1D<Value> extends SimpleInterval1D {
     private Value data;
 
     public ValueInterval1D(long left, long right) {
@@ -18,11 +18,16 @@ public class ValueInterval1D<Value> extends Interval1D {
         this.data = data;
     }
 
-    public Value getData() {
+    public ValueInterval1D(SimpleInterval1D reg, Value data){
+        super(reg);
+        this.data = data;
+    }
+
+    public Value get() {
         return data;
     }
 
-    public void setData(Value data) {
+    public void set(Value data) {
         this.data = data;
     }
 

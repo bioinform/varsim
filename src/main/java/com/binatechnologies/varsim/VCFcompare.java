@@ -466,7 +466,7 @@ public class VCFcompare {
         VCFparser true_parser = new VCFparser(true_vcf_filename, null, false);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
-        chrSearchTree<Variant> true_store = new chrSearchTree<Variant>(true);
+        chrSearchTree<ValueInterval1D<Variant>> true_store = new chrSearchTree<ValueInterval1D<Variant>>(true);
         int num_read = 0;
         int num_added = 0;
 
@@ -521,7 +521,7 @@ public class VCFcompare {
                 }
 
                 total_len += curr_len;
-                Interval1D curr_var_reg = null;
+                SimpleInterval1D curr_var_reg = null;
                 try {
                     curr_var_reg = curr_var.get_geno_var_interval();
                 } catch (Exception e) {
@@ -534,7 +534,7 @@ public class VCFcompare {
                 curr_var.full_idx = num_read;
                 curr_var.original_type = orig_type;
 
-                true_store.put(chr_name, curr_var_reg, curr_var);
+                true_store.put(chr_name, new ValueInterval1D<Variant>(curr_var_reg,curr_var));
                 num_added++;
             }
 
@@ -603,7 +603,7 @@ public class VCFcompare {
                 Genotypes geno = var.getGeno();
 
                 String chr_name = var.getChr_name();
-                Interval1D var_reg = var.get_geno_interval();
+                SimpleInterval1D var_reg = var.get_geno_interval();
 
                 if (!(intersector == null || intersector.contains(chr_name, var_reg))) {
                     continue;
@@ -714,7 +714,7 @@ public class VCFcompare {
         for (Variant var : true_var_list) {
 
             String chr_name = var.getChr_name();
-            Interval1D curr_var_reg = var.get_geno_interval();
+            SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
             if (intersector == null || intersector.contains(chr_name, curr_var_reg)) {
                 int total_len = full_validated_total.get(num_read);
@@ -874,7 +874,7 @@ public class VCFcompare {
 
     class result_comparator {
 
-        chrSearchTree<Variant> _true_store; // true variants
+        chrSearchTree<ValueInterval1D<Variant>> _true_store; // true variants
         double _overlap_ratio;
         boolean _overlap_complex;
         int _wiggle;
@@ -885,10 +885,10 @@ public class VCFcompare {
         ArrayList<dual_idx> matches_hom = new ArrayList<dual_idx>();
         ArrayList<ArrayList<dual_idx>> matches_het = new ArrayList<ArrayList<dual_idx>>(2); // matches either parent
 
-        public result_comparator(chrSearchTree<Variant> true_store, double overlap_ratio, int wiggle) {
+        public result_comparator(chrSearchTree<ValueInterval1D<Variant>> true_store, double overlap_ratio, int wiggle) {
             this(true_store, overlap_ratio, wiggle,false);
         }
-        public result_comparator(chrSearchTree<Variant> true_store, double overlap_ratio, int wiggle, boolean ignore_ins_len) {
+        public result_comparator(chrSearchTree<ValueInterval1D<Variant>> true_store, double overlap_ratio, int wiggle, boolean ignore_ins_len) {
             _true_store = true_store;
             _overlap_ratio = overlap_ratio;
             _wiggle = wiggle;
@@ -949,9 +949,9 @@ public class VCFcompare {
             // consider type to change overlap percent
             Variant.Type type = var.getType(geno);
             String chr_name = var.getChr_name();
-            Interval1D orig_inter;
+            SimpleInterval1D orig_inter;
             if(type == Variant.Type.Insertion && _ignore_ins_len){
-                orig_inter = new Interval1D(var.position(),var.position());
+                orig_inter = new SimpleInterval1D(var.position(),var.position());
             }else{
                 orig_inter = var.get_var_interval(geno);
             }
@@ -963,14 +963,14 @@ public class VCFcompare {
             if (type == Variant.Type.SNP) {
                 // handle SNPs differently
                 // require SNP content to match
-                Iterable<Variant> out = _true_store.getAll(chr_name, orig_inter, 0);
+                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr_name, orig_inter);
 
                 byte val = var.getAlt(geno).getSeq()[0];
 
                 int num_matches = 0;
                 if (out != null) {
-                    for (Variant true_var : out) {
-
+                    for (ValueInterval1D<Variant> true_var_interval : out) {
+                        Variant true_var = true_var_interval.get();
                         boolean has_snp = false;
                         int idx = true_var.idx;
                         int full_idx = true_var.full_idx;
@@ -1024,8 +1024,8 @@ public class VCFcompare {
 
             } else {
                 // the rest
-                Interval1D wiggle_inter = new Interval1D(orig_inter.left - _wiggle, orig_inter.right + _wiggle);
-                Iterable<Variant> out = _true_store.getAll(chr_name, wiggle_inter, 0);
+                SimpleInterval1D wiggle_inter = new SimpleInterval1D(orig_inter.left - _wiggle, orig_inter.right + _wiggle);
+                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr_name, wiggle_inter);
 
 
                 if (out == null) {
@@ -1033,7 +1033,8 @@ public class VCFcompare {
                     return max_true_var_len;
                 }
 
-                for (Variant true_var : out) {
+                for (ValueInterval1D<Variant> true_var_interval : out) {
+                    Variant true_var = true_var_interval.get();
                     int idx = true_var.idx;
                     int full_idx = true_var.full_idx;
 

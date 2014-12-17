@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class BedFile {
     String _filename; // file name of the BED file
-    chrSearchTree<Interval1D> bedST; // the interval search tree for bed file
+    chrSearchTree<SimpleInterval1D> bedST; // the interval search tree for bed file
 
     /**
      * Reads the BED file into a search tree
@@ -26,7 +26,7 @@ public class BedFile {
      * @param filename BED file
      */
     public BedFile(String filename) {
-        bedST = new chrSearchTree<Interval1D>();
+        bedST = new chrSearchTree<SimpleInterval1D>();
         _filename = filename;
         try {
             readBedFile(new File(_filename));
@@ -51,13 +51,14 @@ public class BedFile {
                 continue;
             }
 
+            // TODO replace this with apache-commons for speed
             String[] ll = line.split("\t");
 
             String chr_name = ll[0];
             int start = Integer.parseInt(ll[1]);
             int end = Integer.parseInt(ll[2]);
 
-            bedST.put(chr_name, new Interval1D(start, end));
+            bedST.put(chr_name, new SimpleInterval1D(start, end));
         }
     }
 
@@ -70,7 +71,7 @@ public class BedFile {
      * @return
      */
     public boolean contains(String chrname, int start, int end) {
-        return bedST.contains(chrname, new Interval1D(start, end));
+        return bedST.contains(chrname, new SimpleInterval1D(start, end));
     }
 
     /**
@@ -80,7 +81,7 @@ public class BedFile {
      * @param interval Interval to search (inclusive)
      * @return
      */
-    public boolean contains(String chrname, Interval1D interval) {
+    public boolean contains(String chrname, SimpleInterval1D interval) {
         return bedST.contains(chrname, interval);
     }
 
