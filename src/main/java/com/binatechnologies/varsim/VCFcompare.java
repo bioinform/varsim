@@ -10,7 +10,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -1025,7 +1024,7 @@ public class VCFcompare {
 
             } else {
                 // the rest
-                Interval1D wiggle_inter = new Interval1D(orig_inter.low - _wiggle, orig_inter.high + _wiggle);
+                Interval1D wiggle_inter = new Interval1D(orig_inter.left - _wiggle, orig_inter.right + _wiggle);
                 Iterable<Variant> out = _true_store.getAll(chr_name, wiggle_inter, 0);
 
 

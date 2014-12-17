@@ -2,37 +2,23 @@ package com.binatechnologies.varsim;
 
 import org.apache.log4j.Logger;
 
-// Modified from http://algs4.cs.princeton.edu/93intersection/
-
-/**
- * **********************************************************************
- * Compilation: javac Interval1D.java Execution: java Interval1D
- * <p/>
- * Interval ADT for integer coordinates.
- * <p/>
- * ***********************************************************************
- */
-
-// end-points are inclusive
-// this class seems to be immutable
+// end-points are inclusive, immutable
 public class Interval1D implements Comparable<Interval1D> {
     private final static Logger log = Logger.getLogger(Interval1D.class.getName());
-    public final int low; // left endpoint
-    public final int high; // right endpoint
+    public final long left; // left endpoint, inclusive
+    public final long right; // right endpoint, inclusive
 
     // precondition: left <= right
-    public Interval1D(int left, int right) {
+    public Interval1D(long left, long right) {
         if (left <= right) {
-            this.low = left;
-            this.high = right;
+            this.left = left;
+            this.right = right;
         } else {
             throw new RuntimeException("Illegal interval: " + left + "-" + right);
         }
     }
 
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
         // Test the interval tree
         Interval1D a = new Interval1D(15, 30);
         Interval1D b = new Interval1D(20, 30);
@@ -82,26 +68,26 @@ public class Interval1D implements Comparable<Interval1D> {
         System.err.println("wiggle ratio c intersects d = " + c.intersects(d, ratio, wiggle));
     }
 
-    public int length() {
-        return this.high - this.low + 1;
+    public long length() {
+        return this.right - this.left + 1;
     }
 
     // does this interval intersect that one?
     public boolean intersects(Interval1D that) {
-        if (that.high < this.low)
+        if (that.right < this.left)
             return false;
-        if (this.high < that.low)
+        if (this.right < that.left)
             return false;
         return true;
     }
 
     // does this interval reciprocal intersect that one, with a particular
-    // ratio? The ratio is rounded up.
+    // ratio. The ratio is rounded up.
     public boolean intersects(Interval1D that, double ratio) {
-        int len_this = (int) Math.ceil(this.length() * ratio);
-        int len_that = (int) Math.ceil(that.length() * ratio);
-        int overlap = Math.min(this.high, that.high)
-                - Math.max(this.low, that.low) + 1;
+        long len_this = (long) Math.ceil(this.length() * ratio);
+        long len_that = (long) Math.ceil(that.length() * ratio);
+        long overlap = Math.min(this.right, that.right)
+                - Math.max(this.left, that.left) + 1;
 
         if (overlap >= Math.max(len_this, len_that)) {
             return true;
@@ -115,52 +101,38 @@ public class Interval1D implements Comparable<Interval1D> {
     That is, for any shift forward or back of the wiggle, is there ratio overlap
     */
     public boolean intersects(Interval1D that, double ratio, int wiggle) {
-        int len_this = (int) Math.ceil(this.length() * ratio);
-        int len_that = (int) Math.ceil(that.length() * ratio);
+        long len_this = (long) Math.ceil(this.length() * ratio);
+        long len_that = (long) Math.ceil(that.length() * ratio);
 
-        int max_overlap = 0;
-        int right_lim = 0;
-        int left_lim = 0;
-
-        log.trace("Comparing " + toString() + " with " + that);
+        long max_overlap = 0;
+        long right_lim = 0;
+        long left_lim = 0;
 
         // right limit
-        if (high < that.high) {
-            right_lim = Math.min(that.high, high + wiggle);
+        if (right < that.right) {
+            right_lim = Math.min(that.right, right + wiggle);
         } else {
-            right_lim = Math.max(that.high, high - wiggle);
+            right_lim = Math.max(that.right, right - wiggle);
         }
         left_lim = right_lim - length() + 1;
 
-        //System.err.println("right: " + left_lim + "-" + right_lim);
-
-        int overlap = Math.min(right_lim, that.high)
-                - Math.max(left_lim, that.low) + 1;
-
-        //System.err.println("roverlap: " + overlap);
+        long overlap = Math.min(right_lim, that.right)
+                - Math.max(left_lim, that.left) + 1;
 
         max_overlap = Math.max(max_overlap, overlap);
 
         // left limit
-        if (low < that.low) {
-            left_lim = Math.min(that.low, low + wiggle);
+        if (left < that.left) {
+            left_lim = Math.min(that.left, left + wiggle);
         } else {
-            left_lim = Math.max(that.low, low - wiggle);
+            left_lim = Math.max(that.left, left - wiggle);
         }
         right_lim = left_lim + length() - 1;
 
-        //System.err.println("left: " + left_lim + "-" + right_lim);
-
-        overlap = Math.min(right_lim, that.high)
-                - Math.max(left_lim, that.low) + 1;
-
-        //System.err.println("loverlap: " + overlap);
+        overlap = Math.min(right_lim, that.right)
+                - Math.max(left_lim, that.left) + 1;
 
         max_overlap = Math.max(max_overlap, overlap);
-
-        //System.err.println("max_overlap: " + max_overlap);
-        //System.err.println("len_this: " + len_this);
-        //System.err.println("len_that: " + len_that);
 
         if (max_overlap >= Math.max(len_this, len_that)) {
             return true;
@@ -168,31 +140,49 @@ public class Interval1D implements Comparable<Interval1D> {
         return false;
     }
 
-    // does this interval a intersect b?
-    public boolean contains(int x) {
-        return (low <= x) && (x <= high);
+    /**
+     * @param point point to test
+     * @return True if interval contains the point
+     */
+    public final boolean contains(final long point) {
+        return (left <= point) && (point <= right);
     }
 
-    public int compareTo(Interval1D that) {
-        if (this.low < that.low)
+    /**
+     * @param that com.binatechnologies.varsim.Interval1D to compare to
+     * @return zero if equal
+     */
+    public int compareTo(final Interval1D that) {
+        if (this.left < that.left)
             return -1;
-        else if (this.low > that.low)
+        else if (this.left > that.left)
             return +1;
-        else if (this.high < that.high)
+        else if (this.right < that.right)
             return -1;
-        else if (this.high > that.high)
+        else if (this.right > that.right)
             return +1;
         else
             return 0;
     }
 
-    // creates union of two intervals
+    /**
+     * @param inter Another interval
+     * @return union of current interval with the provided one
+     */
     public Interval1D union(final Interval1D inter) {
-        return new Interval1D(Math.min(low, inter.low), Math.max(high, inter.high));
+        return new Interval1D(Math.min(left, inter.left), Math.max(right, inter.right));
+    }
+
+    /**
+     *
+     * @return The midpoint of the interval floor((right+left)/2)
+     */
+    public final long getCenter(){
+        return ((right+left)/2);
     }
 
     public String toString() {
-        return "[" + low + ", " + high + "]";
+        return "[" + left + ", " + right + "]";
     }
 
 }

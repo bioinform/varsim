@@ -230,7 +230,7 @@ public class IntervalST<Value> {
                 return x.interval;
             else if (x.left == null)
                 x = x.right;
-            else if (x.left.max < interval.low)
+            else if (x.left.max < interval.left)
                 x = x.right;
             else
                 x = x.left;
@@ -267,10 +267,10 @@ public class IntervalST<Value> {
             list.add(x.interval);
             found1 = true;
         }
-        if (x.left != null && x.left.max >= interval.low) {
+        if (x.left != null && x.left.max >= interval.left) {
             found2 = searchAll(x.left, interval, list, ratio);
         }
-        if (found2 || x.left == null || x.left.max < interval.low) {
+        if (found2 || x.left == null || x.left.max < interval.left) {
             found3 = searchAll(x.right, interval, list, ratio);
         }
         return found1 || found2 || found3;
@@ -306,10 +306,10 @@ public class IntervalST<Value> {
             list.addAll(x.value);
             found1 = true;
         }
-        if (x.left != null && x.left.max >= interval.low) {
+        if (x.left != null && x.left.max >= interval.left) {
             found2 = getAll(x.left, interval, list, ratio);
         }
-        if (found2 || x.left == null || x.left.max < interval.low) {
+        if (found2 || x.left == null || x.left.max < interval.left) {
             found3 = getAll(x.right, interval, list, ratio);
         }
         return found1 || found2 || found3;
@@ -355,17 +355,17 @@ public class IntervalST<Value> {
         if (x == null)
             return;
         x.N = 1 + size(x.left) + size(x.right);
-        x.max = max3(x.interval.high, max(x.left), max(x.right));
+        x.max = max3(x.interval.right, max(x.left), max(x.right));
     }
 
-    private int max(Node x) {
+    private long max(Node x) {
         if (x == null)
             return Integer.MIN_VALUE;
         return x.max;
     }
 
     // precondition: a is not null
-    private int max3(int a, int b, int c) {
+    private long max3(long a, long b, long c) {
         return Math.max(a, Math.max(b, c));
     }
 
@@ -419,7 +419,7 @@ public class IntervalST<Value> {
     private boolean checkMax(Node x) {
         if (x == null)
             return true;
-        return x.max == max3(x.interval.high, max(x.left), max(x.right));
+        return x.max == max3(x.interval.right, max(x.left), max(x.right));
     }
 
     // BST helper node data type
@@ -428,14 +428,14 @@ public class IntervalST<Value> {
         ArrayList<Value> value; // associated data
         Node left, right; // left and right subtrees
         int N; // size of subtree rooted at this node
-        int max; // max endpoint in subtree rooted at this node
+        long max; // max endpoint in subtree rooted at this node
 
         Node(Interval1D interval, Value value) {
             this.interval = interval;
             this.value = new ArrayList<Value>(1);
             this.value.add(value);
             this.N = 1;
-            this.max = interval.high;
+            this.max = interval.right;
         }
 
         Node(Node n) {
