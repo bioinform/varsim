@@ -8,6 +8,9 @@ import java.io.IOException;
 /**
  * Reads in a BED file and allows testing of regions
  * Remember that a BED file is 0-based
+ *
+ * TODO this current implementation ignores the other bed columns other than chr,start,end
+ * TODO implement the other types of overlap
  */
 
 /**
@@ -15,7 +18,7 @@ import java.io.IOException;
  */
 public class BedFile {
     String _filename; // file name of the BED file
-    chrST<Integer> bedST; // the interval search tree for bed file
+    chrSearchTree<Interval1D> bedST; // the interval search tree for bed file
 
     /**
      * Reads the BED file into a search tree
@@ -23,7 +26,7 @@ public class BedFile {
      * @param filename BED file
      */
     public BedFile(String filename) {
-        bedST = new chrST<Integer>();
+        bedST = new chrSearchTree<Interval1D>();
         _filename = filename;
         try {
             readBedFile(new File(_filename));
@@ -54,7 +57,7 @@ public class BedFile {
             int start = Integer.parseInt(ll[1]);
             int end = Integer.parseInt(ll[2]);
 
-            bedST.put(chr_name, new Interval1D(start, end), 0);
+            bedST.put(chr_name, new Interval1D(start, end));
         }
     }
 
@@ -67,7 +70,7 @@ public class BedFile {
      * @return
      */
     public boolean contains(String chrname, int start, int end) {
-        return bedST.contains(chrname, start, end, 0);
+        return bedST.contains(chrname, new Interval1D(start, end));
     }
 
     /**
@@ -78,7 +81,7 @@ public class BedFile {
      * @return
      */
     public boolean contains(String chrname, Interval1D interval) {
-        return bedST.contains(chrname, interval, 0);
+        return bedST.contains(chrname, interval);
     }
 
 }

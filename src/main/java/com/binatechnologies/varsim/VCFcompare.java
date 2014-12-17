@@ -466,7 +466,7 @@ public class VCFcompare {
         VCFparser true_parser = new VCFparser(true_vcf_filename, null, false);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
-        chrST<Variant> true_store = new chrST<Variant>(true);
+        chrSearchTree<Variant> true_store = new chrSearchTree<Variant>(true);
         int num_read = 0;
         int num_added = 0;
 
@@ -874,7 +874,7 @@ public class VCFcompare {
 
     class result_comparator {
 
-        chrST<Variant> _true_store; // true variants
+        chrSearchTree<Variant> _true_store; // true variants
         double _overlap_ratio;
         boolean _overlap_complex;
         int _wiggle;
@@ -885,10 +885,10 @@ public class VCFcompare {
         ArrayList<dual_idx> matches_hom = new ArrayList<dual_idx>();
         ArrayList<ArrayList<dual_idx>> matches_het = new ArrayList<ArrayList<dual_idx>>(2); // matches either parent
 
-        public result_comparator(chrST<Variant> true_store, double overlap_ratio, int wiggle) {
+        public result_comparator(chrSearchTree<Variant> true_store, double overlap_ratio, int wiggle) {
             this(true_store, overlap_ratio, wiggle,false);
         }
-        public result_comparator(chrST<Variant> true_store, double overlap_ratio, int wiggle, boolean ignore_ins_len) {
+        public result_comparator(chrSearchTree<Variant> true_store, double overlap_ratio, int wiggle, boolean ignore_ins_len) {
             _true_store = true_store;
             _overlap_ratio = overlap_ratio;
             _wiggle = wiggle;

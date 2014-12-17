@@ -1,14 +1,23 @@
 package com.binatechnologies.varsim;
 
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
-// end-points are inclusive, immutable
+/**
+ * Simple interval, End-points inclusive, immutable
+ *
+ * @author johnmu
+ */
 public class Interval1D implements Comparable<Interval1D> {
-    private final static Logger log = Logger.getLogger(Interval1D.class.getName());
+    //private final static Logger log = Logger.getLogger(Interval1D.class.getName());
     public final long left; // left endpoint, inclusive
     public final long right; // right endpoint, inclusive
 
-    // precondition: left <= right
+    /**
+     * Require left <= right
+     *
+     * @param left  Left end-point (inclusive)
+     * @param right Right end-point (inclusive)
+     */
     public Interval1D(long left, long right) {
         if (left <= right) {
             this.left = left;
@@ -18,61 +27,74 @@ public class Interval1D implements Comparable<Interval1D> {
         }
     }
 
+    /**
+     * Some simple test cases
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         // Test the interval tree
         Interval1D a = new Interval1D(15, 30);
         Interval1D b = new Interval1D(20, 30);
         Interval1D c = new Interval1D(15, 20);
-        Interval1D d = new Interval1D(20, 25);
+        Interval1D d = new Interval1D(31, 35);
 
-        System.err.println("a == b " + a.compareTo(b));
-        System.err.println("a == c " + a.compareTo(c));
-        System.err.println("a == a " + a.compareTo(a));
-        System.err.println("a == d " + a.compareTo(d));
+        System.out.println("a = " + a);
+        System.out.println("b = " + b);
+        System.out.println("c = " + c);
+        System.out.println("d = " + d);
 
-        System.err.println("a = " + a);
-        System.err.println("b = " + b);
-        System.err.println("c = " + c);
-        System.err.println("d = " + d);
+        System.out.println("a == b " + a.compareTo(b));
+        System.out.println("a == c " + a.compareTo(c));
+        System.out.println("a == a " + a.compareTo(a));
+        System.out.println("a == d " + a.compareTo(d));
 
-        System.err.println("b intersects a = " + b.intersects(a));
-        System.err.println("a intersects b = " + a.intersects(b));
-        System.err.println("a intersects c = " + a.intersects(c));
-        System.err.println("c intersects a = " + c.intersects(a));
-        System.err.println("a intersects d = " + a.intersects(d));
-        System.err.println("b intersects c = " + b.intersects(c));
-        System.err.println("b intersects d = " + b.intersects(d));
-        System.err.println("c intersects d = " + c.intersects(d));
+        System.out.println("b intersects a = " + b.intersects(a));
+        System.out.println("a intersects b = " + a.intersects(b));
+        System.out.println("a intersects c = " + a.intersects(c));
+        System.out.println("c intersects a = " + c.intersects(a));
+        System.out.println("a intersects d = " + a.intersects(d));
+        System.out.println("b intersects c = " + b.intersects(c));
+        System.out.println("b intersects d = " + b.intersects(d));
+        System.out.println("c intersects d = " + c.intersects(d));
 
         double ratio = 0.5;
 
-        System.err.println("ratio b intersects a = " + b.intersects(a, ratio));
-        System.err.println("ratio a intersects b = " + a.intersects(b, ratio));
-        System.err.println("ratio a intersects c = " + a.intersects(c, ratio));
-        System.err.println("ratio c intersects a = " + c.intersects(a, ratio));
-        System.err.println("ratio a intersects d = " + a.intersects(d, ratio));
-        System.err.println("ratio b intersects c = " + b.intersects(c, ratio));
-        System.err.println("ratio b intersects d = " + b.intersects(d, ratio));
-        System.err.println("ratio c intersects d = " + c.intersects(d, ratio));
+        System.out.println("ratio b intersects a = " + b.intersects(a, ratio));
+        System.out.println("ratio a intersects b = " + a.intersects(b, ratio));
+        System.out.println("ratio a intersects c = " + a.intersects(c, ratio));
+        System.out.println("ratio c intersects a = " + c.intersects(a, ratio));
+        System.out.println("ratio a intersects d = " + a.intersects(d, ratio));
+        System.out.println("ratio b intersects c = " + b.intersects(c, ratio));
+        System.out.println("ratio b intersects d = " + b.intersects(d, ratio));
+        System.out.println("ratio c intersects d = " + c.intersects(d, ratio));
 
         int wiggle = 5;
 
-        System.err.println("wiggle ratio b intersects a = " + b.intersects(a, ratio, wiggle));
-        System.err.println("wiggle ratio a intersects b = " + a.intersects(b, ratio, wiggle));
-        System.err.println("wiggle ratio a intersects c = " + a.intersects(c, ratio, wiggle));
-        System.err.println("wiggle ratio c intersects a = " + c.intersects(a, ratio, wiggle));
-        System.err.println("wiggle ratio a intersects d = " + a.intersects(d, ratio, wiggle));
-        System.err.println("wiggle ratio b intersects c = " + b.intersects(c, ratio, wiggle));
-        System.err.println("wiggle ratio c intersects b = " + c.intersects(b, ratio, wiggle));
-        System.err.println("wiggle ratio b intersects d = " + b.intersects(d, ratio, wiggle));
-        System.err.println("wiggle ratio c intersects d = " + c.intersects(d, ratio, wiggle));
+        System.out.println("wiggle ratio b intersects a = " + b.intersects(a, ratio, wiggle));
+        System.out.println("wiggle ratio a intersects b = " + a.intersects(b, ratio, wiggle));
+        System.out.println("wiggle ratio a intersects c = " + a.intersects(c, ratio, wiggle));
+        System.out.println("wiggle ratio c intersects a = " + c.intersects(a, ratio, wiggle));
+        System.out.println("wiggle ratio a intersects d = " + a.intersects(d, ratio, wiggle));
+        System.out.println("wiggle ratio b intersects c = " + b.intersects(c, ratio, wiggle));
+        System.out.println("wiggle ratio c intersects b = " + c.intersects(b, ratio, wiggle));
+        System.out.println("wiggle ratio b intersects d = " + b.intersects(d, ratio, wiggle));
+        System.out.println("wiggle ratio c intersects d = " + c.intersects(d, ratio, wiggle));
     }
 
+    /**
+     * @return Length of the interval, end-points are inclusive
+     */
     public long length() {
         return this.right - this.left + 1;
     }
 
-    // does this interval intersect that one?
+    /**
+     * Test if an interval intersects this one
+     *
+     * @param that Interval to test
+     * @return True if it intersects
+     */
     public boolean intersects(Interval1D that) {
         if (that.right < this.left)
             return false;
@@ -81,60 +103,75 @@ public class Interval1D implements Comparable<Interval1D> {
         return true;
     }
 
-    // does this interval reciprocal intersect that one, with a particular
-    // ratio. The ratio is rounded up.
-    public boolean intersects(Interval1D that, double ratio) {
-        long len_this = (long) Math.ceil(this.length() * ratio);
-        long len_that = (long) Math.ceil(that.length() * ratio);
+    /**
+     * does this interval reciprocal overlap intersect that one, with a particular
+     * ratio. The ratio is rounded up. Require at least one base overlap.
+     *
+     * @param that            Interval to compare to
+     * @param reciprocalRatio Ratio between 0 and 1, values outside this range will have undefined behaviour
+     * @return True if it intersects, with the required reciprocal overlap
+     */
+    public boolean intersects(Interval1D that, double reciprocalRatio) {
+        if (reciprocalRatio == 0) {
+            return intersects(that);
+        }
+        // Note: The max may be able to be removed in this case, left to be safe
+        long thisLen = (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1);
+        long thatLen = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
         long overlap = Math.min(this.right, that.right)
                 - Math.max(this.left, that.left) + 1;
-
-        if (overlap >= Math.max(len_this, len_that)) {
+        if (overlap >= Math.max(thisLen, thatLen)) {
             return true;
         }
         return false;
     }
 
-    /*
-    does this interval reciprocal intersect that one, with a particular
-    ratio and wiggle range? The ratio is rounded up.
-    That is, for any shift forward or back of the wiggle, is there ratio overlap
-    */
-    public boolean intersects(Interval1D that, double ratio, int wiggle) {
-        long len_this = (long) Math.ceil(this.length() * ratio);
-        long len_that = (long) Math.ceil(that.length() * ratio);
+    /**
+     * Checks reciprocal overlap with wiggle, each possible shift within the wiggle is checked
+     *
+     * @param that            Interval to compare with
+     * @param reciprocalRatio Ratio between 0 and 1, values outside this range will have undefined behaviour
+     * @param wiggle          Shift the interval between this range and for each shift check the overlap
+     * @return True if overlaps with given criterion
+     */
+    public boolean intersects(Interval1D that, double reciprocalRatio, int wiggle) {
+        if (wiggle == 0) {
+            return intersects(that, reciprocalRatio);
+        }
+        long len_this = (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1);
+        long len_that = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
 
-        long max_overlap = 0;
-        long right_lim = 0;
-        long left_lim = 0;
+        long maxOverlap = 0;
+        long rightLim = 0;
+        long leftLim = 0;
 
         // right limit
         if (right < that.right) {
-            right_lim = Math.min(that.right, right + wiggle);
+            rightLim = Math.min(that.right, right + wiggle);
         } else {
-            right_lim = Math.max(that.right, right - wiggle);
+            rightLim = Math.max(that.right, right - wiggle);
         }
-        left_lim = right_lim - length() + 1;
+        leftLim = rightLim - length() + 1;
 
-        long overlap = Math.min(right_lim, that.right)
-                - Math.max(left_lim, that.left) + 1;
+        long overlap = Math.min(rightLim, that.right)
+                - Math.max(leftLim, that.left) + 1;
 
-        max_overlap = Math.max(max_overlap, overlap);
+        maxOverlap = Math.max(maxOverlap, overlap);
 
         // left limit
         if (left < that.left) {
-            left_lim = Math.min(that.left, left + wiggle);
+            leftLim = Math.min(that.left, left + wiggle);
         } else {
-            left_lim = Math.max(that.left, left - wiggle);
+            leftLim = Math.max(that.left, left - wiggle);
         }
-        right_lim = left_lim + length() - 1;
+        rightLim = leftLim + length() - 1;
 
-        overlap = Math.min(right_lim, that.right)
-                - Math.max(left_lim, that.left) + 1;
+        overlap = Math.min(rightLim, that.right)
+                - Math.max(leftLim, that.left) + 1;
 
-        max_overlap = Math.max(max_overlap, overlap);
+        maxOverlap = Math.max(maxOverlap, overlap);
 
-        if (max_overlap >= Math.max(len_this, len_that)) {
+        if (maxOverlap >= Math.max(len_this, len_that)) {
             return true;
         }
         return false;
@@ -149,7 +186,7 @@ public class Interval1D implements Comparable<Interval1D> {
     }
 
     /**
-     * @param that com.binatechnologies.varsim.Interval1D to compare to
+     * @param that Interval to compare to
      * @return zero if equal
      */
     public int compareTo(final Interval1D that) {
@@ -166,19 +203,18 @@ public class Interval1D implements Comparable<Interval1D> {
     }
 
     /**
-     * @param inter Another interval
+     * @param that Another interval
      * @return union of current interval with the provided one
      */
-    public Interval1D union(final Interval1D inter) {
-        return new Interval1D(Math.min(left, inter.left), Math.max(right, inter.right));
+    public Interval1D union(final Interval1D that) {
+        return new Interval1D(Math.min(this.left, that.left), Math.max(this.right, that.right));
     }
 
     /**
-     *
      * @return The midpoint of the interval floor((right+left)/2)
      */
-    public final long getCenter(){
-        return ((right+left)/2);
+    public final long getCenter() {
+        return ((right + left) / 2);
     }
 
     public String toString() {
