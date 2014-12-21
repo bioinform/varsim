@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

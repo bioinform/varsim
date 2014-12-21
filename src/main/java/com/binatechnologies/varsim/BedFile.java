@@ -1,5 +1,7 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.intervalTree.SimpleInterval1D;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

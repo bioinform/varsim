@@ -1,6 +1,6 @@
 package com.binatechnologies.varsim;
 
-import com.binatechnologies.varsim.fastq_liftover.FastqLiftOver;
+import com.binatechnologies.varsim.fastqLiftover.FastqLiftOver;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

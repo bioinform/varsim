@@ -6,9 +6,9 @@ package com.binatechnologies.varsim;
  */
 
 
-import com.binatechnologies.varsim.fastq_liftover.GenomeLocation;
-import com.binatechnologies.varsim.fastq_liftover.MapBlock;
-import com.binatechnologies.varsim.fastq_liftover.SimulatedRead;
+import com.binatechnologies.varsim.fastqLiftover.GenomeLocation;
+import com.binatechnologies.varsim.fastqLiftover.MapBlock;
+import com.binatechnologies.varsim.fastqLiftover.SimulatedRead;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.samtools.SAMFileReader;

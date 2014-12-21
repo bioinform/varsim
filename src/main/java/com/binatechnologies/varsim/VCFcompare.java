@@ -1,5 +1,7 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.intervalTree.SimpleInterval1D;
+import com.binatechnologies.varsim.intervalTree.ValueInterval1D;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;

@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim;
+package com.binatechnologies.varsim.intervalTree;
 
 import java.util.ArrayList;
 

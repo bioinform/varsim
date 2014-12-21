@@ -6,6 +6,10 @@ package com.binatechnologies.varsim;
  * @author johnmu
  */
 
+import com.binatechnologies.varsim.intervalTree.Interval1D;
+import com.binatechnologies.varsim.intervalTree.IntervalTree;
+import com.binatechnologies.varsim.intervalTree.SimpleInterval1D;
+
 import java.util.HashMap;
 
 

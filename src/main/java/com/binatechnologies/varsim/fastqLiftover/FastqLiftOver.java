@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -77,7 +77,7 @@ public class FastqLiftOver {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java FastqLiftOver [options...] arguments...");
+            System.err.println("java Fastq_liftOver [options...] arguments...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println();

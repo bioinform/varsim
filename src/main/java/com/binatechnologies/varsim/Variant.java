@@ -5,6 +5,8 @@ package com.binatechnologies.varsim;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Random;
+
+import com.binatechnologies.varsim.intervalTree.SimpleInterval1D;
 import org.apache.log4j.Logger;
 
 public class Variant {
