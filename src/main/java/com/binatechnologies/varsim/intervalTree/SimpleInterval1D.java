@@ -208,8 +208,9 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
     }
 
     /**
+     * Note: Not really the union, maybe this method name should be changed
      * @param that Another interval
-     * @return union of current interval with the provided one
+     * @return interval that encloses both current interval and the provided one
      */
     public SimpleInterval1D union(final Interval1D that) {
         return new SimpleInterval1D(Math.min(this.left, that.left), Math.max(this.right, that.right));
