@@ -28,8 +28,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
     }
 
     public SimpleInterval1D(Interval1D reg){
-        this.left = reg.left;
-        this.right = reg.right;
+        this.left = reg.getLeft();
+        this.right = reg.getRight();
     }
 
     /**
@@ -91,7 +91,17 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
      * @return Length of the interval, end-points are inclusive
      */
     public long length() {
-        return this.right - this.left + 1;
+        return this.getRight() - this.getLeft() + 1;
+    }
+
+    @Override
+    public long getLeft() {
+        return left;
+    }
+
+    @Override
+    public long getRight() {
+        return right;
     }
 
     /**
@@ -101,9 +111,9 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
      * @return True if it intersects
      */
     public boolean intersects(Interval1D that) {
-        if (that.right < this.left)
+        if (that.getRight() < this.getLeft())
             return false;
-        if (this.right < that.left)
+        if (this.getRight() < that.getLeft())
             return false;
         return true;
     }
@@ -123,8 +133,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
         // Note: The max may be able to be removed in this case, left to be safe
         long thisLen = (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1);
         long thatLen = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
-        long overlap = Math.min(this.right, that.right)
-                - Math.max(this.left, that.left) + 1;
+        long overlap = Math.min(this.getRight(), that.getRight())
+                - Math.max(this.getLeft(), that.getLeft()) + 1;
         if (overlap >= Math.max(thisLen, thatLen)) {
             return true;
         }
@@ -151,28 +161,28 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
         long leftLim = 0;
 
         // right limit
-        if (right < that.right) {
-            rightLim = Math.min(that.right, right + wiggle);
+        if (getRight() < that.getRight()) {
+            rightLim = Math.min(that.getRight(), getRight() + wiggle);
         } else {
-            rightLim = Math.max(that.right, right - wiggle);
+            rightLim = Math.max(that.getRight(), getRight() - wiggle);
         }
         leftLim = rightLim - length() + 1;
 
-        long overlap = Math.min(rightLim, that.right)
-                - Math.max(leftLim, that.left) + 1;
+        long overlap = Math.min(rightLim, that.getRight())
+                - Math.max(leftLim, that.getLeft()) + 1;
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
         // left limit
-        if (left < that.left) {
-            leftLim = Math.min(that.left, left + wiggle);
+        if (getLeft() < that.getLeft()) {
+            leftLim = Math.min(that.getLeft(), getLeft() + wiggle);
         } else {
-            leftLim = Math.max(that.left, left - wiggle);
+            leftLim = Math.max(that.getLeft(), getLeft() - wiggle);
         }
         rightLim = leftLim + length() - 1;
 
-        overlap = Math.min(rightLim, that.right)
-                - Math.max(leftLim, that.left) + 1;
+        overlap = Math.min(rightLim, that.getRight())
+                - Math.max(leftLim, that.getLeft()) + 1;
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
@@ -187,7 +197,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
      * @return True if interval contains the point
      */
     public boolean contains(final long point) {
-        return (left <= point) && (point <= right);
+        return (getLeft() <= point) && (point <= getRight());
     }
 
     /**
@@ -195,13 +205,13 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
      * @return zero if equal
      */
     public int compareTo(final Interval1D that) {
-        if (this.left < that.left)
+        if (this.getLeft() < that.getLeft())
             return -1;
-        else if (this.left > that.left)
+        else if (this.getLeft() > that.getLeft())
             return +1;
-        else if (this.right < that.right)
+        else if (this.getRight() < that.getRight())
             return -1;
-        else if (this.right > that.right)
+        else if (this.getRight() > that.getRight())
             return +1;
         else
             return 0;
@@ -213,18 +223,18 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
      * @return interval that encloses both current interval and the provided one
      */
     public SimpleInterval1D union(final Interval1D that) {
-        return new SimpleInterval1D(Math.min(this.left, that.left), Math.max(this.right, that.right));
+        return new SimpleInterval1D(Math.min(this.getLeft(), that.getLeft()), Math.max(this.getRight(), that.getRight()));
     }
 
     /**
      * @return The midpoint of the interval floor((right+left)/2)
      */
     public long getCenter() {
-        return ((right + left) / 2);
+        return ((getRight() + getLeft()) / 2);
     }
 
     public String toString() {
-        return "[" + left + ", " + right + "]";
+        return "[" + getLeft() + ", " + getRight() + "]";
     }
 
 }

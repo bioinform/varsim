@@ -99,7 +99,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         if (overlapCenter(k)) {
             return 0;
         }
-        if (k.right < centerCut) {
+        if (k.getRight() < centerCut) {
             return -1;
         } else {
             return 1;

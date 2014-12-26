@@ -4,8 +4,8 @@ package com.binatechnologies.varsim.intervalTree;
  * Created by johnmu on 12/17/14.
  */
 public interface Interval1D {
-    public final long left = 0;
-    public final long right = 0;
+    public long getLeft();
+    public long getRight();
     public boolean intersects(Interval1D that);
     public boolean intersects(Interval1D that, double reciprocalRatio);
     public boolean intersects(Interval1D that, double reciprocalRatio, int wiggle);
