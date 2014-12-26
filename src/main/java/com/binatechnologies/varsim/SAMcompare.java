@@ -11,10 +11,7 @@ import com.binatechnologies.varsim.fastqLiftover.MapBlock;
 import com.binatechnologies.varsim.fastqLiftover.SimulatedRead;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -198,12 +195,17 @@ public class SAMcompare {
         // read sam/bam file
         int num_read = 0;
 
+        final SamReaderFactory factory =
+                SamReaderFactory.makeDefault()
+                        .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS,
+                                SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS)
+                        .validationStringency(ValidationStringency.LENIENT);
+
+
         for(String filename : bam_filename) {
             log.info("Reading file: " + filename);
-            SAMFileReader reader = new SAMFileReader(new File(filename));
+            final SamReader reader = factory.open(new File(filename));
             try {
-                reader.setValidationStringency(ValidationStringency.LENIENT);
-
                 SAMRecordIterator it = reader.iterator();
                 while (it.hasNext()) {
                     SAMRecord rec = it.next();
@@ -353,7 +355,11 @@ public class SAMcompare {
                 }
 
             } finally {
-                reader.close();
+                try {
+                    reader.close();
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
             }
 
         }

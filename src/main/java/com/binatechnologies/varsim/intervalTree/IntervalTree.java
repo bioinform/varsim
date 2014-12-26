@@ -1,7 +1,7 @@
 package com.binatechnologies.varsim.intervalTree;
 
-//import org.apache.commons.lang3.StringUtils;
-//import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 
@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * @author johnmu
  */
 public class IntervalTree<Key extends Interval1D> {
-    //private final static Logger log = Logger.getLogger(IntervalTree.class.getName());
+    private final static Logger log = Logger.getLogger(IntervalTree.class.getName());
     private IntervalTreeNode<Key> root = null;
     long numEntries = 0;
 
@@ -115,13 +115,6 @@ public class IntervalTree<Key extends Interval1D> {
 
         test_tree.testContains(new SimpleInterval1D(20, 20));
         test_tree.testContains(new SimpleInterval1D(-45, -45));
-    }
-
-    private static void printList(final ArrayList<?> x) {
-        for (Object val : x) {
-            System.out.print(val + ",");
-        }
-        System.out.print('\n');
     }
 
     /**
@@ -443,8 +436,7 @@ public class IntervalTree<Key extends Interval1D> {
 
     private void testGetOverlap(Interval1D k) {
         System.out.println("Getting..." + k);
-        //System.out.println(StringUtils.join(output, ','));
-        printList(getOverlaps(k));
+        System.out.println(StringUtils.join(getOverlaps(k), ','));
     }
 
     private void testContains(Interval1D k) {
