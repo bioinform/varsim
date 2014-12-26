@@ -84,14 +84,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.broad.picard</groupId>
-            <artifactId>picard</artifactId>
-            <version>64</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.samtools</groupId>
-            <artifactId>samtools</artifactId>
-            <version>64</version>
+            <groupId>org.seqdoop</groupId>
+            <artifactId>htsjdk</artifactId>
+            <version>1.118</version>
         </dependency>
         <dependency>
             <groupId>org.broad.tribble</groupId>
