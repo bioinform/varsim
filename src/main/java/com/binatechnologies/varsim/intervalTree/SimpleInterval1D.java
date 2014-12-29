@@ -237,4 +237,23 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
         return "[" + getLeft() + ", " + getRight() + "]";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SimpleInterval1D that = (SimpleInterval1D) o;
+
+        if (left != that.left) return false;
+        if (right != that.right) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (left ^ (left >>> 32));
+        result = 31 * result + (int) (right ^ (right >>> 32));
+        return result;
+    }
 }

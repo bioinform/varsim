@@ -21,15 +21,24 @@ public class SimpleInterval1DTest extends TestCase {
     }
 
     public void testIntersects() throws Exception {
-
+        assertEquals(false, A.intersects(B));
+        assertEquals(false, B.intersects(A));
+        assertEquals(true, A.intersects(C));
+        assertEquals(true, C.intersects(A));
     }
 
     public void testIntersects1() throws Exception {
-
+        assertEquals(false, A.intersects(B,0.5));
+        assertEquals(false, B.intersects(A,0.5));
+        assertEquals(false, A.intersects(C,0.55));
+        assertEquals(false, C.intersects(A,0.55));
     }
 
     public void testIntersects2() throws Exception {
-
+        assertEquals(true, A.intersects(B,0.5,6));
+        assertEquals(true, B.intersects(A,0.5,6));
+        assertEquals(true, A.intersects(C,0.55,1));
+        assertEquals(true, C.intersects(A,0.55,1));
     }
 
     public void testContains() throws Exception {
@@ -45,10 +54,10 @@ public class SimpleInterval1DTest extends TestCase {
     }
 
     public void testUnion() throws Exception {
-
+        assertEquals(new SimpleInterval1D(0,20),A.union(B));
     }
 
     public void testGetCenter() throws Exception {
-
+        assertEquals(5,A.getCenter());
     }
 }
