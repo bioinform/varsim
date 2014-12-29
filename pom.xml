@@ -4,7 +4,7 @@
 
     <groupId>com.binatechnologies.seqalto.varsim</groupId>
     <artifactId>varsim</artifactId>
-    <version>0.3.4</version>
+    <version>0.4</version>
     <packaging>jar</packaging>
 
     <name>varsim</name>
@@ -84,14 +84,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.broad.picard</groupId>
-            <artifactId>picard</artifactId>
-            <version>64</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.samtools</groupId>
-            <artifactId>samtools</artifactId>
-            <version>64</version>
+            <groupId>org.seqdoop</groupId>
+            <artifactId>htsjdk</artifactId>
+            <version>1.118</version>
         </dependency>
         <dependency>
             <groupId>org.broad.tribble</groupId>
@@ -120,14 +115,9 @@
             <version>3.3.1</version>
         </dependency>
         <dependency>
-            <groupId>org.seqdoop</groupId>
-            <artifactId>htsjdk</artifactId>
-            <version>1.118</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
+            <groupId>org.apache.commons</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>1.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

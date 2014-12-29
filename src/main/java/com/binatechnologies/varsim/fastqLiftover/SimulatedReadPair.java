@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 public class SimulatedReadPair {
     public SimulatedRead read1;

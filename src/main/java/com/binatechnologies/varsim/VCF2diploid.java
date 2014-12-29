@@ -2,7 +2,6 @@ package com.binatechnologies.varsim;
 
 //--- Java imports ---
 
-import net.sf.picard.analysis.MetricAccumulationLevel;
 import org.apache.log4j.Logger;
 
 import java.io.*;

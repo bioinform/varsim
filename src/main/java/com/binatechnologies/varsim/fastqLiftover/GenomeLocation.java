@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 public class GenomeLocation implements Comparable<GenomeLocation> {
     public String chromosome;
