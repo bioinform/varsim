@@ -210,7 +210,7 @@
 
          // style constants
         var front_style = "fill: rgba(0, 0, 0, 0);";
-        var color_arr = ["#d82525", "#3a3ad1", "#28b128", "#383838", "#d132d1"]
+        var color_arr = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd","#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
 
         var stats_data = {};
 
@@ -1122,8 +1122,8 @@
                 reader.onloadend = (function (idx, file, last_one) {
                     return function (e) {
                         console.log(file);
-                        if (Object.keys(stats_data).length >= 5) {
-                            alert("Maximum number of files is 5");
+                        if (Object.keys(stats_data).length >= color_arr.length) {
+                            alert("Maximum number of files is " + color_arr.length);
                             last_one = true;
                         } else {
                             process_json(e.target.result, file, false);
