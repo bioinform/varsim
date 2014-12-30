@@ -602,6 +602,8 @@ public class VCFcompare {
                     continue;
                 }
 
+                log.info(var);
+
                 Genotypes geno = var.getGeno();
 
                 String chr_name = var.getChr_name();
@@ -635,6 +637,9 @@ public class VCFcompare {
                 }
 
                 for (Variant curr_var : var_list) {
+
+                    log.info("curr_var: " + curr_var);
+
                     // get genotype
                     geno = curr_var.getGeno();
                     result_comparator comp = new result_comparator(true_store, overlap_ratio, wiggle, ignore_ins_len);
