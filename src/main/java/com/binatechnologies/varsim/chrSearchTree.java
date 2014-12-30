@@ -46,6 +46,14 @@ public class chrSearchTree<Key extends Interval1D> {
         return total;
     }
 
+    public long maxDepth(){
+        long maxval = 0;
+        for (IntervalTree<Key> val : data.values()) {
+            maxval = Math.max(maxval, val.maxDepth());
+        }
+        return maxval;
+    }
+
     /**
      * Adding functions
      */
