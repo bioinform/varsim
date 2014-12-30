@@ -407,6 +407,18 @@ public class IntervalTree<Key extends Interval1D> {
         return newHead;
     }
 
+    public long maxDepth(){
+        return maxDepth(root);
+    }
+
+    public long maxDepth(IntervalTreeNode<Key> head){
+        if(head == null){
+            return 0l;
+        }
+
+        return Math.max(maxDepth(head.getLeft()),maxDepth(head.getRight())) + 1;
+    }
+
     public long size(){
         return numEntries;
     }

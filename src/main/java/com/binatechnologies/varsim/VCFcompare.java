@@ -559,6 +559,7 @@ public class VCFcompare {
         log.info("Num read:  " + num_read);
         log.info("Num added: " + num_added);
         log.info("Num nodes: " + true_store.size());
+        log.info("Max depth: " + true_store.maxDepth());
 
         // this is for the split variants
         // set to true if the canonical original variant was validated true
