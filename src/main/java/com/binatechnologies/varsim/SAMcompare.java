@@ -6,20 +6,20 @@ package com.binatechnologies.varsim;
  */
 
 
-import com.binatechnologies.varsim.fastq_liftover.GenomeLocation;
-import com.binatechnologies.varsim.fastq_liftover.MapBlock;
-import com.binatechnologies.varsim.fastq_liftover.SimulatedRead;
+import com.binatechnologies.varsim.fastqLiftover.GenomeLocation;
+import com.binatechnologies.varsim.fastqLiftover.MapBlock;
+import com.binatechnologies.varsim.fastqLiftover.SimulatedRead;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,7 +29,7 @@ public class SAMcompare {
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
 
     @Argument(usage = "One or more BAM files",metaVar = "bam_files ...",required = true)
-    private ArrayList<String> bam_filename = new ArrayList<String>();
+    private ArrayList<String> bam_filename = new ArrayList<>();
 
     static final int WIGGLE_ARG = 20;
     @Option(name = "-wig", usage = "Wiggle allowance in validation ["+WIGGLE_ARG+"]")
@@ -40,6 +40,9 @@ public class SAMcompare {
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
     String bed_filename = "";
+
+    @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]",metaVar = "HTML_file", hidden = true)
+    File html_file = null;
 
     /**
      * @param args
@@ -101,7 +104,7 @@ public class SAMcompare {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar samcompare.jar [options...] bam_files ...");
+            System.err.println("java -jar VarSim.jar samcompare [options...] bam_files ...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
@@ -192,12 +195,17 @@ public class SAMcompare {
         // read sam/bam file
         int num_read = 0;
 
+        final SamReaderFactory factory =
+                SamReaderFactory.makeDefault()
+                        .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS,
+                                SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS)
+                        .validationStringency(ValidationStringency.LENIENT);
+
+
         for(String filename : bam_filename) {
             log.info("Reading file: " + filename);
-            SAMFileReader reader = new SAMFileReader(new File(filename));
+            final SamReader reader = factory.open(new File(filename));
             try {
-                reader.setValidationStringency(ValidationStringency.LENIENT);
-
                 SAMRecordIterator it = reader.iterator();
                 while (it.hasNext()) {
                     SAMRecord rec = it.next();
@@ -347,7 +355,11 @@ public class SAMcompare {
                 }
 
             } finally {
-                reader.close();
+                try {
+                    reader.close();
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
             }
 
         }
@@ -360,10 +372,22 @@ public class SAMcompare {
 
         // output a JSON object
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+        String jsonStr = "";
         try {
-            JSON_writer.print(mapper.writeValueAsString(output_blob));
+            jsonStr = mapper.writeValueAsString(output_blob);
+            JSON_writer.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if(html_file != null) {
+            try {
+                FileUtils.writeStringToFile(new File(out_prefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(html_file), jsonStr));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         JSON_writer.close();

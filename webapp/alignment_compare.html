@@ -9,6 +9,10 @@
     <meta name="author" content="John C. Mu">
 
     <title>VarSim &#8212; Alignment Compare</title>
+    
+    <script>
+    <!--varsim_data-->
+    </script>
 
     <!-- Bootstrap core CSS -->
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
@@ -206,7 +210,7 @@
 
          // style constants
         var front_style = "fill: rgba(0, 0, 0, 0);";
-        var color_arr = ["#d82525", "#3a3ad1", "#28b128", "#383838", "#d132d1"]
+        var color_arr = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd","#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
 
         var stats_data = {};
 
@@ -1118,8 +1122,8 @@
                 reader.onloadend = (function (idx, file, last_one) {
                     return function (e) {
                         console.log(file);
-                        if (Object.keys(stats_data).length >= 5) {
-                            alert("Maximum number of files is 5");
+                        if (Object.keys(stats_data).length >= color_arr.length) {
+                            alert("Maximum number of files is " + color_arr.length);
                             last_one = true;
                         } else {
                             process_json(e.target.result, file, false);
@@ -1181,6 +1185,8 @@
         }
 
          // these are run after everything is setup
+         
+         
 
         document.getElementById('files').addEventListener('change', handleFileSelect, false);
         document.getElementById('reset_button').addEventListener('click', reset_all_plots, false);
@@ -1188,6 +1194,16 @@
         hide_all();
         show_id('about');
         scroll_to('parameters');
+        
+        // check for existence of varsim_data
+		if(typeof varsim_data != undefined){
+			// load the data if the variable exists
+			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
+            process_json(varsim_data, filename, false)
+            hide_all();
+            redraw_plots(stats_data, 'stats');
+            show_id('stats_plot');
+		}
     </script>
 </body>
 

@@ -6,12 +6,15 @@ import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VCFparser extends variantFileParser {
     private final static Logger log = Logger.getLogger(VCFparser.class.getName());
+
+    private Random _rand = null;
 
     private int _id_ind = -1;
     private String _id = null;
@@ -29,7 +32,8 @@ public class VCFparser extends variantFileParser {
      * @param id       ID of individual, essentially selects a column, null to use first ID column
      * @param pass     If true, only output pass lines
      */
-    public VCFparser(String fileName, String id, boolean pass) {
+    public VCFparser(String fileName, String id, boolean pass, Random rand) {
+        _rand = rand;
         try {
             _br = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
             readLine();
@@ -46,13 +50,34 @@ public class VCFparser extends variantFileParser {
     }
 
     /**
+     * Reads a VCF file line by line
+     *
+     * @param fileName VCF file, doesn't have to be sorted or indexed
+     * @param id       ID of individual, essentially selects a column, null to use first ID column
+     * @param pass     If true, only output pass lines
+     */
+    public VCFparser(String fileName, String id, boolean pass) {
+        this(fileName, id, pass, null);
+    }
+
+    /**
+     * Reads a VCF file line by line, if there are multiple individuals, takes the first one
+     *
+     * @param fileName VCF file, doesn't have to be sorted or indexed
+     * @param pass     If true, only output pass lines
+     */
+    public VCFparser(String fileName, boolean pass, Random rand) {
+        this(fileName, null, pass, rand);
+    }
+
+    /**
      * Reads a VCF file line by line, if there are multiple individuals, takes the first one
      *
      * @param fileName VCF file, doesn't have to be sorted or indexed
      * @param pass     If true, only output pass lines
      */
     public VCFparser(String fileName, boolean pass) {
-        this(fileName, null, pass);
+        this(fileName, null, pass, null);
     }
 
     /**
@@ -268,11 +293,6 @@ public class VCFparser extends variantFileParser {
             //return null; // reference alleles... ignore them for now....
         }
 
-        if (phase_val[0] < 0 || phase_val[1] < 0) {
-            phase_val[0] = 1;
-            phase_val[1] = 1;
-        }
-
         // determine copy-number
         // TODO need to be able to deal with unphased copy-numbers?
         byte[] copy_num_val = new byte[2]; // paternal-maternal
@@ -314,13 +334,13 @@ public class VCFparser extends variantFileParser {
                 }
                 // TODO this assumes only one alt
                 return new Variant(chr_name, chr, pos, Math.abs(inv_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else if (end_loc > 0) {
                 int inv_len = Math.max(Math.abs(end_loc - pos + 1),1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, inv_len);
                 return new Variant(chr_name, chr, pos, inv_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else {
                 log.error("No length information for INV:");
                 log.error(line);
@@ -356,7 +376,7 @@ public class VCFparser extends variantFileParser {
                 }
 
                 return new Variant(chr_name, chr, pos, Math.abs(dup_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else if (end_loc > 0) {
                 int dup_len = Math.max(Math.abs(end_loc - pos + 1),1);
                 alts = new FlexSeq[1];
@@ -364,7 +384,7 @@ public class VCFparser extends variantFileParser {
                         copy_num_val[0], copy_num_val[1]));
 
                 return new Variant(chr_name, chr, pos, dup_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else {
                 log.error("No length information for DUP:");
                 log.error(line);
@@ -385,17 +405,22 @@ public class VCFparser extends variantFileParser {
             if (ins_lens.length > 0) {
                 alts = new FlexSeq[ins_lens.length];
                 for (int i = 0; i < ins_lens.length; i++) {
-                    int len_val = Math.max(Math.abs(ins_lens[i]),1);
+                    int len_val = 0;
+                    if(ins_lens[i] == 0) {
+                        len_val = Integer.MAX_VALUE;
+                    } else{
+                        len_val = Math.max(Math.abs(ins_lens[i]), 1);
+                    }
                     alts[i] = new FlexSeq(FlexSeq.Type.INS,len_val);
                 }
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else if (end_loc > 0) {
                 int ins_len = Math.max(Math.abs(end_loc - pos),1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, ins_len);
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else {
                 log.error("No length information for INS:");
                 log.error(line);
@@ -421,13 +446,13 @@ public class VCFparser extends variantFileParser {
                 }
 
                 return new Variant(chr_name, chr, pos, Math.abs(del_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else if (end_loc > 0) {
                 int del_len = end_loc - pos + 1;
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DEL, 0);
                 return new Variant(chr_name, chr, pos, del_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
             } else {
                 log.error("No length information for DEL:");
                 log.error(line);
@@ -538,7 +563,7 @@ public class VCFparser extends variantFileParser {
 
 
             return new Variant(chr_name, chr, pos, refs.length, refs, alts,
-                    phase_val, is_phased, var_id, FILTER, ref_deleted);
+                    phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
         }
     }
 

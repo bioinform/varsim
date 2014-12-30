@@ -53,7 +53,7 @@ public class RandVCF2VCF extends randVCFgenerator {
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
-    static final int MAX_LEN_ARG = 49;
+    static final int MAX_LEN_ARG = 99;
     @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 
@@ -92,7 +92,7 @@ public class RandVCF2VCF extends randVCFgenerator {
         int chr_idx = var.chromosome();
 
         // determine whether this one is novel
-        double rand_num = rand.nextDouble();
+        double rand_num = _rand.nextDouble();
         if (rand_num <= ratio_novel) {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
@@ -106,7 +106,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            int rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            int rand_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
             while (!var.setNovelPosition(rand_pos, ref)) {
                 if (time_out > 100) {
                     log.warn("Error: cannot set novel position: " + (end_val - start_val + 1));
@@ -115,7 +115,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                     break;
                 }
 
-                rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                rand_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 //log.info(time_out + " : " + var.deletion());
 
                 time_out++;
@@ -158,7 +158,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         SimpleReference ref = new SimpleReference(reference_filename);
 
-        rand = new Random(seed);
+        _rand = new Random(seed);
 
         // read through VCF file and count the
         log.info("Counting variants and assigning genotypes");
@@ -171,8 +171,8 @@ public class RandVCF2VCF extends randVCFgenerator {
         int total_num_COMPLEX = 0;
         int total_num_other = 0;
         int total_num = 0;
-        VCFparser parser_one = new VCFparser(vcf_filename, null, false);
-        Variant prev_var = new Variant();
+        VCFparser parser_one = new VCFparser(vcf_filename, null, false,_rand);
+        Variant prev_var = new Variant(_rand);
 
         // read though once to count the totals, this is so we don't have
         // to store an array of the variants for sampling without replacement
@@ -186,7 +186,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             int chr_idx = var.chromosome();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr_idx, num_alt, rand,prop_het);
+            Genotypes geno = new Genotypes(chr_idx, num_alt, _rand,prop_het);
             selected_geno.add(geno);
 
             if (prev_var.equals(var)) {
@@ -268,8 +268,8 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         int geno_idx = 0;
 
-        parser_one = new VCFparser(vcf_filename, null, false);
-        prev_var = new Variant();
+        parser_one = new VCFparser(vcf_filename, null, false,_rand);
+        prev_var = new Variant(_rand);
 
         // Read through it a second time, this time we do the sampling
         while (parser_one.hasMoreInput()) {

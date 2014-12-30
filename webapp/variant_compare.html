@@ -9,6 +9,10 @@
     <meta name="author" content="John C. Mu">
 
     <title>VarSim &#8212; Variant Compare</title>
+    
+    <script>
+    <!--varsim_data-->
+    </script>
 
     <!-- Bootstrap core CSS -->
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
@@ -197,7 +201,7 @@
         var legend_y_margin = 20;
         var legend_labels = [[['TP', 'TPR'], ['FP', 'PPV'], ['True', '']], [['TP', 'F1'], ['Called', ''], ['True', '']]];
         var legend_offsets = [30, 200, 350];
-
+		var sv_lim = 100;
 
          // style constants
         var bar_back_style = "fill: rgba(0, 0, 0, 0.06)";
@@ -205,7 +209,7 @@
         var line_back_style = "fill: rgba(0, 0, 0, 0)";
         var line_back_hl_style = "fill: rgba(0, 128, 0, 0.18)";
         var front_style = "fill: rgba(0, 0, 0, 0);";
-        var color_arr = ["#d82525", "#3a3ad1", "#28b128", "#383838", "#d132d1"]
+        var color_arr = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd","#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
 
         var types_data = {};
 
@@ -815,7 +819,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, 49, leg_idx);
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -823,7 +827,7 @@
             }
 
             var data_arr = compute_data_arr(big_data, type, function (obj) {
-                return get_range_sum_count(obj, 0, 49)
+                return get_range_sum_count(obj, 0, sv_lim-1)
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
@@ -841,14 +845,14 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, 50, 2000000, leg_idx);
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y, plot_width, xlabels, false)
             }
             var data_arr = compute_data_arr(big_data, type, function (obj) {
-                return get_range_sum_count(obj, 50, 2000000)
+                return get_range_sum_count(obj, sv_lim, 2000000)
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,
@@ -1137,8 +1141,8 @@
                 reader.onloadend = (function (idx, file, last_one) {
                     return function (e) {
                         console.log(file);
-                        if (Object.keys(types_data).length >= 5) {
-                            alert("Maximum number of files is 5");
+                        if (Object.keys(types_data).length >= color_arr.length) {
+                            alert("Maximum number of files is " + color_arr.length);
                             last_one = true;
                         } else {
                             process_json(e.target.result, file);
@@ -1210,6 +1214,7 @@
         }
 
 
+		
 
          // these are run after everything is setup
 
@@ -1219,6 +1224,18 @@
         hide_all();
         show_id('about');
         scroll_to('parameters');
+        
+        // check for existence of varsim_data
+		if(typeof varsim_data != undefined){
+			// load the data if the variable exists
+			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
+            process_json(varsim_data, filename, false)
+            hide_all();
+            redraw_plots(types_data, 'types', 'Detail', true);
+            redraw_plots(types_data, 'sum_types', 'Summary', false);
+            show_id('sum_types_var');
+            
+		}
     </script>
 </body>
 

@@ -17,7 +17,7 @@ import java.util.Map;
  */
 
 class Stats_record {
-    public static final int SV_LIM = 50; // >= this val is an SV
+    public static final int SV_LIM = 100; // >= this val is an SV
 
     int[] bin_counts; // the last bin is for anything larger
     int total_count;
@@ -171,8 +171,8 @@ class Parent_record {
     }
 
     public void add(Variant var, BedFile bed_file) {
-        int paternal_allele = var.paternal();
-        int maternal_allele = var.maternal();
+        int paternal_allele = var.getgood_paternal();
+        int maternal_allele = var.getgood_maternal();
 
         boolean added = false;
         if (bed_file == null
@@ -245,7 +245,7 @@ public class VCFstats {
         runner.run(args);
     }
 
-    private void run(String[] args) {
+    public void run(String[] args) {
         String usage = "Compute the distribution of variants in a VCF file\n"
                 + "Assume that there is only one sample in the VCF file\n";
 
@@ -284,7 +284,7 @@ public class VCFstats {
             if (var == null) {
                 continue;
             }
-            if (var.maternal() == 0 && var.paternal() == 0) {
+            if (var.getgood_maternal() == 0 && var.getgood_paternal() == 0) {
                 continue;
             }
             data.add(var, bed_file);

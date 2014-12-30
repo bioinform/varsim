@@ -18,25 +18,14 @@ def get_contigs_list(reference):
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
 
-default_vcf2diploid = os.path.join(my_dir, "target/build/vcf2diploid.jar")
-default_randvcf2vcf = os.path.join(my_dir, "target/build/randvcf2vcf.jar")
-default_randdgv2vcf = os.path.join(my_dir, "target/build/randdgv2vcf.jar")
-default_liftover    = os.path.join(my_dir, "target/build/fastq_liftover.jar")
-default_vcfstats    = os.path.join(my_dir, "target/build/vcfstats.jar")
+default_varsim_jar = os.path.join(my_dir, "VarSim.jar")
 
-require_randvcf2vcf = not os.path.isfile(default_randvcf2vcf)
-require_randdgv2vcf = not os.path.isfile(default_randdgv2vcf)
-require_vcf2diploid = not os.path.isfile(default_vcf2diploid)
-require_liftover    = not os.path.isfile(default_liftover)
-require_vcfstats    = not os.path.isfile(default_vcfstats)
+require_varsim_jar = not os.path.isfile(default_varsim_jar)
 
-if not os.path.isfile(default_randvcf2vcf): default_randvcf2vcf = None
-if not os.path.isfile(default_randdgv2vcf): default_randdgv2vcf = None
-if not os.path.isfile(default_vcf2diploid): default_vcf2diploid = None
-if not os.path.isfile(default_liftover):    default_liftover    = None
-if not os.path.isfile(default_vcfstats):    default_vcfstats    = None
+if not os.path.isfile(default_varsim_jar): require_varsim_jar = None
 
-main_parser = argparse.ArgumentParser(description="VarSim: An accurate reads simulator", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+main_parser = argparse.ArgumentParser(description="VarSim: An accurate variant and reads simulator", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="out")
 main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="work")
 main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False, default="log")
@@ -45,18 +34,16 @@ main_parser.add_argument("--seed", metavar="seed", help="Random number seed", ty
 main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/female)", required=False, type=str, choices=["male", "female"], default="male")
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
 main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str, choices=["art", "dwgsim"], default="art")
-main_parser.add_argument("--vcf2diploid_jar", metavar="vcf2diploid_jar", help="vcf2diploid jar", type=file, default=default_vcf2diploid, required=require_vcf2diploid)
+main_parser.add_argument("--varsim_jar", metavar="varsim_jar", help="VarSim jar", type=file, default=default_varsim_jar, required=require_varsim_jar)
 main_parser.add_argument("--read_length",    metavar="read_length",    help="Length of reads", default=100, type=int)
 main_parser.add_argument("--nlanes",         metavar="nlanes",         help="Number of lanes to generate", default=1, type=int)
 main_parser.add_argument("--total_coverage", metavar="total_coverage", help="Total coverage", default=1.0, type=float)
 main_parser.add_argument("--mean_fragment_size", metavar="mean_fragment_size", help="Mean fragment size", default=350, type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help="Standard deviation of fragment size", default=50, type=int)
 main_parser.add_argument("--vcfs", metavar="vcfs", help="VCF list", nargs="+", default=[])
-main_parser.add_argument("--liftover_jar", metavar="liftover_jar", help="LiftOver jar", type=file, default=default_liftover, required=require_liftover)
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
-main_parser.add_argument("--vcfstats_jar", metavar="JAR", help="VCFStats jar", type=file, default=default_vcfstats, required=require_vcfstats)
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
 pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable RandVCF2VCF")
@@ -73,10 +60,9 @@ rand_vcf_group.add_argument("--vc_num_mnp", metavar="num_mnp", help="Number of M
 rand_vcf_group.add_argument("--vc_num_complex", metavar="num_complex", help="Number of complex variants", default=0, type=int)
 rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
-rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=50, type=int)
-rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=True)
+rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=99, type=int)
+rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=False)
 rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6, type=float)
-rand_vcf_group.add_argument("--rand_vcf_jar", metavar="rand_vcf_jar", help="RandVCF2VCF jar", type=file, default=default_randvcf2vcf, required=require_randvcf2vcf)
 
 #RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
 rand_dgv_group = main_parser.add_argument_group("RandDGV2VCF options")
@@ -85,11 +71,10 @@ rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of d
 rand_dgv_group.add_argument("--sv_num_dup", metavar="num_dup", help="Number of duplications", default=20, type=int);
 rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of inversions", default=20, type=int);
 rand_dgv_group.add_argument("--sv_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=50, type=int)
+rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=100, type=int)
 rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length lim", default=1000000, type=int)
-rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=True)
-rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=True)
-rand_dgv_group.add_argument("--rand_dgv_jar", metavar="rand_dgv_jar", help="RandDGV2VCF jar", type=file, default=default_randdgv2vcf, required=require_randdgv2vcf)
+rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=False)
+rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=False)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
 dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base", default=0.0001, type=float)
@@ -186,7 +171,7 @@ if not args.disable_rand_vcf:
   rand_vcf_stderr = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
 
-  rand_vcf_command = ["java", "-jar", os.path.realpath(args.rand_vcf_jar.name), "-seed", str(args.seed),
+  rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf" ,"-seed", str(args.seed),
                  "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del", str(args.vc_num_del),
                  "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel", str(args.vc_percent_novel),
                  "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref", os.path.realpath(args.reference.name),
@@ -201,7 +186,7 @@ if not args.disable_rand_dgv:
   rand_dgv_stderr = open(os.path.join(args.log_dir, "RandDGV2VCF.err"), "w")
   args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
 
-  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.rand_dgv_jar.name), "-seed", str(args.seed),
+  rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.varsim_jar.name), "randdgv2vcf" , "-seed", str(args.seed),
                     "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup", str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
                     "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len", str(args.sv_max_length_lim), "-ref", os.path.realpath(args.reference.name),
                     "-ins", os.path.realpath(args.sv_insert_seq.name), "-dgv", os.path.realpath(args.sv_dgv.name)]
@@ -221,7 +206,7 @@ for in_vcf in args.vcfs:
   out_prefix = os.path.basename(in_vcf)
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), "-vcf", in_vcf]
+  vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", in_vcf]
   p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   processes.append(p_vcfstats)
@@ -232,7 +217,10 @@ if not args.disable_vcf2diploid:
   vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
   vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
   filter_arg_list = ["-pass"] if args.filter else []
-  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.vcf2diploid_jar.name), "-t", args.sex, "-id", args.id, "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
+  vcf2diploid_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "vcf2diploid",
+  						 "-t", args.sex, 
+  						 "-id", args.id, 
+  						 "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
 
   p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr, cwd=args.out_dir)
   logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))
@@ -267,7 +255,7 @@ if not args.disable_vcf2diploid:
 
   vcfstats_stdout = open(os.path.join(args.out_dir, "%s.truth.vcf.stats" %  (args.id)), "w")
   vcfstats_stderr = open(os.path.join(args.log_dir, "%s.truth.vcf.vcfstats.err" %  (args.id)), "w")
-  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.vcfstats_jar.name), merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+  p_vcfstats = subprocess.Popen(["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats" ,"-vcf", merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
   logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
   monitor_processes([p_vcfstats], logger) 
 
@@ -352,7 +340,7 @@ if not args.disable_sim:
   for i in xrange(args.nlanes):
     liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
     liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
-    fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s -map %s -id %d -fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) -fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) -out >(gzip -1 > %s/lane%d.read1.fq.gz) -out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (os.path.realpath(args.liftover_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i, args.out_dir, i)
+    fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d -fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) -fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) -out >(gzip -1 > %s/lane%d.read1.fq.gz) -out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i, args.out_dir, i)
     if args.force_five_base_encoding: fastq_liftover_command += " -force_five_base_encoding "
     if args.simulator == "art": fastq_liftover_command += " -type art -aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) -aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (args.out_dir, i, args.out_dir, i)
     fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)

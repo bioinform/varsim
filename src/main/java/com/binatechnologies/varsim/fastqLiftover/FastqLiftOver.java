@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -34,7 +34,7 @@ public class FastqLiftOver {
     private boolean forceFiveBaseEncoding = false;
 
     public static void main(String[] args) throws IOException {
-        new FastqLiftOver().doMain(args);
+        new FastqLiftOver().run(args);
     }
 
     public InputStream decompressStream(final File inputFile) throws IOException {
@@ -65,7 +65,7 @@ public class FastqLiftOver {
         return ps;
     }
 
-    public void doMain(String[] args) throws IOException {
+    public void run(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
         // if you have a wider console, you could increase the value;
@@ -77,7 +77,7 @@ public class FastqLiftOver {
         } catch (CmdLineException e) {
             System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java FastqLiftOver [options...] arguments...");
+            System.err.println("java Fastq_liftOver [options...] arguments...");
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println();

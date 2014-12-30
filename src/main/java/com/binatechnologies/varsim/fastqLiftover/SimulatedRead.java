@@ -1,4 +1,4 @@
-package com.binatechnologies.varsim.fastq_liftover;
+package com.binatechnologies.varsim.fastqLiftover;
 
 import com.google.common.base.Joiner;
 import org.apache.log4j.Logger;

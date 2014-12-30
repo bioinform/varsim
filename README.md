@@ -7,7 +7,7 @@ For access to webapps http://bioinform.github.io/varsim/
 
 Pre-built JARs
 
-Latest version (BETA): https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
+Latest version (BETA): https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
 
 # System Requirements
 <p>
@@ -43,8 +43,8 @@ This quick start guide will provide steps for generating a random genome with pr
 Download varsim to `varsim_run`
 
 ```
-wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
-tar xfz varsim-0.2-beta.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
+tar xfz varsim-0.3.tar.gz
 ```
 
 
@@ -110,7 +110,7 @@ The structure of `varsim_run` should look like
 ```
 
 
-<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input. 
 
 
 ```
@@ -121,7 +121,7 @@ The structure of `varsim_run` should look like
 --sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
 --vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
---sv_max_length_lim 1000000 --nlanes 3 --total_coverage 30 \
+--sv_max_length_lim 1000000 --nlanes 3 --total_coverage 1 \
 --art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
 --simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]

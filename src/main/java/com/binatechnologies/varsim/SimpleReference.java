@@ -5,8 +5,9 @@ package com.binatechnologies.varsim;
  *  @author johnmu
  */
 
-import net.sf.picard.reference.FastaSequenceFile;
-import net.sf.picard.reference.ReferenceSequence;
+import htsjdk.samtools.reference.FastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.HashMap;
 
 
 public class SimpleReference {
+    private final static Logger log = Logger.getLogger(SimpleReference.class.getName());
+
     // chr_idx -> reference_string
     HashMap<Integer, Sequence> data;
 
@@ -113,6 +116,14 @@ public class SimpleReference {
         }
     }
 
+    char charAt(int chr_idx, int loc){
+        return (char)byteAt(chr_idx,loc);
+    }
+
+    char charAt(String chr_name, int loc){
+        return (char)byteAt(chr_name,loc);
+    }
+
     // 1-based, inclusive start, exclusive end
 
     /**
@@ -139,7 +150,7 @@ public class SimpleReference {
 
         Sequence contig = data.get(chr_idx);
         if (contig == null) {
-            System.err.println("Contig not found: " + chr_idx);
+            log.error("Contig not found: " + chr_idx);
             return null;
         } else {
             return contig.subSeq(start_loc, end_loc);

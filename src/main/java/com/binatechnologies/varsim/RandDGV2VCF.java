@@ -15,9 +15,12 @@ import java.util.Random;
 public class RandDGV2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
 
+    @Option(name = "-all", usage = "Output all variants")
+    boolean output_all;
+
     static final int SEED_ARG = 333;
     @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
-    int seed = SEED_ARG;
+    static int seed = SEED_ARG;
 
     static final int NUM_INS_ARG = 2000;
     @Option(name = "-num_ins", usage = "Number of insertion SV to sample ["+NUM_INS_ARG+"]")
@@ -39,7 +42,7 @@ public class RandDGV2VCF extends randVCFgenerator {
     @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
     double ratio_novel = NOVEL_RATIO_ARG;
 
-    static final int MIN_LEN_ARG = 50;
+    static final int MIN_LEN_ARG = 100;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
@@ -63,6 +66,11 @@ public class RandDGV2VCF extends randVCFgenerator {
         num_novel_added = 0;
     }
 
+    RandDGV2VCF(long seed) {
+        super(seed);
+        num_novel_added = 0;
+    }
+
     /**
      * @param args command line arguments
      */
@@ -81,7 +89,7 @@ public class RandDGV2VCF extends randVCFgenerator {
         int num_alt = var.get_num_alt();
 
         // determine whether this one is novel
-        double rand_num = rand.nextDouble();
+        double rand_num = _rand.nextDouble();
         if (rand_num <= ratio_novel) {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
@@ -96,7 +104,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            int new_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            int new_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
             while (!var.setNovelPosition(new_pos, ref)) {
                 if (time_out > 100) {
                     log.warn("Error, cannot set novel position: " + (end_val - start_val + 1));
@@ -107,7 +115,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
                 log.info(time_out + " : " + new_pos + " : " + var.deletion());
 
-                new_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                new_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 time_out++;
             }
 
@@ -152,7 +160,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             System.exit(1);
         }
 
-        rand = new Random(seed);
+        _rand = new Random(seed);
 
         log.info("Reading reference");
         SimpleReference ref = new SimpleReference(reference_filename);
@@ -190,8 +198,8 @@ public class RandDGV2VCF extends randVCFgenerator {
         int total_lines = 0;
         int total_duplicate = 0;
         int total_out_of_range = 0;
-        DGVparser parser_one = new DGVparser(dgv_filename, ref);
-        Variant prev_var = new Variant();
+        DGVparser parser_one = new DGVparser(dgv_filename, ref,_rand);
+        Variant prev_var = new Variant(_rand);
 
         // Read through a first time to generate the counts for sampling without replacement
         while (parser_one.hasMoreInput()) {
@@ -204,7 +212,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             int chr_idx = var.chromosome();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr_idx, num_alt, rand);
+            Genotypes geno = new Genotypes(chr_idx, num_alt, _rand);
             selected_geno.add(geno);
             total_lines++;
 
@@ -215,7 +223,6 @@ public class RandDGV2VCF extends randVCFgenerator {
             }
 
             prev_var = var;
-
 
             if (var.max_len() > max_length_lim
                     || var.min_len() < min_length_lim) {
@@ -248,11 +255,8 @@ public class RandDGV2VCF extends randVCFgenerator {
                     default:
                         total_num_other++;
                 }
-
             }
-
             total_num++;
-
         }
 
         log.info("total_num_INS: " + total_num_INS);
@@ -288,8 +292,8 @@ public class RandDGV2VCF extends randVCFgenerator {
         Sample_params INV_params = new Sample_params();
 
         int geno_idx = 0;
-        parser_one = new DGVparser(dgv_filename, ref);
-        prev_var = new Variant();
+        parser_one = new DGVparser(dgv_filename, ref,_rand);
+        prev_var = new Variant(_rand);
 
 
         // Read through and do the sampling
@@ -309,8 +313,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
             prev_var = new Variant(var);
 
-            if (var.max_len() > max_length_lim
-                    || var.min_len() < min_length_lim) {
+            if (var.max_len() > max_length_lim || var.min_len() < min_length_lim) {
                 continue;
             }
 
@@ -328,19 +331,19 @@ public class RandDGV2VCF extends randVCFgenerator {
                 switch (var.getType(geno.geno[i])) {
                     case Insertion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INS_params,
-                                num_INS, total_num_INS);
+                                num_INS, total_num_INS,output_all);
                         break;
                     case Deletion:
                         geno.geno[i] = sample_genotype(geno.geno[i], DEL_params,
-                                num_DEL, total_num_DEL);
+                                num_DEL, total_num_DEL,output_all);
                         break;
                     case Tandem_Duplication:
                         geno.geno[i] = sample_genotype(geno.geno[i], DUP_params,
-                                num_DUP, total_num_DUP);
+                                num_DUP, total_num_DUP,output_all);
                         break;
                     case Inversion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INV_params,
-                                num_INV, total_num_INV);
+                                num_INV, total_num_INV,output_all);
                         break;
                     default:
                         break;
