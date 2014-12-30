@@ -17,7 +17,7 @@ import java.util.Map;
  */
 
 class Stats_record {
-    public static final int SV_LIM = 50; // >= this val is an SV
+    public static final int SV_LIM = 100; // >= this val is an SV
 
     int[] bin_counts; // the last bin is for anything larger
     int total_count;

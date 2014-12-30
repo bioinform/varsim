@@ -24,7 +24,7 @@ public class RandBED2VCF extends randVCFgenerator {
     byte[] insert_seq = null;
 
     // parameters
-    static final int MIN_LEN_ARG = 50;
+    static final int MIN_LEN_ARG = 100;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 

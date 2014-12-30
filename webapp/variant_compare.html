@@ -201,7 +201,7 @@
         var legend_y_margin = 20;
         var legend_labels = [[['TP', 'TPR'], ['FP', 'PPV'], ['True', '']], [['TP', 'F1'], ['Called', ''], ['True', '']]];
         var legend_offsets = [30, 200, 350];
-
+		var sv_lim = 100;
 
          // style constants
         var bar_back_style = "fill: rgba(0, 0, 0, 0.06)";
@@ -819,7 +819,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, 49, leg_idx);
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -827,7 +827,7 @@
             }
 
             var data_arr = compute_data_arr(big_data, type, function (obj) {
-                return get_range_sum_count(obj, 0, 49)
+                return get_range_sum_count(obj, 0, sv_lim-1)
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
@@ -845,14 +845,14 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, 50, 2000000, leg_idx);
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000, leg_idx);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y, plot_width, xlabels, false)
             }
             var data_arr = compute_data_arr(big_data, type, function (obj) {
-                return get_range_sum_count(obj, 50, 2000000)
+                return get_range_sum_count(obj, sv_lim, 2000000)
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,

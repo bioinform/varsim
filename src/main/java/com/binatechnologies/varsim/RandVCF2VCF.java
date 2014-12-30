@@ -53,7 +53,7 @@ public class RandVCF2VCF extends randVCFgenerator {
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
-    static final int MAX_LEN_ARG = 49;
+    static final int MAX_LEN_ARG = 99;
     @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 

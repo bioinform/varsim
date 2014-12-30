@@ -42,7 +42,7 @@ public class RandDGV2VCF extends randVCFgenerator {
     @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
     double ratio_novel = NOVEL_RATIO_ARG;
 
-    static final int MIN_LEN_ARG = 50;
+    static final int MIN_LEN_ARG = 100;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 

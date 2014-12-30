@@ -60,7 +60,7 @@ rand_vcf_group.add_argument("--vc_num_mnp", metavar="num_mnp", help="Number of M
 rand_vcf_group.add_argument("--vc_num_complex", metavar="num_complex", help="Number of complex variants", default=0, type=int)
 rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
-rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=50, type=int)
+rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=99, type=int)
 rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=False)
 rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6, type=float)
 
@@ -71,7 +71,7 @@ rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of d
 rand_dgv_group.add_argument("--sv_num_dup", metavar="num_dup", help="Number of duplications", default=20, type=int);
 rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of inversions", default=20, type=int);
 rand_dgv_group.add_argument("--sv_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=50, type=int)
+rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=100, type=int)
 rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length lim", default=1000000, type=int)
 rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=False)
 rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=False)
