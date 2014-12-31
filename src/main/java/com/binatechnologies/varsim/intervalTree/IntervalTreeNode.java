@@ -67,11 +67,19 @@ public class IntervalTreeNode<Key extends Interval1D> {
         balanceFactor++;
     }
 
+    public void incBalanceFactor(int val) {
+        balanceFactor += val;
+    }
+
     /**
      * This is for adding to the left
      */
     public void decBalanceFactor() {
         balanceFactor--;
+    }
+
+    public void decBalanceFactor(int val) {
+        balanceFactor -= val;
     }
 
     public ArrayList<Key> getCenter() {

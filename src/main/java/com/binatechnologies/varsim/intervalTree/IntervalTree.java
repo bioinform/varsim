@@ -49,7 +49,7 @@ public class IntervalTree<Key extends Interval1D> {
      */
     public static void main(String args[]) {
         IntervalTree test_tree = new IntervalTree();
-        System.out.println("Adding...");
+        log.info("Adding...");
         test_tree.add(new SimpleInterval1D(10, 20));
         test_tree.add(new SimpleInterval1D(5, 10));
         test_tree.add(new SimpleInterval1D(5, 20));
@@ -57,23 +57,63 @@ public class IntervalTree<Key extends Interval1D> {
         test_tree.testGetOverlap(new SimpleInterval1D(10, 10));
         test_tree.testGetOverlap(new SimpleInterval1D(11, 15));
 
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
         // test out the rotation
-        // keep adding to the right and see if it balances
+        test_tree.add(new SimpleInterval1D(-15, 10));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
         test_tree.add(new SimpleInterval1D(15, 20));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
+        test_tree.add(new SimpleInterval1D(40, 60));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
+        test_tree.add(new SimpleInterval1D(70, 70));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
+        // keep adding to the right and see if it balances
+
         test_tree.add(new SimpleInterval1D(20, 20));
-        test_tree.add(new SimpleInterval1D(20, 21));
-        test_tree.add(new SimpleInterval1D(20, 24));
+
+        //log.info("Max depth: " + test_tree.maxDepth());
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
         test_tree.add(new SimpleInterval1D(30, 34));
-        test_tree.add(new SimpleInterval1D(31, 34));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
         test_tree.add(new SimpleInterval1D(35, 35));
+
+        log.info("*** Print test tree...");
+        test_tree.printTree();
+
         test_tree.add(new SimpleInterval1D(45, 45));
         test_tree.add(new SimpleInterval1D(55, 55));
         test_tree.add(new SimpleInterval1D(65, 65));
         test_tree.add(new SimpleInterval1D(75, 75));
         test_tree.add(new SimpleInterval1D(85, 85));
+        test_tree.add(new SimpleInterval1D(55, 55));
+        test_tree.add(new SimpleInterval1D(50, 50));
+        test_tree.add(new SimpleInterval1D(51, 51));
+        test_tree.add(new SimpleInterval1D(52, 52));
+        test_tree.add(new SimpleInterval1D(53, 53));
+        test_tree.add(new SimpleInterval1D(54, 54));
 
         // see what the tree looks like
-        System.out.println("Print test tree...");
+        log.info("Max depth: " + test_tree.maxDepth());
+        log.info("Print test tree...");
         test_tree.printTree();
 
         // keep adding to the left and see if it balances
@@ -88,26 +128,27 @@ public class IntervalTree<Key extends Interval1D> {
 
 
         // see what the tree looks like
-        System.out.println("Print test tree...");
+        log.info("Max depth: " + test_tree.maxDepth());
+        log.info("Print test tree...");
         test_tree.printTree();
 
         test_tree.testGetOverlap(new SimpleInterval1D(20, 20));
         test_tree.testGetOverlap(new SimpleInterval1D(21, 22));
         test_tree.testGetOverlap(new SimpleInterval1D(30, 31));
 
-        System.out.println("Do some rotation");
-        System.out.println("**Rotate right: " + test_tree.rotateRight());
-        System.out.println("**Rotate right: " + test_tree.rotateRight());
-        System.out.println("**Rotate right: " + test_tree.rotateRight());
-        System.out.println("**Rotate right: " + test_tree.rotateRight());
-        System.out.println("**Rotate right: " + test_tree.rotateRight());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
-        System.out.println("**Rotate left: " + test_tree.rotateLeft());
+        log.info("Do some rotation");
+        log.info("**Rotate right: " + test_tree.rotateRight());
+        log.info("**Rotate right: " + test_tree.rotateRight());
+        log.info("**Rotate right: " + test_tree.rotateRight());
+        log.info("**Rotate right: " + test_tree.rotateRight());
+        log.info("**Rotate right: " + test_tree.rotateRight());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
+        log.info("**Rotate left: " + test_tree.rotateLeft());
 
         test_tree.testGetOverlap(new SimpleInterval1D(20, 20));
         test_tree.testGetOverlap(new SimpleInterval1D(21, 22));
@@ -123,6 +164,8 @@ public class IntervalTree<Key extends Interval1D> {
      * @param k key to add
      */
     public void add(Key k) {
+        log.trace("adding: " + k);
+
         numEntries++;
         if (root == null) {
             root = new IntervalTreeNode<Key>(k);
@@ -137,10 +180,11 @@ public class IntervalTree<Key extends Interval1D> {
      * @param head   Start adding at this node
      * @param parent null if head is the root, otherwise this is the parent of head
      * @param k      Key to add
-     * @return The adjustment to balance factor
+     * @return The change in height of the tree
      */
     private int add(IntervalTreeNode<Key> head, IntervalTreeNode<Key> parent, Key k) {
-        int balanceFactorChange = 0;
+        int leftHeightChange = 0;
+        int rightHeightChange = 0;
         if (head == null) {
             throw new RuntimeException("Tried to add to null node, key=" + k);
         } else {
@@ -150,50 +194,87 @@ public class IntervalTree<Key extends Interval1D> {
                 // added to center, we can stop now :D phew...
                 return 0;
             } else if (compVal < 0) {
+                // add to left
                 if (head.getLeft() == null) {
                     head.setLeft(new IntervalTreeNode<Key>(k));
                     // Created a new branch, need to change the balance factor
-                    balanceFactorChange--;
+                    leftHeightChange++;
                 } else {
-                    balanceFactorChange = add(head.getLeft(), head, k);
+                    leftHeightChange = add(head.getLeft(), head, k);
                 }
             } else {
+                // add to right
                 if (head.getRight() == null) {
                     head.setRight(new IntervalTreeNode<Key>(k));
                     // Created a new branch, need to change the balance factor
-                    balanceFactorChange++;
+                    rightHeightChange++;
                 } else {
-                    balanceFactorChange = add(head.getRight(), head, k);
+                    rightHeightChange = add(head.getRight(), head, k);
                 }
             }
         }
-        // Change the balance factor as necessary
-        if (balanceFactorChange > 0) {
-            head.incBalanceFactor();
-        } else if (balanceFactorChange < 0) {
-            head.decBalanceFactor();
+
+        if(Math.abs(leftHeightChange) > 1 || Math.abs(rightHeightChange) > 1 ){
+            throw new RuntimeException("Height change greater than one..." + leftHeightChange + ", " + rightHeightChange);
         }
+
+        // Change the balance factor as necessary
+        int headHeightChange = 0;
+        int prevBalanceFactor = head.getBalanceFactor();
+        if(leftHeightChange != 0){
+            // left was modified
+            if(leftHeightChange >= 1){
+                head.decBalanceFactor();
+            }else{
+                head.incBalanceFactor();
+            }
+            if(prevBalanceFactor < 0){
+                headHeightChange = leftHeightChange;
+            }else if(prevBalanceFactor == 0 && leftHeightChange > 0){
+                headHeightChange = leftHeightChange;
+            }
+        }else if(rightHeightChange != 0){
+            // right was modified
+            if(rightHeightChange >= 1){
+                head.incBalanceFactor();
+            }else{
+                head.decBalanceFactor();
+            }
+            if(prevBalanceFactor > 0){
+                headHeightChange = rightHeightChange;
+            }else if(prevBalanceFactor == 0 && rightHeightChange > 0){
+                headHeightChange = rightHeightChange;
+            }
+        }
+
+        //log.trace("before rotate headHeightChange: " + headHeightChange);
 
         // Check the balance factor and rotate as necessary
         if (head.getBalanceFactor() > 1) {
+            if(head.getRight().getBalanceFactor() > 0){
+                headHeightChange--;
+            }
             if (parent == null) {
                 // we are at root
                 root = rotateLeft(head);
             } else {
                 parent.setChild(head, rotateLeft(head));
             }
-            balanceFactorChange--;
         } else if (head.getBalanceFactor() < -1) {
+            if(head.getLeft().getBalanceFactor() < 0){
+                headHeightChange--;
+            }
             if (parent == null) {
                 // we are at root
                 root = rotateRight(head);
             } else {
                 parent.setChild(head, rotateRight(head));
             }
-            balanceFactorChange++;
         }
 
-        return balanceFactorChange;
+        //log.trace("headHeightChange: " + headHeightChange);
+
+        return headHeightChange;
     }
 
     public ArrayList<Key> getOverlaps(Interval1D k) {
@@ -322,6 +403,9 @@ public class IntervalTree<Key extends Interval1D> {
         int bfNewHead;
         int bfNewChild;
 
+        //log.trace("r-bfChild: " + bfChild);
+        //log.trace("r-bfHead: " + bfHead);
+
         if (bfChild >= 0) {
             bfNewChild = bfHead + 1;
             if (bfNewChild >= 0) {
@@ -337,6 +421,9 @@ public class IntervalTree<Key extends Interval1D> {
                 bfNewHead = bfChild + 1;
             }
         }
+
+        //log.trace("r-bfNewHead: " + bfNewHead);
+        //log.trace("r-bfNewChild: " + bfNewChild);
 
         IntervalTreeNode<Key> newHead = head.getLeft();
         newHead.setBalanceFactor(bfNewHead);
@@ -379,6 +466,9 @@ public class IntervalTree<Key extends Interval1D> {
         int bfNewHead;
         int bfNewChild;
 
+        //log.trace("l-bfChild: " + bfChild);
+        //log.trace("l-bfHead: " + bfHead);
+
         if (bfChild <= 0) {
             // left branch on child is heavier
             bfNewChild = bfHead - 1;
@@ -398,6 +488,9 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
+        //log.trace("l-bfNewHead: " + bfNewHead);
+        //log.trace("l-bfNewChild: " + bfNewChild);
+
         IntervalTreeNode<Key> newHead = head.getRight();
         newHead.setBalanceFactor(bfNewHead);
         head.setBalanceFactor(bfNewChild);
@@ -411,7 +504,7 @@ public class IntervalTree<Key extends Interval1D> {
         return maxDepth(root);
     }
 
-    public long maxDepth(IntervalTreeNode<Key> head){
+    public long maxDepth(final IntervalTreeNode<Key> head){
         if(head == null){
             return 0l;
         }
@@ -437,21 +530,21 @@ public class IntervalTree<Key extends Interval1D> {
      * @param level level head is at, this is just for printing
      */
     private void printTree(final IntervalTreeNode<Key> head, int level) {
-        System.out.println(level + ":" + head);
+        log.info(level + ":" + head);
         if (head != null) {
-            System.out.println("Right: " + (level + 1));
+            log.info("Right: " + (level + 1));
             printTree(head.getRight(), level + 1);
-            System.out.println("Left: " + (level + 1));
+            log.info("Left: " + (level + 1));
             printTree(head.getLeft(), level + 1);
         }
     }
 
     private void testGetOverlap(Interval1D k) {
-        System.out.println("Getting..." + k);
-        System.out.println(StringUtils.join(getOverlaps(k), ','));
+        log.info("Getting..." + k);
+        log.info(StringUtils.join(getOverlaps(k), ','));
     }
 
     private void testContains(Interval1D k) {
-        System.out.println("Contains..." + k + " -- " + contains(k));
+        log.info("Contains..." + k + " -- " + contains(k));
     }
 }
