@@ -603,7 +603,7 @@ public class VCFcompare {
                     continue;
                 }
 
-                log.info(var);
+                //log.info(var);
 
                 Genotypes geno = var.getGeno();
 
@@ -639,7 +639,7 @@ public class VCFcompare {
 
                 for (Variant curr_var : var_list) {
 
-                    log.info("curr_var: " + curr_var);
+                    //log.info("curr_var: " + curr_var);
 
                     // get genotype
                     geno = curr_var.getGeno();
