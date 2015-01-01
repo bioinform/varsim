@@ -156,10 +156,10 @@ class ratio_record {
         sb.append(',');
         sb.append(_FP);
         sb.append(',');
-        sb.append(_TN);
-        sb.append(',');
-        sb.append(_FN);
-        sb.append(',');
+        //sb.append(_TN);
+        //sb.append(',');
+        //sb.append(_FN);
+        //sb.append(',');
         sb.append(_T);
         return sb.toString();
     }
