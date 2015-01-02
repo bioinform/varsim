@@ -67,7 +67,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         balanceFactor++;
     }
 
-    public void incBalanceFactor(int val) {
+    public void addBalanceFactor(int val) {
         balanceFactor += val;
     }
 
@@ -78,9 +78,6 @@ public class IntervalTreeNode<Key extends Interval1D> {
         balanceFactor--;
     }
 
-    public void decBalanceFactor(int val) {
-        balanceFactor -= val;
-    }
 
     public ArrayList<Key> getCenter() {
         return center;

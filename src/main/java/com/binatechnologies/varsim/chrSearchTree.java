@@ -9,11 +9,13 @@ package com.binatechnologies.varsim;
 import com.binatechnologies.varsim.intervalTree.Interval1D;
 import com.binatechnologies.varsim.intervalTree.IntervalTree;
 import com.binatechnologies.varsim.intervalTree.SimpleInterval1D;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 
 
 public class chrSearchTree<Key extends Interval1D> {
+    private final static Logger log = Logger.getLogger(chrSearchTree.class.getName());
 
     HashMap<String, IntervalTree<Key>> data;
     boolean allow_duplicates = false; // this will allow duplicate intervals
@@ -69,7 +71,7 @@ public class chrSearchTree<Key extends Interval1D> {
         if (out == null) {
             IntervalTree<Key> contents = new IntervalTree<Key>();
             contents.add(key);
-            System.err.println("Put: " + chrname);
+            log.info("Added chromosome: " + chrname);
             data.put(chrname, contents);
         } else {
             out.add(key);

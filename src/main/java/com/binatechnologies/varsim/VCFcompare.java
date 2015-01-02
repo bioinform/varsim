@@ -21,6 +21,8 @@ import java.util.BitSet;
 /**
  * Compare two VCF files, output the TPR and FDR for various bins and variant types
  *
+ * TODO: this file needs massive refactoring
+ *
  * @author johnmu
  */
 
@@ -56,10 +58,12 @@ public class VCFcompare {
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]",metaVar = "HTML_file", hidden = true)
     File html_file = null;
 
+    @Option(name = "-sample", usage = "Sample to read from new VCF, otherwise will read first one [Optional]",metaVar = "String")
+    String sample_name = null;
+
 
     public static void main(String[] args) {
-        VCFcompare runner = new VCFcompare();
-        runner.run(args);
+        new VCFcompare().run(args);
     }
 
     // end = true will add the indel to the end, other wise it will add to start
@@ -593,7 +597,7 @@ public class VCFcompare {
         // iterate over new VCF and collect stats
 
         for(String curr_vcf_file : new_vcf_filename) {
-            VCFparser new_parser = new VCFparser(curr_vcf_file, null, false);
+            VCFparser new_parser = new VCFparser(curr_vcf_file, sample_name, false);
 
             while (new_parser.hasMoreInput()) {
                 Variant var = new_parser.parseLine();
@@ -602,8 +606,6 @@ public class VCFcompare {
                     // System.err.println("Bad variant or not a variant line");
                     continue;
                 }
-
-                //log.info(var);
 
                 Genotypes geno = var.getGeno();
 
@@ -638,9 +640,6 @@ public class VCFcompare {
                 }
 
                 for (Variant curr_var : var_list) {
-
-                    //log.info("curr_var: " + curr_var);
-
                     // get genotype
                     geno = curr_var.getGeno();
                     result_comparator comp = new result_comparator(true_store, overlap_ratio, wiggle, ignore_ins_len);
