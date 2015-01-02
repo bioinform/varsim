@@ -214,37 +214,26 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
-        // There should not be a change in height greater than 1... in theory
-        if(Math.abs(leftHeightChange) > 1 || Math.abs(rightHeightChange) > 1 ){
-            throw new RuntimeException("Height change greater than one..." + leftHeightChange + ", " + rightHeightChange);
-        }
-
         // Determine the change in height of tree at head
         int headHeightChange = 0;
         int prevBalanceFactor = head.getBalanceFactor();
         if(leftHeightChange != 0){
             // left was modified
-            if(leftHeightChange >= 1){
-                head.decBalanceFactor();
-            }else{
-                head.incBalanceFactor();
-            }
+            head.addBalanceFactor(-leftHeightChange);
             if(prevBalanceFactor < 0){
-                headHeightChange = leftHeightChange;
-            }else if(prevBalanceFactor == 0 && leftHeightChange > 0){
-                headHeightChange = leftHeightChange;
+                // previously left branch was heavy
+                headHeightChange = Math.max(prevBalanceFactor,leftHeightChange);
+            }else if(prevBalanceFactor >= 0){
+                headHeightChange = Math.max(0, leftHeightChange - prevBalanceFactor);
             }
         }else if(rightHeightChange != 0){
             // right was modified
-            if(rightHeightChange >= 1){
-                head.incBalanceFactor();
-            }else{
-                head.decBalanceFactor();
-            }
+            head.addBalanceFactor(rightHeightChange);
             if(prevBalanceFactor > 0){
-                headHeightChange = rightHeightChange;
-            }else if(prevBalanceFactor == 0 && rightHeightChange > 0){
-                headHeightChange = rightHeightChange;
+                // previously right branch was heavy
+                headHeightChange = Math.max(-prevBalanceFactor,rightHeightChange);
+            }else if(prevBalanceFactor <= 0){
+                headHeightChange = Math.max(0,rightHeightChange + prevBalanceFactor);
             }
         }
 
