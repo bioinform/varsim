@@ -197,7 +197,7 @@ public class IntervalTree<Key extends Interval1D> {
                 // add to left
                 if (head.getLeft() == null) {
                     head.setLeft(new IntervalTreeNode<Key>(k));
-                    // Created a new branch, need to change the balance factor
+                    // Created a new branch, height increases
                     leftHeightChange++;
                 } else {
                     leftHeightChange = add(head.getLeft(), head, k);
@@ -206,7 +206,7 @@ public class IntervalTree<Key extends Interval1D> {
                 // add to right
                 if (head.getRight() == null) {
                     head.setRight(new IntervalTreeNode<Key>(k));
-                    // Created a new branch, need to change the balance factor
+                    // Created a new branch, height increases
                     rightHeightChange++;
                 } else {
                     rightHeightChange = add(head.getRight(), head, k);
@@ -214,11 +214,12 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
+        // There should not be a change in height greater than 1... in theory
         if(Math.abs(leftHeightChange) > 1 || Math.abs(rightHeightChange) > 1 ){
             throw new RuntimeException("Height change greater than one..." + leftHeightChange + ", " + rightHeightChange);
         }
 
-        // Change the balance factor as necessary
+        // Determine the change in height of tree at head
         int headHeightChange = 0;
         int prevBalanceFactor = head.getBalanceFactor();
         if(leftHeightChange != 0){
@@ -247,9 +248,9 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
-        //log.trace("before rotate headHeightChange: " + headHeightChange);
-
         // Check the balance factor and rotate as necessary
+        // if rotation successfully changed the height, adjust the height
+        // TODO: it is possible to know if rotation will change the height, maybe don't need to rotate in those cases?
         if (head.getBalanceFactor() > 1) {
             if(head.getRight().getBalanceFactor() > 0){
                 headHeightChange--;
@@ -271,8 +272,6 @@ public class IntervalTree<Key extends Interval1D> {
                 parent.setChild(head, rotateRight(head));
             }
         }
-
-        //log.trace("headHeightChange: " + headHeightChange);
 
         return headHeightChange;
     }
