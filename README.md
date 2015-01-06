@@ -3,6 +3,11 @@ VarSim: A high-fidelity simulation validation framework for high-throughput geno
 # Website
 For access to webapps http://bioinform.github.io/varsim/
 
+# Data access
+Pre-generated reads and variants are avaliable on Amazon S3.
+
+Link for download will be avaliable as soon as upload is complete. 
+
 # Download
 
 Pre-built JARs
