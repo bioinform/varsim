@@ -14,6 +14,8 @@ Pre-built JARs
 
 Latest version (BETA): https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
 
+For source code, see "releases" above. https://github.com/bioinform/metasv/releases
+
 # System Requirements
 <p>
 For variant simulation and read generation:
@@ -25,7 +27,7 @@ For variant simulation and read generation:
 </ul>
 </p>
 <p>
-For alignment and variant validation:
+For alignment and variant calling validation:
 <ul>
 <li>8GB free RAM</li>
 </ul>
@@ -38,8 +40,8 @@ To build, execute `mvn package`
 
 # Quick Start
 
-This quick start guide will provide steps for generating a random genome with pre-specified and random variants. Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
-
+This quick start guide will provide steps for generating a random genome with pre-specified and random variants. 
+Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
 
 
 <b>Step 1:</b> Create a directory `varsim_run`
@@ -48,8 +50,8 @@ This quick start guide will provide steps for generating a random genome with pr
 Download varsim to `varsim_run`
 
 ```
-wget https://github.com/bioinform/varsim/releases/download/v0.3/varsim-0.3.tar.gz
-tar xfz varsim-0.3.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz
+tar xfz varsim-0.4.1.tar.gz
 ```
 
 
@@ -110,12 +112,17 @@ The structure of `varsim_run` should look like
 - insert_seq.txt  
 - \samtools  
 - - samtools files...
-- varsim files ...
-- varsim-0.2-beta.tar.gz
+- VarSim.jar
+- varsim.py
+- varsim_somatic.py
+- varsim-0.4.1.tar.gz
 ```
 
 
-<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. Replace the values in square brackets with the appropriate values. This will take a few hours to run. The last --vcfs option is optional and only required if you want to add additional variants to the simluation. It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input. 
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. 
+Replace the values in square brackets with the appropriate values. This will take a few hours to run. 
+The last --vcfs option is optional and only required if you want to add additional variants to the simluation. 
+It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input. 
 
 
 ```
@@ -133,7 +140,8 @@ The structure of `varsim_run` should look like
 ```
 
 
-The reads will be generated in the `out` directory. A script `quickstart.sh` is also provided which runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
+The reads will be generated in the `out` directory. A script `quickstart.sh` is also provided which 
+runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
 The ground truth VCF file is also in the `out` directory called `simu.truth.vcf`
 
 
@@ -142,7 +150,7 @@ The ground truth VCF file is also in the `out` directory called `simu.truth.vcf`
 
 
 ```
-java -jar target/build/vcfcompare.jar -true_vcf simu.truth.vcf -new_vcf [VCF from result of secondary analysis] -prefix simu
+java -jar VarSim.jar vcfcompare -true_vcf simu.truth.vcf -prefix simu [VCF from result of secondary analysis] 
 ```
 
 
@@ -154,7 +162,7 @@ This will output a JSON file that can be used as input to the VCF Compare webapp
 
 
 ```
-java -jar target/build/samcompare.jar -prefix simu [BAM files from result of secondary analysis]
+java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary analysis]
 ```
 
 
