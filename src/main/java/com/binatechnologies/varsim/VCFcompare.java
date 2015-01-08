@@ -52,6 +52,9 @@ public class VCFcompare {
     @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
     boolean ignore_ins_len;
 
+    @Option(name = "-match_geno", usage = "Also ensures genotypes match")
+    boolean match_geno;
+
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
     String bed_filename = "";
 
@@ -379,7 +382,6 @@ public class VCFcompare {
     public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
-        boolean compare_genotypes = false;
 
         // these are the statistics we "ideally" want to collect
         // number of variants correct (either genotype) (for each type)
@@ -648,7 +650,7 @@ public class VCFcompare {
                         int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
 
                         dual_idx idx;
-                        if (compare_genotypes) {
+                        if (match_geno) {
                             idx = comp.isHomMatch();
                         } else {
                             idx = comp.isMatch();
@@ -679,7 +681,7 @@ public class VCFcompare {
                         }
 
                         dual_idx idx;
-                        if (compare_genotypes) {
+                        if (match_geno) {
                             idx = comp.isHetMatch();
                         } else {
                             idx = comp.isMatch();
