@@ -1,5 +1,7 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.constants.Constant;
+
 import java.util.*;
 
 /**
@@ -508,6 +510,9 @@ class StatsRatioRecord {
 
     public void addTP(int val) {
         sumCount.incTP();
+        if(val >= Constant.SVLEN){
+            svSumCount.incTP();
+        }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {
                 binCounts[i].incTP();
@@ -519,6 +524,9 @@ class StatsRatioRecord {
 
     public void addFP(int val) {
         sumCount.incFP();
+        if(val >= Constant.SVLEN){
+            svSumCount.incFP();
+        }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {
                 binCounts[i].incFP();
@@ -530,6 +538,9 @@ class StatsRatioRecord {
 
     public void addT(int val) {
         sumCount.incT();
+        if(val >= Constant.SVLEN){
+            svSumCount.incT();
+        }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {
                 binCounts[i].incT();
@@ -568,7 +579,13 @@ class StatsRatioRecord {
 
         // write overall TPR/FDR;
         sb.append("TPR,FDR,TP,FP,T:\n");
+        sb.append("ALL");
+        sb.append(':');
         sb.append(sumCount);
+        sb.append('\n');
+        sb.append("[>="+Constant.SVLEN+"]");
+        sb.append(':');
+        sb.append(svSumCount);
         sb.append('\n');
 
         for (int i = 0; i < binCounts.length; i++) {
