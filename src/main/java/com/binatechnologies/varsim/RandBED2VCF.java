@@ -1,5 +1,6 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.constants.Constant;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -24,7 +25,7 @@ public class RandBED2VCF extends randVCFgenerator {
     byte[] insert_seq = null;
 
     // parameters
-    static final int MIN_LEN_ARG = 100;
+    static final int MIN_LEN_ARG = Constant.SVLEN;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 

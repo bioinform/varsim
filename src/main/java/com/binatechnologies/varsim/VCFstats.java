@@ -4,6 +4,7 @@ package com.binatechnologies.varsim;
  *
  */
 
+import com.binatechnologies.varsim.constants.Constant;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -17,8 +18,6 @@ import java.util.Map;
  */
 
 class Stats_record {
-    public static final int SV_LIM = 100; // >= this val is an SV
-
     int[] bin_counts; // the last bin is for anything larger
     int total_count;
     int sv_total_count;
@@ -40,7 +39,7 @@ class Stats_record {
      */
     public void add(int val) {
         total_count++;
-        if (val >= SV_LIM) sv_total_count++;
+        if (val >= Constant.SVLEN) sv_total_count++;
 
         for (int i = 0; i < bin_breaks.length; i++) {
             if (val <= bin_breaks[i]) {
@@ -66,7 +65,7 @@ class Stats_record {
     public String toString(int max_len) {
         StringBuilder sb = new StringBuilder();
         sb.append("Total: " + getTotal_count() + "\n");
-        sb.append("Total (>=" + SV_LIM + "): " + getsvTotal_count() + "\n");
+        sb.append("Total (>=" + Constant.SVLEN + "): " + getsvTotal_count() + "\n");
         sb.append("[");
         sb.append(1);
         sb.append(",");

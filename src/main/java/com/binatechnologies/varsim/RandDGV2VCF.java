@@ -1,5 +1,6 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.constants.Constant;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -42,7 +43,7 @@ public class RandDGV2VCF extends randVCFgenerator {
     @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
     double ratio_novel = NOVEL_RATIO_ARG;
 
-    static final int MIN_LEN_ARG = 100;
+    static final int MIN_LEN_ARG = Constant.SVLEN;
     @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
