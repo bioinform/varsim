@@ -328,8 +328,8 @@
 
                 var contents = data[filename][type];
 
-                for (var idx in contents.binCounts) {
-                    var obj = contents.binCounts[idx];
+                for (var idx in contents.bin_counts) {
+                    var obj = contents.bin_counts[idx];
                     var val = func(obj)[0];
 
                     if (isNaN(val)) {
@@ -343,7 +343,7 @@
                     }
                 }
 
-                var val = func(contents.sumCount)[0];
+                var val = func(contents.sum_count)[0];
                 if (val > 0 && !isNaN(val)) {
                     if (val < range[0]) {
                         range[0] = val;
@@ -376,7 +376,7 @@
          // get functions
 
         function get_sum_count(obj) {
-            return obj.sumCount;
+            return obj.sum_count;
         }
 
          // the range is inclusive
@@ -387,11 +387,11 @@
                 "_FP": 0,
                 "_T": 0
             };
-            for (var idx in obj.binCounts) {
-                if ((obj.binCounts[idx].lower >= lower && obj.binCounts[idx].lower <= upper)) {
-                    output._TP += obj.binCounts[idx]._TP;
-                    output._FP += obj.binCounts[idx]._FP;
-                    output._T += obj.binCounts[idx]._T;
+            for (var idx in obj.bin_counts) {
+                if ((obj.bin_counts[idx].lower >= lower && obj.bin_counts[idx].lower <= upper)) {
+                    output._TP += obj.bin_counts[idx]._TP;
+                    output._FP += obj.bin_counts[idx]._FP;
+                    output._T += obj.bin_counts[idx]._T;
                 }
             }
 
@@ -454,7 +454,7 @@
             var first_one = null;
             for (var filename in data) {
                 if (data[filename].hasOwnProperty(type)) {
-                    first_one = data[filename][type].binCounts;
+                    first_one = data[filename][type].bin_counts;
                 }
             }
 
@@ -473,7 +473,7 @@
                 // loop through the file and store data for first bin
                 for (var filename in data) {
                     if (data[filename].hasOwnProperty(type)) {
-                        var contents = data[filename][type].binCounts[bin_idx];
+                        var contents = data[filename][type].bin_counts[bin_idx];
                         mini_data.push(proc_func(contents));
                     } else {
                         mini_data.push(proc_func(null));
@@ -1079,10 +1079,10 @@
             if (pass_validation && Object.keys(types_data).length > 0) {
                 // check consistency of the bins
                 var orig_data = types_data[Object.keys(types_data)[0]];
-                orig_data = orig_data[Object.keys(orig_data)[0]].binCounts;
+                orig_data = orig_data[Object.keys(orig_data)[0]].bin_counts;
 
                 var new_data = varsim_obj.num_true_correct.data;
-                new_data = new_data[Object.keys(new_data)[0]].binCounts;
+                new_data = new_data[Object.keys(new_data)[0]].bin_counts;
 
                 if (orig_data.length != new_data.length) {
                     param_str += " : [Error] Inconsistent bins";
