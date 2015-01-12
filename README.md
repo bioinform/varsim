@@ -4,9 +4,23 @@ VarSim: A high-fidelity simulation validation framework for high-throughput geno
 For access to webapps http://bioinform.github.io/varsim/
 
 # Data access
-Pre-generated reads and variants are avaliable on Amazon S3.
+Pre-generated reads and variants are avaliable on Amazon S3. It is in a requester-pays bucket
+so the requester must pay for the data transmission costs outside of S3. Currently the cost Amazon
+lists is 0.09 $/GB. You will also need an AWS account to access the data. 
 
-Link for download will be avaliable as soon as upload is complete. 
+Bucket URI: s3://varsim
+
+## Instructions on how to access the data
+<ol>
+<li>Create an account at aws.amazon.com</li>
+<li>Download an AWS S3 client, this example will use http://s3tools.org/s3cmd<li>
+<li>Configure your s3cmd with "s3cmd configure", get authentication details from https://console.aws.amazon.com/iam/home?#security_credential then "access keys"</li>
+<li>List files with the command "s3cmd ls --add-header=x-amz-request-payer:requester s3://varsim/*"</li>
+<li>Download files with the command "s3cmd get --add-header=x-amz-request-payer:requester s3://varsim/[file that you want]"</li>
+</ol>
+
+There is a "readme.txt" in the root directory. 
+
 
 # Download
 
