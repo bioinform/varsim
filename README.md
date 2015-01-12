@@ -13,7 +13,7 @@ Bucket URI: s3://varsim
 ## Instructions on how to access the data
 <ol>
 <li>Create an account at aws.amazon.com</li>
-<li>Download an AWS S3 client, this example will use http://s3tools.org/s3cmd<li>
+<li>Download an AWS S3 client, this example will use http://s3tools.org/s3cmd</li>
 <li>Configure your s3cmd with "s3cmd configure", get authentication details from https://console.aws.amazon.com/iam/home?#security_credential then "access keys"</li>
 <li>List files with the command "s3cmd ls --add-header=x-amz-request-payer:requester s3://varsim/*"</li>
 <li>Download files with the command "s3cmd get --add-header=x-amz-request-payer:requester s3://varsim/[file that you want]"</li>
