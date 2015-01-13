@@ -5,23 +5,33 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="VarSim - Variant Compare">
+    <meta name="description" content="VarSim">
     <meta name="author" content="John C. Mu">
 
-    <title>VarSim &#8212; Variant Compare</title>
+    <title>VarSim</title>
 
     <!-- Bootstrap core CSS -->
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    .container {
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 760px;
+}
+    </style>
 </head>
 
 <body>
 
+	
+
     <div class="container" style="padding-bottom: 400px;">
+    	<div class="page-header">
+  		<h1>VarSim (BETA)</h1>
+  		<h2>A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications</h2>
+	</div>
+    
         <div class="jumbotron">
-            <h1>VarSim (BETA)</h1>
-            <p>
-                A high-fidelity simulation validation framework for high-throughput genome sequencing with cancer applications
-            </p>
             <p>
                 <a href="webapp/alignment_compare.html">Alignment Compare</a> webapp
             </p>
@@ -30,17 +40,230 @@
             </p>
             
             <p>
-                <a href="https://github.com/bioinform/varsim">Download and quick start guide</a>
-            </p>
-            <p>
                 For more information contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
             </p>
             
-            <p>
-                Publication with methodology out soon
-            </p>
         </div>
+        
+        <h2>Publication</h2>
+        <div class="panel panel-default" style="font-family:monospace;">
+        <div class="panel-body">
+        Applications Note:<br>
+John C. Mu, Marghoob Mohiyuddin, Jian Li, Narges Bani Asadi, Mark B. Gerstein, Alexej Abyzov, Wing H. Wong, and Hugo Y.K. Lam<br>
+<b>VarSim: A high-fidelity simulation and validation framework for high-throughput genome sequencing with cancer applications</b><br>
+Bioinformatics first published online December 17, 2014 <a href="http://dx.doi.org/10.1093/bioinformatics/btu828">doi:10.1093/bioinformatics/btu828</a>
+        </div>
+        </div>
+        <h2>Data Access</h2>
+        <p>
+        Pre-generated reads and variants are avaliable on Amazon S3. It is in a requester-pays bucket
+so the requester must pay for the data transmission costs outside of S3. Currently the cost Amazon
+lists is 0.09 $/GB. You will also need an AWS account to access the data. 
+</p>
+<div class="well well-sm" style="font-family:monospace;">
+Bucket URI: s3://varsim
+</div>
+<h3>Instructions on how to access the data</h3>
+<ol>
+<li>Create an account at aws.amazon.com</li>
+<li>Download an AWS S3 client, this example will use <code>http://s3tools.org/s3cmd</code></li>
+<li>Configure your s3cmd with <code>s3cmd configure</code>, get authentication details from <code>https://console.aws.amazon.com/iam/home?#security_credential</code> then "access keys"</li>
+<li>List files with the command <code>s3cmd ls --add-header=x-amz-request-payer:requester s3://varsim/*</code></li>
+<li>Download files with the command <code>s3cmd get --add-header=x-amz-request-payer:requester s3://varsim/[file that you want]</code></li>
+</ol>
+<p>
+There is a <code>readme.txt</code> in the root directory with details of the data. 
+</p>
+
+<h2>Download VarSim</h2>
+
+<p>Latest pre-built version:  <a href="https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz">https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz</a></p>
+
+<p>For source code, see "releases" above. <a href="https://github.com/bioinform/varsim/releases">https://github.com/bioinform/varsim/releases</a></p>
+
+
+<h2>System Requirements</h2>
+<p>
+For variant simulation and read generation/simulation:
+<ul>
+<li>32GB free RAM</li>
+<li>Enough free disk space to store twice the number of reads generated</li>
+<li>ART or dwgsim installed</li>
+<li>Python 2.7 with argparse package</li>
+</ul>
+</p>
+<p>
+For alignment and variant calling validation:
+<ul>
+<li>8GB free RAM</li>
+</ul>
+</p>
+
+<h2>Building VarSim</h2>
+<p>VarSim uses maven to build some of the tools. Please make sure maven is installed on your system.</p>
+
+<p>To build, execute <code>mvn package</code></p>
+
+
+<h2>Running VarSim</h2>
+
+Type <code>varsim.py -h</code> for help.
+
+<h2>Quick Start Guide</h2>
+
+
+<p>This quick start guide will provide steps for generating a random genome with pre-specified and random variants. 
+Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis is plotted.  
+</p>
+
+<p>
+<b>Step 1:</b> Create a directory <code>varsim_run</code>
+</p>
+
+Download varsim to <code>varsim_run</code>
+
+<pre>
+wget https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz
+tar xfz varsim-0.4.1.tar.gz
+</pre>
+
+<p>
+<b>Step 2:</b> Download the following files to <code>varsim_run</code>:
+</p>
+
+<ol>
+<li>Reference genome in FASTA format <a href='http://goo.gl/lgT18V'>[hs37d5.fa.gz]</a></li>
+<li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a></li>
+<li>DGV annotations <a href='http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt'>[GRCh37_hg19_supportingvariants_2013-07-23.txt]</a></li>
+<li>dbSNP 141 file <a href='http://goo.gl/NUG0dy'>[All.vcf.gz]</a></li>
+<li>(optional) Extra variants to include in simulation variants.vcf</li>
+</ol>
+
+<p>
+by running the following commands
+</p>
+
+<pre>
+wget http://goo.gl/lgT18V
+wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
+wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
+wget http://goo.gl/NUG0dy
+gunzip hs37d5.fa.gz
+</pre>
+
+<p>
+<b>Step 3:</b> Download Samtools to index the reference genome
+</p>
+
+<pre>
+mkdir samtools
+cd samtools
+wget http://sourceforge.net/projects/samtools/files/samtools/1.0/samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
+tar xfj samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
+cd ..
+samtools/samtools-bcftools-htslib-1.0_x64-linux/bin/samtools faidx hs37d5.fa
+</pre>
+
+<p>
+<b>Step 4:</b> Dowload ART to <code>varsim_run</code> under an the directory ART by running
+<p>
+
+<pre>
+mkdir ART
+cd ART
+wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
+tar xfz artbinvanillaicecream031114linux64tgz.tgz
+cd ..
+</pre>
+
+<p>
+The structure of <code>varsim_run</code> should look like
+</p>
+
+<pre>
+\varsim_run
+- All.vcf.gz  
+- \ART  
+- - \art_bin_VanillaIceCream  
+- - - ART files ...
+- - artbinvanillaicecream031114linux64tgz.tgz
+- GRCh37_hg19_supportingvariants_2013-07-23.txt	
+- hs37d5.fa  
+- hs37d5.fa.fai  
+- insert_seq.txt  
+- \samtools  
+- - samtools files...
+- VarSim.jar
+- varsim.py
+- varsim_somatic.py
+- varsim-0.4.1.tar.gz
+</pre>
+
+<p>
+<b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth. 
+Replace the values in square brackets with the appropriate values. This will take a few hours to run. 
+The last <code>--vcfs</code> option is optional and only required if you want to add additional variants to the simluation. 
+It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input. 
+</p>
+
+<pre>
+./varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
+--sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
+--reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
+--vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
+--sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
+--vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
+--vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
+--sv_max_length_lim 1000000 --nlanes 3 --total_coverage 1 \
+--art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
+--simulator art  \
+--vcfs [Optional VCF file to include, variants.vcf]
+</pre>
+
+<p>
+The reads will be generated in the <code>out</code> directory. A script <code>quickstart.sh</code> is also provided which 
+runs the above steps and generates reads for 1X coverage.  Run the secondary analysis tools (alignment and variant calling) on those.
+The ground truth VCF file is also in the <code>out</code> directory called <code>simu.truth.vcf</code>
+</p>
+
+<p>
+<b>Step 6:</b> After running the alignment and variant calling we can evaluate the results. In order to validate the variants run the following command:
+</p>
+
+<pre>
+java -jar VarSim.jar vcfcompare -true_vcf simu.truth.vcf -prefix simu [VCF from result of secondary analysis] 
+</pre>
+
+<p>
+This will output a JSON file that can be used as input to the VCF Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/variant_compare.html">http://bioinform.github.io/varsim/webapp/variant_compare.html</a>]
+</p>
+
+<p>
+<b>Step 7:</b> In order to validate the alignments run the following command:
+</p>
+
+<pre>
+java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary analysis]
+</pre>
+
+<p>
+This will output a JSON file that can be used as input to the Alignment Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/alignment_compare.html">http://bioinform.github.io/varsim/webapp/alignment_compare.html</a>]
+</p>
+
+
+<h2>References/Tools</h2>
+
+<ul style="font-family:monospace;">
+<li>vcf2diploid: Rozowsky J, Abyzov A, Wang J, Alves P, Raha D, Harmanci A, Leng J, Bjornson R, Kong Y, Kitabayashi N, Bhardwaj N, Rubin M, Snyder M, Gerstein M. <a href="http://msb.embopress.org/content/7/1/522">AlleleSeq: analysis of allele-specific expression and binding in a network framework</a>. Mol Syst Biol. 2011 Aug 2;7:522. doi: 10.1038/msb.2011.54. <a href="http://alleleseq.gersteinlab.org/tools.html">Download link</a></li>
+<li>DWGSIM: Nils Homer. <a href="https://github.com/nh13/DWGSIM">Github repository</a></li>
+<li>ART: Huang W1, Li L, Myers JR, Marth GT. <a href="http://www.ncbi.nlm.nih.gov/pubmed/22199392">ART: a next-generation sequencing read simulator.</a> Bioinformatics. 2012 Feb 15;28(4):593-4. doi: 10.1093/bioinformatics/btr708. Epub 2011 Dec 23. <a href="http://www.niehs.nih.gov/research/resources/software/biostatistics/art/">Download link</a></li>
+</ul>
+
+
+
     </div>
+    
+    
 
 
     <!-- Bootstrap core JavaScript
