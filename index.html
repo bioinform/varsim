@@ -28,6 +28,19 @@
 
   ga('create', 'UA-58409498-2', 'auto');
   ga('send', 'pageview');
+  
+  /**
+* Function that tracks a click on an outbound link in Google Analytics.
+* This function takes a valid URL string as an argument, and uses that URL string
+* as the event label.
+*/
+var trackOutboundLink = function(url) {
+   ga('send', 'event', 'outbound', 'click', url, {'hitCallback':
+     function () {
+     document.location = url;
+     }
+   });
+}
 
 </script>
 
@@ -45,10 +58,10 @@
     
         <div class="jumbotron">
             <p>
-                <a href="webapp/alignment_compare.html">Alignment Compare</a> webapp
+                <a href="webapp/alignment_compare.html" onclick="trackOutboundLink('webapp/alignment_compare.html'); return false;">Alignment Compare</a> webapp
             </p>
             <p>
-                <a href="webapp/variant_compare.html">Variant Compare</a> webapp
+                <a href="webapp/variant_compare.html" onclick="trackOutboundLink('webapp/variant_compare.html'); return false;">Variant Compare</a> webapp
             </p>
             
             <p>
@@ -63,7 +76,7 @@
         If you use VarSim in your work, please cite the following:<br>
 John C. Mu, Marghoob Mohiyuddin, Jian Li, Narges Bani Asadi, Mark B. Gerstein, Alexej Abyzov, Wing H. Wong, and Hugo Y.K. Lam<br>
 <b>VarSim: A high-fidelity simulation and validation framework for high-throughput genome sequencing with cancer applications</b><br>
-Bioinformatics first published online December 17, 2014 <a href="http://dx.doi.org/10.1093/bioinformatics/btu828">doi:10.1093/bioinformatics/btu828</a>
+Bioinformatics first published online December 17, 2014 <a href="http://dx.doi.org/10.1093/bioinformatics/btu828" onclick="trackOutboundLink('http://dx.doi.org/10.1093/bioinformatics/btu828'); return false;">doi:10.1093/bioinformatics/btu828</a>
         </div>
         </div>
         <h2>Data Access</h2>
@@ -90,9 +103,11 @@ There is a <code>readme.txt</code> in the root directory with details of the dat
 
 <h2>Download VarSim</h2>
 
-<p>Latest pre-built version:  <a href="https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz">https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz</a></p>
+<p>Latest pre-built version:  <a href="https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz"
+onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz'); return false;">https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz</a></p>
 
-<p>For source code, see "releases" above. <a href="https://github.com/bioinform/varsim/releases">https://github.com/bioinform/varsim/releases</a></p>
+<p>For source code, see "releases" above. <a href="https://github.com/bioinform/varsim/releases"
+onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases'); return false;">https://github.com/bioinform/varsim/releases</a></p>
 
 
 <h2>System Requirements</h2>
@@ -248,7 +263,7 @@ java -jar VarSim.jar vcfcompare -true_vcf simu.truth.vcf -prefix simu [VCF from 
 </pre>
 
 <p>
-This will output a JSON file that can be used as input to the VCF Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/variant_compare.html">http://bioinform.github.io/varsim/webapp/variant_compare.html</a>]
+This will output a JSON file that can be used as input to the VCF Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/variant_compare.html" onclick="trackOutboundLink('webapp/variant_compare.html'); return false;">http://bioinform.github.io/varsim/webapp/variant_compare.html</a>]
 </p>
 
 <p>
@@ -260,7 +275,7 @@ java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary
 </pre>
 
 <p>
-This will output a JSON file that can be used as input to the Alignment Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/alignment_compare.html">http://bioinform.github.io/varsim/webapp/alignment_compare.html</a>]
+This will output a JSON file that can be used as input to the Alignment Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/alignment_compare.html" onclick="trackOutboundLink('webapp/alignment_compare.html'); return false;">http://bioinform.github.io/varsim/webapp/alignment_compare.html</a>]
 </p>
 
 
