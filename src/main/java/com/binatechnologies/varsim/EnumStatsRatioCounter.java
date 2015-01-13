@@ -1,5 +1,7 @@
 package com.binatechnologies.varsim;
 
+import com.binatechnologies.varsim.constants.Constant;
+
 import java.util.*;
 
 /**
@@ -9,7 +11,7 @@ import java.util.*;
 /**
  * Stores everything required to compute precision and recall
  */
-class ratio_record {
+class RatioRecord {
     private int _TP = 0; // True Positive
     private int _FP = 0; // False Positive
     private int _TN = 0; // True Positive
@@ -20,10 +22,10 @@ class ratio_record {
     private int lower = -1; // -1 means negative infinity or unknown
     private int upper = -1; // -1 means positive infinity or unknown
 
-    public ratio_record() {
+    public RatioRecord() {
     }
 
-    public ratio_record(int lower, int upper) {
+    public RatioRecord(int lower, int upper) {
         this.lower = lower;
         this.upper = upper;
     }
@@ -156,10 +158,10 @@ class ratio_record {
         sb.append(',');
         sb.append(_FP);
         sb.append(',');
-        sb.append(_TN);
-        sb.append(',');
-        sb.append(_FN);
-        sb.append(',');
+        //sb.append(_TN);
+        //sb.append(',');
+        //sb.append(_FN);
+        //sb.append(',');
         sb.append(_T);
         return sb.toString();
     }
@@ -169,7 +171,7 @@ class ratio_record {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ratio_record that = (ratio_record) o;
+        RatioRecord that = (RatioRecord) o;
 
         if (_FN != that._FN) return false;
         if (_FP != that._FP) return false;
@@ -201,11 +203,11 @@ class ratio_record {
  * The filter value is stored in the "upper" field
  */
 class RatioRecordSum {
-    private ArrayList<ratio_record> data; // accending order
+    private ArrayList<RatioRecord> data; // accending order
     private int T; // number of true
 
     public RatioRecordSum() {
-        data = new ArrayList<ratio_record>();
+        data = new ArrayList<RatioRecord>();
         T = 0;
     }
 
@@ -214,7 +216,7 @@ class RatioRecordSum {
         if (val > max_val) {
             int num_add = val - max_val;
             for (int i = 0; i < num_add; i++) {
-                data.add(new ratio_record(0, max_val + i + 1));
+                data.add(new RatioRecord(0, max_val + i + 1));
             }
         }
     }
@@ -251,11 +253,11 @@ class RatioRecordSum {
         }
     }
 
-    public ArrayList<ratio_record> getData() {
+    public ArrayList<RatioRecord> getData() {
         return data;
     }
 
-    public void setData(ArrayList<ratio_record> data) {
+    public void setData(ArrayList<RatioRecord> data) {
         this.data = data;
     }
 
@@ -270,7 +272,7 @@ class RatioRecordSum {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < data.size(); i++) {
-            ratio_record rec = data.get(i);
+            RatioRecord rec = data.get(i);
             rec.setT(T);
             sb.append(i);
             sb.append(",");
@@ -478,35 +480,39 @@ class MapRatioRecordSum {
 /**
  * This is for recording values in bins of various sizes, the bins are hard coded for now
  */
-class Stats_ratio_record {
-    private ratio_record[] bin_counts; // the last bin is for anything larger, this is the number correct
-    private ratio_record sum_count;
+class StatsRatioRecord {
+    private RatioRecord[] bin_counts; // the last bin is for anything larger, this is the number correct
+    private RatioRecord sum_count;
+    private RatioRecord svSumCount;
 
     private int[] bin_breaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
 
-    Stats_ratio_record() {
-        bin_counts = new ratio_record[bin_breaks.length + 1];
+    StatsRatioRecord() {
+        bin_counts = new RatioRecord[bin_breaks.length + 1];
 
         if (bin_breaks.length > 0) {
-            bin_counts[0] = new ratio_record(1, bin_breaks[0]);
+            bin_counts[0] = new RatioRecord(1, bin_breaks[0]);
         } else {
-            bin_counts[0] = new ratio_record(1, -1);
+            bin_counts[0] = new RatioRecord(1, -1);
         }
 
         for (int i = 1; i < bin_counts.length; i++) {
             if (i < bin_breaks.length) {
-                bin_counts[i] = new ratio_record(bin_breaks[i - 1] + 1, bin_breaks[i]);
+                bin_counts[i] = new RatioRecord(bin_breaks[i - 1] + 1, bin_breaks[i]);
             } else {
-                bin_counts[i] = new ratio_record(bin_breaks[i - 1] + 1, -1);
+                bin_counts[i] = new RatioRecord(bin_breaks[i - 1] + 1, -1);
             }
         }
 
-        sum_count = new ratio_record();
+        sum_count = new RatioRecord();
     }
 
     public void addTP(int val) {
         sum_count.incTP();
+        if(val >= Constant.SVLEN){
+            svSumCount.incTP();
+        }
         for (int i = 0; i < bin_breaks.length; i++) {
             if (val <= bin_breaks[i]) {
                 bin_counts[i].incTP();
@@ -518,6 +524,9 @@ class Stats_ratio_record {
 
     public void addFP(int val) {
         sum_count.incFP();
+        if(val >= Constant.SVLEN){
+            svSumCount.incFP();
+        }
         for (int i = 0; i < bin_breaks.length; i++) {
             if (val <= bin_breaks[i]) {
                 bin_counts[i].incFP();
@@ -529,6 +538,9 @@ class Stats_ratio_record {
 
     public void addT(int val) {
         sum_count.incT();
+        if(val >= Constant.SVLEN){
+            svSumCount.incT();
+        }
         for (int i = 0; i < bin_breaks.length; i++) {
             if (val <= bin_breaks[i]) {
                 bin_counts[i].incT();
@@ -538,19 +550,19 @@ class Stats_ratio_record {
         bin_counts[bin_breaks.length].incT();
     }
 
-    public ratio_record[] getBin_counts() {
+    public RatioRecord[] getBin_counts() {
         return bin_counts;
     }
 
-    public void setBin_counts(ratio_record[] bin_counts) {
+    public void setBin_counts(RatioRecord[] bin_counts) {
         this.bin_counts = bin_counts;
     }
 
-    public ratio_record getSum_count() {
+    public RatioRecord getSum_count() {
         return sum_count;
     }
 
-    public void setSum_count(ratio_record sum_count) {
+    public void setSum_count(RatioRecord sum_count) {
         this.sum_count = sum_count;
     }
 
@@ -567,7 +579,13 @@ class Stats_ratio_record {
 
         // write overall TPR/FDR;
         sb.append("TPR,FDR,TP,FP,T:\n");
+        sb.append("ALL");
+        sb.append(':');
         sb.append(sum_count);
+        sb.append('\n');
+        sb.append("[>="+Constant.SVLEN+"]");
+        sb.append(':');
+        sb.append(svSumCount);
         sb.append('\n');
 
         for (int i = 0; i < bin_counts.length; i++) {
@@ -597,20 +615,20 @@ class Stats_ratio_record {
  */
 public class EnumStatsRatioCounter<Value extends Enum> {
 
-    private HashMap<Value, Stats_ratio_record> data;
-    private Stats_ratio_record all_data; // this records regardless of type
+    private HashMap<Value, StatsRatioRecord> data;
+    private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {
-        data = new HashMap<Value, Stats_ratio_record>();
-        all_data = new Stats_ratio_record();
+        data = new HashMap<Value, StatsRatioRecord>();
+        all_data = new StatsRatioRecord();
     }
 
     public void addTP(Value a, int len) {
-        Stats_ratio_record count = data.get(a);
+        StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addTP(len);
         } else {
-            Stats_ratio_record contents = new Stats_ratio_record();
+            StatsRatioRecord contents = new StatsRatioRecord();
             contents.addTP(len);
             data.put(a, contents);
         }
@@ -619,11 +637,11 @@ public class EnumStatsRatioCounter<Value extends Enum> {
     }
 
     public void addFP(Value a, int len) {
-        Stats_ratio_record count = data.get(a);
+        StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addFP(len);
         } else {
-            Stats_ratio_record contents = new Stats_ratio_record();
+            StatsRatioRecord contents = new StatsRatioRecord();
             contents.addFP(len);
             data.put(a, contents);
         }
@@ -632,11 +650,11 @@ public class EnumStatsRatioCounter<Value extends Enum> {
     }
 
     public void addT(Value a, int len) {
-        Stats_ratio_record count = data.get(a);
+        StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addT(len);
         } else {
-            Stats_ratio_record contents = new Stats_ratio_record();
+            StatsRatioRecord contents = new StatsRatioRecord();
             contents.addT(len);
             data.put(a, contents);
         }
@@ -644,19 +662,19 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         all_data.addT(len);
     }
 
-    public HashMap<Value, Stats_ratio_record> getData() {
+    public HashMap<Value, StatsRatioRecord> getData() {
         return data;
     }
 
-    public void setData(HashMap<Value, Stats_ratio_record> data) {
+    public void setData(HashMap<Value, StatsRatioRecord> data) {
         this.data = data;
     }
 
-    public Stats_ratio_record getAll_data() {
+    public StatsRatioRecord getAll_data() {
         return all_data;
     }
 
-    public void setAll_data(Stats_ratio_record all_data) {
+    public void setAll_data(StatsRatioRecord all_data) {
         this.all_data = all_data;
     }
 
@@ -668,7 +686,7 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         sb.append("---------\n");
 
         // Output for each variant type
-        for (Map.Entry<Value, Stats_ratio_record> entry : data.entrySet()) {
+        for (Map.Entry<Value, StatsRatioRecord> entry : data.entrySet()) {
             sb.append(entry.getKey());
             sb.append('\n');
             sb.append(entry.getValue());

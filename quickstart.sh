@@ -3,8 +3,8 @@
 set -x
 
 # Download varsim
-wget https://github.com/bioinform/varsim/releases/download/0.2-beta/varsim-0.2-beta.tar.gz
-tar xfz varsim-0.2-beta.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz
+tar xfz varsim-0.4.1.tar.gz
 
 # Download reference and variant databases 
 wget http://goo.gl/lgT18V

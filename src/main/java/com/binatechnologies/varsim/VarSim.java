@@ -19,6 +19,8 @@ import java.util.Arrays;
 public class VarSim {
     private final static Logger log = Logger.getLogger(VarSim.class.getName());
 
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+
     public void run(String[] args) throws IOException{
         String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
                 + "      --= Simulation =-- \n"
@@ -33,6 +35,7 @@ public class VarSim {
                 + "       fastq_liftover -- Lifts over simulated FASTQ files to reference coordinates \n"
                 + "\n";
         if(args.length == 0){
+            System.err.println(VERSION);
             System.err.println(usage);
             System.exit(1);
         }

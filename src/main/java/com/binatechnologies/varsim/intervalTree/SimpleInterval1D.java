@@ -1,6 +1,6 @@
 package com.binatechnologies.varsim.intervalTree;
 
-//import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 
 /**
  * Simple interval, End-points inclusive, immutable
@@ -8,7 +8,7 @@ package com.binatechnologies.varsim.intervalTree;
  * @author johnmu
  */
 public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
-    //private final static Logger log = Logger.getLogger(SimpleInterval1D.class.getName());
+    private final static Logger log = Logger.getLogger(SimpleInterval1D.class.getName());
     public final long left; // left endpoint, inclusive
     public final long right; // right endpoint, inclusive
 
