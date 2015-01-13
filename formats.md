@@ -9,3 +9,4 @@ Our modified vcf2diploid generates a file indicating the mapping from blocks of 
 Direction of a block can be '+' or '-'. The feature name indicates which feature the block comes from-could be 'INS', 'DEL', 'DUP', 'DUP_TANDEM', 'SEQ', 'INV'. When the feature is 'INS', the 'ref chr' and 'ref loc' fields indicate the location before which the insertion happened. This is vice-versa for 'DEL'. When the direction is '-', then the mapping for the host block is done after reversing the locations within the block-for '+', the mapping is sequential. Also, all the locations are 1-indexed.  
 
 Variant_id is to keep track of variants that have multiple features. 
+
