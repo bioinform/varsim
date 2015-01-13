@@ -28,7 +28,7 @@ Pre-built JARs
 
 Latest version (BETA): https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz
 
-For source code, see "releases" above. https://github.com/bioinform/metasv/releases
+For source code, see "releases" above. https://github.com/bioinform/varsim/releases
 
 # System Requirements
 <p>
