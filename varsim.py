@@ -38,7 +38,8 @@ main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/f
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
 main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
-
+main_parser.add_argument("--simulator_executable", metavar="executable", help="Read simulator executable", required=True,
+                         type=file)
 main_parser.add_argument("--varsim_jar", metavar="varsim_jar", help="VarSim jar", type=file, default=default_varsim_jar,
                          required=require_varsim_jar)
 main_parser.add_argument("--read_length", metavar="read_length", help="Length of reads", default=100, type=int)
@@ -95,27 +96,27 @@ dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", h
 dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help="Error rate on the last base",
                           default=0.0015, type=float)
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
-dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=False,
-                          default=None)
 
 art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
-art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=False,
-                       default=None)
+
 
 args = main_parser.parse_args()
 
+# make the directories we need
 for d in [args.log_dir, args.out_dir, args.work_dir]:
     if not os.path.exists(d):
         os.makedirs(d)
 
+#Setup logging
 FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
 logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
+# ####### Some functions here ##########
 def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
     retcode = subproc.wait()
@@ -169,18 +170,14 @@ def check_executable(fpath):
         sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
         sys.exit(1)
 
+# ####### END Some functions here ##########
 
+
+
+# Make sure we can actually execute the executable
 if not args.disable_sim:
-    if args.simulator == "dwgsim":
-        if args.dwgsim is None:
-            sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
-            sys.exit(1)
-        check_executable(args.dwgsim.name)
-    if args.simulator == "art":
-        if args.art is None:
-            sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
-            sys.exit(1)
-        check_executable(args.art.name)
+    check_executable(args.simulator_executable.name)
+
 
 processes = []
 
@@ -310,7 +307,8 @@ if not args.disable_sim:
         for i in xrange(args.nlanes):
             for end in [1, 2]:
                 fifo_src_dst.append(
-                    ("simulated.lane%d.bwa.read%d.fastq" % (i, end), "simulated.lane%d.read%d.fq.gz" % (i, end)))
+                    ("simulated.lane%d.read%d.fastq" % (i, end),
+                     "simulated.lane%d.read%d.fq.gz" % (i, end)))
     if args.simulator == "art":
         for i in xrange(args.nlanes):
             for end in [1, 2]:
@@ -333,7 +331,7 @@ if not args.disable_sim:
 
     if args.simulator == "dwgsim":
         for i in xrange(args.nlanes):
-            dwgsim_command = [os.path.realpath(args.dwgsim.name), "-e",
+            dwgsim_command = [os.path.realpath(args.simulator_executable.name), "-e",
                               "%s,%s" % (args.dwgsim_start_e, args.dwgsim_end_e),
                               "-E", "%s,%s" % (args.dwgsim_start_e, args.dwgsim_end_e), args.dwgsim_options,
                               "-d", str(args.mean_fragment_size), "-s", str(args.sd_fragment_size), "-C",
@@ -354,7 +352,7 @@ if not args.disable_sim:
             profile_opts = ["-1", args.profile_1.name, "-2", args.profile_2.name]
 
         for i in xrange(args.nlanes):
-            art_command = [args.art.name] + profile_opts + ["-i", merged_reference, "-p",
+            art_command = [args.simulator_executable.name] + profile_opts + ["-i", merged_reference, "-p",
                                                             "-l", str(args.read_length), "-f", str(coverage_per_lane),
                                                             "-m", str(args.mean_fragment_size),
                                                             "-s", str(args.sd_fragment_size), "-rs", str(i),
