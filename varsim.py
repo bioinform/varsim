@@ -38,8 +38,8 @@ main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/f
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
 main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
-main_parser.add_argument("--simulator_executable", metavar="executable", help="Read simulator executable", required=True,
-                         type=file)
+main_parser.add_argument("--simulator_executable", metavar="executable", help="Read simulator executable"
+                         , required=True, type=file)
 main_parser.add_argument("--varsim_jar", metavar="varsim_jar", help="VarSim jar", type=file, default=default_varsim_jar,
                          required=require_varsim_jar)
 main_parser.add_argument("--read_length", metavar="read_length", help="Length of reads", default=100, type=int)
@@ -259,20 +259,33 @@ if not args.disable_vcf2diploid:
     contigs = get_contigs_list(args.reference.name)
     with open(merged_reference, "w") as merged_fa:
         for contig in contigs:
-            #continue
             for strand in ["maternal", "paternal"]:
                 fasta = os.path.join(args.out_dir, "%s_%s_%s.fa" % (contig, args.id, strand))
-                if not os.path.isfile(fasta): continue
+                if not os.path.isfile(fasta):
+                    continue
                 with open(fasta) as chromosome_fasta:
                     shutil.copyfileobj(chromosome_fasta, merged_fa)
-                    #break
+
     # contatenate the vcfs
     with open(merged_truth_vcf, "w") as merged_vcf:
+        first_file = True
         for contig in contigs:
             chr_vcf = os.path.join(args.out_dir, "%s_%s.vcf" % (contig, args.id))
-            if not os.path.isfile(chr_vcf): continue
+            if not os.path.isfile(chr_vcf):
+                continue
             with open(chr_vcf) as chr_vcf_file:
-                shutil.copyfileobj(chr_vcf_file, merged_vcf)
+                for line in chr_vcf_file:
+                    line = line.strip()
+                    if len(line) == 0:
+                        continue
+                    if not first_file:
+                        if line[0] == "#":
+                            continue
+                    merged_vcf.write(line)
+                    merged_vcf.write('\n')
+
+                first_file = False
+
 
     # Merge the chain files
     with open(merged_chain, "w") as merged_chain_file:
