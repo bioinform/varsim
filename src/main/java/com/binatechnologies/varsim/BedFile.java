@@ -57,8 +57,14 @@ public class BedFile {
             String[] ll = line.split("\t");
 
             String chr_name = ll[0];
-            int start = Integer.parseInt(ll[1]);
-            int end = Integer.parseInt(ll[2]);
+            int start;
+            int end;
+            try {
+                start = Integer.parseInt(ll[1]);
+                end = Integer.parseInt(ll[2]);
+            }catch(NumberFormatException e){
+                throw new RuntimeException("Malformed BED line (nfe): " + line);
+            }
 
             bedST.put(chr_name, new SimpleInterval1D(start, end - 1));
         }
