@@ -506,6 +506,7 @@ class StatsRatioRecord {
         }
 
         sum_count = new RatioRecord();
+        svSumCount = new RatioRecord();
     }
 
     public void addTP(int val) {
