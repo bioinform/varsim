@@ -48,7 +48,7 @@ public class BedFile {
         String line;
         while ((line = br.readLine()) != null) {
             line = line.trim();
-            if (line.charAt(0) == '#') {
+            if (line.length() == 0 || line.charAt(0) == '#') {
                 // comment line
                 continue;
             }
