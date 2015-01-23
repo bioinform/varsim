@@ -36,7 +36,7 @@ public class VCFcompare {
     String true_vcf_filename;
 
     @Argument(usage = "One or more VCF files from secondary analysis",metaVar = "vcf_files ...",required = true)
-    private ArrayList<String> new_vcf_filename = new ArrayList<>();
+    ArrayList<String> new_vcf_filename;
 
     @Option(name = "-prefix", usage = "Prefix for output file [Required]",metaVar = "file",required = true)
     String out_prefix;
@@ -63,7 +63,6 @@ public class VCFcompare {
 
     @Option(name = "-sample", usage = "Sample to read from new VCF, otherwise will read first one [Optional]",metaVar = "String")
     String sample_name = null;
-
 
     public static void main(String[] args) {
         new VCFcompare().run(args);
@@ -172,7 +171,7 @@ public class VCFcompare {
 
     //if end = true, we add indels to the end
     private ArrayList<Variant> convert_var_to_var_list(Variant var, boolean end) {
-        ArrayList<Variant> var_list = new ArrayList<Variant>();
+        ArrayList<Variant> var_list = new ArrayList<>();
 
         //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
@@ -223,7 +222,6 @@ public class VCFcompare {
                 }
             }
             int min_match_len = Math.min(match_len[0], match_len[1]);
-            //System.err.println("min_match_len: " + min_match_len);
 
             if (min_match_len > 0) {
                 ref = Arrays.copyOfRange(ref, min_match_len, ref.length);
@@ -422,6 +420,7 @@ public class VCFcompare {
         }
 
         if(bed_exists) {
+            log.info("Using " + bed_filename + " to intersect");
             intersector = new BedFile(bed_filename);
         }
 
@@ -474,15 +473,15 @@ public class VCFcompare {
         VCFparser true_parser = new VCFparser(true_vcf_filename, null, false);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
-        chrSearchTree<ValueInterval1D<Variant>> true_store = new chrSearchTree<ValueInterval1D<Variant>>(true);
+        chrSearchTree<ValueInterval1D<Variant>> true_store = new chrSearchTree<>(true);
         int num_read = 0;
         int num_added = 0;
 
         // this is for the original variants
         // it stores the total length of the original variant in bases
         // Still check for validation of canonical full variants
-        ArrayList<Integer> full_validated_total = new ArrayList<Integer>();
-        ArrayList<Variant> true_var_list = new ArrayList<Variant>();
+        ArrayList<Integer> full_validated_total = new ArrayList<>();
+        ArrayList<Variant> true_var_list = new ArrayList<>();
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
@@ -542,7 +541,7 @@ public class VCFcompare {
                 curr_var.full_idx = num_read;
                 curr_var.original_type = orig_type;
 
-                true_store.put(chr_name, new ValueInterval1D<Variant>(curr_var_reg,curr_var));
+                true_store.put(chr_name, new ValueInterval1D<>(curr_var_reg,curr_var));
                 num_added++;
             }
 
@@ -609,7 +608,7 @@ public class VCFcompare {
                     continue;
                 }
 
-                Genotypes geno = var.getGeno();
+                Genotypes geno;
 
                 String chr_name = var.getChr_name();
                 SimpleInterval1D var_reg = var.get_geno_interval();
@@ -668,7 +667,7 @@ public class VCFcompare {
 
                     } else {
                         // het
-                        boolean matched = false;
+                        //boolean matched = false;
                         int max_true_len = 0;
                         for (int i = 0; i < 2; i++) {
                             byte allele = geno.geno[i];
@@ -865,11 +864,8 @@ public class VCFcompare {
                 return false;
             }
 
-            if (full_idx != temp.full_idx) {
-                return false;
-            }
+            return full_idx == temp.full_idx;
 
-            return true;
         }
 
         @Override
@@ -891,8 +887,8 @@ public class VCFcompare {
 
         // Results to store
         // this stores the indexes of the true variants matched
-        ArrayList<dual_idx> matches_hom = new ArrayList<dual_idx>();
-        ArrayList<ArrayList<dual_idx>> matches_het = new ArrayList<ArrayList<dual_idx>>(2); // matches either parent
+        ArrayList<dual_idx> matches_hom = new ArrayList<>();
+        ArrayList<ArrayList<dual_idx>> matches_het = new ArrayList<>(2); // matches either parent
 
         public result_comparator(chrSearchTree<ValueInterval1D<Variant>> true_store, double overlap_ratio, int wiggle) {
             this(true_store, overlap_ratio, wiggle,false);
@@ -916,7 +912,7 @@ public class VCFcompare {
         }
 
         public dual_idx isHetMatch() {
-            ArrayList<dual_idx> temp = new ArrayList<dual_idx>(matches_het.get(0));
+            ArrayList<dual_idx> temp = new ArrayList<>(matches_het.get(0));
             temp.retainAll(matches_het.get(1));
             if (temp.size() > 0) {
                 return temp.get(0);
