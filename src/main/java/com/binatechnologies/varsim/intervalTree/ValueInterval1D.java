@@ -13,12 +13,12 @@ public class ValueInterval1D<Value> extends SimpleInterval1D {
         data = null;
     }
 
-    public ValueInterval1D(long left, long right, Value data){
+    public ValueInterval1D(long left, long right, Value data) {
         super(left, right);
         this.data = data;
     }
 
-    public ValueInterval1D(SimpleInterval1D reg, Value data){
+    public ValueInterval1D(SimpleInterval1D reg, Value data) {
         super(reg);
         this.data = data;
     }

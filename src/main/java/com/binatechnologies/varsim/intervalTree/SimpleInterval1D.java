@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
  *
  * @author johnmu
  */
-public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
+public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
     private final static Logger log = Logger.getLogger(SimpleInterval1D.class.getName());
     public final long left; // left endpoint, inclusive
     public final long right; // right endpoint, inclusive
@@ -27,7 +27,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
         }
     }
 
-    public SimpleInterval1D(Interval1D reg){
+    public SimpleInterval1D(Interval1D reg) {
         this.left = reg.getLeft();
         this.right = reg.getRight();
     }
@@ -219,6 +219,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>,Interval1D {
 
     /**
      * Note: Not really the union, maybe this method name should be changed
+     *
      * @param that Another interval
      * @return interval that encloses both current interval and the provided one
      */

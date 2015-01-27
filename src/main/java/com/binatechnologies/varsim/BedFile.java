@@ -62,7 +62,7 @@ public class BedFile {
             try {
                 start = Integer.parseInt(ll[1]);
                 end = Integer.parseInt(ll[2]);
-            }catch(NumberFormatException e){
+            } catch (NumberFormatException e) {
                 throw new RuntimeException("Malformed BED line (nfe): " + line);
             }
 
@@ -95,16 +95,17 @@ public class BedFile {
 
     /**
      * Checks whether either endpoint of the interval is in the BED file
+     *
      * @param chrname
      * @param interval
      * @return
      */
     public boolean containsEitherEndpoint(String chrname, SimpleInterval1D interval) {
-        if(interval.getLeft() == interval.getRight()){
+        if (interval.getLeft() == interval.getRight()) {
             return bedST.contains(chrname, interval);
-        }else {
-            return bedST.contains(chrname, new SimpleInterval1D(interval.getLeft(),interval.getLeft())) |
-                    bedST.contains(chrname, new SimpleInterval1D(interval.getRight(),interval.getRight()));
+        } else {
+            return bedST.contains(chrname, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) |
+                    bedST.contains(chrname, new SimpleInterval1D(interval.getRight(), interval.getRight()));
         }
     }
 

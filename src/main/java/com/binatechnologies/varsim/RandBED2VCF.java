@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
 import java.io.*;
 import java.util.Random;
 
@@ -26,33 +27,33 @@ public class RandBED2VCF extends randVCFgenerator {
 
     // parameters
     static final int MIN_LEN_ARG = Constant.SVLEN;
-    @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
+    @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
     static final int MAX_LEN_ARG = 1000000;
-    @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
+    @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 
     static final long SEED_ARG = 333;
-    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     static long seed = 333;
 
-    @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
+    @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
     String reference_filename;
 
-    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]",metaVar = "file",required = true)
+    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]", metaVar = "file", required = true)
     String insert_filename;
 
-    @Option(name = "-ins_bed", usage = "Known Insertion BED file [Required]",metaVar = "BED_file",required = true)
+    @Option(name = "-ins_bed", usage = "Known Insertion BED file [Required]", metaVar = "BED_file", required = true)
     String ins_bed_filename;
 
-    @Option(name = "-del_bed", usage = "Known Deletion BED file [Required]",metaVar = "BED_file",required = true)
+    @Option(name = "-del_bed", usage = "Known Deletion BED file [Required]", metaVar = "BED_file", required = true)
     String del_bed_filename;
 
-    @Option(name = "-dup_bed", usage = "Known Duplication BED file [Required]",metaVar = "BED_file",required = true)
+    @Option(name = "-dup_bed", usage = "Known Duplication BED file [Required]", metaVar = "BED_file", required = true)
     String dup_bed_filename;
 
-    @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]",metaVar = "BED_file",required = true)
+    @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]", metaVar = "BED_file", required = true)
     String inv_bed_filename;
 
     RandBED2VCF() {
@@ -95,7 +96,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         int chr_idx = variantFileParser.getChromIndex(ll[0]);
 
-        if(chr_idx <= 0){
+        if (chr_idx <= 0) {
             return null;
         }
 
@@ -104,14 +105,14 @@ public class RandBED2VCF extends randVCFgenerator {
         String[] meta = ll[3].split(",");
         byte[] ins_seq = null;
         int len = 1;
-        if(meta[0].equals("seq")){
+        if (meta[0].equals("seq")) {
             // this is an insertion and we have the insertion sequence
             try {
                 ins_seq = meta[1].getBytes("US-ASCII");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             len = Integer.parseInt(meta[0]);
         }
 
@@ -125,20 +126,20 @@ public class RandBED2VCF extends randVCFgenerator {
             var_idx_str = "del_";
             ref_seq = ref.byteRange(chr_idx, pos, pos + len);
 
-            if(ref_seq == null){
+            if (ref_seq == null) {
                 log.error("Range error: " + line);
             }
 
         } else if (type == Variant.Type.Insertion) {
-            if(ins_seq != null) {
+            if (ins_seq != null) {
                 alts[0] = new FlexSeq(ins_seq);
-            }else{
+            } else {
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, len);
             }
             var_idx_str = "ins_";
             ref_seq = new byte[0];
         } else if (type == Variant.Type.Tandem_Duplication) {
-            alts[0] = new FlexSeq(FlexSeq.Type.DUP, len,2);
+            alts[0] = new FlexSeq(FlexSeq.Type.DUP, len, 2);
             var_idx_str = "dup_";
             ref_seq = new byte[0];
         } else if (type == Variant.Type.Inversion) {
@@ -156,7 +157,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         return new Variant(ll[0], chr_idx, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
-                .charAt(chr_idx, pos - 1)),_rand);
+                .charAt(chr_idx, pos - 1)), _rand);
 
     }
 
@@ -175,7 +176,7 @@ public class RandBED2VCF extends randVCFgenerator {
             try {
                 if (!var.isRef()) {
                     rand_output_vcf_record(out, var);
-                }else{
+                } else {
                     //log.error("Reference variant: " + line);
                 }
             } catch (IOException e) {

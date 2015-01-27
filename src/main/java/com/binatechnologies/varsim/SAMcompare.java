@@ -18,6 +18,7 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,20 +29,20 @@ import java.util.List;
 public class SAMcompare {
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
 
-    @Argument(usage = "One or more BAM files",metaVar = "bam_files ...",required = true)
+    @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
     static final int WIGGLE_ARG = 20;
-    @Option(name = "-wig", usage = "Wiggle allowance in validation ["+WIGGLE_ARG+"]")
+    @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
 
-    @Option(name = "-prefix", usage = "Prefix for output file [Required]",metaVar = "file",required = true)
+    @Option(name = "-prefix", usage = "Prefix for output file [Required]", metaVar = "file", required = true)
     String out_prefix;
 
-    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]",metaVar = "BED_file")
+    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
 
-    @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]",metaVar = "HTML_file", hidden = true)
+    @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
 
     /**
@@ -116,16 +117,16 @@ public class SAMcompare {
 
         boolean bed_exists = false;
         // check if the file exists
-        try{
+        try {
             File f = new File(bed_filename);
-            if(f.exists()){
+            if (f.exists()) {
                 bed_exists = true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
-        if(bed_exists) {
+        if (bed_exists) {
             intersector = new BedFile(bed_filename);
         }
 
@@ -166,7 +167,7 @@ public class SAMcompare {
         output_class output_blob = new output_class();
 
         // TODO think about better way to deal with multiple bams
-        output_blob.setParams(new CompareParams(bam_filename.get(0).substring(0,Math.min(64,bam_filename.get(0).length())), wiggle, bed_filename));
+        output_blob.setParams(new CompareParams(bam_filename.get(0).substring(0, Math.min(64, bam_filename.get(0).length())), wiggle, bed_filename));
         output_blob.setStats(new MapRatioRecordSum());
 
         // generate the output files
@@ -202,7 +203,7 @@ public class SAMcompare {
                         .validationStringency(ValidationStringency.LENIENT);
 
 
-        for(String filename : bam_filename) {
+        for (String filename : bam_filename) {
             log.info("Reading file: " + filename);
             final SamReader reader = factory.open(new File(filename));
             try {
@@ -357,7 +358,7 @@ public class SAMcompare {
             } finally {
                 try {
                     reader.close();
-                }catch(IOException e){
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -382,7 +383,7 @@ public class SAMcompare {
             e.printStackTrace();
         }
 
-        if(html_file != null) {
+        if (html_file != null) {
             try {
                 FileUtils.writeStringToFile(new File(out_prefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(html_file), jsonStr));
             } catch (IOException e) {

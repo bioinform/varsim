@@ -217,23 +217,23 @@ public class IntervalTree<Key extends Interval1D> {
         // Determine the change in height of tree at head
         int headHeightChange = 0;
         int prevBalanceFactor = head.getBalanceFactor();
-        if(leftHeightChange != 0){
+        if (leftHeightChange != 0) {
             // left was modified
             head.addBalanceFactor(-leftHeightChange);
-            if(prevBalanceFactor < 0){
+            if (prevBalanceFactor < 0) {
                 // previously left branch was heavy
-                headHeightChange = Math.max(prevBalanceFactor,leftHeightChange);
-            }else if(prevBalanceFactor >= 0){
+                headHeightChange = Math.max(prevBalanceFactor, leftHeightChange);
+            } else if (prevBalanceFactor >= 0) {
                 headHeightChange = Math.max(0, leftHeightChange - prevBalanceFactor);
             }
-        }else if(rightHeightChange != 0){
+        } else if (rightHeightChange != 0) {
             // right was modified
             head.addBalanceFactor(rightHeightChange);
-            if(prevBalanceFactor > 0){
+            if (prevBalanceFactor > 0) {
                 // previously right branch was heavy
-                headHeightChange = Math.max(-prevBalanceFactor,rightHeightChange);
-            }else if(prevBalanceFactor <= 0){
-                headHeightChange = Math.max(0,rightHeightChange + prevBalanceFactor);
+                headHeightChange = Math.max(-prevBalanceFactor, rightHeightChange);
+            } else if (prevBalanceFactor <= 0) {
+                headHeightChange = Math.max(0, rightHeightChange + prevBalanceFactor);
             }
         }
 
@@ -241,7 +241,7 @@ public class IntervalTree<Key extends Interval1D> {
         // if rotation successfully changed the height, adjust the height
         // TODO: it is possible to know if rotation will change the height, maybe don't need to rotate in those cases?
         if (head.getBalanceFactor() > 1) {
-            if(head.getRight().getBalanceFactor() > 0){
+            if (head.getRight().getBalanceFactor() > 0) {
                 headHeightChange--;
             }
             if (parent == null) {
@@ -251,7 +251,7 @@ public class IntervalTree<Key extends Interval1D> {
                 parent.setChild(head, rotateLeft(head));
             }
         } else if (head.getBalanceFactor() < -1) {
-            if(head.getLeft().getBalanceFactor() < 0){
+            if (head.getLeft().getBalanceFactor() < 0) {
                 headHeightChange--;
             }
             if (parent == null) {
@@ -276,7 +276,7 @@ public class IntervalTree<Key extends Interval1D> {
     /**
      * Gets keys overlapping k from the root
      *
-     * @param k Key to search for
+     * @param k               Key to search for
      * @param reciprocalRatio
      * @param wiggle
      * @return ArrayList of keys that overlap the given Key
@@ -313,11 +313,11 @@ public class IntervalTree<Key extends Interval1D> {
     }
 
     public boolean contains(Interval1D k, double reciprocalRatio) {
-        return contains(root, k, reciprocalRatio,0);
+        return contains(root, k, reciprocalRatio, 0);
     }
 
     /**
-     * @param k Key to search for
+     * @param k               Key to search for
      * @param reciprocalRatio
      * @param wiggle
      * @return true if k overlaps and key in tree
@@ -488,19 +488,19 @@ public class IntervalTree<Key extends Interval1D> {
         return newHead;
     }
 
-    public long maxDepth(){
+    public long maxDepth() {
         return maxDepth(root);
     }
 
-    public long maxDepth(final IntervalTreeNode<Key> head){
-        if(head == null){
+    public long maxDepth(final IntervalTreeNode<Key> head) {
+        if (head == null) {
             return 0l;
         }
 
-        return Math.max(maxDepth(head.getLeft()),maxDepth(head.getRight())) + 1;
+        return Math.max(maxDepth(head.getLeft()), maxDepth(head.getRight())) + 1;
     }
 
-    public long size(){
+    public long size() {
         return numEntries;
     }
 

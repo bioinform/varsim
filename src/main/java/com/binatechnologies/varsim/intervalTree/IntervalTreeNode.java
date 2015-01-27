@@ -23,6 +23,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
 
     /**
      * Create new node from a key, the centerCut will be set to the middle of the Interval
+     *
      * @param k
      */
     public IntervalTreeNode(Key k) {
@@ -117,7 +118,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
 
     /**
      * Goes through the center list and finds all the overlaps with the key
-     *
+     * <p/>
      * TODO This can be made more efficient, but maybe not necessary for most sane datasets
      *
      * @param k
@@ -136,7 +137,6 @@ public class IntervalTreeNode<Key extends Interval1D> {
     }
 
     /**
-     *
      * @param k
      * @param reciprocalRatio
      * @return
@@ -146,7 +146,6 @@ public class IntervalTreeNode<Key extends Interval1D> {
     }
 
     /**
-     *
      * @param k
      * @param reciprocalRatio
      * @return
@@ -157,9 +156,10 @@ public class IntervalTreeNode<Key extends Interval1D> {
 
     /**
      * Goes through the center list and finds all the overlaps (reciprocal with wiggle) with the key
-     * @param k Key to search for
+     *
+     * @param k               Key to search for
      * @param reciprocalRatio Reciprocal overlap ratio
-     * @param wiggle Try to shift the interval within this wiggle
+     * @param wiggle          Try to shift the interval within this wiggle
      * @return All intervals that overlap with the provided one matching the criteria
      */
     public final ArrayList<Key> getOverlaps(final Interval1D k, double reciprocalRatio, int wiggle) {
@@ -173,10 +173,9 @@ public class IntervalTreeNode<Key extends Interval1D> {
     }
 
     /**
-     *
-     * @param k Key to search for
+     * @param k               Key to search for
      * @param reciprocalRatio Reciprocal overlap ratio
-     * @param wiggle Try to shift the interval within this wiggle
+     * @param wiggle          Try to shift the interval within this wiggle
      * @return True if node contains the key with specified criteria
      */
     public final boolean contains(final Interval1D k, double reciprocalRatio, int wiggle) {

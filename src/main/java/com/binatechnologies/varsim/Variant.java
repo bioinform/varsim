@@ -41,7 +41,7 @@ public class Variant {
     public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
-        this(chr_name,chr,pos,del,ref,alts,phase,isPhased,var_id,filter,ref_deleted,null);
+        this(chr_name, chr, pos, del, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
     }
 
     public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
@@ -141,12 +141,12 @@ public class Variant {
             for (FlexSeq f : _alts) {
                 if (f.getSeq() != null) {
                     // make sure there is no prefix the same
-                    for(int i = 0;i<temp_ref.length;i++){
-                        if(i < f.getSeq().length){
-                            if(temp_ref[i] == f.getSeq()[i]){
+                    for (int i = 0; i < temp_ref.length; i++) {
+                        if (i < f.getSeq().length) {
+                            if (temp_ref[i] == f.getSeq()[i]) {
                                 log.warn("Same ref at alt at " + pos + " to " + (pos + len));
                                 return false;
-                            }else{
+                            } else {
                                 break;
                             }
                         }
@@ -276,12 +276,12 @@ public class Variant {
             }
 
             // TODO hmm unsafe
-            if(max_len(ind) == Integer.MAX_VALUE){
+            if (max_len(ind) == Integer.MAX_VALUE) {
                 return new SimpleInterval1D(_pos, _pos);
-            }else {
+            } else {
                 return new SimpleInterval1D(_pos, _pos + max_len(ind) - 1);
             }
-        }catch(RuntimeException e){
+        } catch (RuntimeException e) {
             log.error("Bad variant interval: " + toString());
             log.error("_pos: " + _pos);
             log.error("ind: " + ind);
@@ -572,7 +572,7 @@ public class Variant {
     }
 
     public void randomizeHaplotype() {
-        if(_rand == null){
+        if (_rand == null) {
             log.error("Cannot randomize haplotype");
             log.error(toString());
             System.exit(1);
@@ -588,13 +588,13 @@ public class Variant {
     }
 
     public void randomizeGenotype() {
-        if(_rand == null){
+        if (_rand == null) {
             log.error("Cannot randomize genotype");
             log.error(toString());
             System.exit(1);
         }
 
-        Genotypes g = new Genotypes(_chr,_alts.length,_rand);
+        Genotypes g = new Genotypes(_chr, _alts.length, _rand);
         _paternal = g.geno[0];
         _maternal = g.geno[1];
         return;
@@ -604,10 +604,10 @@ public class Variant {
     /*
     Tests if all of the alternate alleles with sequence are ACTGN
      */
-    public boolean is_alt_ACTGN(){
-        for(FlexSeq a : _alts){
-            if(a.isSeq()){
-                if(!a.toString().matches("[ACTGN]*")) {
+    public boolean is_alt_ACTGN() {
+        for (FlexSeq a : _alts) {
+            if (a.isSeq()) {
+                if (!a.toString().matches("[ACTGN]*")) {
                     return false;
                 }
             }
@@ -785,18 +785,18 @@ public class Variant {
         return sbStr.toString();
     }
 
-    byte getgood_paternal(){
-        if(_paternal < 0){
+    byte getgood_paternal() {
+        if (_paternal < 0) {
             return 1;
-        }else{
+        } else {
             return _paternal;
         }
     }
 
-    byte getgood_maternal(){
-        if(_maternal < 0){
+    byte getgood_maternal() {
+        if (_maternal < 0) {
             return 1;
-        }else{
+        } else {
             return _maternal;
         }
     }

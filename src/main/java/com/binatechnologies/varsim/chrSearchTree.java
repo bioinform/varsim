@@ -48,7 +48,7 @@ public class chrSearchTree<Key extends Interval1D> {
         return total;
     }
 
-    public long maxDepth(){
+    public long maxDepth() {
         long maxval = 0;
         for (IntervalTree<Key> val : data.values()) {
             maxval = Math.max(maxval, val.maxDepth());
@@ -63,8 +63,8 @@ public class chrSearchTree<Key extends Interval1D> {
     /**
      * Add an interval to the appropriate search tree
      *
-     * @param chrname  Chromosome name as a string
-     * @param key      Entry to be inserted
+     * @param chrname Chromosome name as a string
+     * @param key     Entry to be inserted
      */
     public void put(String chrname, Key key) {
         IntervalTree<Key> out = data.get(chrname);
@@ -84,18 +84,18 @@ public class chrSearchTree<Key extends Interval1D> {
 
 
     public Iterable<Key> getOverlaps(String chrname, Interval1D key) {
-        return getOverlaps(chrname,key,0,0);
+        return getOverlaps(chrname, key, 0, 0);
     }
 
     public Iterable<Key> getOverlaps(String chrname, Interval1D key, double reciprocalRatio) {
-        return getOverlaps(chrname,key,reciprocalRatio,0);
+        return getOverlaps(chrname, key, reciprocalRatio, 0);
     }
 
     /**
-     * @param chrname  Chromosome name as a string
-     * @param key Interval to be searched for
-     * @param reciprocalRatio    minimum reciprocal overlap required, 0 means minimum one position overlap
-     * @param wiggle Amount the interval can be shifted
+     * @param chrname         Chromosome name as a string
+     * @param key             Interval to be searched for
+     * @param reciprocalRatio minimum reciprocal overlap required, 0 means minimum one position overlap
+     * @param wiggle          Amount the interval can be shifted
      * @return All the values corresponding to the intervals overlapping the specified interval
      */
     public Iterable<Key> getOverlaps(String chrname, Interval1D key, double reciprocalRatio, int wiggle) {
@@ -108,18 +108,18 @@ public class chrSearchTree<Key extends Interval1D> {
     }
 
     public boolean contains(String chrname, Interval1D key) {
-        return contains(chrname,key,0,0);
+        return contains(chrname, key, 0, 0);
     }
 
     public boolean contains(String chrname, Interval1D key, double reciprocalRatio) {
-        return contains(chrname,key,reciprocalRatio,0);
+        return contains(chrname, key, reciprocalRatio, 0);
     }
 
     /**
-     * @param chrname  Chromosome name as a string
-     * @param key Interval to be searched for
-     * @param reciprocalRatio    minimum reciprocal overlap required, 0 means minimum one position overlap
-     * @param wiggle Amount the interval can be shifted
+     * @param chrname         Chromosome name as a string
+     * @param key             Interval to be searched for
+     * @param reciprocalRatio minimum reciprocal overlap required, 0 means minimum one position overlap
+     * @param wiggle          Amount the interval can be shifted
      * @return Whether the specified interval is overlapped at all
      */
     public boolean contains(String chrname, Interval1D key, double reciprocalRatio, int wiggle) {
@@ -132,10 +132,10 @@ public class chrSearchTree<Key extends Interval1D> {
     }
 
     /**
-     * @param chrname Chromosome name as a string
-     * @param start   start location of interval (inclusive)
-     * @param end     end location of interval (inclusive)
-     * @param reciprocalRatio   minimum reciprocal overlap required, 0 means minimum one position overlap
+     * @param chrname         Chromosome name as a string
+     * @param start           start location of interval (inclusive)
+     * @param end             end location of interval (inclusive)
+     * @param reciprocalRatio minimum reciprocal overlap required, 0 means minimum one position overlap
      * @return Whether the specified interval is overlapped at all
      */
     public boolean contains(String chrname, int start, int end, double reciprocalRatio) {

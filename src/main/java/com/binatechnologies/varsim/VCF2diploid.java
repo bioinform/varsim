@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -31,10 +32,10 @@ public class VCF2diploid {
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType _gender = GenderType.MALE;
 
-    @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]",metaVar = "FASTA_file",required = true)
+    @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]", metaVar = "FASTA_file", required = true)
     ArrayList<String> _chrFiles = null;
 
-    @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]",metaVar = "VCF_file",required = true)
+    @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]", metaVar = "VCF_file", required = true)
     ArrayList<String> _vcfFiles = null;
 
     @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
@@ -44,11 +45,10 @@ public class VCF2diploid {
     private boolean _pass = false;
 
     static final long SEED_ARG = 3333;
-    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     long seed = 3333;
 
     private final static char DELETED_BASE = '~';
-
 
 
     @SuppressWarnings("unchecked")
@@ -60,11 +60,11 @@ public class VCF2diploid {
 
     }
 
-    public void run(String[] args){
+    public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
         String usage = "Create a diploid genome as associated files from a reference genome\n"
-                +"and some VCF files. \n";
+                + "and some VCF files. \n";
 
         CmdLineParser cmd_parser = new CmdLineParser(this);
 
@@ -926,7 +926,6 @@ public class VCF2diploid {
     private String paternalName(String name) {
         return (name + "_paternal");
     }
-
 
 
     //"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
