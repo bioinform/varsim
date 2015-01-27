@@ -613,7 +613,7 @@ public class VCFcompare {
                 String chr_name = var.getChr_name();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
-                if (!(intersector == null || intersector.contains(chr_name, var_reg))) {
+                if (!(intersector == null || intersector.containsEitherEndpoint(chr_name, var_reg))) {
                     continue;
                 }
 
@@ -724,7 +724,7 @@ public class VCFcompare {
             String chr_name = var.getChr_name();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || intersector.contains(chr_name, curr_var_reg)) {
+            if (intersector == null || intersector.containsEitherEndpoint(chr_name, curr_var_reg)) {
                 int total_len = full_validated_total.get(num_read);
                 int validated_len = full_validated_count[num_read];
 

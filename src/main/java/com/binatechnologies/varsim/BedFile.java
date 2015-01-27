@@ -93,4 +93,19 @@ public class BedFile {
         return bedST.contains(chrname, interval);
     }
 
+    /**
+     * Checks whether either endpoint of the interval is in the BED file
+     * @param chrname
+     * @param interval
+     * @return
+     */
+    public boolean containsEitherEndpoint(String chrname, SimpleInterval1D interval) {
+        if(interval.getLeft() == interval.getRight()){
+            return bedST.contains(chrname, interval);
+        }else {
+            return bedST.contains(chrname, new SimpleInterval1D(interval.getLeft(),interval.getLeft())) |
+                    bedST.contains(chrname, new SimpleInterval1D(interval.getRight(),interval.getRight()));
+        }
+    }
+
 }
