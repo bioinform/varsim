@@ -4,6 +4,7 @@ package com.binatechnologies.varsim;
 
 
 import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -187,7 +188,7 @@ public class DGVparser extends variantFileParser {
         byte[] phase = {1, 1};
         return new Variant(chr_name, chr_idx, start_loc, refs.length, refs,
                 alts, phase, false, var_id, "PASS", String.valueOf((char) _reference
-                .byteAt(chr_idx, start_loc - 1)),_rand);
+                .byteAt(chr_idx, start_loc - 1)), _rand);
     }
 
 }

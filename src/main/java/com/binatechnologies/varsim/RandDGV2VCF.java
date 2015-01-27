@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -20,44 +21,44 @@ public class RandDGV2VCF extends randVCFgenerator {
     boolean output_all;
 
     static final int SEED_ARG = 333;
-    @Option(name = "-seed", usage = "Seed for random sampling ["+SEED_ARG+"]")
+    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     static int seed = SEED_ARG;
 
     static final int NUM_INS_ARG = 2000;
-    @Option(name = "-num_ins", usage = "Number of insertion SV to sample ["+NUM_INS_ARG+"]")
+    @Option(name = "-num_ins", usage = "Number of insertion SV to sample [" + NUM_INS_ARG + "]")
     int num_INS = NUM_INS_ARG;
 
     static final int NUM_DEL_ARG = 2000;
-    @Option(name = "-num_del", usage = "Number of deletion SV to sample ["+NUM_DEL_ARG+"]")
+    @Option(name = "-num_del", usage = "Number of deletion SV to sample [" + NUM_DEL_ARG + "]")
     int num_DEL = NUM_DEL_ARG;
 
     static final int NUM_DUP_ARG = 500;
-    @Option(name = "-num_dup", usage = "Number of duplications to sample ["+NUM_DUP_ARG+"]")
+    @Option(name = "-num_dup", usage = "Number of duplications to sample [" + NUM_DUP_ARG + "]")
     int num_DUP = NUM_DUP_ARG;
 
     static final int NUM_INV_ARG = 500;
-    @Option(name = "-num_inv", usage = "Number of inversions to sample ["+NUM_INV_ARG+"]")
+    @Option(name = "-num_inv", usage = "Number of inversions to sample [" + NUM_INV_ARG + "]")
     int num_INV = NUM_INV_ARG;
 
     static final double NOVEL_RATIO_ARG = 0.01;
-    @Option(name = "-novel", usage = "Average ratio of novel variants["+NOVEL_RATIO_ARG+"]")
+    @Option(name = "-novel", usage = "Average ratio of novel variants[" + NOVEL_RATIO_ARG + "]")
     double ratio_novel = NOVEL_RATIO_ARG;
 
     static final int MIN_LEN_ARG = Constant.SVLEN;
-    @Option(name = "-min_len", usage = "Minimum variant length ["+MIN_LEN_ARG+"], inclusive")
+    @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int min_length_lim = MIN_LEN_ARG;
 
     static final int MAX_LEN_ARG = 1000000;
-    @Option(name = "-max_len", usage = "Maximum variant length ["+MAX_LEN_ARG+"], inclusive")
+    @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int max_length_lim = MAX_LEN_ARG;
 
-    @Option(name = "-ref", usage = "Reference Genome [Required]",metaVar = "file",required = true)
+    @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
     String reference_filename;
 
-    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]",metaVar = "file",required = true)
+    @Option(name = "-ins", usage = "Known Insertion Sequences [Required]", metaVar = "file", required = true)
     String insert_filename;
 
-    @Option(name = "-dgv", usage = "DGV database flat file [Required]",metaVar = "file",required = true)
+    @Option(name = "-dgv", usage = "DGV database flat file [Required]", metaVar = "file", required = true)
     String dgv_filename;
 
     int num_novel_added = 0;
@@ -199,7 +200,7 @@ public class RandDGV2VCF extends randVCFgenerator {
         int total_lines = 0;
         int total_duplicate = 0;
         int total_out_of_range = 0;
-        DGVparser parser_one = new DGVparser(dgv_filename, ref,_rand);
+        DGVparser parser_one = new DGVparser(dgv_filename, ref, _rand);
         Variant prev_var = new Variant(_rand);
 
         // Read through a first time to generate the counts for sampling without replacement
@@ -293,7 +294,7 @@ public class RandDGV2VCF extends randVCFgenerator {
         Sample_params INV_params = new Sample_params();
 
         int geno_idx = 0;
-        parser_one = new DGVparser(dgv_filename, ref,_rand);
+        parser_one = new DGVparser(dgv_filename, ref, _rand);
         prev_var = new Variant(_rand);
 
 
@@ -332,19 +333,19 @@ public class RandDGV2VCF extends randVCFgenerator {
                 switch (var.getType(geno.geno[i])) {
                     case Insertion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INS_params,
-                                num_INS, total_num_INS,output_all);
+                                num_INS, total_num_INS, output_all);
                         break;
                     case Deletion:
                         geno.geno[i] = sample_genotype(geno.geno[i], DEL_params,
-                                num_DEL, total_num_DEL,output_all);
+                                num_DEL, total_num_DEL, output_all);
                         break;
                     case Tandem_Duplication:
                         geno.geno[i] = sample_genotype(geno.geno[i], DUP_params,
-                                num_DUP, total_num_DUP,output_all);
+                                num_DUP, total_num_DUP, output_all);
                         break;
                     case Inversion:
                         geno.geno[i] = sample_genotype(geno.geno[i], INV_params,
-                                num_INV, total_num_INV,output_all);
+                                num_INV, total_num_INV, output_all);
                         break;
                     default:
                         break;

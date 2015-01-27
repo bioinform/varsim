@@ -21,7 +21,7 @@ public class VCFparser extends variantFileParser {
     private boolean _pass = false;
     private boolean chrom_exists = false;
 
-    private VCFparser(){
+    private VCFparser() {
         _id_ind = 10; // the first sample
     }
 
@@ -204,7 +204,7 @@ public class VCFparser extends variantFileParser {
     }
 
 
-    public Variant process_line(String line){
+    public Variant process_line(String line) {
 
         // try to determine the column we should read for the genotype
         StringTokenizer toks = new StringTokenizer(line);
@@ -329,18 +329,18 @@ public class VCFparser extends variantFileParser {
             if (inv_lens.length > 0) {
                 alts = new FlexSeq[inv_lens.length];
                 for (int i = 0; i < inv_lens.length; i++) {
-                    int len_val = Math.max(Math.abs(inv_lens[i]),1);
+                    int len_val = Math.max(Math.abs(inv_lens[i]), 1);
                     alts[i] = new FlexSeq(FlexSeq.Type.INV, len_val);
                 }
                 // TODO this assumes only one alt
                 return new Variant(chr_name, chr, pos, Math.abs(inv_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else if (end_loc > 0) {
-                int inv_len = Math.max(Math.abs(end_loc - pos + 1),1);
+                int inv_len = Math.max(Math.abs(end_loc - pos + 1), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, inv_len);
                 return new Variant(chr_name, chr, pos, inv_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else {
                 log.error("No length information for INV:");
                 log.error(line);
@@ -370,21 +370,21 @@ public class VCFparser extends variantFileParser {
                         }
                     }
 
-                    int len_val = Math.max(Math.abs(dup_lens[i]),1);
+                    int len_val = Math.max(Math.abs(dup_lens[i]), 1);
 
-                    alts[i] = new FlexSeq(FlexSeq.Type.DUP, len_val,copy_val);
+                    alts[i] = new FlexSeq(FlexSeq.Type.DUP, len_val, copy_val);
                 }
 
                 return new Variant(chr_name, chr, pos, Math.abs(dup_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else if (end_loc > 0) {
-                int dup_len = Math.max(Math.abs(end_loc - pos + 1),1);
+                int dup_len = Math.max(Math.abs(end_loc - pos + 1), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, dup_len, Math.max(
                         copy_num_val[0], copy_num_val[1]));
 
                 return new Variant(chr_name, chr, pos, dup_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else {
                 log.error("No length information for DUP:");
                 log.error(line);
@@ -406,21 +406,21 @@ public class VCFparser extends variantFileParser {
                 alts = new FlexSeq[ins_lens.length];
                 for (int i = 0; i < ins_lens.length; i++) {
                     int len_val = 0;
-                    if(ins_lens[i] == 0) {
+                    if (ins_lens[i] == 0) {
                         len_val = Integer.MAX_VALUE;
-                    } else{
+                    } else {
                         len_val = Math.max(Math.abs(ins_lens[i]), 1);
                     }
-                    alts[i] = new FlexSeq(FlexSeq.Type.INS,len_val);
+                    alts[i] = new FlexSeq(FlexSeq.Type.INS, len_val);
                 }
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else if (end_loc > 0) {
-                int ins_len = Math.max(Math.abs(end_loc - pos),1);
+                int ins_len = Math.max(Math.abs(end_loc - pos), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, ins_len);
                 return new Variant(chr_name, chr, pos, 0, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else {
                 log.error("No length information for INS:");
                 log.error(line);
@@ -446,13 +446,13 @@ public class VCFparser extends variantFileParser {
                 }
 
                 return new Variant(chr_name, chr, pos, Math.abs(del_lens[0]), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else if (end_loc > 0) {
                 int del_len = end_loc - pos + 1;
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DEL, 0);
                 return new Variant(chr_name, chr, pos, del_len, refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else {
                 log.error("No length information for DEL:");
                 log.error(line);
@@ -527,21 +527,21 @@ public class VCFparser extends variantFileParser {
                     int len = alts[i].length();
 
                     int clip_len = 0;
-                    for(int j = 0;j<len;j++){
+                    for (int j = 0; j < len; j++) {
 
                         // make sure there is at least something in alt
-                        if(ref_len - j<= 0 || len - j <=0){
+                        if (ref_len - j <= 0 || len - j <= 0) {
                             clip_len = j;
                             break;
                         }
-                        if(REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j -1)){
+                        if (REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j - 1)) {
                             clip_len = j;
                             break;
                         }
-                        clip_len = j+1;
+                        clip_len = j + 1;
                     }
 
-                    if(min_clip_len > clip_len){
+                    if (min_clip_len > clip_len) {
                         min_clip_len = clip_len;
                     }
                 }
@@ -563,7 +563,7 @@ public class VCFparser extends variantFileParser {
 
 
             return new Variant(chr_name, chr, pos, refs.length, refs, alts,
-                    phase_val, is_phased, var_id, FILTER, ref_deleted,_rand);
+                    phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
         }
     }
 
@@ -579,7 +579,7 @@ public class VCFparser extends variantFileParser {
         return process_line(line);
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         VCFparser runner = new VCFparser();
         Variant v = runner.process_line("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
         System.err.println(v);

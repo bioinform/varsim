@@ -511,7 +511,7 @@ class StatsRatioRecord {
 
     public void addTP(int val) {
         sum_count.incTP();
-        if(val >= Constant.SVLEN){
+        if (val >= Constant.SVLEN) {
             svSumCount.incTP();
         }
         for (int i = 0; i < bin_breaks.length; i++) {
@@ -525,7 +525,7 @@ class StatsRatioRecord {
 
     public void addFP(int val) {
         sum_count.incFP();
-        if(val >= Constant.SVLEN){
+        if (val >= Constant.SVLEN) {
             svSumCount.incFP();
         }
         for (int i = 0; i < bin_breaks.length; i++) {
@@ -539,7 +539,7 @@ class StatsRatioRecord {
 
     public void addT(int val) {
         sum_count.incT();
-        if(val >= Constant.SVLEN){
+        if (val >= Constant.SVLEN) {
             svSumCount.incT();
         }
         for (int i = 0; i < bin_breaks.length; i++) {
@@ -584,7 +584,7 @@ class StatsRatioRecord {
         sb.append(':');
         sb.append(sum_count);
         sb.append('\n');
-        sb.append("[>="+Constant.SVLEN+"]");
+        sb.append("[>=" + Constant.SVLEN + "]");
         sb.append(':');
         sb.append(svSumCount);
         sb.append('\n');

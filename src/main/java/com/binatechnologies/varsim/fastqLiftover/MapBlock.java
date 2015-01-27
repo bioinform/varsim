@@ -7,6 +7,7 @@ public class MapBlock implements Comparable<MapBlock> {
     public BlockType blockType;
     public int direction;
     public String name;
+
     public MapBlock(final int size, final String srcChr, final int srcLocation, final String dstChr, final int dstLocation, final String direction, final String featureType, final String name) {
         this.size = size;
         srcLoc = new GenomeLocation(srcChr, srcLocation);

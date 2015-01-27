@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- *
  * VarSim
- *
+ * <p/>
  * This is the main class the calls each of the individual tools
- *
+ * <p/>
  * Created by johnmu on 11/25/14.
  */
 
@@ -21,7 +20,7 @@ public class VarSim {
 
     String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
-    public void run(String[] args) throws IOException{
+    public void run(String[] args) throws IOException {
         String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
                 + "      --= Simulation =-- \n"
                 + "       randvcf2vcf    -- Randomly samples variants from a VCF file\n"
@@ -34,15 +33,15 @@ public class VarSim {
                 + "       vcf2diploid    -- Enhanced version of vcf2diploid from alleleseq \n"
                 + "       fastq_liftover -- Lifts over simulated FASTQ files to reference coordinates \n"
                 + "\n";
-        if(args.length == 0){
+        if (args.length == 0) {
             System.err.println(VERSION);
             System.err.println(usage);
             System.exit(1);
         }
 
-        String[] pass_args = Arrays.copyOfRange(args,1,args.length);
+        String[] pass_args = Arrays.copyOfRange(args, 1, args.length);
 
-        switch(args[0]){
+        switch (args[0]) {
             case "vcf2diploid":
                 new VCF2diploid().run(pass_args);
                 break;
@@ -79,7 +78,7 @@ public class VarSim {
 
     }
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException {
         VarSim runner = new VarSim();
         runner.run(args);
     }

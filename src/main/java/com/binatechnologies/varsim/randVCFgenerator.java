@@ -33,15 +33,15 @@ class Genotypes {
      * @param rand    Random number generator
      */
     Genotypes(int chr_idx, int num_alt, Random rand) {
-        this(chr_idx,num_alt,rand,0.6);
+        this(chr_idx, num_alt, rand, 0.6);
     }
 
     /**
      * generate random genotypes
      *
-     * @param chr_idx Chromosome name in number format
-     * @param num_alt Number of alternate alleles possible
-     * @param rand    Random number generator
+     * @param chr_idx  Chromosome name in number format
+     * @param num_alt  Number of alternate alleles possible
+     * @param rand     Random number generator
      * @param prop_het proportion heterozygous, rest are homo
      */
     Genotypes(int chr_idx, int num_alt, Random rand, double prop_het) {
@@ -130,7 +130,7 @@ abstract public class randVCFgenerator {
      */
     byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
                          int num_total, boolean output_all) {
-        if(!output_all) {
+        if (!output_all) {
             if (seen_added.added_num < num_sample) {
                 double rand_num = _rand.nextDouble();
                 if ((num_total - seen_added.seen_num) * rand_num >= (num_sample - seen_added.added_num)) {
@@ -142,7 +142,7 @@ abstract public class randVCFgenerator {
                     return geno;
                 }
             }
-        }else{
+        } else {
             return geno;
         }
         return 0;
@@ -160,7 +160,7 @@ abstract public class randVCFgenerator {
      */
     byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
                          int num_total) {
-        return sample_genotype(geno, seen_added, num_sample, num_total,false);
+        return sample_genotype(geno, seen_added, num_sample, num_total, false);
     }
 
     /**
@@ -217,7 +217,7 @@ abstract public class randVCFgenerator {
         String ref = var.getOrig_Ref().toUpperCase();
         String alt = var.alt_string().toString().toUpperCase();
 
-        if(!ref.matches("[ACTGN]*") || (!var.is_alt_ACTGN())){
+        if (!ref.matches("[ACTGN]*") || (!var.is_alt_ACTGN())) {
             return; // don't output if it is not ACTGN
         }
 
