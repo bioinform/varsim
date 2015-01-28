@@ -88,7 +88,6 @@ public class FastqLiftOver {
         MapBlocks mapBlocks = new MapBlocks(mapFile);
 
         if (fastqType.equals("dwgsim")) {
-            final File outFile = (outFiles != null && outFiles.size() == 1) ? outFiles.get(0) : null; // marghoob this is not used?
             log.info("fastqFiles " + fastqFiles.get(0).getName() + " " + fastqFiles.get(1).getName());
             doLiftOverDwgsimFastqMap(mapBlocks, getOutStream(outFiles.get(0), compress), getOutStream(outFiles.get(1), compress));
         }

@@ -3,9 +3,4 @@
 target/**
 *.jar
 
-*.iml
 /target/
-
-*.iml
-
-varsim.iml
