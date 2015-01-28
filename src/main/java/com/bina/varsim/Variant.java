@@ -586,16 +586,16 @@ public class Variant {
 
     /**
      * Randomize the genotype
-     * @param male
+     * @param gender
      */
-    public void randomizeGenotype(boolean male) {
+    public void randomizeGenotype(GenderType gender) {
         if (_rand == null) {
             log.error("Cannot randomize genotype");
             log.error(toString());
             System.exit(1);
         }
 
-        Genotypes g = new Genotypes(_chr, male, _alts.length, _rand);
+        Genotypes g = new Genotypes(_chr, gender, _alts.length, _rand);
         _paternal = g.geno[0];
         _maternal = g.geno[1];
         return;

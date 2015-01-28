@@ -12,7 +12,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Random;
 /**
- *
+ * TODO ignores the input genotypes for now
  */
 
 /**
@@ -69,6 +69,9 @@ public class RandVCF2VCF extends randVCFgenerator {
     @Option(name = "-vcf", usage = "Known VCF file, eg. dbSNP [Required]", metaVar = "file", required = true)
     String vcf_filename;
 
+    @Option(name = "-t", usage = "Gender of individual [MALE]")
+    GenderType gender = GenderType.MALE;
+
 
     int num_novel_added;
 
@@ -91,7 +94,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                                 SimpleReference ref, double ratio_novel, Genotypes geno)
             throws IOException {
 
-        int chr_idx = var.getChr();
+        ChrString chr = var.getChr();
 
         // determine whether this one is novel
         double rand_num = _rand.nextDouble();
@@ -99,7 +102,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
 
-            int chr_len = ref.getRefLen(chr_idx);
+            int chr_len = ref.getRefLen(chr);
             int buffer = Math.max(
                     10,
                     Math.max(var.max_len(geno.geno[0]),
@@ -185,10 +188,10 @@ public class RandVCF2VCF extends randVCFgenerator {
             }
 
             // select genotypes here
-            int chr_idx = var.getChr();
+            ChrString chr = var.getChr();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr_idx, num_alt, _rand, prop_het);
+            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
             selected_geno.add(geno);
 
             if (prev_var.equals(var)) {

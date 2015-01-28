@@ -212,10 +212,10 @@ public class RandDGV2VCF extends randVCFgenerator {
             }
 
             // select genotypes here
-            int chr_idx = var.getChr();
+            ChrString chr = var.getChr();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr_idx, num_alt, _rand);
+            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand);
             selected_geno.add(geno);
             total_lines++;
 
