@@ -80,11 +80,11 @@ public class VCFcompare {
                     byte[] phase = {1, 1};
 
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -93,23 +93,23 @@ public class VCFcompare {
                     if (end) {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -118,11 +118,11 @@ public class VCFcompare {
                 // deletion
                 byte[] phase = {1, 1};
                 if (end) {
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt[0].length, -diff[0],
+                    var_list.add(new Variant(var.getChr(), curr_pos + alt[0].length, -diff[0],
                             Arrays.copyOfRange(ref, alt[0].length, alt[0].length - diff[0]), new FlexSeq[]{new FlexSeq()},
                             phase, true, var.getVar_id(), ".", ""));
                 } else {
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff[0],
+                    var_list.add(new Variant(var.getChr(), curr_pos, -diff[0],
                             Arrays.copyOfRange(ref, 0, -diff[0]), new FlexSeq[]{new FlexSeq()},
                             phase, true, var.getVar_id(), ".", ""));
                 }
@@ -134,11 +134,11 @@ public class VCFcompare {
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -147,11 +147,11 @@ public class VCFcompare {
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt[a].length, -diff[a],
+                        var_list.add(new Variant(var.getChr(), curr_pos + alt[a].length, -diff[a],
                                 Arrays.copyOfRange(ref, alt[a].length, alt[a].length - diff[a]), new FlexSeq[]{new FlexSeq()},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff[a],
+                        var_list.add(new Variant(var.getChr(), curr_pos, -diff[a],
                                 Arrays.copyOfRange(ref, 0, -diff[a]), new FlexSeq[]{new FlexSeq()},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -257,12 +257,12 @@ public class VCFcompare {
                 } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] != ref[i]) {
                     // one deleted, hence the other is homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
                 } else if (idx[0] < 0 && idx[1] >= 0 && alt[1][idx[1]] != ref[i]) {
                     // one deleted, hence the other is homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[1][idx[1]])}, phase, true, var.getVar_id(), ".", ""));
                 } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] == ref[i]) {
                     // ref call with del
@@ -273,13 +273,13 @@ public class VCFcompare {
                 } else if (alt[0][idx[0]] == alt[1][idx[1]]) {
                     // homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
 
                 } else if (alt[0][idx[0]] != ref[i] && alt[1][idx[1]] != ref[i]) {
                     // het but both alt
                     byte[] phase = {1, 2};
-                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]]), new FlexSeq(alt[1][idx[1]])},
                             phase, true, var.getVar_id(), ".", ""));
                 } else {
@@ -288,7 +288,7 @@ public class VCFcompare {
                         if (alt[a][idx[a]] != ref[i]) {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                            var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                                     new FlexSeq[]{new FlexSeq(alt[a][idx[a]])}, phase, true, var.getVar_id(), ".", ""));
                         }
                     }
@@ -317,11 +317,11 @@ public class VCFcompare {
                         byte[] phase = {0, 0};
                         phase[a] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
+                            var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
                                     phase, true, var.getVar_id(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
+                            var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
                                     phase, true, var.getVar_id(), ".", ""));
                         }
@@ -330,12 +330,12 @@ public class VCFcompare {
                         byte[] phase = {0, 0};
                         phase[a] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt.length, -diff,
+                            var_list.add(new Variant(var.getChr(), curr_pos + alt.length, -diff,
                                     Arrays.copyOfRange(ref, alt.length, alt.length - diff),
                                     new FlexSeq[]{new FlexSeq()},
                                     phase, true, var.getVar_id(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff,
+                            var_list.add(new Variant(var.getChr(), curr_pos, -diff,
                                     Arrays.copyOfRange(ref, 0, -diff),
                                     new FlexSeq[]{new FlexSeq()},
                                     phase, true, var.getVar_id(), ".", ""));
@@ -358,7 +358,7 @@ public class VCFcompare {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
 
-                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
+                            var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                                     new FlexSeq[]{new FlexSeq(alt[idx])}, phase, true, var.getVar_id(), ".", ""));
                         }
 
@@ -506,7 +506,7 @@ public class VCFcompare {
                 continue;
             }
 
-            String chr_name = var.getChr_name();
+            ChrString chr = var.getChr();
             Variant.OverallType orig_type = var.getType();
 
             // determine max variant region
@@ -541,7 +541,7 @@ public class VCFcompare {
                 curr_var.full_idx = num_read;
                 curr_var.original_type = orig_type;
 
-                true_store.put(chr_name, new ValueInterval1D<>(curr_var_reg, curr_var));
+                true_store.put(chr, new ValueInterval1D<>(curr_var_reg, curr_var));
                 num_added++;
             }
 
@@ -610,10 +610,10 @@ public class VCFcompare {
 
                 Genotypes geno;
 
-                String chr_name = var.getChr_name();
+                ChrString chr = var.getChr();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
-                if (!(intersector == null || intersector.containsEitherEndpoint(chr_name, var_reg))) {
+                if (!(intersector == null || intersector.containsEitherEndpoint(chr, var_reg))) {
                     continue;
                 }
 
@@ -719,10 +719,10 @@ public class VCFcompare {
         num_read = 0;
         for (Variant var : true_var_list) {
 
-            String chr_name = var.getChr_name();
+            ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || intersector.containsEitherEndpoint(chr_name, curr_var_reg)) {
+            if (intersector == null || intersector.containsEitherEndpoint(chr, curr_var_reg)) {
                 int total_len = full_validated_total.get(num_read);
                 int validated_len = full_validated_count[num_read];
 
@@ -953,7 +953,7 @@ public class VCFcompare {
             double overlap_ratio = _overlap_ratio;
             // consider type to change overlap percent
             Variant.Type type = var.getType(geno);
-            String chr_name = var.getChr_name();
+            ChrString chr = var.getChr();
             SimpleInterval1D orig_inter;
             if (type == Variant.Type.Insertion && _ignore_ins_len) {
                 orig_inter = new SimpleInterval1D(var.getPos(), var.getPos());
@@ -968,7 +968,7 @@ public class VCFcompare {
             if (type == Variant.Type.SNP) {
                 // handle SNPs differently
                 // require SNP content to match
-                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr_name, orig_inter);
+                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr, orig_inter);
 
                 byte val = var.getAlt(geno).getSeq()[0];
 
@@ -1030,7 +1030,7 @@ public class VCFcompare {
             } else {
                 // the rest
                 SimpleInterval1D wiggle_inter = new SimpleInterval1D(orig_inter.left - _wiggle, orig_inter.right + _wiggle);
-                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr_name, wiggle_inter);
+                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr, wiggle_inter);
 
 
                 if (out == null) {

@@ -66,46 +66,46 @@ public class BedFile {
                 throw new RuntimeException("Malformed BED line (nfe): " + line);
             }
 
-            bedST.put(chr_name, new SimpleInterval1D(start, end - 1));
+            bedST.put(new ChrString(chr_name), new SimpleInterval1D(start, end - 1));
         }
     }
 
     /**
      * Check whether an interval in contained within the interval tree, don't allow for wiggle
      *
-     * @param chrname chromosome name as a string
+     * @param chr chromosome name as a string
      * @param start   start location (inclusive)
      * @param end     end location (inclusive)
      * @return
      */
-    public boolean contains(String chrname, int start, int end) {
-        return bedST.contains(chrname, new SimpleInterval1D(start, end));
+    public boolean contains(ChrString chr, int start, int end) {
+        return bedST.contains(chr, new SimpleInterval1D(start, end));
     }
 
     /**
      * Check whether an interval in contained within the interval tree, don't allow for wiggle
      *
-     * @param chrname  chromosome name as a string
+     * @param chr  chromosome name as a string
      * @param interval Interval to search (inclusive)
      * @return
      */
-    public boolean contains(String chrname, SimpleInterval1D interval) {
-        return bedST.contains(chrname, interval);
+    public boolean contains(ChrString chr, SimpleInterval1D interval) {
+        return bedST.contains(chr, interval);
     }
 
     /**
      * Checks whether either endpoint of the interval is in the BED file
      *
-     * @param chrname
+     * @param chr
      * @param interval
      * @return
      */
-    public boolean containsEitherEndpoint(String chrname, SimpleInterval1D interval) {
+    public boolean containsEitherEndpoint(ChrString chr, SimpleInterval1D interval) {
         if (interval.getLeft() == interval.getRight()) {
-            return bedST.contains(chrname, interval);
+            return bedST.contains(chr, interval);
         } else {
-            return bedST.contains(chrname, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) |
-                    bedST.contains(chrname, new SimpleInterval1D(interval.getRight(), interval.getRight()));
+            return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) |
+                    bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
         }
     }
 

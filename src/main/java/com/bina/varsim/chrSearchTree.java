@@ -14,10 +14,10 @@ import org.apache.log4j.Logger;
 import java.util.HashMap;
 
 
-public class chrSearchTree<Key extends Interval1D> {
+public class chrSearchTree<K extends Interval1D> {
     private final static Logger log = Logger.getLogger(chrSearchTree.class.getName());
 
-    HashMap<String, IntervalTree<Key>> data;
+    HashMap<ChrString, IntervalTree<K>> data;
     boolean allow_duplicates = false; // this will allow duplicate intervals
 
     /**
@@ -25,7 +25,7 @@ public class chrSearchTree<Key extends Interval1D> {
      */
 
     public chrSearchTree() {
-        data = new HashMap<String, IntervalTree<Key>>();
+        data = new HashMap<>();
     }
 
 
@@ -42,7 +42,7 @@ public class chrSearchTree<Key extends Interval1D> {
      */
     public long size() {
         long total = 0;
-        for (IntervalTree<Key> val : data.values()) {
+        for (IntervalTree<K> val : data.values()) {
             total += val.size();
         }
         return total;
@@ -50,7 +50,7 @@ public class chrSearchTree<Key extends Interval1D> {
 
     public long maxDepth() {
         long maxval = 0;
-        for (IntervalTree<Key> val : data.values()) {
+        for (IntervalTree<K> val : data.values()) {
             maxval = Math.max(maxval, val.maxDepth());
         }
         return maxval;
@@ -66,10 +66,10 @@ public class chrSearchTree<Key extends Interval1D> {
      * @param chrname Chromosome name as a string
      * @param key     Entry to be inserted
      */
-    public void put(String chrname, Key key) {
-        IntervalTree<Key> out = data.get(chrname);
+    public void put(ChrString chrname, K key) {
+        IntervalTree<K> out = data.get(chrname);
         if (out == null) {
-            IntervalTree<Key> contents = new IntervalTree<Key>();
+            IntervalTree<K> contents = new IntervalTree<>();
             contents.add(key);
             log.info("Added chromosome: " + chrname);
             data.put(chrname, contents);
@@ -83,11 +83,11 @@ public class chrSearchTree<Key extends Interval1D> {
      */
 
 
-    public Iterable<Key> getOverlaps(String chrname, Interval1D key) {
+    public Iterable<K> getOverlaps(ChrString chrname, Interval1D key) {
         return getOverlaps(chrname, key, 0, 0);
     }
 
-    public Iterable<Key> getOverlaps(String chrname, Interval1D key, double reciprocalRatio) {
+    public Iterable<K> getOverlaps(ChrString chrname, Interval1D key, double reciprocalRatio) {
         return getOverlaps(chrname, key, reciprocalRatio, 0);
     }
 
@@ -98,8 +98,8 @@ public class chrSearchTree<Key extends Interval1D> {
      * @param wiggle          Amount the interval can be shifted
      * @return All the values corresponding to the intervals overlapping the specified interval
      */
-    public Iterable<Key> getOverlaps(String chrname, Interval1D key, double reciprocalRatio, int wiggle) {
-        IntervalTree<Key> out = data.get(chrname);
+    public Iterable<K> getOverlaps(ChrString chrname, Interval1D key, double reciprocalRatio, int wiggle) {
+        IntervalTree<K> out = data.get(chrname);
         if (out == null) {
             return null;
         } else {
@@ -107,11 +107,11 @@ public class chrSearchTree<Key extends Interval1D> {
         }
     }
 
-    public boolean contains(String chrname, Interval1D key) {
+    public boolean contains(ChrString chrname, Interval1D key) {
         return contains(chrname, key, 0, 0);
     }
 
-    public boolean contains(String chrname, Interval1D key, double reciprocalRatio) {
+    public boolean contains(ChrString chrname, Interval1D key, double reciprocalRatio) {
         return contains(chrname, key, reciprocalRatio, 0);
     }
 
@@ -122,8 +122,8 @@ public class chrSearchTree<Key extends Interval1D> {
      * @param wiggle          Amount the interval can be shifted
      * @return Whether the specified interval is overlapped at all
      */
-    public boolean contains(String chrname, Interval1D key, double reciprocalRatio, int wiggle) {
-        IntervalTree<Key> out = data.get(chrname);
+    public boolean contains(ChrString chrname, Interval1D key, double reciprocalRatio, int wiggle) {
+        IntervalTree<K> out = data.get(chrname);
         if (out == null) {
             return false;
         } else {
@@ -138,7 +138,7 @@ public class chrSearchTree<Key extends Interval1D> {
      * @param reciprocalRatio minimum reciprocal overlap required, 0 means minimum one position overlap
      * @return Whether the specified interval is overlapped at all
      */
-    public boolean contains(String chrname, int start, int end, double reciprocalRatio) {
+    public boolean contains(ChrString chrname, int start, int end, double reciprocalRatio) {
         return contains(chrname, new SimpleInterval1D(start, end), reciprocalRatio);
     }
 
