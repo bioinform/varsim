@@ -17,10 +17,10 @@ public class ARTFastqAlnReader {
     }
 
     public SimulatedRead getNextRead() throws IOException {
-        SimulatedRead read = null;
+        SimulatedRead read;
         final String nameLine = fastqBr.readLine();
         if (nameLine == null) return null;
-        ArtAlnRecord alnRecord = null;
+        ArtAlnRecord alnRecord;
         if ((alnRecord = artAlnR.getNextAln()) == null) return null;
 
         final String nameFields[] = nameLine.trim().substring(1).split("[-/]");

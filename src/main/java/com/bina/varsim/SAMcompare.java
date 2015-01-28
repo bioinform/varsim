@@ -123,7 +123,7 @@ public class SAMcompare {
                 bed_exists = true;
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
         if (bed_exists) {
@@ -207,9 +207,7 @@ public class SAMcompare {
             log.info("Reading file: " + filename);
             final SamReader reader = factory.open(new File(filename));
             try {
-                SAMRecordIterator it = reader.iterator();
-                while (it.hasNext()) {
-                    SAMRecord rec = it.next();
+                for (SAMRecord rec : reader) {
                     num_read++;
 
                     if (num_read % 100000 == 0) {
@@ -235,7 +233,7 @@ public class SAMcompare {
                     if (!(intersector == null)) {
                         boolean contained_in_bed = false;
                         for (GenomeLocation loc : true_locs) {
-                            if (intersector.contains(loc.chromosome, loc.location
+                            if (intersector.contains(new ChrString(loc.chromosome), loc.location
                                     , loc.location + rec.getReadLength() - 1)) {
                                 contained_in_bed = true;
                             }
@@ -249,7 +247,7 @@ public class SAMcompare {
                     boolean true_unmapped;
 
 
-                    HashSet<String> features = new HashSet<String>(4);
+                    HashSet<String> features = new HashSet<>(4);
                     features.add("All");
 
                     // determine if the read really should be unmapped

@@ -77,32 +77,35 @@ public class DGVparser extends GzFileParser<Variant> {
         String varianttype = ll[4];
         String variantsubtype = ll[5];
 
-        if (varianttype.equals("CNV")) {
-            if (variantsubtype.equals("Gain")) {
-                type = Variant.Type.Tandem_Duplication;
-            } else if (variantsubtype.equals("Loss")) {
-                type = Variant.Type.Deletion;
-            } else if (variantsubtype.equals("CNV")) {
-                type = Variant.Type.Tandem_Duplication;
-            } else if (variantsubtype.equals("Duplication")) {
-                type = Variant.Type.Tandem_Duplication;
-            } else if (variantsubtype.equals("Insertion")) {
-                type = Variant.Type.Insertion;
-            } else if (variantsubtype.equals("Deletion")) {
-                type = Variant.Type.Deletion;
-            } else {
+        switch (varianttype) {
+            case "CNV":
+                if (variantsubtype.equals("Gain")) {
+                    type = Variant.Type.Tandem_Duplication;
+                } else if (variantsubtype.equals("Loss")) {
+                    type = Variant.Type.Deletion;
+                } else if (variantsubtype.equals("CNV")) {
+                    type = Variant.Type.Tandem_Duplication;
+                } else if (variantsubtype.equals("Duplication")) {
+                    type = Variant.Type.Tandem_Duplication;
+                } else if (variantsubtype.equals("Insertion")) {
+                    type = Variant.Type.Insertion;
+                } else if (variantsubtype.equals("Deletion")) {
+                    type = Variant.Type.Deletion;
+                } else {
+                    return null;
+                }
+                break;
+            case "OTHER":
+                if (variantsubtype.equals("Tandem Duplication")) {
+                    type = Variant.Type.Tandem_Duplication;
+                } else if (variantsubtype.equals("Inversion")) {
+                    type = Variant.Type.Inversion;
+                } else {
+                    return null;
+                }
+                break;
+            default:
                 return null;
-            }
-        } else if (varianttype.equals("OTHER")) {
-            if (variantsubtype.equals("Tandem Duplication")) {
-                type = Variant.Type.Tandem_Duplication;
-            } else if (variantsubtype.equals("Inversion")) {
-                type = Variant.Type.Inversion;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
         }
 
         // TODO right now we treat all gains as tandem duplications

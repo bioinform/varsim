@@ -167,7 +167,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         // read through VCF file and count the
         log.info("Counting variants and assigning genotypes");
-        ArrayList<Genotypes> selected_geno = new ArrayList<Genotypes>();
+        ArrayList<Genotypes> selected_geno = new ArrayList<>();
 
         int total_num_SNP = 0;
         int total_num_INS = 0;

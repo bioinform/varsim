@@ -15,7 +15,7 @@ public class ArtAlnReader {
     public ArtAlnReader(final BufferedReader br) throws IOException {
         this.br = br;
 
-        chromosomeLengths = new HashMap<String, Integer>();
+        chromosomeLengths = new HashMap<>();
         readHeader();
     }
 

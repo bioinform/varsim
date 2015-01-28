@@ -177,7 +177,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             FileReader fileReader = new FileReader(insert_filename);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
                 sb.append(line);
@@ -190,7 +190,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
         // count the number of variants
         log.info("Counting variants and assigning genotypes");
-        ArrayList<Genotypes> selected_geno = new ArrayList<Genotypes>();
+        ArrayList<Genotypes> selected_geno = new ArrayList<>();
 
         int total_num_INS = 0;
         int total_num_DEL = 0;

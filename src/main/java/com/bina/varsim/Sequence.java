@@ -21,9 +21,7 @@ public class Sequence {
         if (seq.length < len)
             len = seq.length;
         _seq = new byte[len];
-        for (int i = 0; i < len; i++) {
-            _seq[i] = seq[i];
-        }
+        System.arraycopy(seq, 0, _seq, 0, len);
         if (header.charAt(0) == '>') {
             _header = header.substring(1);
         }

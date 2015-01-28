@@ -84,8 +84,8 @@ public class VCF2diploid {
             log.error("No VCF file(s) is given!");
         }
 
-        for (int i = 0; i < _vcfFiles.size(); i++) {
-            VCFparser parser = new VCFparser(_vcfFiles.get(i), _id, _pass, _rand);
+        for (String _vcfFile : _vcfFiles) {
+            VCFparser parser = new VCFparser(_vcfFile, _id, _pass, _rand);
             int n_ev = 0, var_nucs = 0;
             while (parser.hasMoreInput()) {
                 Variant var = parser.parseLine();
@@ -108,11 +108,11 @@ public class VCF2diploid {
                     log.warn("Chr out of range, probably unplaced");
                     continue;
                 }
-                addVariant(chr,var);
+                addVariant(chr, var);
                 n_ev++;
                 var_nucs += var.variantBases();
             }
-            System.out.println(_vcfFiles.get(i) + ": " + n_ev + " variants, "
+            System.out.println(_vcfFile + ": " + n_ev + " variants, "
                     + var_nucs + " variant bases");
         }
 
@@ -148,8 +148,8 @@ public class VCF2diploid {
 
         // This is the loop if chromosomes exist in separate files
         SimpleReference all_seqs = new SimpleReference();
-        for (int f = 0; f < _chrFiles.size(); f++) {
-            all_seqs.addReference(_chrFiles.get(f));
+        for (String _chrFile : _chrFiles) {
+            all_seqs.addReference(_chrFile);
         }
 
         // This is the loop through each chromosome
@@ -187,8 +187,8 @@ public class VCF2diploid {
             // this is the list of variants for the chromosome of question
             ArrayList<Variant> varList = _variants.get(chr);
 
-            ArrayList<Boolean> maternal_added_variants = new ArrayList<Boolean>();
-            ArrayList<Boolean> paternal_added_variants = new ArrayList<Boolean>();
+            ArrayList<Boolean> maternal_added_variants = new ArrayList<>();
+            ArrayList<Boolean> paternal_added_variants = new ArrayList<>();
 
             int len = ref_seq.length();
             byte[] maternal_seq = new byte[len];
@@ -205,16 +205,13 @@ public class VCF2diploid {
                 maternal_seq[c - 1] = paternal_seq[c - 1] = ref_seq.byteAt(c);
             }
 
-            Hashtable<Integer, FlexSeq> pat_ins_seq = new Hashtable<Integer, FlexSeq>(150);
-            Hashtable<Integer, FlexSeq> mat_ins_seq = new Hashtable<Integer, FlexSeq>(150);
+            Hashtable<Integer, FlexSeq> pat_ins_seq = new Hashtable<>(150);
+            Hashtable<Integer, FlexSeq> mat_ins_seq = new Hashtable<>(150);
 
             int n_var_pat = 0, n_var_mat = 0;
             int n_base_pat = 0, n_base_mat = 0;
-            ListIterator<Variant> it = varList.listIterator();
-            while (it.hasNext()) {
+            for (Variant var : varList) {
                 // iterate over the variants in the chromosome
-                Variant var = it.next();
-
                 if (!var.isPhased()) {
                     var.randomizeHaplotype();
                 }
@@ -338,7 +335,7 @@ public class VCF2diploid {
         if (pos > new_seq.length || pos + del > new_seq.length) {
             log.warn("Variant out of chromosome bounds at "
                     + ref_seq.getName() + ":" + pos + ", (del,ins) of (" + del
-                    + "," + ins + "). Skipping.");
+                    + "," + Arrays.toString(ins) + "). Skipping.");
             return false;
         }
 
@@ -379,6 +376,7 @@ public class VCF2diploid {
             // TODO this may result in other variants getting added in between
             for (int i = pos; i < pos + del; i++) {
                 // add each SNP
+                assert ins != null;
                 if (Character.isLowerCase((char) ref_seq.byteAt(i))) {
                     new_seq[i - 1] = (byte) Character.toLowerCase((char) ins[i - pos]);
                 } else {
@@ -459,7 +457,7 @@ public class VCF2diploid {
         Enumeration<Integer> enm = ins_seq.keys();
         while (enm.hasMoreElements()) {
             Integer key = enm.nextElement();
-            ins_flag[key.intValue() - 1] = true;
+            ins_flag[key - 1] = true;
         }
         int ref_len = genome.length;
         int der_len = 0;
@@ -504,17 +502,23 @@ public class VCF2diploid {
     }
 
     private void adjust_idx(map_rec curr_rec, host_ref_idx hf_idx) {
-        if (curr_rec.feature.equals("SEQ")) {
-            hf_idx.host_idx += curr_rec.len;
-            hf_idx.ref_idx += curr_rec.len;
-        } else if (curr_rec.feature.equals("DEL")) {
-            hf_idx.ref_idx += curr_rec.len;
-        } else if (curr_rec.feature.equals("INS")) {
-            hf_idx.host_idx += curr_rec.len;
-        } else if (curr_rec.feature.equals("DUP_TANDEM")) {
-            hf_idx.host_idx += curr_rec.len;
-        } else if (curr_rec.feature.equals("INV")) {
-            hf_idx.host_idx += curr_rec.len;
+        switch (curr_rec.feature) {
+            case "SEQ":
+                hf_idx.host_idx += curr_rec.len;
+                hf_idx.ref_idx += curr_rec.len;
+                break;
+            case "DEL":
+                hf_idx.ref_idx += curr_rec.len;
+                break;
+            case "INS":
+                hf_idx.host_idx += curr_rec.len;
+                break;
+            case "DUP_TANDEM":
+                hf_idx.host_idx += curr_rec.len;
+                break;
+            case "INV":
+                hf_idx.host_idx += curr_rec.len;
+                break;
         }
     }
 
@@ -630,11 +634,11 @@ public class VCF2diploid {
         Enumeration<Integer> enm = ins_seq.keys();
         while (enm.hasMoreElements()) {
             Integer key = enm.nextElement();
-            ins_flag[key.intValue() - 1] = true;
+            ins_flag[key - 1] = true;
         }
 
 
-        int NOT_IN_GENOME = 0;
+        //int NOT_IN_GENOME = 0;
 
 
         // host is the perturbed genome
@@ -662,20 +666,24 @@ public class VCF2diploid {
             // if still in the same block increment the length
             boolean same_block = true;
 
-            if (curr_rec.feature.equals("DEL")) {
-                if (genome[idx] != DELETED_BASE) {
+            switch (curr_rec.feature) {
+                case "DEL":
+                    if (genome[idx] != DELETED_BASE) {
+                        same_block = false;
+                    } else if (ins_flag[idx]) {
+                        same_block = false;
+                    }
+                    break;
+                case "SEQ":
+                    if (genome[idx] == DELETED_BASE) {
+                        same_block = false;
+                    } else if (ins_flag[idx]) {
+                        same_block = false;
+                    }
+                    break;
+                default:
                     same_block = false;
-                } else if (ins_flag[idx]) {
-                    same_block = false;
-                }
-            } else if (curr_rec.feature.equals("SEQ")) {
-                if (genome[idx] == DELETED_BASE) {
-                    same_block = false;
-                } else if (ins_flag[idx]) {
-                    same_block = false;
-                }
-            } else {
-                same_block = false;
+                    break;
             }
 
             if (same_block) {
@@ -742,7 +750,7 @@ public class VCF2diploid {
         Enumeration<Integer> enm = ins_seq.keys();
         while (enm.hasMoreElements()) {
             Integer key = enm.nextElement();
-            ins_flag[key.intValue() - 1] = true;
+            ins_flag[key - 1] = true;
         }
 
         // write header

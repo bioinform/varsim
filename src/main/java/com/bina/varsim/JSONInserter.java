@@ -51,7 +51,7 @@ public class JSONInserter {
         for (String filename : jsonFilename) {
             // generate output_filename
             String[] prefixes = filename.split("\\.");
-            String prefix = "";
+            String prefix;
             if (prefixes.length == 0) {
                 prefix = filename;
             } else {
@@ -67,7 +67,7 @@ public class JSONInserter {
     }
 
     public static String insertJSON(String varsim_html, String jsonStr) {
-        TreeMap lookup = new TreeMap<>();
+        TreeMap<String, String> lookup = new TreeMap<>();
         lookup.put("varsim_data", "var varsim_data = \"" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\";");
         return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
     }

@@ -14,8 +14,8 @@ public class MapBlocks {
     public MapBlocks(final File mapFile) throws IOException, IllegalArgumentException {
         MapFileReader mfr = new MapFileReader(mapFile);
 
-        MapBlock mapBlock = null;
-        chrBlocks = new HashMap<String, NavigableSet<MapBlock>>();
+        MapBlock mapBlock;
+        chrBlocks = new HashMap<>();
         while ((mapBlock = mfr.getNext()) != null) {
             final String chromosome = mapBlock.srcLoc.chromosome;
             if (!chrBlocks.containsKey(chromosome)) {
@@ -30,7 +30,7 @@ public class MapBlocks {
         final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
         final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end - 1));
 
-        List<GenomeLocation> liftedLocs = new ArrayList<GenomeLocation>();
+        List<GenomeLocation> liftedLocs = new ArrayList<>();
         if (!chrBlocks.containsKey(chromosome)) {
             return liftedLocs;
         }

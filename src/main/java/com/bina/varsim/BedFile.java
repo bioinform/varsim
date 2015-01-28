@@ -28,7 +28,7 @@ public class BedFile {
      * @param filename BED file
      */
     public BedFile(String filename) {
-        bedST = new chrSearchTree<SimpleInterval1D>();
+        bedST = new chrSearchTree<>();
         _filename = filename;
         try {
             readBedFile(new File(_filename));

@@ -157,8 +157,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         long len_that = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
 
         long maxOverlap = 0;
-        long rightLim = 0;
-        long leftLim = 0;
+        long rightLim;
+        long leftLim;
 
         // right limit
         if (getRight() < that.getRight()) {

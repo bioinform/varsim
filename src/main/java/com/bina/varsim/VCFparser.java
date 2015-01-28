@@ -237,8 +237,8 @@ public class VCFparser extends GzFileParser<Variant> {
         int pos = -1;
         ChrString chr = null;
         String REF = "", FILTER = "", ALT = "", var_id = "";
-        String phase = ".", copy_num = "0/0", INFO = "", FORMAT = "";
-        String[] sampleInfo = {};
+        String phase = ".", copy_num = "0/0", INFO = "", FORMAT;
+        String[] sampleInfo;
         while (toks.hasMoreTokens()) {
             index++;
             if (index == 1) { // Parsing chromosome
@@ -280,7 +280,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return null;
         }
 
-        if (_pass && FILTER.indexOf("PASS") < 0) {
+        if (_pass && !FILTER.contains("PASS")) {
             //log.warn("not pass line" + line);
             return null; // Filtered out
         }
@@ -296,7 +296,7 @@ public class VCFparser extends GzFileParser<Variant> {
         // determine copy-number
         // TODO need to be able to deal with unphased copy-numbers?
         byte[] copy_num_val = new byte[2]; // paternal-maternal
-        boolean is_cn_phased = false;
+        boolean is_cn_phased;
 
         if (copynum_ind >= 0) {
             is_cn_phased = splitGeno(copy_num, copy_num_val, chr);
@@ -405,7 +405,7 @@ public class VCFparser extends GzFileParser<Variant> {
             if (ins_lens.length > 0) {
                 alts = new FlexSeq[ins_lens.length];
                 for (int i = 0; i < ins_lens.length; i++) {
-                    int len_val = 0;
+                    int len_val;
                     if (ins_lens[i] == 0) {
                         len_val = Integer.MAX_VALUE;
                     } else {

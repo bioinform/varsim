@@ -48,7 +48,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param args
      */
     public static void main(String args[]) {
-        IntervalTree test_tree = new IntervalTree();
+        IntervalTree<SimpleInterval1D> test_tree = new IntervalTree<>();
         log.info("Adding...");
         test_tree.add(new SimpleInterval1D(10, 20));
         test_tree.add(new SimpleInterval1D(5, 10));
@@ -168,7 +168,7 @@ public class IntervalTree<Key extends Interval1D> {
 
         numEntries++;
         if (root == null) {
-            root = new IntervalTreeNode<Key>(k);
+            root = new IntervalTreeNode<>(k);
         } else {
             add(root, null, k);
         }
@@ -196,7 +196,7 @@ public class IntervalTree<Key extends Interval1D> {
             } else if (compVal < 0) {
                 // add to left
                 if (head.getLeft() == null) {
-                    head.setLeft(new IntervalTreeNode<Key>(k));
+                    head.setLeft(new IntervalTreeNode<>(k));
                     // Created a new branch, height increases
                     leftHeightChange++;
                 } else {
@@ -205,7 +205,7 @@ public class IntervalTree<Key extends Interval1D> {
             } else {
                 // add to right
                 if (head.getRight() == null) {
-                    head.setRight(new IntervalTreeNode<Key>(k));
+                    head.setRight(new IntervalTreeNode<>(k));
                     // Created a new branch, height increases
                     rightHeightChange++;
                 } else {
@@ -293,7 +293,7 @@ public class IntervalTree<Key extends Interval1D> {
      */
     private ArrayList<Key> getOverlaps(IntervalTreeNode<Key> head, Interval1D k, double reciprocalRatio, int wiggle) {
         if (head == null) {
-            return new ArrayList<Key>();
+            return new ArrayList<>();
         }
         ArrayList<Key> retVal = head.getOverlaps(k, reciprocalRatio, wiggle);
         int compVal = head.checkKey(k);

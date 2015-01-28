@@ -22,7 +22,7 @@ public class DWGSIMFastqReader {
     }
 
     public SimulatedRead getNextRead() throws IOException {
-        SimulatedRead read = null;
+        SimulatedRead read;
         final String nameLine = br.readLine();
         if (nameLine == null) return null;
 

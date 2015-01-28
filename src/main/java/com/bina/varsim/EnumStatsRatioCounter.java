@@ -149,21 +149,11 @@ class RatioRecord {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%.4f", 100 * getTPR()));
-        sb.append(',');
-        sb.append(String.format("%.4f", 100 * getFDR()));
-        sb.append(',');
-        sb.append(_TP);
-        sb.append(',');
-        sb.append(_FP);
-        sb.append(',');
-        //sb.append(_TN);
-        //sb.append(',');
-        //sb.append(_FN);
-        //sb.append(',');
-        sb.append(_T);
-        return sb.toString();
+        return String.format("%.4f", 100 * getTPR()) + ','
+                + String.format("%.4f", 100 * getFDR()) + ','
+                + _TP + ','
+                + _FP + ','
+                + _T;
     }
 
     @Override
@@ -207,7 +197,7 @@ class RatioRecordSum {
     private int T; // number of true
 
     public RatioRecordSum() {
-        data = new ArrayList<RatioRecord>();
+        data = new ArrayList<>();
         T = 0;
     }
 
@@ -293,7 +283,7 @@ class MapRatioRecordSum {
     private RatioRecordSum all_data; // this records regardless of type
 
     public MapRatioRecordSum() {
-        data = new TreeMap<String, RatioRecordSum>();
+        data = new TreeMap<>();
         all_data = new RatioRecordSum();
     }
 
@@ -589,19 +579,19 @@ class StatsRatioRecord {
         sb.append(svSumCount);
         sb.append('\n');
 
-        for (int i = 0; i < bin_counts.length; i++) {
+        for (RatioRecord bin_count : bin_counts) {
 
-            if (bin_counts[i].getLower() > max_len) {
+            if (bin_count.getLower() > max_len) {
                 break;
             }
 
-            if (bin_counts[i].isEmpty()) {
+            if (bin_count.isEmpty()) {
                 continue;
             }
 
-            sb.append(bin_counts[i].rangeStr());
+            sb.append(bin_count.rangeStr());
             sb.append(':');
-            sb.append(bin_counts[i].toString());
+            sb.append(bin_count.toString());
             sb.append('\n');
         }
         return sb.toString();
@@ -620,7 +610,7 @@ public class EnumStatsRatioCounter<Value extends Enum> {
     private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {
-        data = new HashMap<Value, StatsRatioRecord>();
+        data = new HashMap<>();
         all_data = new StatsRatioRecord();
     }
 

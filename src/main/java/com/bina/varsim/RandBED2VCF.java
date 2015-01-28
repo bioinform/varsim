@@ -123,7 +123,7 @@ public class RandBED2VCF extends randVCFgenerator {
         if (pos == 0 || len > max_length_lim || len < min_length_lim) return null;
 
         FlexSeq[] alts = new FlexSeq[1];
-        String var_idx_str = "";
+        String var_idx_str;
         byte[] ref_seq;
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
@@ -159,6 +159,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         Genotypes geno = new Genotypes(chr, gender, 1, _rand);
 
+        assert ref_seq != null;
         return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
                 .charAt(chr, pos - 1)), _rand);
@@ -233,7 +234,7 @@ public class RandBED2VCF extends randVCFgenerator {
             FileReader fileReader = new FileReader(insert_filename);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
                 sb.append(line);
@@ -244,10 +245,10 @@ public class RandBED2VCF extends randVCFgenerator {
             e.printStackTrace();
         }
 
-        BufferedReader ins_bed_reader = null;
-        BufferedReader del_bed_reader = null;
-        BufferedReader dup_bed_reader = null;
-        BufferedReader inv_bed_reader = null;
+        BufferedReader ins_bed_reader;
+        BufferedReader del_bed_reader;
+        BufferedReader dup_bed_reader;
+        BufferedReader inv_bed_reader;
 
         // try to open each of them to make sure the file can open
         try {

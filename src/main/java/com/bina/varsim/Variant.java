@@ -327,9 +327,9 @@ public class Variant {
     // TODO this is wrong, but it only effects the count of variant bases
     public int variantBases() {
         int ret = _del;
-        for (int i = 0; i < _alts.length; i++) {
-            if (_del != _alts[i].length()) {
-                ret += _alts[i].length();
+        for (FlexSeq _alt : _alts) {
+            if (_del != _alt.length()) {
+                ret += _alt.length();
             }
         }
         return ret;
@@ -537,8 +537,8 @@ public class Variant {
      */
     public boolean hasCN() {
         boolean CN_positive = false;
-        for (int i = 0; i < _alts.length; i++) {
-            if (_alts[i].getCopy_num() > 1) {
+        for (FlexSeq _alt : _alts) {
+            if (_alt.getCopy_num() > 1) {
                 CN_positive = true;
             }
         }
@@ -553,7 +553,7 @@ public class Variant {
                 sbStr.append(",");
             }
             if (_alts[i].isSeq()) {
-                sbStr.append(_ref_deleted + _alts[i].toString());
+                sbStr.append(_ref_deleted).append(_alts[i].toString());
             } else {
                 sbStr.append(_alts[i].toString());
             }

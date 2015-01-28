@@ -88,7 +88,7 @@ public class FastqLiftOver {
         MapBlocks mapBlocks = new MapBlocks(mapFile);
 
         if (fastqType.equals("dwgsim")) {
-            final File outFile = (outFiles != null && outFiles.size() == 1) ? outFiles.get(0) : null;
+            final File outFile = (outFiles != null && outFiles.size() == 1) ? outFiles.get(0) : null; // marghoob this is not used?
             log.info("fastqFiles " + fastqFiles.get(0).getName() + " " + fastqFiles.get(1).getName());
             doLiftOverDwgsimFastqMap(mapBlocks, getOutStream(outFiles.get(0), compress), getOutStream(outFiles.get(1), compress));
         }
@@ -132,12 +132,12 @@ public class FastqLiftOver {
 
             readPair.read1.locs1 = newLocs1;
             readPair.read1.locs2 = newLocs2;
-            readPair.read1.origLocs1 = new ArrayList<GenomeLocation>();
-            readPair.read1.origLocs2 = new ArrayList<GenomeLocation>();
+            readPair.read1.origLocs1 = new ArrayList<>();
+            readPair.read1.origLocs2 = new ArrayList<>();
             readPair.read2.locs1 = newLocs1;
             readPair.read2.locs2 = newLocs2;
-            readPair.read2.origLocs1 = new ArrayList<GenomeLocation>();
-            readPair.read2.origLocs2 = new ArrayList<GenomeLocation>();
+            readPair.read2.origLocs1 = new ArrayList<>();
+            readPair.read2.origLocs2 = new ArrayList<>();
 
             ps1.println(readPair.read1);
             ps2.println(readPair.read2);

@@ -64,8 +64,8 @@ class Stats_record {
 
     public String toString(int max_len) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Total: " + getTotal_count() + "\n");
-        sb.append("Total (>=" + Constant.SVLEN + "): " + getsvTotal_count() + "\n");
+        sb.append("Total: ").append(getTotal_count()).append("\n");
+        sb.append("Total (>=" + Constant.SVLEN + "): ").append(getsvTotal_count()).append("\n");
         sb.append("[");
         sb.append(1);
         sb.append(",");
@@ -107,7 +107,7 @@ class Type_record<T extends Enum> {
     HashMap<T, Stats_record> data;
 
     Type_record() {
-        data = new HashMap<T, Stats_record>();
+        data = new HashMap<>();
     }
 
     /**
@@ -138,7 +138,7 @@ class Type_record<T extends Enum> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
-            sb.append(entry.getKey().name() + "\n");
+            sb.append(entry.getKey().name()).append("\n");
             sb.append('\n');
             if (entry.getKey() == Variant.Type.SNP) {
                 sb.append(entry.getValue().toString(1));
@@ -162,10 +162,10 @@ class Parent_record {
     int total_count;
 
     Parent_record() {
-        data = new Type_record[2];
-        data[PATERNAL] = new Type_record();
-        data[MATERNAL] = new Type_record();
-        overall_data = new Type_record<Variant.OverallType>();
+        data = (Type_record<Variant.Type>[]) new Type_record[2];
+        data[PATERNAL] = new Type_record<>();
+        data[MATERNAL] = new Type_record<>();
+        overall_data = new Type_record<>();
         total_count = 0;
     }
 
@@ -175,19 +175,19 @@ class Parent_record {
 
         boolean added = false;
         if (bed_file == null
-                || bed_file.contains(var.getChr_name(), var.get_interval(paternal_allele))) {
+                || bed_file.contains(var.getChr(), var.get_interval(paternal_allele))) {
             data[PATERNAL].add(var.getType(paternal_allele), var.max_len(paternal_allele));
             added = true;
         }
 
         if (bed_file == null
-                || bed_file.contains(var.getChr_name(), var.get_interval(maternal_allele))) {
+                || bed_file.contains(var.getChr(), var.get_interval(maternal_allele))) {
             data[MATERNAL].add(var.getType(maternal_allele), var.max_len(maternal_allele));
             added = true;
         }
 
         if (bed_file == null
-                || bed_file.contains(var.getChr_name(), var.get_geno_interval())) {
+                || bed_file.contains(var.getChr(), var.get_geno_interval())) {
             overall_data.add(var.getType(), var.max_len());
             added = true;
         }
@@ -198,29 +198,16 @@ class Parent_record {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Total count: ");
-        sb.append(total_count);
-        sb.append("\n");
-        sb.append("Paternal\n");
-        sb.append("Total: ");
-        sb.append(data[PATERNAL].getTotal_nonref());
-        sb.append("\n");
-        sb.append(data[PATERNAL]);
-        sb.append("\n");
-        sb.append("Maternal\n");
-        sb.append("Total: ");
-        sb.append(data[MATERNAL].getTotal_nonref());
-        sb.append("\n");
-        sb.append(data[MATERNAL]);
-        sb.append("\n");
-        sb.append("Overall\n");
-        sb.append("Total: ");
-        sb.append(overall_data.getTotal_nonref());
-        sb.append("\n");
-        sb.append(overall_data);
-        sb.append("\n");
-        return sb.toString();
+        return "Total count: " + total_count + "\n"
+                + "Paternal\n"
+                + "Total: " + data[PATERNAL].getTotal_nonref() + "\n"
+                + data[PATERNAL] + "\n"
+                + "Maternal\n"
+                + "Total: " + data[MATERNAL].getTotal_nonref() + "\n"
+                + data[MATERNAL] + "\n"
+                + "Overall\n"
+                + "Total: " + overall_data.getTotal_nonref() + "\n"
+                + overall_data + "\n";
     }
 }
 

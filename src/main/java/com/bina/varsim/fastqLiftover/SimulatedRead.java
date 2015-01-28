@@ -31,10 +31,10 @@ public class SimulatedRead {
     public int alignedBases2 = 0;
 
     public SimulatedRead() {
-        locs1 = new ArrayList<GenomeLocation>();
-        locs2 = new ArrayList<GenomeLocation>();
-        origLocs1 = new ArrayList<GenomeLocation>();
-        origLocs2 = new ArrayList<GenomeLocation>();
+        locs1 = new ArrayList<>();
+        locs2 = new ArrayList<>();
+        origLocs1 = new ArrayList<>();
+        origLocs2 = new ArrayList<>();
     }
 
     /* Parses the VarSim generated read-name and fills the fields, except for the quality and sequence */
@@ -59,7 +59,7 @@ public class SimulatedRead {
 
     public List<GenomeLocation> parseLocations(final String locationsString) {
         final String fields[] = locationsString.split(",", -1);
-        List<GenomeLocation> locations = new ArrayList<GenomeLocation>();
+        List<GenomeLocation> locations = new ArrayList<>();
         for (String field : fields) {
             if (!("".equals(field))) {
                 locations.add(new GenomeLocation(field));
@@ -82,10 +82,10 @@ public class SimulatedRead {
 
     public String encodeInts(int... numbers) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < numbers.length; i++) {
+        for (int number : numbers) {
             sb.append(":");
-            if (numbers[i] != 0) {
-                sb.append(numbers[i]);
+            if (number != 0) {
+                sb.append(number);
             }
         }
         return sb.toString();
@@ -98,7 +98,7 @@ public class SimulatedRead {
     }
 
     private List<GenomeLocation> selectLocs(final List<GenomeLocation> locs) {
-        List<GenomeLocation> selected = new ArrayList<GenomeLocation>();
+        List<GenomeLocation> selected = new ArrayList<>();
         int seqSelected = 0;
         for (GenomeLocation g : locs) {
             if ("S".equals(g.feature) || "".equals(g.feature)) {

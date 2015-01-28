@@ -15,7 +15,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
     protected int balanceFactor = 0; // positive for heavier to the right
     private IntervalTreeNode<Key> left;
     private IntervalTreeNode<Key> right;
-    private ArrayList<Key> center = new ArrayList<Key>();
+    private ArrayList<Key> center = new ArrayList<>();
 
     public IntervalTreeNode(long centerCut) {
         this.centerCut = centerCut;
@@ -163,7 +163,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
      * @return All intervals that overlap with the provided one matching the criteria
      */
     public final ArrayList<Key> getOverlaps(final Interval1D k, double reciprocalRatio, int wiggle) {
-        ArrayList<Key> retVal = new ArrayList<Key>();
+        ArrayList<Key> retVal = new ArrayList<>();
         for (Key centerKey : center) {
             if (centerKey.intersects(k, reciprocalRatio, wiggle)) {
                 retVal.add(centerKey);
@@ -213,7 +213,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         } else if (getLeft() == child) {
             setLeft(val);
         } else {
-            new RuntimeException("Tried to set a child that did to match");
+            throw new RuntimeException("Tried to set a child that did to match");
         }
     }
 
@@ -226,7 +226,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
         sb.append(balanceFactor);
         sb.append(" -- ");
         for (Interval1D val : center) {
-            sb.append(val + ",");
+            sb.append(val).append(",");
         }
         return sb.toString();
     }
