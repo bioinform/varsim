@@ -126,7 +126,7 @@ def monitor_multiprocesses(processes, logger):
     for p in processes:
         p.join()
         if p.exitcode != 0:
-            logger.error("Process with pid %d failed with exit code %d" % (p.pid, pid.exitcode))
+            logger.error("Process with pid %d failed with exit code %d" % (p.pid, pid.exitcode)) # Marghoob: pid?
         else:
             logger.info("Process with pid %d finished successfully" % (p.pid))
 
@@ -142,7 +142,7 @@ def monitor_processes(processes, logger):
                 logger.info("Process %s exited with code %d" % (p.pid, status))
                 if status != 0:
                     kill_all = True
-                    logger.error("Process %s failed. Will kill the remaining processes." % (p.pid))
+                    logger.error("Process %s failed. Will kill the remaining processes." % p.pid)
             else:
                 processes_running.append(p)
         if kill_all:

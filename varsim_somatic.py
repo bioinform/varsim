@@ -7,10 +7,8 @@ import os
 import sys
 import subprocess
 import logging
-import shutil
 import time
 import signal
-import multiprocessing as mp
 from multiprocessing import Process
 
 
