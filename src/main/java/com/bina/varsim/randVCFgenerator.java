@@ -189,7 +189,7 @@ abstract public class randVCFgenerator {
                     }
                 } else {
                     int rand_start = _rand.nextInt(insert_seq.length - len);
-                    System.arraycopy(insert_seq, rand_start + 0, new_seq, 0, len);
+                    System.arraycopy(insert_seq, rand_start, new_seq, 0, len);
                 }
                 alt = new FlexSeq(new_seq);
             }

@@ -276,6 +276,7 @@ public class RandBED2VCF extends randVCFgenerator {
             out = new BufferedWriter(new OutputStreamWriter(System.out));
         } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
 
         try {

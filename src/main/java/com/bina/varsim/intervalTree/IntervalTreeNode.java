@@ -15,7 +15,7 @@ public class IntervalTreeNode<Key extends Interval1D> {
     protected int balanceFactor = 0; // positive for heavier to the right
     private IntervalTreeNode<Key> left;
     private IntervalTreeNode<Key> right;
-    private ArrayList<Key> center = new ArrayList<>();
+    private final ArrayList<Key> center = new ArrayList<>();
 
     public IntervalTreeNode(long centerCut) {
         this.centerCut = centerCut;

@@ -11,7 +11,7 @@ public class MapFileReader {
         this.scanner = new Scanner(file);
     }
 
-    public MapBlock getNext() throws IOException, IllegalArgumentException {
+    public MapBlock getNext() throws IllegalArgumentException {
         MapBlock mapBlock = null;
         if (scanner.hasNext()) {
             final int size = scanner.nextInt();
