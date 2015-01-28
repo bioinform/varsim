@@ -126,7 +126,7 @@ def monitor_multiprocesses(processes, logger):
     for p in processes:
         p.join()
         if p.exitcode != 0:
-            logger.error("Process with pid %d failed with exit code %d" % (p.pid, pid.exitcode))
+            logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))
         else:
             logger.info("Process with pid %d finished successfully" % (p.pid))
 
