@@ -45,9 +45,7 @@ public class VCF2diploid {
 
     private final static char DELETED_BASE = '~';
 
-
-    @SuppressWarnings("unchecked")
-    private ArrayList<Variant>[] _variants = (ArrayList<Variant>[]) new ArrayList[25];
+    private HashMap<ChrString, ArrayList<Variant>> _variants = new HashMap<>();
 
     public VCF2diploid() {
         _rand = new Random(seed);
@@ -86,10 +84,6 @@ public class VCF2diploid {
             log.error("No VCF file(s) is given!");
         }
 
-        for (int i = 0; i < _variants.length; i++) {
-            _variants[i] = new ArrayList<>(128);
-        }
-
         for (int i = 0; i < _vcfFiles.size(); i++) {
             VCFparser parser = new VCFparser(_vcfFiles.get(i), _id, _pass, _rand);
             int n_ev = 0, var_nucs = 0;
@@ -106,15 +100,15 @@ public class VCF2diploid {
 
                 if (var.maternal() < 0 || var.paternal() < 0) {
                     // randomize the genotype
-                    var.randomizeGenotype();
+                    var.randomizeGenotype(_gender);
                 }
 
-                int chr = var.getChr();
-                if (chr <= 0 || chr > _variants.length) {
+                ChrString chr = var.getChr();
+                if (chr == null) {
                     log.warn("Chr out of range, probably unplaced");
                     continue;
                 }
-                _variants[chr - 1].add(var);
+                addVariant(chr,var);
                 n_ev++;
                 var_nucs += var.variantBases();
             }
@@ -123,6 +117,17 @@ public class VCF2diploid {
         }
 
         makeDiploid();
+    }
+
+    private void addVariant(ChrString chr, Variant var){
+        ArrayList<Variant> temp = _variants.get(chr);
+        if (temp == null){
+            temp = new ArrayList<>();
+            temp.add(var);
+            _variants.put(chr,temp);
+        }else{
+            temp.add(var);
+        }
     }
 
     /**
@@ -148,35 +153,29 @@ public class VCF2diploid {
         }
 
         // This is the loop through each chromosome
-        for (int s = 0; s < all_seqs.getNumContigs(); s++) {
-            Sequence ref_seq = all_seqs.getSequence(all_seqs.nameAt(s));
+        for (ChrString chr : all_seqs.keySet()) {
+            Sequence ref_seq = all_seqs.getSequence(chr);
 
             System.out.println("Working on " + ref_seq.getName() + "...");
-            int index = variantFileParser.getChromIndex(ref_seq.getName());
-
-            // ignore the unplaced contigs
-            if (index < 1 || index > VCFparser.MT) {
-                continue;
-            }
 
             boolean output_paternal = true;
             boolean output_maternal = true;
 
             if (_gender == GenderType.FEMALE) {
-                if (index == VCFparser.Y) {
+                if (chr.isY()) {
                     output_paternal = false;
                     output_maternal = false;
                 }
             } else if (_gender == GenderType.MALE) {
                 // only male and female
-                if (index == VCFparser.X) {
+                if (chr.isX()) {
                     output_paternal = false;
                 }
-                if (index == VCFparser.Y) {
+                if (chr.isY()) {
                     output_maternal = false;
                 }
             }
-            if (index == VCFparser.MT) {
+            if (chr.isMT()) {
                 output_paternal = false;
             }
 
@@ -186,7 +185,7 @@ public class VCF2diploid {
             }
 
             // this is the list of variants for the chromosome of question
-            ArrayList<Variant> varList = _variants[index - 1];
+            ArrayList<Variant> varList = _variants.get(chr);
 
             ArrayList<Boolean> maternal_added_variants = new ArrayList<Boolean>();
             ArrayList<Boolean> paternal_added_variants = new ArrayList<Boolean>();
@@ -815,7 +814,7 @@ public class VCF2diploid {
                     Variant curr_var = varList.get(i);
 
                     // chromosome name
-                    bw.write(curr_var.getChr_name());
+                    bw.write(curr_var.getChr().toString());
                     bw.write("\t");
                     // start position
                     bw.write(String.valueOf(curr_var.getPos()
