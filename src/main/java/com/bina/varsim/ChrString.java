@@ -36,13 +36,13 @@ public class ChrString {
     /**
      * Checks if the chromosome is haploid.
      * TODO ignore the alternate contigs for now
-     * @param male True if male
+     * @param gender Gender of individual
      * @return True if the chromosome is haploid given the sex
      */
-    public boolean isHaploid(boolean male){
+    public boolean isHaploid(GenderType gender){
         if(isMT()){
             return true;
-        }else if(male){
+        }else if(gender == GenderType.MALE){
             return (isX() || isY());
         }
         return false;
@@ -62,5 +62,22 @@ public class ChrString {
             chr = "MT";
         }
         return chr;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChrString chrString = (ChrString) o;
+
+        if (!name.equals(chrString.name)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

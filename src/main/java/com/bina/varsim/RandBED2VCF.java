@@ -41,6 +41,9 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
     String reference_filename;
 
+    @Option(name = "-t", usage = "Gender of individual [MALE]")
+    GenderType gender = GenderType.MALE;
+
     @Option(name = "-ins", usage = "Known Insertion Sequences [Required]", metaVar = "file", required = true)
     String insert_filename;
 
@@ -91,14 +94,15 @@ public class RandBED2VCF extends randVCFgenerator {
 
     // remember BED is 0-based
     Variant parse_bed_line(String line, Variant.Type type) {
+        line = line.trim();
         String[] ll = line.split("\t");
         if (ll.length < 4) return new Variant(_rand);
 
-        int chr_idx = variantFileParser.getChromIndex(ll[0]);
-
-        if (chr_idx <= 0) {
+        if(ll[0].charAt(0) == '#'){
             return null;
         }
+
+        ChrString chr = new ChrString(ll[0]);
 
         int pos = Integer.parseInt(ll[1]) + 1; //0-indexed
         //int end = Integer.parseInt(ll[2]);
@@ -124,7 +128,7 @@ public class RandBED2VCF extends randVCFgenerator {
         if (type == Variant.Type.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
-            ref_seq = ref.byteRange(chr_idx, pos, pos + len);
+            ref_seq = ref.byteRange(chr, pos, pos + len);
 
             if (ref_seq == null) {
                 log.error("Range error: " + line);
@@ -153,11 +157,11 @@ public class RandBED2VCF extends randVCFgenerator {
         var_idx_str += var_idx;
         var_idx++;
 
-        Genotypes geno = new Genotypes(chr_idx, 1, _rand);
+        Genotypes geno = new Genotypes(chr, gender, 1, _rand);
 
         return new Variant(ll[0], chr_idx, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
-                .charAt(chr_idx, pos - 1)), _rand);
+                .charAt(chr, pos - 1)), _rand);
 
     }
 

@@ -565,6 +565,9 @@ public class Variant {
         return _alts.length;
     }
 
+    /**
+     * Randomly swap the haploype
+     */
     public void randomizeHaplotype() {
         if (_rand == null) {
             log.error("Cannot randomize haplotype");
@@ -581,14 +584,18 @@ public class Variant {
         return;
     }
 
-    public void randomizeGenotype() {
+    /**
+     * Randomize the genotype
+     * @param male
+     */
+    public void randomizeGenotype(boolean male) {
         if (_rand == null) {
             log.error("Cannot randomize genotype");
             log.error(toString());
             System.exit(1);
         }
 
-        Genotypes g = new Genotypes(_chr, _alts.length, _rand);
+        Genotypes g = new Genotypes(_chr, male, _alts.length, _rand);
         _paternal = g.geno[0];
         _maternal = g.geno[1];
         return;
@@ -598,7 +605,7 @@ public class Variant {
     /*
     Tests if all of the alternate alleles with sequence are ACTGN
      */
-    public boolean is_alt_ACTGN() {
+    public boolean isAltACTGN() {
         for (FlexSeq a : _alts) {
             if (a.isSeq()) {
                 if (!a.toString().matches("[ACTGN]*")) {
@@ -623,7 +630,6 @@ public class Variant {
 
         Variant variant = (Variant) o;
 
-        if (_chr != variant._chr) return false;
         if (_del != variant._del) return false;
         if (_isPhased != variant._isPhased) return false;
         if (_maternal != variant._maternal) return false;
@@ -632,23 +638,28 @@ public class Variant {
         if (full_idx != variant.full_idx) return false;
         if (idx != variant.idx) return false;
         if (!Arrays.equals(_alts, variant._alts)) return false;
-        if (_chr_name != null ? !_chr_name.equals(variant._chr_name) : variant._chr_name != null) return false;
+        if (_chr != null ? !_chr.equals(variant._chr) : variant._chr != null) return false;
         if (_filter != null ? !_filter.equals(variant._filter) : variant._filter != null) return false;
+        if (_rand != null ? !_rand.equals(variant._rand) : variant._rand != null) return false;
         if (!Arrays.equals(_ref, variant._ref)) return false;
         if (_ref_deleted != null ? !_ref_deleted.equals(variant._ref_deleted) : variant._ref_deleted != null)
             return false;
         if (_var_id != null ? !_var_id.equals(variant._var_id) : variant._var_id != null) return false;
+        if (original_type != variant.original_type) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = _chr;
+        int result = _rand != null ? _rand.hashCode() : 0;
+        result = 31 * result + idx;
+        result = 31 * result + full_idx;
+        result = 31 * result + (original_type != null ? original_type.hashCode() : 0);
         result = 31 * result + _pos;
         result = 31 * result + _del;
         result = 31 * result + (_ref != null ? Arrays.hashCode(_ref) : 0);
-        result = 31 * result + (_chr_name != null ? _chr_name.hashCode() : 0);
+        result = 31 * result + (_chr != null ? _chr.hashCode() : 0);
         result = 31 * result + (_alts != null ? Arrays.hashCode(_alts) : 0);
         result = 31 * result + (int) _maternal;
         result = 31 * result + (int) _paternal;
@@ -656,8 +667,6 @@ public class Variant {
         result = 31 * result + (_filter != null ? _filter.hashCode() : 0);
         result = 31 * result + (_var_id != null ? _var_id.hashCode() : 0);
         result = 31 * result + (_ref_deleted != null ? _ref_deleted.hashCode() : 0);
-        result = 31 * result + idx;
-        result = 31 * result + full_idx;
         return result;
     }
 
@@ -695,7 +704,7 @@ public class Variant {
     // TODO, this should be self contained and output a VCF record
     private void buildVCFstr(StringBuilder sbStr) {
         // chromosome name
-        sbStr.append(_chr_name);
+        sbStr.append(_chr.toString());
         sbStr.append("\t");
         // start position
         sbStr.append(_pos - _ref_deleted.length());

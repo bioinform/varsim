@@ -11,7 +11,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-
 /**
  * Class to construct diploid genome from genome reference and genome variants
  * calls in VCF format.
@@ -23,10 +22,6 @@ public class VCF2diploid {
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
 
     private Random _rand = null;
-
-    public enum GenderType {
-        FEMALE, MALE
-    }
 
     // arguments
     @Option(name = "-t", usage = "Gender of individual [MALE]")

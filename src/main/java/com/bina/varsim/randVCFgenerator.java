@@ -32,7 +32,7 @@ class Genotypes {
      * @param num_alt Number of alternate alleles possible
      * @param rand    Random number generator
      */
-    Genotypes(ChrString chr, boolean male, int num_alt, Random rand) {
+    Genotypes(ChrString chr, GenderType male, int num_alt, Random rand) {
         this(chr, male, num_alt, rand, 0.6);
     }
 
@@ -44,7 +44,7 @@ class Genotypes {
      * @param rand     Random number generator
      * @param prop_het proportion heterozygous, rest are homo
      */
-    Genotypes(ChrString chr, boolean male, int num_alt, Random rand, double prop_het) {
+    Genotypes(ChrString chr, GenderType male, int num_alt, Random rand, double prop_het) {
         geno = new byte[2];
 
         if (chr.isHaploid(male)) {
@@ -217,7 +217,7 @@ abstract public class randVCFgenerator {
         String ref = var.getOrig_Ref().toUpperCase();
         String alt = var.alt_string().toString().toUpperCase();
 
-        if (!ref.matches("[ACTGN]*") || (!var.is_alt_ACTGN())) {
+        if (!ref.matches("[ACTGN]*") || (!var.isAltACTGN())) {
             return; // don't output if it is not ACTGN
         }
 
