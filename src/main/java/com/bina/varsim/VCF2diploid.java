@@ -186,6 +186,9 @@ public class VCF2diploid {
 
             // this is the list of variants for the chromosome of question
             ArrayList<Variant> varList = _variants.get(chr);
+            if(varList == null){
+                varList = new ArrayList<>();
+            }
 
             ArrayList<Boolean> maternal_added_variants = new ArrayList<>();
             ArrayList<Boolean> paternal_added_variants = new ArrayList<>();
