@@ -13,21 +13,7 @@ public abstract class variantFileParser {
     protected BufferedReader _br = null;
     protected String _line = "";
 
-    /**
-     * Converts hg19 or b37 format chromosomes to b37 format
-     *
-     * @param chr Chromosome name as a string
-     * @return chromosome name as a string in b37 format
-     */
-    public static String stripChr(String chr) {
-        if (chr.length() > 3 && chr.substring(0, 3).equalsIgnoreCase("chr")) {
-            return chr.substring(3);
-        }
-        if (chr.equals("M")) {
-            chr = "MT";
-        }
-        return chr;
-    }
+
 
     /**
      * Converts the b37 chromosome name to an integer representation, only works for human
