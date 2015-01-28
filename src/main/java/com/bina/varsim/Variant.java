@@ -106,7 +106,7 @@ public class Variant {
     /**
      * @return Start position of variant
      */
-    public int position() {
+    public int getPos() {
         return _pos;
     }
 

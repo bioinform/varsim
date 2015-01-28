@@ -225,7 +225,7 @@ abstract public class randVCFgenerator {
         bw.write(var.getChr().toString());
         bw.write("\t");
         // start position
-        bw.write(String.valueOf(var.position() - var.getRef_deleted().length()));
+        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length()));
         bw.write("\t");
         // variant id
         bw.write(var.getVar_id());

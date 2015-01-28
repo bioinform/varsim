@@ -218,7 +218,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             selected_geno.add(geno);
             total_lines++;
 
-            if (prev_var.position() == var.position()) {
+            if (prev_var.getPos() == var.getPos()) {
                 // duplicate
                 total_duplicate++;
                 continue;
@@ -308,7 +308,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             Genotypes geno = selected_geno.get(geno_idx);
             geno_idx++;
 
-            if (prev_var.position() == var.position()) {
+            if (prev_var.getPos() == var.getPos()) {
                 // duplicate
                 continue;
             }

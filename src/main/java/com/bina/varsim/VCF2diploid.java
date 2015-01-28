@@ -331,7 +331,7 @@ public class VCF2diploid {
     private boolean addVariant(byte[] new_seq, Sequence ref_seq,
                                Variant variant, int allele, Hashtable<Integer, FlexSeq> ins_seq) {
 
-        int pos = variant.position();
+        int pos = variant.getPos();
         int del = variant.deletion();
         byte[] ins = variant.insertion(allele);
         Variant.Type var_type = variant.getType(allele);
@@ -823,7 +823,7 @@ public class VCF2diploid {
                     bw.write(curr_var.getChr_name());
                     bw.write("\t");
                     // start position
-                    bw.write(String.valueOf(curr_var.position()
+                    bw.write(String.valueOf(curr_var.getPos()
                             - curr_var.getRef_deleted().length()));
                     bw.write("\t");
                     // variant id

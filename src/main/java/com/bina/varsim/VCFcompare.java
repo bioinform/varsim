@@ -208,7 +208,7 @@ public class VCFcompare {
             int[] allele = {var.get_allele(0), var.get_allele(1)};
             byte[][] alt = {var.getAlt(allele[0]).getSeq(), var.getAlt(allele[1]).getSeq()};
             byte[] ref = var.getRef();
-            int curr_pos = var.position();
+            int curr_pos = var.getPos();
 
             // modify positions based on if ref matches alt
             int[] match_len = {0, 0};
@@ -307,7 +307,7 @@ public class VCFcompare {
                         || var.getType(allele) == Variant.Type.SNP) {
                     byte[] alt = var.getAlt(allele).getSeq();
                     byte[] ref = var.getRef();
-                    int curr_pos = var.position();
+                    int curr_pos = var.getPos();
                     int diff = alt.length - ref.length;
 
                     // add insertions or deletions for complex variants
@@ -956,7 +956,7 @@ public class VCFcompare {
             String chr_name = var.getChr_name();
             SimpleInterval1D orig_inter;
             if (type == Variant.Type.Insertion && _ignore_ins_len) {
-                orig_inter = new SimpleInterval1D(var.position(), var.position());
+                orig_inter = new SimpleInterval1D(var.getPos(), var.getPos());
             } else {
                 orig_inter = var.get_var_interval(geno);
             }
@@ -994,7 +994,7 @@ public class VCFcompare {
                         if (true_var.isHom()) {
                             // position is correct, check genotype
                             if (true_var.getType(true_var.getgood_paternal()) == Variant.Type.SNP
-                                    && var.position() == true_var.position()) {
+                                    && var.getPos() == true_var.getPos()) {
                                 if (val == true_var.getAlt(true_var.getgood_paternal()).getSeq()[0]) {
                                     matches_hom.add(new dual_idx(idx, full_idx));
                                 }
@@ -1005,7 +1005,7 @@ public class VCFcompare {
                                 int allele = true_var.get_allele(parent);
                                 if (allele > 0) {
                                     if (true_var.getType(allele) == Variant.Type.SNP
-                                            && var.position() == true_var.position()) {
+                                            && var.getPos() == true_var.getPos()) {
                                         if (val == true_var.getAlt(allele).getSeq()[0]) {
                                             matches_het.get(parent).add(new dual_idx(idx, full_idx));
                                         }
@@ -1076,7 +1076,7 @@ public class VCFcompare {
                             // this is the case where we want to ignore insertion lengths when comparing
                             // just do a check of the start position
 
-                            if (Math.abs(true_var.position() - var.position()) <= _wiggle) {
+                            if (Math.abs(true_var.getPos() - var.getPos()) <= _wiggle) {
                                 // Matches!
                                 if (true_var.isHom()) {
                                     matches_hom.add(new dual_idx(idx, full_idx));
