@@ -13,7 +13,7 @@ class Sample_params {
         added_num = 0;
         seen_num = 0;
     }
-};
+}
 
 /**
  * Stores genotypes and provides facilities for generating random ones

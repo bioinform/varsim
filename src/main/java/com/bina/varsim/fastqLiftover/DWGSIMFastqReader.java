@@ -44,7 +44,7 @@ public class DWGSIMFastqReader {
         final int start2 = Integer.parseInt(nameFields[nameFields.length - 13]);
         final int start1 = Integer.parseInt(nameFields[nameFields.length - 14]);
         final String chromosome1 = joiner.join(Arrays.copyOfRange(nameFields, 0, nameFields.length - 14));
-        final String chromosome2 = chromosome1;
+        final String chromosome2 = chromosome1; // Marghoob was there a reason for this?
 
         read.locs1.add(new GenomeLocation(chromosome1, start1, direction1));
         read.locs2.add(new GenomeLocation(chromosome2, start2, direction2));

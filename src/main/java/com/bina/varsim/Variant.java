@@ -581,7 +581,6 @@ public class Variant {
         byte tmp = _paternal;
         _paternal = _maternal;
         _maternal = tmp;
-        return;
     }
 
     /**
@@ -598,7 +597,6 @@ public class Variant {
         Genotypes g = new Genotypes(_chr, gender, _alts.length, _rand);
         _paternal = g.geno[0];
         _maternal = g.geno[1];
-        return;
     }
 
 
@@ -807,13 +805,13 @@ public class Variant {
     // type for one allele
 
     public enum Type {
-        Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Complex;
+        Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Complex
     }
 
     // Type for whole variant
     public enum OverallType {
-        //Reference, SNP, INDEL, Deletion, Insertion, MNP, Inversion, Tandem_Duplication, Complex;
-        Reference, SNP, Deletion, Insertion, Inversion, Tandem_Duplication, Complex;
+        //Reference, SNP, INDEL, Deletion, Insertion, MNP, Inversion, Tandem_Duplication, Complex
+        Reference, SNP, Deletion, Insertion, Inversion, Tandem_Duplication, Complex
     }
 
 }

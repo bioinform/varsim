@@ -41,14 +41,14 @@ public abstract class GzFileParser<T> {
         try {
             _line = _br.readLine();
         } catch (IOException ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
 
         if (_line == null) {
             try {
                 _br.close();
             } catch (IOException ex) {
-                System.err.println(ex);
+                ex.printStackTrace();
             }
             _br = null;
         }

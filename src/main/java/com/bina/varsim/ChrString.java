@@ -71,9 +71,8 @@ public class ChrString {
 
         ChrString chrString = (ChrString) o;
 
-        if (!name.equals(chrString.name)) return false;
+        return name.equals(chrString.name);
 
-        return true;
     }
 
     @Override
