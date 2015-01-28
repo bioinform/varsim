@@ -10,28 +10,24 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 
 public class SimpleReference {
     private final static Logger log = Logger.getLogger(SimpleReference.class.getName());
 
     // chr_idx -> reference_string
-    HashMap<Integer, Sequence> data;
+    private final HashMap<ChrString, Sequence> data;
 
-    // list of chromosomes already loaded
-    ArrayList<Integer> chr_list;
-
-    SimpleReference() {
-        data = new HashMap<Integer, Sequence>();
-        chr_list = new ArrayList<Integer>();
+    public SimpleReference() {
+        data = new HashMap<>();
     }
 
     /**
      * @param filename FASTA file, should include the fai index
      */
-    SimpleReference(String filename) {
+    public SimpleReference(String filename) {
         this();
         addReference(filename);
     }
@@ -41,28 +37,24 @@ public class SimpleReference {
      *
      * @param filename FASTA file with fai index
      */
-    void addReference(String filename) {
+    public void addReference(String filename) {
         File f = new File(filename);
         FastaSequenceFile fa = new FastaSequenceFile(f, true);
         ReferenceSequence seq = fa.nextSequence();
         while (seq != null) {
-            int name = variantFileParser.getChromIndex(seq.getName());
+            ChrString name = new ChrString(seq.getName());
             byte[] seq_bytes = seq.getBases();
 
             if (seq_bytes == null) {
-                System.err.println("Contig error: " + seq.getName());
+                log.error("Contig error: " + seq.getName());
             } else {
-                if (name > 0) {
-                    System.err.println("Read ref: " + seq.getName() + ":"
-                            + name);
-                    if (!data.containsKey(name)) {
-                        Sequence contig = new Sequence(seq.getName(),
-                                seq_bytes, seq_bytes.length);
-                        data.put(name, contig);
-                        chr_list.add(name);
-                    } else {
-                        System.err.println("Duplicate Key!");
-                    }
+                log.info("Read ref: " + seq.getName() + ":" + name);
+                if (!data.containsKey(name)) {
+                    Sequence contig = new Sequence(seq.getName(),
+                            seq_bytes, seq_bytes.length);
+                    data.put(name, contig);
+                } else {
+                    log.warn("Duplicate Key!");
                 }
             }
             seq = fa.nextSequence();
@@ -70,45 +62,26 @@ public class SimpleReference {
     }
 
     /**
-     * @param chr_name chromosome name as a string
+     * @param chr_name chromosome name as a class
      * @return Entire sequence of the chromosome
      */
-    public Sequence getSequence(String chr_name) {
-        return getSequence(variantFileParser.getChromIndex(chr_name));
-    }
-
-    /**
-     * @param chr_idx chromosome name as a number
-     * @return Entire sequence of the chromosome
-     */
-    public Sequence getSequence(int chr_idx) {
-        return data.get(chr_idx);
+    public Sequence getSequence(ChrString chr_name) {
+        return data.get(chr_name);
     }
 
     /**
      * 1-based
      *
-     * @param chr_name chromosome name as a string
+     * @param chr_name chromosome name as a class
      * @param loc      location in chromosome 1-based
      * @return base at the specified position
      */
-    byte byteAt(String chr_name, int loc) {
-        return byteAt(variantFileParser.getChromIndex(chr_name), loc);
-    }
-
-    /**
-     * 1-based
-     *
-     * @param chr_idx chromosome name as a number
-     * @param loc     location in chromosome 1-based
-     * @return base at the specified position
-     */
-    byte byteAt(int chr_idx, int loc) {
+    public byte byteAt(ChrString chr_name, int loc) {
         if (loc < 1) {
             return 0;
         }
 
-        Sequence contig = data.get(chr_idx);
+        Sequence contig = data.get(chr_name);
         if (contig == null) {
             return 0;
         } else {
@@ -116,41 +89,27 @@ public class SimpleReference {
         }
     }
 
-    char charAt(int chr_idx, int loc) {
-        return (char) byteAt(chr_idx, loc);
-    }
-
-    char charAt(String chr_name, int loc) {
+    public char charAt(ChrString chr_name, int loc) {
         return (char) byteAt(chr_name, loc);
     }
 
     // 1-based, inclusive start, exclusive end
 
     /**
-     * @param chr_name  chromosome name as a string
+     * @param chr_name  chromosome name as a number
      * @param start_loc inclusive
      * @param end_loc   exclusive
      * @return an array of bytes that is the sequence of bases
      */
-    byte[] byteRange(String chr_name, int start_loc, int end_loc) {
-        return byteRange(variantFileParser.getChromIndex(chr_name), start_loc, end_loc);
-    }
-
-    /**
-     * @param chr_idx   chromosome name as a number
-     * @param start_loc inclusive
-     * @param end_loc   exclusive
-     * @return an array of bytes that is the sequence of bases
-     */
-    byte[] byteRange(int chr_idx, int start_loc, int end_loc) {
+    public byte[] byteRange(ChrString chr_name, int start_loc, int end_loc) {
         if (start_loc < 1 || end_loc < 1 || end_loc < start_loc) {
-            System.err.println("byteRange: Invalide range");
+            log.error("byteRange: Invalid range");
             return null;
         }
 
-        Sequence contig = data.get(chr_idx);
+        Sequence contig = data.get(chr_name);
         if (contig == null) {
-            log.error("Contig not found: " + chr_idx);
+            log.error("Contig not found: " + chr_name);
             return null;
         } else {
             return contig.subSeq(start_loc, end_loc);
@@ -158,11 +117,11 @@ public class SimpleReference {
     }
 
     /**
-     * @param chr_idx Chromosome name as a number
+     * @param chr_name Chromosome name as a number
      * @return length of the specified chromosome
      */
-    int getRefLen(int chr_idx) {
-        Sequence contig = data.get(chr_idx);
+    public int getRefLen(ChrString chr_name) {
+        Sequence contig = data.get(chr_name);
         if (contig == null) {
             return 0;
         } else {
@@ -173,17 +132,14 @@ public class SimpleReference {
     /**
      * @return Number of chromosomes loaded
      */
-    int getNumContigs() {
-        return chr_list.size();
+    public int getNumContigs() {
+        return data.keySet().size();
     }
 
     /**
-     * This is used to iterate through the loaded chromosomes... there is probably a better solution
-     *
-     * @param inner_idx idx in internal array
-     * @return actual chromosome idx as a number
+     * @return Chromosomes currently loaded
      */
-    int nameAt(int inner_idx) {
-        return chr_list.get(inner_idx);
+    public Set<ChrString> keySet() {
+        return data.keySet();
     }
 }

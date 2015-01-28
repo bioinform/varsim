@@ -6,40 +6,9 @@ import java.util.zip.GZIPInputStream;
 /**
  * Created by johnmu on 8/21/14.
  */
-public abstract class variantFileParser {
-    public static final int X = 23;
-    public static final int Y = 24;
-    public static final int MT = 25;
+public abstract class GzFileParser<T> {
     protected BufferedReader _br = null;
     protected String _line = "";
-
-
-
-    /**
-     * Converts the b37 chromosome name to an integer representation, only works for human
-     *
-     * @param chr chromosome name as a string in b37 format
-     * @return chromosome name as a integer
-     */
-    public static int getChromIndex(String chr) {
-        int ret = -1;
-        chr = stripChr(chr);
-
-        if (chr.equalsIgnoreCase("X"))
-            ret = X;
-        else if (chr.equalsIgnoreCase("Y"))
-            ret = Y;
-        else if (chr.equalsIgnoreCase("M") || chr.equalsIgnoreCase("MT"))
-            ret = MT;
-        else
-            try {
-                ret = Integer.parseInt(chr);
-            } catch (NumberFormatException e) {
-                System.err.println("Unknown human chromosome " + chr + ".");
-            }
-
-        return ret;
-    }
 
     protected InputStream decompressStream(final String fileName) throws IOException {
         PushbackInputStream pb = new PushbackInputStream(new FileInputStream(fileName), 1024 * 1024); //we need a pushbackstream to look ahead
@@ -64,7 +33,7 @@ public abstract class variantFileParser {
     /**
      * @return the variant read, null if the line is not a variant line or there was an error parsing
      */
-    public abstract Variant parseLine();
+    public abstract T parseLine();
 
 
     protected void readLine() {

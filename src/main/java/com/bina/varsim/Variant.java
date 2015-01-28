@@ -21,9 +21,9 @@ public class Variant {
     // this is the type before the variant was split into canonical ones
     public OverallType original_type = null;
 
-    private int _chr = -1, _pos = -1, _del = -1;
+    private int _pos = -1, _del = -1;
     private byte[] _ref;
-    private String _chr_name;
+    private ChrString _chr;
     private FlexSeq[] _alts;
     private byte _maternal = 0, _paternal = 0; // -1 for not avaliable
     private boolean _isPhased = false; // Phasing
@@ -38,19 +38,18 @@ public class Variant {
         _rand = rand;
     }
 
-    public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
+    public Variant(ChrString chr, int pos, int del, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
-        this(chr_name, chr, pos, del, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
+        this(chr, pos, del, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
     }
 
-    public Variant(String chr_name, int chr, int pos, int del, byte[] ref,
+    public Variant(ChrString chr, int pos, int del, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted, Random rand) {
         this(rand);
 
         _filter = filter;
-        _chr_name = chr_name;
         _var_id = var_id;
 
         _chr = chr;
@@ -76,7 +75,6 @@ public class Variant {
 
     public Variant(final Variant var) {
         _filter = var._filter;
-        _chr_name = var._chr_name;
         _var_id = var._var_id;
         _chr = var._chr;
         _pos = var._pos;
@@ -101,7 +99,7 @@ public class Variant {
     /**
      * @return Chromosome variant is on
      */
-    public int chromosome() {
+    public ChrString chromosome() {
         return _chr;
     }
 
