@@ -159,7 +159,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         Genotypes geno = new Genotypes(chr, gender, 1, _rand);
 
-        return new Variant(ll[0], chr_idx, pos, ref_seq.length, ref_seq, alts,
+        return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
                 .charAt(chr, pos - 1)), _rand);
 

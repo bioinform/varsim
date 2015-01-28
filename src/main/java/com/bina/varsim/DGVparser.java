@@ -14,7 +14,7 @@ import java.util.Random;
 /**
  * Reads a DGV database flat file... not really sure if this format is stable
  */
-public class DGVparser extends variantFileParser {
+public class DGVparser extends GzFileParser<Variant> {
     private final static Logger log = Logger.getLogger(DGVparser.class.getName());
 
     Random _rand = null;
@@ -48,8 +48,13 @@ public class DGVparser extends variantFileParser {
         String line = _line;
         readLine();
 
-        if (line == null || line.length() == 0)
+        if (line == null || line.length() == 0) {
             return null;
+        }
+
+        if (line.charAt(0) == '#'){
+            return null;
+        }
 
         String[] ll = line.split("\t");
 
@@ -111,12 +116,7 @@ public class DGVparser extends variantFileParser {
         // int observedlosses = Integer.parseInt(ll[16]);
 
         String var_id = ll[0];
-        String chr_name = ll[1];
-        int chr_idx = getChromIndex(chr_name);
-
-        if (chr_idx <= 0) {
-            return null;
-        }
+        ChrString chr = new ChrString(ll[1]);
 
         int start_loc = Integer.parseInt(ll[2]);
         int end_loc = Integer.parseInt(ll[3]);
@@ -128,7 +128,7 @@ public class DGVparser extends variantFileParser {
             case Deletion:
                 // reference sequence is the deletion
                 // reference sequence always includes an extra character...
-                byte[] temp = _reference.byteRange(chr_idx, start_loc, end_loc);
+                byte[] temp = _reference.byteRange(chr, start_loc, end_loc);
                 if (temp != null) {
                     REF = new String(temp);
                 } else {
@@ -140,8 +140,6 @@ public class DGVparser extends variantFileParser {
                 break;
             case Insertion:
                 REF = "";
-                //System.err.println("Insertion: " +start_loc+ "," +end_loc+ "," +
-                //(end_loc-start_loc+1));
                 // TODO this is suspect... should sample from distribution of deletions.. maybe ok for now
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, end_loc - start_loc + 1);
                 break;
@@ -150,16 +148,11 @@ public class DGVparser extends variantFileParser {
                 if (observedgains < 2) {
                     observedgains = 2;
                 }
-                //System.err.println("DUP: " +start_loc+ "," +end_loc+ "," +
-                //(end_loc-start_loc+1));
-
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, end_loc - start_loc + 1,
                         observedgains);
                 break;
             case Inversion:
                 REF = "";
-                //System.err.println("INV: " +start_loc+ "," +end_loc+ "," +
-                //(end_loc-start_loc+1));
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, end_loc - start_loc + 1);
                 break;
             default:
@@ -186,9 +179,9 @@ public class DGVparser extends variantFileParser {
         }
 
         byte[] phase = {1, 1};
-        return new Variant(chr_name, chr_idx, start_loc, refs.length, refs,
+        return new Variant(chr, start_loc, refs.length, refs,
                 alts, phase, false, var_id, "PASS", String.valueOf((char) _reference
-                .byteAt(chr_idx, start_loc - 1)), _rand);
+                .byteAt(chr, start_loc - 1)), _rand);
     }
 
 }

@@ -61,6 +61,9 @@ public class RandDGV2VCF extends randVCFgenerator {
     @Option(name = "-dgv", usage = "DGV database flat file [Required]", metaVar = "file", required = true)
     String dgv_filename;
 
+    @Option(name = "-t", usage = "Gender of individual [MALE]")
+    GenderType gender = GenderType.MALE;
+
     int num_novel_added = 0;
 
     RandDGV2VCF() {
@@ -87,8 +90,7 @@ public class RandDGV2VCF extends randVCFgenerator {
                                 SimpleReference ref, byte[] insert_seq, double ratio_novel,
                                 Genotypes geno) throws IOException {
 
-        int chr_idx = var.getChr();
-        int num_alt = var.get_num_alt();
+        ChrString chr = var.getChr();
 
         // determine whether this one is novel
         double rand_num = _rand.nextDouble();
@@ -96,7 +98,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
 
-            int chr_len = ref.getRefLen(chr_idx);
+            int chr_len = ref.getRefLen(chr);
             int buffer = Math.max(
                     100000,
                     Math.max(var.max_len(geno.geno[0]),
@@ -131,7 +133,6 @@ public class RandDGV2VCF extends randVCFgenerator {
         fill_in_seq(var, insert_seq, geno.geno[1]);
 
         output_vcf_record(bw, var, geno.geno[0], geno.geno[1]);
-
     }
 
 
