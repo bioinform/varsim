@@ -63,8 +63,8 @@ pipeline_control_group.add_argument("--disable_sim", action="store_true", help="
 # RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX percent_novel min_length_lim max_length_lim reference_file file.vcf
 rand_vcf_group = main_parser.add_argument_group("RandVCF2VCF options")
 rand_vcf_group.add_argument("--vc_num_snp", metavar="num_snp", help="Number of SNPs", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_ins", metavar="num_ins", help="Number of insertions", default=0, type=int);
-rand_vcf_group.add_argument("--vc_num_del", metavar="num_del", help="Number of deletions", default=0, type=int);
+rand_vcf_group.add_argument("--vc_num_ins", metavar="num_ins", help="Number of insertions", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_del", metavar="num_del", help="Number of deletions", default=0, type=int)
 rand_vcf_group.add_argument("--vc_num_mnp", metavar="num_mnp", help="Number of MNPs", default=0, type=int)
 rand_vcf_group.add_argument("--vc_num_complex", metavar="num_complex", help="Number of complex variants", default=0,
                             type=int)
@@ -78,10 +78,10 @@ rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Propor
 
 # RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
 rand_dgv_group = main_parser.add_argument_group("RandDGV2VCF options")
-rand_dgv_group.add_argument("--sv_num_ins", metavar="num_ins", help="Number of insertions", default=20, type=int);
-rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of deletions", default=20, type=int);
-rand_dgv_group.add_argument("--sv_num_dup", metavar="num_dup", help="Number of duplications", default=20, type=int);
-rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of inversions", default=20, type=int);
+rand_dgv_group.add_argument("--sv_num_ins", metavar="num_ins", help="Number of insertions", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of deletions", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_dup", metavar="num_dup", help="Number of duplications", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of inversions", default=20, type=int)
 rand_dgv_group.add_argument("--sv_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=100,
                             type=int)
