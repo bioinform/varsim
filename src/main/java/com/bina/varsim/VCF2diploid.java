@@ -114,7 +114,7 @@ public class VCF2diploid {
                     var.randomizeGenotype();
                 }
 
-                int chr = var.chromosome();
+                int chr = var.getChr();
                 if (chr <= 0 || chr > _variants.length) {
                     log.warn("Chr out of range, probably unplaced");
                     continue;

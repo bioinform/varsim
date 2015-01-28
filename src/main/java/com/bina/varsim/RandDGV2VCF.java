@@ -87,7 +87,7 @@ public class RandDGV2VCF extends randVCFgenerator {
                                 SimpleReference ref, byte[] insert_seq, double ratio_novel,
                                 Genotypes geno) throws IOException {
 
-        int chr_idx = var.chromosome();
+        int chr_idx = var.getChr();
         int num_alt = var.get_num_alt();
 
         // determine whether this one is novel
@@ -211,7 +211,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             }
 
             // select genotypes here
-            int chr_idx = var.chromosome();
+            int chr_idx = var.getChr();
             int num_alt = var.get_num_alt();
 
             Genotypes geno = new Genotypes(chr_idx, num_alt, _rand);

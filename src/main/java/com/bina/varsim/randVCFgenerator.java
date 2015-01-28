@@ -28,26 +28,26 @@ class Genotypes {
     /**
      * generate random genotypes, make sure het-hom ration is 1.5
      *
-     * @param chr_idx Chromosome name in number format
+     * @param chr Chromosome name in number format
      * @param num_alt Number of alternate alleles possible
      * @param rand    Random number generator
      */
-    Genotypes(int chr_idx, int num_alt, Random rand) {
-        this(chr_idx, num_alt, rand, 0.6);
+    Genotypes(ChrString chr, boolean male, int num_alt, Random rand) {
+        this(chr, male, num_alt, rand, 0.6);
     }
 
     /**
      * generate random genotypes
      *
-     * @param chr_idx  Chromosome name in number format
+     * @param chr  Chromosome name in number format
      * @param num_alt  Number of alternate alleles possible
      * @param rand     Random number generator
      * @param prop_het proportion heterozygous, rest are homo
      */
-    Genotypes(int chr_idx, int num_alt, Random rand, double prop_het) {
+    Genotypes(ChrString chr, boolean male, int num_alt, Random rand, double prop_het) {
         geno = new byte[2];
 
-        if (chr_idx == 24 || chr_idx == 25) {
+        if (chr.isHaploid(male)) {
             geno[0] = 1;
             geno[1] = 1;
         } else {
@@ -222,7 +222,7 @@ abstract public class randVCFgenerator {
         }
 
         // chromosome name
-        bw.write(var.getChr_name());
+        bw.write(var.getChr().toString());
         bw.write("\t");
         // start position
         bw.write(String.valueOf(var.position() - var.getRef_deleted().length()));

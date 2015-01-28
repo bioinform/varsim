@@ -80,11 +80,11 @@ public class VCFcompare {
                     byte[] phase = {1, 1};
 
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -93,23 +93,23 @@ public class VCFcompare {
                     if (end) {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
                                 phase, true, var.getVar_id(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -118,11 +118,11 @@ public class VCFcompare {
                 // deletion
                 byte[] phase = {1, 1};
                 if (end) {
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt[0].length, -diff[0],
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt[0].length, -diff[0],
                             Arrays.copyOfRange(ref, alt[0].length, alt[0].length - diff[0]), new FlexSeq[]{new FlexSeq()},
                             phase, true, var.getVar_id(), ".", ""));
                 } else {
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[0],
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff[0],
                             Arrays.copyOfRange(ref, 0, -diff[0]), new FlexSeq[]{new FlexSeq()},
                             phase, true, var.getVar_id(), ".", ""));
                 }
@@ -134,11 +134,11 @@ public class VCFcompare {
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -147,11 +147,11 @@ public class VCFcompare {
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt[a].length, -diff[a],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt[a].length, -diff[a],
                                 Arrays.copyOfRange(ref, alt[a].length, alt[a].length - diff[a]), new FlexSeq[]{new FlexSeq()},
                                 phase, true, var.getVar_id(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff[a],
+                        var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff[a],
                                 Arrays.copyOfRange(ref, 0, -diff[a]), new FlexSeq[]{new FlexSeq()},
                                 phase, true, var.getVar_id(), ".", ""));
                     }
@@ -257,12 +257,12 @@ public class VCFcompare {
                 } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] != ref[i]) {
                     // one deleted, hence the other is homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
                 } else if (idx[0] < 0 && idx[1] >= 0 && alt[1][idx[1]] != ref[i]) {
                     // one deleted, hence the other is homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[1][idx[1]])}, phase, true, var.getVar_id(), ".", ""));
                 } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] == ref[i]) {
                     // ref call with del
@@ -273,13 +273,13 @@ public class VCFcompare {
                 } else if (alt[0][idx[0]] == alt[1][idx[1]]) {
                     // homozygous
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
 
                 } else if (alt[0][idx[0]] != ref[i] && alt[1][idx[1]] != ref[i]) {
                     // het but both alt
                     byte[] phase = {1, 2};
-                    var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                    var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                             new FlexSeq[]{new FlexSeq(alt[0][idx[0]]), new FlexSeq(alt[1][idx[1]])},
                             phase, true, var.getVar_id(), ".", ""));
                 } else {
@@ -288,7 +288,7 @@ public class VCFcompare {
                         if (alt[a][idx[a]] != ref[i]) {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                                     new FlexSeq[]{new FlexSeq(alt[a][idx[a]])}, phase, true, var.getVar_id(), ".", ""));
                         }
                     }
@@ -317,11 +317,11 @@ public class VCFcompare {
                         byte[] phase = {0, 0};
                         phase[a] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + ref.length, 0, new byte[0],
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + ref.length, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
                                     phase, true, var.getVar_id(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 0, new byte[0],
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
                                     phase, true, var.getVar_id(), ".", ""));
                         }
@@ -330,12 +330,12 @@ public class VCFcompare {
                         byte[] phase = {0, 0};
                         phase[a] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos + alt.length, -diff,
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos + alt.length, -diff,
                                     Arrays.copyOfRange(ref, alt.length, alt.length - diff),
                                     new FlexSeq[]{new FlexSeq()},
                                     phase, true, var.getVar_id(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, -diff,
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, -diff,
                                     Arrays.copyOfRange(ref, 0, -diff),
                                     new FlexSeq[]{new FlexSeq()},
                                     phase, true, var.getVar_id(), ".", ""));
@@ -358,7 +358,7 @@ public class VCFcompare {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
 
-                            var_list.add(new Variant(var.getChr_name(), var.chromosome(), curr_pos, 1, new byte[]{ref[i]},
+                            var_list.add(new Variant(var.getChr_name(), var.getChr(), curr_pos, 1, new byte[]{ref[i]},
                                     new FlexSeq[]{new FlexSeq(alt[idx])}, phase, true, var.getVar_id(), ".", ""));
                         }
 

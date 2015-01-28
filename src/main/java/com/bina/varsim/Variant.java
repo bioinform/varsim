@@ -99,7 +99,7 @@ public class Variant {
     /**
      * @return Chromosome variant is on
      */
-    public ChrString chromosome() {
+    public ChrString getChr() {
         return _chr;
     }
 
@@ -520,10 +520,6 @@ public class Variant {
             e.printStackTrace();
             return "";
         }
-    }
-
-    public String getChr_name() {
-        return _chr_name;
     }
 
     public String getRef_deleted() {
