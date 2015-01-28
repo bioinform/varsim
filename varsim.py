@@ -34,7 +34,7 @@ main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory t
 main_parser.add_argument("--reference", metavar="Reference", help="Reference file", required=True, type=file)
 main_parser.add_argument("--seed", metavar="seed", help="Random number seed", type=int, default=0)
 main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/female)", required=False, type=str,
-                         choices=["male", "female"], default="male")
+                         choices=["MALE", "FEMALE"], default="MALE")
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
 main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
@@ -76,7 +76,7 @@ rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", t
 rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6,
                             type=float)
 
-#RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
+# RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
 rand_dgv_group = main_parser.add_argument_group("RandDGV2VCF options")
 rand_dgv_group.add_argument("--sv_num_ins", metavar="num_ins", help="Number of insertions", default=20, type=int);
 rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of deletions", default=20, type=int);
@@ -101,7 +101,6 @@ art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
-
 
 args = main_parser.parse_args()
 
@@ -178,7 +177,6 @@ def check_executable(fpath):
 if not args.disable_sim:
     check_executable(args.simulator_executable.name)
 
-
 processes = []
 
 t_s = time.time()
@@ -191,6 +189,7 @@ if not args.disable_rand_vcf:
     args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
 
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
+                        "-t", args.sex,
                         "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del",
                         str(args.vc_num_del),
                         "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel",
@@ -209,6 +208,7 @@ if not args.disable_rand_dgv:
     args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
 
     rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.varsim_jar.name), "randdgv2vcf",
+                        "-t", args.sex,
                         "-seed", str(args.seed),
                         "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup",
                         str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
@@ -366,11 +366,15 @@ if not args.disable_sim:
 
         for i in xrange(args.nlanes):
             art_command = [args.simulator_executable.name] + profile_opts + ["-i", merged_reference, "-p",
-                                                            "-l", str(args.read_length), "-f", str(coverage_per_lane),
-                                                            "-m", str(args.mean_fragment_size),
-                                                            "-s", str(args.sd_fragment_size), "-rs", str(i),
-                                                            args.art_options, "-o",
-                                                            os.path.join(args.out_dir, "simulated.lane%d.read" % (i))]
+                                                                             "-l", str(args.read_length), "-f",
+                                                                             str(coverage_per_lane),
+                                                                             "-m", str(args.mean_fragment_size),
+                                                                             "-s", str(args.sd_fragment_size), "-rs",
+                                                                             str(i),
+                                                                             args.art_options, "-o",
+                                                                             os.path.join(args.out_dir,
+                                                                                          "simulated.lane%d.read" % (
+                                                                                          i))]
             art_command = " ".join(art_command)
             art_stdout = open(os.path.join(args.log_dir, "art.lane%d.out" % (i)), "w")
             art_stderr = open(os.path.join(args.log_dir, "art.lane%d.err" % (i)), "w")
@@ -391,11 +395,11 @@ if not args.disable_sim:
         liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
         liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
         fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d -fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) -fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) -out >(gzip -1 > %s/lane%d.read1.fq.gz) -out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
-        os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i,
-        args.out_dir, i)
+            os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i,
+            args.out_dir, i)
         if args.force_five_base_encoding: fastq_liftover_command += " -force_five_base_encoding "
         if args.simulator == "art": fastq_liftover_command += " -type art -aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) -aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
-        args.out_dir, i, args.out_dir, i)
+            args.out_dir, i, args.out_dir, i)
         fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
         liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
         liftover_p.start()
@@ -410,7 +414,7 @@ if not args.disable_sim:
     sim_te = max(sim_ts + 1, time.time())
     bytes_written = sum([os.path.getsize(fastq) for fastq in fastqs])
     logger.info("Took %g seconds, %ld Mbytes written, %g MB/s" % (
-    sim_te - sim_ts, bytes_written / 1024.0 / 1024.0, bytes_written / 1024.0 / 1024.0 / (sim_te - sim_ts)))
+        sim_te - sim_ts, bytes_written / 1024.0 / 1024.0, bytes_written / 1024.0 / 1024.0 / (sim_te - sim_ts)))
 
     for fifo in fifos:
         os.remove(fifo)

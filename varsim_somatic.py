@@ -23,10 +23,16 @@ def get_contigs_list(reference):
 my_dir = os.path.dirname(os.path.realpath(__file__))
 
 default_varsim_jar = os.path.join(my_dir, "VarSim.jar")
-
 require_varsim_jar = not os.path.isfile(default_varsim_jar)
 
-if not os.path.isfile(default_varsim_jar): default_varsim_jar = None
+if not os.path.isfile(default_varsim_jar):
+    default_varsim_jar = None
+
+default_varsim = os.path.join(my_dir, "varsim.py")
+require_varsim = not os.path.isfile(default_varsim)
+
+if not os.path.isfile(default_varsim):
+    default_varsim = None
 
 main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -70,13 +76,13 @@ pipeline_control_group.add_argument("--disable_sim", action="store_true", help="
 rand_vcf_group = main_parser.add_argument_group("RandVCF2VCF somatic options")
 rand_vcf_group.add_argument("--som_num_snp", metavar="num_snp", help="Number of somatic SNPs", default=9000, type=int)
 rand_vcf_group.add_argument("--som_num_ins", metavar="num_ins", help="Number of somatic insertions", default=1000,
-                            type=int);
+                            type=int)
 rand_vcf_group.add_argument("--som_num_del", metavar="num_del", help="Number of somatic deletions", default=1000,
-                            type=int);
+                            type=int)
 rand_vcf_group.add_argument("--som_num_mnp", metavar="num_mnp", help="Number of somatic MNPs", default=100, type=int)
 rand_vcf_group.add_argument("--som_num_complex", metavar="num_complex", help="Number of somatic complex variants",
                             default=100, type=int)
-#rand_vcf_group.add_argument("--som_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
+# rand_vcf_group.add_argument("--som_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
 rand_vcf_group.add_argument("--som_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0,
                             type=int)
 rand_vcf_group.add_argument("--som_max_length_lim", metavar="max_length_lim", help="Max length lim", default=49,
