@@ -394,11 +394,17 @@ if not args.disable_sim:
     for i in xrange(args.nlanes):
         liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
         liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
-        fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d -fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) -fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) -out >(gzip -1 > %s/lane%d.read1.fq.gz) -out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
+        fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
+                                 "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
+                                 "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
+                                 "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
+                                 "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
             os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i,
             args.out_dir, i)
         if args.force_five_base_encoding: fastq_liftover_command += " -force_five_base_encoding "
-        if args.simulator == "art": fastq_liftover_command += " -type art -aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) -aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
+        if args.simulator == "art": fastq_liftover_command += " -type art " \
+                                                              "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
+                                                              "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
             args.out_dir, i, args.out_dir, i)
         fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
         liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
