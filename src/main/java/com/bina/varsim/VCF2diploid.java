@@ -418,7 +418,7 @@ public class VCF2diploid {
                 // this prevents the original sequence to be altered and
                 // become less like a duplication
                 // TODO make length correct
-                //System.err.println("Insert DUP");
+                // System.err.println("Insert DUP");
 
                 del = variant.insertion_len(allele);
                 int single_ins_len = variant.insertion_len(allele);
