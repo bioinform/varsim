@@ -109,7 +109,7 @@ for d in [args.log_dir, args.out_dir, args.work_dir]:
     if not os.path.exists(d):
         os.makedirs(d)
 
-#Setup logging
+# Setup logging
 FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
 logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ def monitor_multiprocesses(processes, logger):
     for p in processes:
         p.join()
         if p.exitcode != 0:
-            logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode)) # Marghoob: pid?
+            logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))  # Marghoob: pid?
         else:
             logger.info("Process with pid %d finished successfully" % p.pid)
 
@@ -374,7 +374,7 @@ if not args.disable_sim:
                                                                              args.art_options, "-o",
                                                                              os.path.join(args.out_dir,
                                                                                           "simulated.lane%d.read" % (
-                                                                                          i))]
+                                                                                              i))]
             art_command = " ".join(art_command)
             art_stdout = open(os.path.join(args.log_dir, "art.lane%d.out" % (i)), "w")
             art_stderr = open(os.path.join(args.log_dir, "art.lane%d.err" % (i)), "w")
@@ -399,13 +399,16 @@ if not args.disable_sim:
                                  "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
                                  "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
                                  "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
-            os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i, args.out_dir, i, args.out_dir, i,
-            args.out_dir, i)
-        if args.force_five_base_encoding: fastq_liftover_command += " -force_five_base_encoding "
-        if args.simulator == "art": fastq_liftover_command += " -type art " \
-                                                              "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
-                                                              "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
-            args.out_dir, i, args.out_dir, i)
+                                     os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i,
+                                     args.out_dir, i, args.out_dir, i,
+                                     args.out_dir, i)
+        if args.force_five_base_encoding:
+            fastq_liftover_command += " -force_five_base_encoding "
+        if args.simulator == "art":
+            fastq_liftover_command += " -type art " \
+                                      "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
+                                      "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
+                                          args.out_dir, i, args.out_dir, i)
         fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
         liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
         liftover_p.start()
