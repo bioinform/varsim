@@ -623,8 +623,10 @@ public class VCFcompare {
                 ChrString chr = var.getChr();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
-                if (!bed_exclude_fdr && !(intersector == null || intersector.containsEitherEndpoint(chr, var_reg))) {
-                    continue;
+                if(intersector != null) {
+                    if (!bed_exclude_fdr && !intersector.containsEitherEndpoint(chr, var_reg)) {
+                        continue;
+                    }
                 }
 
                 // the overall type of the called variant
@@ -726,15 +728,15 @@ public class VCFcompare {
         log.info("Num new variants read: " + num_new_vars);
 
         // read through again and compute for the true variants
-        num_read = 0;
+        int num_read2 = 0;
         for (Variant var : true_var_list) {
 
             ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (!bed_exclude_tpr && (intersector == null || intersector.containsEitherEndpoint(chr, curr_var_reg))) {
-                int total_len = full_validated_total.get(num_read);
-                int validated_len = full_validated_count[num_read];
+            if (intersector == null || bed_exclude_tpr || intersector.containsEitherEndpoint(chr, curr_var_reg)) {
+                int total_len = full_validated_total.get(num_read2);
+                int validated_len = full_validated_count[num_read2];
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
@@ -747,7 +749,11 @@ public class VCFcompare {
 
                 output_blob.getNum_true_correct().addT(var.getType(), var.max_len());
             }
-            num_read++;
+            num_read2++;
+        }
+
+        if(num_read != num_read2){
+            log.error("Number of variants read are inconsistent: " + num_read + "," + num_read2);
         }
 
         // output the stats
