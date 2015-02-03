@@ -623,9 +623,10 @@ public class VCFcompare {
                 ChrString chr = var.getChr();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
+                boolean skipFP = false;
                 if(intersector != null) {
                     if (!bed_exclude_fdr && !intersector.containsEitherEndpoint(chr, var_reg)) {
-                        continue;
+                        skipFP = true;
                     }
                 }
 
@@ -672,7 +673,7 @@ public class VCFcompare {
                             validated_true.set(idx.idx);
                             full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
                             validated_len += curr_var.max_len();
-                        } else if (compute_as_split) {
+                        } else if (compute_as_split && !skipFP) {
                             output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
                             FP_writer.println(var);
                         }
@@ -702,7 +703,7 @@ public class VCFcompare {
                             validated_true.set(idx.idx);
                             full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                             validated_len += curr_var.max_len();
-                        } else if (compute_as_split) {
+                        } else if (compute_as_split && !skipFP) {
                             output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
                             if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
                                 log.warn("SNP with bad length: " + curr_var);
@@ -712,7 +713,7 @@ public class VCFcompare {
                     }
                 }
 
-                if (!compute_as_split && validated_len < (total_len * overlap_ratio)) {
+                if (!compute_as_split && validated_len < (total_len * overlap_ratio) && !skipFP) {
                     // this is a false positive!
                     output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
                     if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
@@ -740,7 +741,6 @@ public class VCFcompare {
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
-
                     output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
                     TP_writer.println(var);
                 } else {
