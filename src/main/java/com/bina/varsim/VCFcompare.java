@@ -625,7 +625,7 @@ public class VCFcompare {
 
                 boolean skipFP = false;
                 if(intersector != null) {
-                    if (!bed_exclude_fdr && !intersector.containsEitherEndpoint(chr, var_reg)) {
+                    if (!bed_exclude_fdr && !intersector.containsBothEndpoints(chr, var_reg)) {
                         skipFP = true;
                     }
                 }
@@ -735,7 +735,7 @@ public class VCFcompare {
             ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || bed_exclude_tpr || intersector.containsEitherEndpoint(chr, curr_var_reg)) {
+            if (intersector == null || bed_exclude_tpr || intersector.containsBothEndpoints(chr, curr_var_reg)) {
                 int total_len = full_validated_total.get(num_read2);
                 int validated_len = full_validated_count[num_read2];
 

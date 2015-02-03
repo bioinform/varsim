@@ -104,7 +104,23 @@ public class BedFile {
         if (interval.getLeft() == interval.getRight()) {
             return bedST.contains(chr, interval);
         } else {
-            return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) |
+            return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) ||
+                    bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
+        }
+    }
+
+    /**
+     * Checks whether both endpoints of the interval are in the BED file
+     *
+     * @param chr
+     * @param interval
+     * @return
+     */
+    public boolean containsBothEndpoints(ChrString chr, SimpleInterval1D interval) {
+        if (interval.getLeft() == interval.getRight()) {
+            return bedST.contains(chr, interval);
+        } else {
+            return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) &&
                     bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
         }
     }
