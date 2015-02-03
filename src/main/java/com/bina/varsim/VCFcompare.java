@@ -64,6 +64,9 @@ public class VCFcompare {
     @Option(name = "-bed_exclude_fdr", usage = "Exclude FDR from the BED file filtering")
     boolean bed_exclude_fdr;
 
+    @Option(name = "-bed_either", usage = "Use either break-end of the variant for filtering instead of both")
+    boolean bed_either;
+
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
 
@@ -625,7 +628,7 @@ public class VCFcompare {
 
                 boolean skipFP = false;
                 if(intersector != null) {
-                    if (!bed_exclude_fdr && !intersector.containsBothEndpoints(chr, var_reg)) {
+                    if (!bed_exclude_fdr && !intersector.containsEndpoints(chr, var_reg, bed_either)) {
                         skipFP = true;
                     }
                 }
@@ -735,7 +738,7 @@ public class VCFcompare {
             ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || bed_exclude_tpr || intersector.containsBothEndpoints(chr, curr_var_reg)) {
+            if (intersector == null || bed_exclude_tpr || intersector.containsEndpoints(chr, curr_var_reg, bed_either)) {
                 int total_len = full_validated_total.get(num_read2);
                 int validated_len = full_validated_count[num_read2];
 
