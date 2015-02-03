@@ -58,6 +58,12 @@ public class VCFcompare {
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
 
+    @Option(name = "-bed_exclude_tpr", usage = "Exclude TPR from the BED file filtering")
+    boolean bed_exclude_tpr;
+
+    @Option(name = "-bed_exclude_fdr", usage = "Exclude FDR from the BED file filtering")
+    boolean bed_exclude_fdr;
+
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
 
@@ -422,6 +428,10 @@ public class VCFcompare {
         if (bed_exists) {
             log.info("Using " + bed_filename + " to intersect");
             intersector = new BedFile(bed_filename);
+        }else{
+            if(bed_exclude_tpr || bed_exclude_fdr){
+                log.warn("No BED file specified but used exclude parameters");
+            }
         }
 
         // load true VCF into interval tree
@@ -613,7 +623,7 @@ public class VCFcompare {
                 ChrString chr = var.getChr();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
-                if (!(intersector == null || intersector.containsEitherEndpoint(chr, var_reg))) {
+                if (!bed_exclude_fdr && !(intersector == null || intersector.containsEitherEndpoint(chr, var_reg))) {
                     continue;
                 }
 
@@ -722,7 +732,7 @@ public class VCFcompare {
             ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || intersector.containsEitherEndpoint(chr, curr_var_reg)) {
+            if (!bed_exclude_tpr && (intersector == null || intersector.containsEitherEndpoint(chr, curr_var_reg))) {
                 int total_len = full_validated_total.get(num_read);
                 int validated_len = full_validated_count[num_read];
 
