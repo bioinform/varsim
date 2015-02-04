@@ -589,12 +589,16 @@ public class VCFcompare {
 
         // generate the output files
         PrintWriter TP_writer = null;
+        PrintWriter unknown_TP_writer = null;
         PrintWriter FP_writer = null;
+        PrintWriter unknown_FP_writer = null;
         PrintWriter FN_writer = null;
         PrintWriter JSON_writer = null;
         try {
             TP_writer = new PrintWriter(out_prefix + "_TP.vcf", "UTF-8");
+            unknown_TP_writer = new PrintWriter(out_prefix + "_unknown_TP.vcf", "UTF-8");
             FP_writer = new PrintWriter(out_prefix + "_FP.vcf", "UTF-8");
+            unknown_FP_writer = new PrintWriter(out_prefix + "_unknown_FP.vcf", "UTF-8");
             FN_writer = new PrintWriter(out_prefix + "_FN.vcf", "UTF-8");
             JSON_writer = new PrintWriter(out_prefix + "_report.json", "UTF-8");
         } catch (Exception e) {
@@ -676,9 +680,13 @@ public class VCFcompare {
                             validated_true.set(idx.idx);
                             full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
                             validated_len += curr_var.max_len();
-                        } else if (compute_as_split && !skipFP) {
-                            output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
-                            FP_writer.println(var);
+                        } else if (compute_as_split) {
+                            if(!skipFP) {
+                                output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                                FP_writer.println(var);
+                            }else{
+                                unknown_FP_writer.println(var);
+                            }
                         }
 
                     } else {
@@ -706,23 +714,31 @@ public class VCFcompare {
                             validated_true.set(idx.idx);
                             full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                             validated_len += curr_var.max_len();
-                        } else if (compute_as_split && !skipFP) {
-                            output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
-                            if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
-                                log.warn("SNP with bad length: " + curr_var);
+                        } else if (compute_as_split) {
+                            if(!skipFP) {
+                                output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
+                                if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
+                                    log.warn("SNP with bad length: " + curr_var);
+                                }
+                                FP_writer.println(var);
+                            }else {
+                                unknown_FP_writer.println(var);
                             }
-                            FP_writer.println(var);
                         }
                     }
                 }
 
-                if (!compute_as_split && validated_len < (total_len * overlap_ratio) && !skipFP) {
-                    // this is a false positive!
-                    output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
-                    if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
-                        log.warn("SNP with bad length: " + var);
+                if (!compute_as_split && validated_len < (total_len * overlap_ratio)) {
+                    if(!skipFP) {
+                        // this is a false positive!
+                        output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
+                        if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
+                            log.warn("SNP with bad length: " + var);
+                        }
+                        FP_writer.println(var);
+                    }else{
+                        unknown_FP_writer.println(var);
                     }
-                    FP_writer.println(var);
                 }
 
                 num_new_vars++;
@@ -751,6 +767,8 @@ public class VCFcompare {
                 }
 
                 output_blob.getNum_true_correct().addT(var.getType(), var.max_len());
+            }else{
+                unknown_TP_writer.println(var);
             }
             num_read2++;
         }
@@ -784,7 +802,9 @@ public class VCFcompare {
 
         try {
             TP_writer.close();
+            unknown_TP_writer.close();
             FP_writer.close();
+            unknown_FP_writer.close();
             FN_writer.close();
             JSON_writer.close();
         } catch (Exception e) {
