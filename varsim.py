@@ -25,70 +25,70 @@ require_varsim_jar = not os.path.isfile(default_varsim_jar)
 
 if not os.path.isfile(default_varsim_jar): require_varsim_jar = None
 
-main_parser = argparse.ArgumentParser(description="VarSim: An accurate variant and reads simulator",
+main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False, default="out")
-main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False, default="work")
-main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False,
+main_parser.add_argument("--out_dir", metavar="DIR", help="Output directory for the simulated genome, reads and variants", required=False, default="out")
+main_parser.add_argument("--work_dir", metavar="DIR", help="Work directory, currently not used", required=False, default="work")
+main_parser.add_argument("--log_dir", metavar="DIR", help="Log files of all steps are kept here", required=False,
                          default="log")
-main_parser.add_argument("--reference", metavar="Reference", help="Reference file", required=True, type=file)
-main_parser.add_argument("--seed", metavar="seed", help="Random number seed", type=int, default=0)
-main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/female)", required=False, type=str,
+main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into", required=True, type=file)
+main_parser.add_argument("--seed", metavar="seed", help="Random number seed for reproducibility", type=int, default=0)
+main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
                          choices=["MALE", "FEMALE"], default="MALE")
-main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
-main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str,
+main_parser.add_argument("--id", metavar="ID", help="Sample ID to be put in output VCF file", required=True)
+main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
-main_parser.add_argument("--simulator_executable", metavar="executable", help="Read simulator executable"
+main_parser.add_argument("--simulator_executable", metavar="PATH", help="Path to the executable of the read simulator chosen"
                          , required=True, type=file)
-main_parser.add_argument("--varsim_jar", metavar="varsim_jar", help="VarSim jar", type=file, default=default_varsim_jar,
+main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file, default=default_varsim_jar,
                          required=require_varsim_jar)
-main_parser.add_argument("--read_length", metavar="read_length", help="Length of reads", default=100, type=int)
-main_parser.add_argument("--nlanes", metavar="nlanes", help="Number of lanes to generate", default=1, type=int)
-main_parser.add_argument("--total_coverage", metavar="total_coverage", help="Total coverage", default=1.0, type=float)
-main_parser.add_argument("--mean_fragment_size", metavar="mean_fragment_size", help="Mean fragment size", default=350,
+main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
+main_parser.add_argument("--nlanes", metavar="INTEGER", help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files", default=1, type=int)
+main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0, type=float)
+main_parser.add_argument("--mean_fragment_size", metavar="FLOAT", help="Mean fragment size to simulate", default=350,
                          type=int)
-main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help="Standard deviation of fragment size",
+main_parser.add_argument("--sd_fragment_size", metavar="FLOAT", help="Standard deviation of fragment size to simulate",
                          default=50, type=int)
-main_parser.add_argument("--vcfs", metavar="vcfs", help="VCF list", nargs="+", default=[])
-main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
-main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
-main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
+main_parser.add_argument("--vcfs", metavar="VCF", help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+", default=[])
+main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force output bases to be only ACTGN")
+main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
+main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
-pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable RandVCF2VCF")
-pipeline_control_group.add_argument("--disable_rand_dgv", action="store_true", help="Disable RandDGV2VCF")
-pipeline_control_group.add_argument("--disable_vcf2diploid", action="store_true", help="Disable vcf2diploid")
+pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable sampling from the provided small variant VCF")
+pipeline_control_group.add_argument("--disable_rand_dgv", action="store_true", help="Disable sampline from the provided DGV file")
+pipeline_control_group.add_argument("--disable_vcf2diploid", action="store_true", help="Disable diploid genome simulation")
 pipeline_control_group.add_argument("--disable_sim", action="store_true", help="Disable read simulation")
 
 # RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX percent_novel min_length_lim max_length_lim reference_file file.vcf
-rand_vcf_group = main_parser.add_argument_group("RandVCF2VCF options")
-rand_vcf_group.add_argument("--vc_num_snp", metavar="num_snp", help="Number of SNPs", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_ins", metavar="num_ins", help="Number of insertions", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_del", metavar="num_del", help="Number of deletions", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_mnp", metavar="num_mnp", help="Number of MNPs", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_complex", metavar="num_complex", help="Number of complex variants", default=0,
+rand_vcf_group = main_parser.add_argument_group("Small variant simulation options")
+rand_vcf_group.add_argument("--vc_num_snp", metavar="INTEGER", help="Number of SNPs to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_ins", metavar="INTEGER", help="Number of insertions to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_del", metavar="INTEGER", help="Number of deletions to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_mnp", metavar="INTEGER", help="Number of MNPs to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_complex", metavar="INTEGER", help="Number of complex variants to sample from small variant VCF", default=0,
                             type=int)
-rand_vcf_group.add_argument("--vc_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_vcf_group.add_argument("--vc_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0, type=int)
-rand_vcf_group.add_argument("--vc_max_length_lim", metavar="max_length_lim", help="Max length lim", default=99,
+rand_vcf_group.add_argument("--vc_percent_novel", metavar="FLOAT", help="Percent variants sampled from small variant VCF that will be moved to novel positions", default=0, type=float)
+rand_vcf_group.add_argument("--vc_min_length_lim", metavar="INTEGER", help="Min length of small variant to accept [inclusive]", default=0, type=int)
+rand_vcf_group.add_argument("--vc_max_length_lim", metavar="INTEGER", help="Max length of small variant to accept [inclusive]", default=99,
                             type=int)
-rand_vcf_group.add_argument("--vc_in_vcf", metavar="in_vcf", help="Input VCF", type=file, required=False)
-rand_vcf_group.add_argument("--vc_prop_het", metavar="vc_prop_het", help="Proportion of heterozygous vars", default=0.6,
+rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP", type=file, required=False)
+rand_vcf_group.add_argument("--vc_prop_het", metavar="FLOAT", help="Proportion of heterozygous small variants", default=0.6,
                             type=float)
 
 # RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
-rand_dgv_group = main_parser.add_argument_group("RandDGV2VCF options")
-rand_dgv_group.add_argument("--sv_num_ins", metavar="num_ins", help="Number of insertions", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_del", metavar="num_del", help="Number of deletions", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_dup", metavar="num_dup", help="Number of duplications", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_inv", metavar="num_inv", help="Number of inversions", default=20, type=int)
-rand_dgv_group.add_argument("--sv_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length lim", default=100,
+rand_dgv_group = main_parser.add_argument_group("Structural variant simulation options")
+rand_dgv_group.add_argument("--sv_num_ins", metavar="INTEGER", help="Number of insertions to sample from DGV", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_del", metavar="INTEGER", help="Number of deletions to sample from DGV", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_dup", metavar="INTEGER", help="Number of duplications to sample from DGV", default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_inv", metavar="INTEGER", help="Number of inversions to sample from DGV", default=20, type=int)
+rand_dgv_group.add_argument("--sv_percent_novel", metavar="FLOAT", help="Percent variants sampled from DGV that will be moved to novel positions", default=0, type=float)
+rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length of structural variant to accept [inclusive]", default=100,
                             type=int)
-rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length lim", default=1000000,
+rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length of structural variant to accept [inclusive]", default=1000000,
                             type=int)
-rand_dgv_group.add_argument("--sv_insert_seq", metavar="insert_seq", help="Insert seq", type=file, required=False)
-rand_dgv_group.add_argument("--sv_dgv", metavar="dgv", help="DGV file", type=file, required=False)
+rand_dgv_group.add_argument("--sv_insert_seq", metavar="FILE", help="Path to file containing concatenation of real insertion sequences", type=file, required=False)
+rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants", type=file, required=False)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
 dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base",
@@ -98,8 +98,8 @@ dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
 
 art_group = main_parser.add_argument_group("ART options")
-art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
-art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
+art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default=None, type=file)
+art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
 
 args = main_parser.parse_args()
