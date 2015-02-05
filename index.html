@@ -333,6 +333,115 @@ java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary
 This will output a JSON file that can be used as input to the Alignment Compare webapp [<a href="http://bioinform.github.io/varsim/webapp/alignment_compare.html" onclick="trackOutboundLink('webapp/alignment_compare.html'); return false;">http://bioinform.github.io/varsim/webapp/alignment_compare.html</a>]
 </p>
 
+<h2>Command Line Options</h2>
+<pre>
+	VarSim: A high-fidelity simulation validation framework
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --out_dir DIR         Output directory for the simulated genome, reads and
+                        variants (default: out)
+  --work_dir DIR        Work directory, currently not used (default: work)
+  --log_dir DIR         Log files of all steps are kept here (default: log)
+  --reference FASTA     Reference genome that variants will be inserted into
+                        (default: None)
+  --seed seed           Random number seed for reproducibility (default: 0)
+  --sex Sex             Sex of the person (MALE/FEMALE) (default: MALE)
+  --id ID               Sample ID to be put in output VCF file (default: None)
+  --simulator SIMULATOR
+                        Read simulator to use (default: art)
+  --varsim_jar PATH     Path to VarSim.jar (default: /net/kodiak/volumes/river
+                        /shared/users/johnmu/github/varsim/VarSim.jar)
+  --read_length LENGTH  Length of read to simulate (default: 100)
+  --nlanes INTEGER      Number of lanes to generate, coverage will be divided
+                        evenly over the lanes. Simulation is parallized over
+                        lanes. Each lane will have its own pair of files
+                        (default: 1)
+  --total_coverage FLOAT
+                        Total coverage to simulate (default: 1.0)
+  --mean_fragment_size FLOAT
+                        Mean fragment size to simulate (default: 350)
+  --sd_fragment_size FLOAT
+                        Standard deviation of fragment size to simulate
+                        (default: 50)
+  --vcfs VCF [VCF ...]  Addtional list of VCFs to insert into genome, priority
+                        is lowest ... highest (default: [])
+  --force_five_base_encoding
+                        Force output bases to be only ACTGN (default: False)
+  --filter              Only use PASS variants for simulation (default: False)
+  --keep_temp           Keep temporary files after simulation (default: False)
+
+Pipeline control options. Disable parts of the pipeline.:
+  --disable_rand_vcf    Disable sampling from the provided small variant VCF
+                        (default: False)
+  --disable_rand_dgv    Disable sampline from the provided DGV file (default:
+                        False)
+  --disable_vcf2diploid
+                        Disable diploid genome simulation (default: False)
+  --disable_sim         Disable read simulation (default: False)
+
+Small variant simulation options:
+  --vc_num_snp INTEGER  Number of SNPs to sample from small variant VCF
+                        (default: 0)
+  --vc_num_ins INTEGER  Number of insertions to sample from small variant VCF
+                        (default: 0)
+  --vc_num_del INTEGER  Number of deletions to sample from small variant VCF
+                        (default: 0)
+  --vc_num_mnp INTEGER  Number of MNPs to sample from small variant VCF
+                        (default: 0)
+  --vc_num_complex INTEGER
+                        Number of complex variants to sample from small
+                        variant VCF (default: 0)
+  --vc_percent_novel FLOAT
+                        Percent variants sampled from small variant VCF that
+                        will be moved to novel positions (default: 0)
+  --vc_min_length_lim INTEGER
+                        Min length of small variant to accept [inclusive]
+                        (default: 0)
+  --vc_max_length_lim INTEGER
+                        Max length of small variant to accept [inclusive]
+                        (default: 99)
+  --vc_in_vcf VCF       Input small variant VCF, usually dbSNP (default: None)
+  --vc_prop_het FLOAT   Proportion of heterozygous small variants (default:
+                        0.6)
+
+Structural variant simulation options:
+  --sv_num_ins INTEGER  Number of insertions to sample from DGV (default: 20)
+  --sv_num_del INTEGER  Number of deletions to sample from DGV (default: 20)
+  --sv_num_dup INTEGER  Number of duplications to sample from DGV (default:
+                        20)
+  --sv_num_inv INTEGER  Number of inversions to sample from DGV (default: 20)
+  --sv_percent_novel FLOAT
+                        Percent variants sampled from DGV that will be moved
+                        to novel positions (default: 0)
+  --sv_min_length_lim min_length_lim
+                        Min length of structural variant to accept [inclusive]
+                        (default: 100)
+  --sv_max_length_lim max_length_lim
+                        Max length of structural variant to accept [inclusive]
+                        (default: 1000000)
+  --sv_insert_seq FILE  Path to file containing concatenation of real
+                        insertion sequences (default: None)
+  --sv_dgv DGV_FILE     DGV file containing structural variants (default:
+                        None)
+
+DWGSIM options:
+  --dwgsim_start_e first_base_error_rate
+                        Error rate on the first base (default: 0.0001)
+  --dwgsim_end_e last_base_error_rate
+                        Error rate on the last base (default: 0.0015)
+  --dwgsim_options DWGSIM_OPTIONS
+                        DWGSIM command-line options (default: )
+
+ART options:
+  --profile_1 profile_file1
+                        ART error profile for first end (default: None)
+  --profile_2 profile_file2
+                        ART error profile for second end (default: None)
+  --art_options ART_OPTIONS
+                        ART command-line options (default: )
+</pre>
+
 
 <h2>References/Tools</h2>
 
