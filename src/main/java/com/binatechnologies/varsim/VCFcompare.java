@@ -465,7 +465,7 @@ public class VCFcompare {
 
         output_blob.setParams(new CompareParams());
         output_blob.getParams().setBed_filename(bed_filename);
-        // TODO: make it output the full list if variants in JSON
+        // TODO: make it output the full list if vcf files in JSON
         output_blob.getParams().setNew_vcf_filename(new_vcf_filename.get(0));
         output_blob.getParams().setOverlap_percent(overlap_ratio);
         output_blob.getParams().setTrue_vcf_filename(true_vcf_filename);
