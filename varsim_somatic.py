@@ -74,21 +74,21 @@ pipeline_control_group.add_argument("--disable_sim", action="store_true", help="
 
 # RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX percent_novel min_length_lim max_length_lim reference_file file.vcf
 rand_vcf_group = main_parser.add_argument_group("RandVCF2VCF somatic options")
-rand_vcf_group.add_argument("--som_num_snp", metavar="num_snp", help="Number of somatic SNPs", default=9000, type=int)
-rand_vcf_group.add_argument("--som_num_ins", metavar="num_ins", help="Number of somatic insertions", default=1000,
+rand_vcf_group.add_argument("--som_num_snp", metavar="INT", help="Number of somatic SNPs", default=9000, type=int)
+rand_vcf_group.add_argument("--som_num_ins", metavar="INT", help="Number of somatic insertions", default=1000,
                             type=int)
-rand_vcf_group.add_argument("--som_num_del", metavar="num_del", help="Number of somatic deletions", default=1000,
+rand_vcf_group.add_argument("--som_num_del", metavar="INT", help="Number of somatic deletions", default=1000,
                             type=int)
-rand_vcf_group.add_argument("--som_num_mnp", metavar="num_mnp", help="Number of somatic MNPs", default=100, type=int)
-rand_vcf_group.add_argument("--som_num_complex", metavar="num_complex", help="Number of somatic complex variants",
+rand_vcf_group.add_argument("--som_num_mnp", metavar="INT", help="Number of somatic MNPs", default=100, type=int)
+rand_vcf_group.add_argument("--som_num_complex", metavar="INT", help="Number of somatic complex variants",
                             default=100, type=int)
 # rand_vcf_group.add_argument("--som_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_vcf_group.add_argument("--som_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0,
+rand_vcf_group.add_argument("--som_min_length_lim", metavar="INT", help="Min length lim", default=0,
                             type=int)
-rand_vcf_group.add_argument("--som_max_length_lim", metavar="max_length_lim", help="Max length lim", default=49,
+rand_vcf_group.add_argument("--som_max_length_lim", metavar="INT", help="Max length lim", default=49,
                             type=int)
 #rand_vcf_group.add_argument("--som_vcf", metavar="in_vcf", help="Input somatic variant database VCF", type=file, required=False)
-rand_vcf_group.add_argument("--som_prop_het", metavar="vc_prop_het", help="Proportion of somatic heterozygous variants",
+rand_vcf_group.add_argument("--som_prop_het", metavar="FLOAT", help="Proportion of somatic heterozygous variants",
                             default=1.0, type=float)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
@@ -170,15 +170,15 @@ def check_executable(fpath):
 
 if not args.disable_sim:
     if args.simulator == "dwgsim":
-        if args.dwgsim is None:
+        if args.simulator_executable is None:
             sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
             sys.exit(1)
-        check_executable(args.dwgsim.name)
+        check_executable(args.simulator_executable.name)
     if args.simulator == "art":
-        if args.art is None:
+        if args.simulator_executable is None:
             sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
             sys.exit(1)
-        check_executable(args.art.name)
+        check_executable(args.simulator_executable.name)
 
 processes = []
 
