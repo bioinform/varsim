@@ -45,9 +45,9 @@ main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.ja
 main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
 main_parser.add_argument("--nlanes", metavar="INTEGER", help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files", default=1, type=int)
 main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0, type=float)
-main_parser.add_argument("--mean_fragment_size", metavar="FLOAT", help="Mean fragment size to simulate", default=350,
+main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragment size to simulate", default=350,
                          type=int)
-main_parser.add_argument("--sd_fragment_size", metavar="FLOAT", help="Standard deviation of fragment size to simulate",
+main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size to simulate",
                          default=50, type=int)
 main_parser.add_argument("--vcfs", metavar="VCF", help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+", default=[])
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force output bases to be only ACTGN")
