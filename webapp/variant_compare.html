@@ -9,9 +9,10 @@
     <meta name="author" content="John C. Mu">
 
     <title>VarSim &#8212; Variant Compare</title>
-    
+
     <script>
     <!--varsim_data-->
+
     </script>
 
     <!-- Bootstrap core CSS -->
@@ -21,169 +22,185 @@
 
 <style>
     body {
-        padding-top: 70px;
+    padding-top: 70px;
     }
     .btn-file {
-        position: relative;
-        overflow: hidden;
+    position: relative;
+    overflow: hidden;
     }
     .btn-file input[type=file] {
-        position: absolute;
-        top: 0;
-        right: 0;
-        min-width: 100%;
-        min-height: 100%;
-        font-size: 999px;
-        text-align: right;
-        filter: alpha(opacity=0);
-        opacity: 0;
-        outline: none;
-        background: white;
-        cursor: inherit;
-        display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 999px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
     }
     .axis {
-        font: 10px sans-serif;
+    font: 10px sans-serif;
     }
     .axis path,
     .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
     }
     a.anchor {
-        display: block;
-        position: relative;
-        top: -70px;
-        visibility: hidden;
+    display: block;
+    position: relative;
+    top: -70px;
+    visibility: hidden;
     }
 </style>
 
 <body>
 
-    <!-- Fixed navbar -->
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">VarSim &#8212; Variant Compare</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a href="#parameters">Parameters</a>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Summary) <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu" id="sum_types_menu">
-
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Detail) <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu" id="types_menu">
-
-                        </ul>
-                    </li>
-                </ul>
-
-                <ul class="nav navbar-nav navbar-right">
-                    <li><a href="javascript:hide_all();show_id('about');scroll_to('a_about');">About</a>
-                    </li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                    <li><a href="javascript:hide_all();show_id('help');scroll_to('a_help');">Help</a>
-                    </li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
-        </div>
-    </div>
-
+<!-- Fixed navbar -->
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
-        <a id="parameters" class="anchor"></a>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <button type="button" id="reset_button" class="btn btn-default">Clear plots</button>
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">VarSim &#8212; Variant Compare</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="#parameters">Parameters</a>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Summary) <span
+                            class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu" id="sum_types_menu">
+
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Detail) <span
+                            class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu" id="types_menu">
+
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="javascript:hide_all();show_id('about');scroll_to('a_about');">About</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="javascript:hide_all();show_id('help');scroll_to('a_help');">Help</a>
+                </li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container">
+    <a id="parameters" class="anchor"></a>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <button type="button" id="reset_button" class="btn btn-default">Clear plots</button>
                 <span class="btn btn-default btn-file">
-                    Add datasets (.json) <input type="file" id="files" name="files[]" multiple />
+                    Add datasets (.json) <input type="file" id="files" name="files[]" multiple/>
                 </span>
 
                 <span>
                     &nbsp; Add dataset to see results or <a href="javascript:load_demo()">load some demo data</a>
                 </span>
-                <p>
-                    <div id="file_name_list"></div>
-                </p>
-            </div>
+
+            <p>
+
+            <div id="file_name_list"></div>
+            </p>
         </div>
-
-
-        <a id="a_help" class="anchor"></a>
-        <div id="help" style="padding-bottom: 400px;">
-            <div class="panel">
-                <h2>Quick Start</h2>
-                <p>This web application takes results from VarSim VCFcompare and displays them in an interactive plot. For instructions on how to run VCFcompare please see [add link]</p>
-                <p>Steps for basic usage
-                    <ol>
-                        <li>Run VCFcompare to generate one or more .json files that contains the variant accuracy results.</li>
-                        <li>Click "Add datasets" (above) and select the .json files you would like to compare.</li>
-                        <li>The resulting plots generated are grouped by the type of variant.</li>
-                    </ol>
-                </p>
-
-                <h2>Types of variants</h2>
-                <p>
-                    <ul>
-                        <li><b>SNP</b> &#8212; Simple SNP.</li>
-                        <li><b>Insertion</b> &#8212; Simple insertion.</li>
-                        <li><b>Deletion</b> &#8212; Simple deletion.</li>
-                        <li><b>Inversion</b> &#8212; Simple inversion of reference sequence.</li>
-                        <li><b>Tandem_Duplication</b> &#8212; Tandem duplication or other type of duplication</li>
-                        <li><b>Complex</b> &#8212; All other types of variants, including MNPs</li>
-
-                    </ul>
-                </p>
-
-                <h2>Validation Methodology</h2>
-                <p>Will add this once paper is out...</p>
-            </div>
-        </div>
-
-        <a id="a_about" class="anchor"></a>
-        <div id="about" style="padding-bottom: 400px;">
-            <div class="jumbotron">
-                <h1>VarSim &#8212; Variant Compare</h1>
-                <p>Display results for variant comparison.</p>
-                <p>
-                    Please read the <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">help</a> before use.
-                </p>
-                <p>
-                    Contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
-                </p>
-            </div>
-        </div>
-
-        <div id="sum_types_var">
-
-        </div>
-
-        <div id="types_var">
-
-        </div>
-
-        <!-- /container -->
     </div>
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <a id="a_help" class="anchor"></a>
 
-    <script>
+    <div id="help" style="padding-bottom: 400px;">
+        <div class="panel">
+            <h2>Quick Start</h2>
+
+            <p>This web application takes results from VarSim VCFcompare and displays them in an interactive plot. For
+                instructions on how to run VCFcompare please see [add link]</p>
+
+            <p>Steps for basic usage
+            <ol>
+                <li>Run VCFcompare to generate one or more .json files that contains the variant accuracy results.</li>
+                <li>Click "Add datasets" (above) and select the .json files you would like to compare.</li>
+                <li>The resulting plots generated are grouped by the type of variant.</li>
+            </ol>
+            </p>
+
+            <h2>Types of variants</h2>
+
+            <p>
+            <ul>
+                <li><b>SNP</b> &#8212; Simple SNP.</li>
+                <li><b>Insertion</b> &#8212; Simple insertion.</li>
+                <li><b>Deletion</b> &#8212; Simple deletion.</li>
+                <li><b>Inversion</b> &#8212; Simple inversion of reference sequence.</li>
+                <li><b>Tandem_Duplication</b> &#8212; Tandem duplication or other type of duplication</li>
+                <li><b>Complex</b> &#8212; All other types of variants, including MNPs</li>
+
+            </ul>
+            </p>
+
+            <h2>Validation Methodology</h2>
+
+            <p>Will add this once paper is out...</p>
+        </div>
+    </div>
+
+    <a id="a_about" class="anchor"></a>
+
+    <div id="about" style="padding-bottom: 400px;">
+        <div class="jumbotron">
+            <h1>VarSim &#8212; Variant Compare</h1>
+
+            <p>Display results for variant comparison.</p>
+
+            <p>
+                Please read the <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">help</a> before
+                use.
+            </p>
+
+            <p>
+                Contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="sum_types_var">
+
+    </div>
+
+    <div id="types_var">
+
+    </div>
+
+    <!-- /container -->
+</div>
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+
+<script>
         // constants
         var all_height = 780;
         var all_width = 1000;
@@ -1236,7 +1253,8 @@
             show_id('sum_types_var');
             
 		}
-    </script>
+
+</script>
 </body>
 
 </html>
