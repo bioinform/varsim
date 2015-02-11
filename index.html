@@ -175,8 +175,8 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
     <h2>Download VarSim</h2>
 
     <p>Latest pre-built version: <a
-            href="https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz"
-            onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz'); return false;">https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz</a>
+            href="https://github.com/bioinform/varsim/releases/download/v0.5.0/varsim-0.5.0.tar.gz"
+            onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases/download/v0.5.0/varsim-0.5.0.tar.gz'); return false;">https://github.com/bioinform/varsim/releases/download/v0.5.0/varsim-0.5.0.tar.gz</a>
     </p>
 
     <p>For source code, see "releases". <a href="https://github.com/bioinform/varsim/releases"
@@ -233,8 +233,8 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
     Download varsim to <code>varsim_run</code>
 
 <pre>
-wget https://github.com/bioinform/varsim/releases/download/v0.4.1/varsim-0.4.1.tar.gz
-tar xfz varsim-0.4.1.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.5.0/varsim-0.5.0.tar.gz
+tar xfz varsim-0.5.0.tar.gz
 </pre>
 
     <p>
@@ -310,7 +310,7 @@ cd ..
 - VarSim.jar
 - varsim.py
 - varsim_somatic.py
-- varsim-0.4.1.tar.gz
+- varsim-0.5.0.tar.gz
 </pre>
 
     <p>
@@ -330,7 +330,7 @@ cd ..
 --vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
 --sv_max_length_lim 1000000 --nlanes 3 --total_coverage 1 \
---art ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
+--simulator_executable ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
 --simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]
 </pre>
