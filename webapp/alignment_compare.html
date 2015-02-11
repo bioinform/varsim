@@ -9,9 +9,10 @@
     <meta name="author" content="John C. Mu">
 
     <title>VarSim &#8212; Alignment Compare</title>
-    
+
     <script>
     <!--varsim_data-->
+
     </script>
 
     <!-- Bootstrap core CSS -->
@@ -21,179 +22,214 @@
 
 <style>
     body {
-        padding-top: 70px;
+    padding-top: 70px;
     }
     .btn-file {
-        position: relative;
-        overflow: hidden;
+    position: relative;
+    overflow: hidden;
     }
     .btn-file input[type=file] {
-        position: absolute;
-        top: 0;
-        right: 0;
-        min-width: 100%;
-        min-height: 100%;
-        font-size: 999px;
-        text-align: right;
-        filter: alpha(opacity=0);
-        opacity: 0;
-        outline: none;
-        background: white;
-        cursor: inherit;
-        display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 999px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
     }
     .axis {
-        font: 10px sans-serif;
+    font: 10px sans-serif;
     }
     .axis path,
     .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
     }
     a.anchor {
-        display: block;
-        position: relative;
-        top: -70px;
-        visibility: hidden;
+    display: block;
+    position: relative;
+    top: -70px;
+    visibility: hidden;
     }
 </style>
 
 <body>
 
-    <!-- Fixed navbar -->
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">VarSim &#8212; Alignment Compare</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>
-                        <a href="#parameters">Parameters</a>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant Types <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu" id="stats_menu">
-
-                        </ul>
-                    </li>
-
-                </ul>
-
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="javascript:hide_all();show_id('about');scroll_to('a_about');">About</a>
-                    </li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">Help</a>
-                    </li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
-        </div>
-    </div>
-
+<!-- Fixed navbar -->
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
-        <a id="parameters" class="anchor"></a>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <button type="button" id="reset_button" class="btn btn-default">
-                    Clear plots
-                </button>
-                <span class="btn btn-default btn-file"> Add datasets (.json)
-						<input type="file" id="files" name="files[]" multiple />
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">VarSim &#8212; Alignment Compare</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="#parameters">Parameters</a>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant Types <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu" id="stats_menu">
+
+                    </ul>
+                </li>
+
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="javascript:hide_all();show_id('about');scroll_to('a_about');">About</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">Help</a>
+                </li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container">
+    <a id="parameters" class="anchor"></a>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <button type="button" id="reset_button" class="btn btn-default">
+                Clear plots
+            </button>
+                <span class="btn btn-default btn-file"> Add data sets (.json)
+						<input type="file" id="files" name="files[]" multiple/>
 					</span>
 
-                <span> &nbsp; Add dataset to see results or <a href="javascript:load_demo()">load some demo data</a> </span>
+            <span> &nbsp; Add data set to see results or <a href="javascript:load_demo()">load some demo data</a> </span>
 
-                <p>
-                    <div id="file_name_list"></div>
-                </p>
-            </div>
+            <p>
+
+            <div id="file_name_list"></div>
+            </p>
         </div>
-
-        <div id="stats_plot">
-
-        </div>
-
-        <a id="a_help" class="anchor"></a>
-        <div id="help" style="padding-bottom: 400px;">
-            <div class="panel">
-                <h2>Quick Start</h2>
-                <p>
-                    This web application takes the results from VarSim SAMcompare and displays them in an interactive plot. For instructions on how to run SAMcompare, please see [link].
-                </p>
-                <p>
-                    Steps for basic usage:
-                    <ol>
-                        <li>Run SAMcompare to generate one or more .json files that contains the accuracy results.</li>
-                        <li>Click "Add datasets" (above) and select the .json files you would like to compare.</li>
-                        <li>The resulting plots generated are grouped by the type of variation each read overlaps in the truth set.</li>
-                        <li>You can click on the plots to change the selection mode.</li>
-                    </ol>
-                </p>
-                <h2>Introduction</h2>
-                <p>
-                    VarSim provides an easy and flexible way to compare secondary analysis workflows. Alignment Compare is for displaying the accuracy results for alignment tools based on the truth set generated by VarSim. It is able to break down the comparison into different regions of the genome based on the type of variant each read overlaps. The curves are generated by varying the MAPQ cut-off.
-                </p>
-                <h2>Details</h2>
-                <h3>Plot generation</h3>
-                <p>
-                    The plots are generated by varying the MAPQ cut-off. That is for each point alignments are filtered as greater or equal to the MAPQ value.
-                </p>
-                <h3>Axes</h3>
-                <p>
-                    VarSim plots Sensitivity (TPR) versus FDR. TPR is defined as TP/(TP+FN) and FDR is defined as FP/(FP+TP).
-                </p>
-                <h3>Selection modes</h3>
-                <p>
-                    <ul>
-                        <li><b>Closest point:</b> The closest (euclidian) point to the cursor for each series will be selected.</li>
-                        <li><b>X lock:</b> The closest (euclidian) point to the cursor on the X-axis for each series will be selected.</li>
-                        <li><b>Y lock:</b> The closest (euclidian) point to the cursor on the Y-axis for each series will be selected.</li>
-                        <li><b>Closest MAPQ:</b> The MAPQ of the closest (euclidian) point to the cursor is recorded. For each series, the point with the closest MAPQ to this value is selected.</li>
-                    </ul>
-                </p>
-
-                <h2>Limitations</h2>
-                <p>
-                    Points with less than 30% of the reads aligned are not plotted since those are potentially noisy and not so useful.
-                </p>
-
-            </div>
-        </div>
-
-        <a id="a_about" class="anchor"></a>
-        <div id="about" style="padding-bottom: 400px;">
-            <div class="jumbotron">
-                <h1>VarSim &#8212; Alignment Compare</h1>
-                <p>
-                    Display detailed results for alignment comparison.
-                </p>
-                <p>
-                    Please read the <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">help</a> before use.
-                </p>
-                <p>
-                    Contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- /container -->
     </div>
 
-    <!-- Bootstrap core JavaScript
-		================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <div id="stats_plot">
 
-    <script>
+    </div>
+
+    <a id="a_help" class="anchor"></a>
+
+    <div id="help" style="padding-bottom: 400px;">
+        <div class="panel">
+            <h2>Quick Start</h2>
+
+            <p>
+                This web application takes the results from VarSim SAMcompare and displays them in an interactive plot.
+                For instructions on how to run SAMcompare, please see [link].
+            </p>
+
+            <p>
+                Steps for basic usage:
+            <ol>
+                <li>Run SAMcompare to generate one or more .json files that contains the accuracy results.</li>
+                <li>Click "Add data sets" (above) and select the .json files you would like to compare.</li>
+                <li>The resulting plots generated are grouped by the type of variation each read overlaps in the truth
+                    set.
+                </li>
+                <li>You can click on the plots to change the selection mode.</li>
+            </ol>
+            </p>
+            <h2>Introduction</h2>
+
+            <p>
+                VarSim provides an easy and flexible way to compare secondary analysis workflows. Alignment Compare is
+                for displaying the accuracy results for alignment tools based on the truth set generated by VarSim. It
+                is able to break down the comparison into different regions of the genome based on the type of variant
+                each read overlaps. The curves are generated by varying the MAPQ cut-off.
+            </p>
+
+            <h2>Details</h2>
+
+            <h3>Plot generation</h3>
+
+            <p>
+                The plots are generated by varying the MAPQ cut-off. That is for each point alignments are filtered as
+                greater or equal to the MAPQ value.
+            </p>
+
+            <h3>Axes</h3>
+
+            <p>
+                VarSim plots Sensitivity (TPR) versus FDR. TPR is defined as TP/(TP+FN) and FDR is defined as
+                FP/(FP+TP).
+            </p>
+
+            <h3>Selection modes</h3>
+
+            <p>
+            <ul>
+                <li><b>Closest point:</b> The closest (euclidian) point to the cursor for each series will be selected.
+                </li>
+                <li><b>X lock:</b> The closest (euclidian) point to the cursor on the X-axis for each series will be
+                    selected.
+                </li>
+                <li><b>Y lock:</b> The closest (euclidian) point to the cursor on the Y-axis for each series will be
+                    selected.
+                </li>
+                <li><b>Closest MAPQ:</b> The MAPQ of the closest (euclidian) point to the cursor is recorded. For each
+                    series, the point with the closest MAPQ to this value is selected.
+                </li>
+            </ul>
+            </p>
+
+            <h2>Limitations</h2>
+
+            <p>
+                Points with less than 30% of the reads aligned are not plotted since those are potentially noisy and not
+                so useful.
+            </p>
+
+        </div>
+    </div>
+
+    <a id="a_about" class="anchor"></a>
+
+    <div id="about" style="padding-bottom: 400px;">
+        <div class="jumbotron">
+            <h1>VarSim &#8212; Alignment Compare</h1>
+
+            <p>
+                Display detailed results for alignment comparison.
+            </p>
+
+            <p>
+                Please read the <a href="javascript:hide_all();show_id('help');scroll_to('a_help');">help</a> before
+                use.
+            </p>
+
+            <p>
+                Contact us at <a href="mailto:rd@bina.com">rd@bina.com</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- /container -->
+</div>
+
+<!-- Bootstrap core JavaScript
+    ================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+
+<script>
         // constants
         var all_height = 680;
         var all_width = 700;
@@ -467,7 +503,7 @@
 
                     for (var idx in data_arr) {
                         var contents = data_arr[idx];
-                        var P_val = contents._TP + contents._FP + contents._TN + contents._FN;
+                        var P_val = contents._TP + contents._FP;
                         if (max_P < P_val) {
                             max_P = P_val;
                         }
@@ -477,7 +513,7 @@
 
                     for (var idx in data_arr) {
                         var contents = data_arr[idx];
-                        var P_val = contents._TP + contents._FP + contents._TN + contents._FN;
+                        var P_val = contents._TP + contents._FP;
 
                         var prev_val = out_arr[out_arr.length - 1];
                         if (out_arr.length > 0 && contents._FP == prev_val._FP && contents._TP == prev_val._TP && contents._T == prev_val._T) {
@@ -1204,7 +1240,8 @@
             redraw_plots(stats_data, 'stats');
             show_id('stats_plot');
 		}
-    </script>
+
+</script>
 </body>
 
 </html>
