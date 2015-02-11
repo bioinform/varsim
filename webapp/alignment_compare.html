@@ -503,7 +503,7 @@
 
                     for (var idx in data_arr) {
                         var contents = data_arr[idx];
-                        var P_val = contents._TP + contents._FP + contents._TN + contents._FN;
+                        var P_val = contents._TP + contents._FP;
                         if (max_P < P_val) {
                             max_P = P_val;
                         }
@@ -513,7 +513,7 @@
 
                     for (var idx in data_arr) {
                         var contents = data_arr[idx];
-                        var P_val = contents._TP + contents._FP + contents._TN + contents._FN;
+                        var P_val = contents._TP + contents._FP;
 
                         var prev_val = out_arr[out_arr.length - 1];
                         if (out_arr.length > 0 && contents._FP == prev_val._FP && contents._TP == prev_val._TP && contents._T == prev_val._T) {
