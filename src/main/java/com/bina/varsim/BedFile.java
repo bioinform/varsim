@@ -94,19 +94,26 @@ public class BedFile {
     }
 
     /**
-     * Checks whether either endpoint of the interval is in the BED file
+     * Checks whether either (or both) endpoint of the interval is in the BED file
      *
      * @param chr
      * @param interval
+     * @param either but default, both endpoints are used, this will use either instead
      * @return
      */
-    public boolean containsEitherEndpoint(ChrString chr, SimpleInterval1D interval) {
+    public boolean containsEndpoints(ChrString chr, SimpleInterval1D interval, boolean either) {
         if (interval.getLeft() == interval.getRight()) {
             return bedST.contains(chr, interval);
         } else {
-            return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) |
-                    bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
+            if(either) {
+                return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) ||
+                        bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
+            }else{
+                return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) &&
+                        bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
+            }
         }
     }
+
 
 }

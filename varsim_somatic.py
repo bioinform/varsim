@@ -40,29 +40,31 @@ main_parser.add_argument("--work_dir", metavar="Work directory", help="Work dire
                          default="somatic_work")
 main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False,
                          default="somatic_log")
-main_parser.add_argument("--reference", metavar="Reference", help="Reference file", required=True, type=file)
-main_parser.add_argument("--seed", metavar="seed", help="Random number seed", type=int, default=0)
-main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (male/female)", required=False, type=str,
-                         choices=["male", "female"], default="male")
+main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome", required=True, type=file)
+main_parser.add_argument("--seed", metavar="INT", help="Random number seed", type=int, default=0)
+main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
+                         choices=["MALE", "FEMALE"], default="MALE")
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
-main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator", required=False, type=str,
+main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator to use", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
-main_parser.add_argument("--varsim_jar", metavar="varsim_jar", help="VarSim jar", type=file, default=default_varsim_jar,
+main_parser.add_argument("--simulator_executable", metavar="PATH", help="Path to the executable of the read simulator chosen"
+                         , required=True, type=file)
+main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file, default=default_varsim_jar,
                          required=require_varsim_jar)
-main_parser.add_argument("--read_length", metavar="read_length", help="Length of reads", default=100, type=int)
-main_parser.add_argument("--nlanes", metavar="nlanes", help="Number of lanes to generate", default=3, type=int)
-main_parser.add_argument("--total_coverage", metavar="total_coverage", help="Total coverage", default=1.0, type=float)
-main_parser.add_argument("--mean_fragment_size", metavar="mean_fragment_size", help="Mean fragment size", default=350,
+main_parser.add_argument("--read_length", metavar="INT", help="Length of read to simulate", default=100, type=int)
+main_parser.add_argument("--nlanes", metavar="INT", help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files", default=3, type=int)
+main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0, type=float)
+main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragment size", default=350,
                          type=int)
-main_parser.add_argument("--sd_fragment_size", metavar="sd_fragment_size", help="Standard deviation of fragment size",
+main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
                          default=50, type=int)
-main_parser.add_argument("--cosmic_vcf", metavar="cosmic_vcf", help="COSMIC database VCF", default=[], required=True)
-main_parser.add_argument("--normal_vcf", metavar="normal_vcf", help="Normal VCF from previous VarSim run", default=[],
+main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF", default=[], required=True)
+main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", default=[],
                          required=True)
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
-main_parser.add_argument("--varsim_py", metavar="PYTHON", help="VarSim python script", type=file,
+main_parser.add_argument("--varsim_py", metavar="PATH", help="Path to VarSim.py", type=file,
                          default=default_varsim, required=require_varsim)
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
@@ -72,21 +74,21 @@ pipeline_control_group.add_argument("--disable_sim", action="store_true", help="
 
 # RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX percent_novel min_length_lim max_length_lim reference_file file.vcf
 rand_vcf_group = main_parser.add_argument_group("RandVCF2VCF somatic options")
-rand_vcf_group.add_argument("--som_num_snp", metavar="num_snp", help="Number of somatic SNPs", default=9000, type=int)
-rand_vcf_group.add_argument("--som_num_ins", metavar="num_ins", help="Number of somatic insertions", default=1000,
+rand_vcf_group.add_argument("--som_num_snp", metavar="INT", help="Number of somatic SNPs", default=9000, type=int)
+rand_vcf_group.add_argument("--som_num_ins", metavar="INT", help="Number of somatic insertions", default=1000,
                             type=int)
-rand_vcf_group.add_argument("--som_num_del", metavar="num_del", help="Number of somatic deletions", default=1000,
+rand_vcf_group.add_argument("--som_num_del", metavar="INT", help="Number of somatic deletions", default=1000,
                             type=int)
-rand_vcf_group.add_argument("--som_num_mnp", metavar="num_mnp", help="Number of somatic MNPs", default=100, type=int)
-rand_vcf_group.add_argument("--som_num_complex", metavar="num_complex", help="Number of somatic complex variants",
+rand_vcf_group.add_argument("--som_num_mnp", metavar="INT", help="Number of somatic MNPs", default=100, type=int)
+rand_vcf_group.add_argument("--som_num_complex", metavar="INT", help="Number of somatic complex variants",
                             default=100, type=int)
 # rand_vcf_group.add_argument("--som_percent_novel", metavar="percent_novel", help="Percent novel", default=0, type=float)
-rand_vcf_group.add_argument("--som_min_length_lim", metavar="min_length_lim", help="Min length lim", default=0,
+rand_vcf_group.add_argument("--som_min_length_lim", metavar="INT", help="Min length lim", default=0,
                             type=int)
-rand_vcf_group.add_argument("--som_max_length_lim", metavar="max_length_lim", help="Max length lim", default=49,
+rand_vcf_group.add_argument("--som_max_length_lim", metavar="INT", help="Max length lim", default=49,
                             type=int)
 #rand_vcf_group.add_argument("--som_vcf", metavar="in_vcf", help="Input somatic variant database VCF", type=file, required=False)
-rand_vcf_group.add_argument("--som_prop_het", metavar="vc_prop_het", help="Proportion of somatic heterozygous variants",
+rand_vcf_group.add_argument("--som_prop_het", metavar="FLOAT", help="Proportion of somatic heterozygous variants",
                             default=1.0, type=float)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
@@ -95,15 +97,11 @@ dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", h
 dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help="Error rate on the last base",
                           default=0.0015, type=float)
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
-dwgsim_group.add_argument("--dwgsim", metavar="dwgsim_executable", help="DWGSIM executable", type=file, required=False,
-                          default=None)
 
 art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="Profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="Profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
-art_group.add_argument("--art", metavar="art_executable", help="ART executable", type=file, required=False,
-                       default=None)
 
 args = main_parser.parse_args()
 
@@ -172,15 +170,15 @@ def check_executable(fpath):
 
 if not args.disable_sim:
     if args.simulator == "dwgsim":
-        if args.dwgsim is None:
+        if args.simulator_executable is None:
             sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
             sys.exit(1)
-        check_executable(args.dwgsim.name)
+        check_executable(args.simulator_executable.name)
     if args.simulator == "art":
-        if args.art is None:
+        if args.simulator_executable is None:
             sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
             sys.exit(1)
-        check_executable(args.art.name)
+        check_executable(args.simulator_executable.name)
 
 processes = []
 
@@ -199,7 +197,7 @@ if not args.disable_rand_vcf:
                         "-num_del", str(args.som_num_del),
                         "-num_mnp", str(args.som_num_mnp),
                         "-num_complex", str(args.som_num_complex),
-                        #"-novel", str(args.som_percent_novel),
+                        # "-novel", str(args.som_percent_novel), # Not able to support novel yet (COS)
                         "-min_len", str(args.som_min_length_lim),
                         "-max_len", str(args.som_max_length_lim),
                         "-ref", os.path.realpath(args.reference.name),
@@ -235,10 +233,8 @@ filter_arg_list = ["--filter"] if args.filter else []
 disable_sim_arg_list = ["--disable_sim"] if args.disable_sim else []
 force_five_base_encoding_arg_list = ["--force_five_base_encoding"] if args.force_five_base_encoding else []
 keep_temp_arg_list = ["--keep_temp"] if args.keep_temp else []
-dwgsim_arg_list = ["--dwgsim", args.dwgsim] if args.dwgsim is not None else []
 profile_1_arg_list = ["--profile_1", args.profile_1] if args.profile_1 is not None else []
 profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not None else []
-art_arg_list = ["--art", args.art.name] if args.art is not None else []
 varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--out_dir", str(os.path.realpath(args.out_dir)),
                   "--work_dir", str(os.path.realpath(args.work_dir)),
@@ -248,6 +244,7 @@ varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--sex", str(args.sex),
                   "--id", str(args.id),
                   "--simulator", str(args.simulator),
+                  "--simulator_executable", str(args.simulator_executable.name),
                   "--varsim_jar", str(os.path.realpath(args.varsim_jar.name)),
                   "--read_length", str(args.read_length),
                   "--nlanes", str(args.nlanes),
@@ -259,7 +256,8 @@ varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--dwgsim_options", str(args.dwgsim_options),
                   "--art_options", str(args.art_options),
                   "--disable_rand_vcf",
-                  "--disable_rand_dgv"] + vcf_arg_list + filter_arg_list + disable_sim_arg_list + force_five_base_encoding_arg_list + keep_temp_arg_list + dwgsim_arg_list + profile_1_arg_list + profile_2_arg_list + art_arg_list
+                  "--disable_rand_dgv"] + vcf_arg_list + filter_arg_list + disable_sim_arg_list \
+                 + force_five_base_encoding_arg_list + keep_temp_arg_list + profile_1_arg_list + profile_2_arg_list
 p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_stderr)
 logger.info("Executing command " + " ".join(varsim_command) + " with pid " + str(p_varsim.pid))
 processes.append(p_varsim)

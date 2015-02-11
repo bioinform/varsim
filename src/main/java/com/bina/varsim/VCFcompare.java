@@ -58,6 +58,15 @@ public class VCFcompare {
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
 
+    @Option(name = "-bed_exclude_tpr", usage = "Exclude TPR from the BED file filtering")
+    boolean bed_exclude_tpr;
+
+    @Option(name = "-bed_exclude_fdr", usage = "Exclude FDR from the BED file filtering")
+    boolean bed_exclude_fdr;
+
+    @Option(name = "-bed_either", usage = "Use either break-end of the variant for filtering instead of both")
+    boolean bed_either;
+
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
 
@@ -422,6 +431,10 @@ public class VCFcompare {
         if (bed_exists) {
             log.info("Using " + bed_filename + " to intersect");
             intersector = new BedFile(bed_filename);
+        }else{
+            if(bed_exclude_tpr || bed_exclude_fdr){
+                log.warn("No BED file specified but used exclude parameters");
+            }
         }
 
         // load true VCF into interval tree
@@ -576,12 +589,16 @@ public class VCFcompare {
 
         // generate the output files
         PrintWriter TP_writer = null;
+        PrintWriter unknown_TP_writer = null;
         PrintWriter FP_writer = null;
+        PrintWriter unknown_FP_writer = null;
         PrintWriter FN_writer = null;
         PrintWriter JSON_writer = null;
         try {
             TP_writer = new PrintWriter(out_prefix + "_TP.vcf", "UTF-8");
+            unknown_TP_writer = new PrintWriter(out_prefix + "_unknown_TP.vcf", "UTF-8");
             FP_writer = new PrintWriter(out_prefix + "_FP.vcf", "UTF-8");
+            unknown_FP_writer = new PrintWriter(out_prefix + "_unknown_FP.vcf", "UTF-8");
             FN_writer = new PrintWriter(out_prefix + "_FN.vcf", "UTF-8");
             JSON_writer = new PrintWriter(out_prefix + "_report.json", "UTF-8");
         } catch (Exception e) {
@@ -613,8 +630,11 @@ public class VCFcompare {
                 ChrString chr = var.getChr();
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
-                if (!(intersector == null || intersector.containsEitherEndpoint(chr, var_reg))) {
-                    continue;
+                boolean skipFP = false;
+                if(intersector != null) {
+                    if (!bed_exclude_fdr && !intersector.containsEndpoints(chr, var_reg, bed_either)) {
+                        skipFP = true;
+                    }
                 }
 
                 // the overall type of the called variant
@@ -661,8 +681,12 @@ public class VCFcompare {
                             full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
                             validated_len += curr_var.max_len();
                         } else if (compute_as_split) {
-                            output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
-                            FP_writer.println(var);
+                            if(!skipFP) {
+                                output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                                FP_writer.println(var);
+                            }else{
+                                unknown_FP_writer.println(var);
+                            }
                         }
 
                     } else {
@@ -691,22 +715,30 @@ public class VCFcompare {
                             full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
                             validated_len += curr_var.max_len();
                         } else if (compute_as_split) {
-                            output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
-                            if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
-                                log.warn("SNP with bad length: " + curr_var);
+                            if(!skipFP) {
+                                output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
+                                if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
+                                    log.warn("SNP with bad length: " + curr_var);
+                                }
+                                FP_writer.println(var);
+                            }else {
+                                unknown_FP_writer.println(var);
                             }
-                            FP_writer.println(var);
                         }
                     }
                 }
 
                 if (!compute_as_split && validated_len < (total_len * overlap_ratio)) {
-                    // this is a false positive!
-                    output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
-                    if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
-                        log.warn("SNP with bad length: " + var);
+                    if(!skipFP) {
+                        // this is a false positive!
+                        output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
+                        if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
+                            log.warn("SNP with bad length: " + var);
+                        }
+                        FP_writer.println(var);
+                    }else{
+                        unknown_FP_writer.println(var);
                     }
-                    FP_writer.println(var);
                 }
 
                 num_new_vars++;
@@ -716,19 +748,18 @@ public class VCFcompare {
         log.info("Num new variants read: " + num_new_vars);
 
         // read through again and compute for the true variants
-        num_read = 0;
+        int num_read2 = 0;
         for (Variant var : true_var_list) {
 
             ChrString chr = var.getChr();
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
-            if (intersector == null || intersector.containsEitherEndpoint(chr, curr_var_reg)) {
-                int total_len = full_validated_total.get(num_read);
-                int validated_len = full_validated_count[num_read];
+            if (intersector == null || bed_exclude_tpr || intersector.containsEndpoints(chr, curr_var_reg, bed_either)) {
+                int total_len = full_validated_total.get(num_read2);
+                int validated_len = full_validated_count[num_read2];
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
-
                     output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
                     TP_writer.println(var);
                 } else {
@@ -736,8 +767,14 @@ public class VCFcompare {
                 }
 
                 output_blob.getNum_true_correct().addT(var.getType(), var.max_len());
+            }else{
+                unknown_TP_writer.println(var);
             }
-            num_read++;
+            num_read2++;
+        }
+
+        if(num_read != num_read2){
+            log.error("Number of variants read are inconsistent: " + num_read + "," + num_read2);
         }
 
         // output the stats
@@ -765,7 +802,9 @@ public class VCFcompare {
 
         try {
             TP_writer.close();
+            unknown_TP_writer.close();
             FP_writer.close();
+            unknown_FP_writer.close();
             FN_writer.close();
             JSON_writer.close();
         } catch (Exception e) {
