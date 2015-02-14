@@ -329,7 +329,7 @@ cd ..
 --sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
 --vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
---sv_max_length_lim 1000000 --nlanes 3 --total_coverage 1 \
+--sv_max_length_lim 1000000 --nlanes 5 --total_coverage 1 \
 --simulator_executable ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
 --simulator art  \
 --vcfs [Optional VCF file to include, variants.vcf]
@@ -373,7 +373,7 @@ java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary
     </p>
 
 
-    <h2>Quick Start Guide for Somatic Simulation</h2>
+    <h2>Quick Start Guide for Somatic Simulation [in writing]</h2>
     <p>
         <b>Step 1:</b> Make sure you have already gone through the Quick Start Guide for germline simulation
     </p>
@@ -399,7 +399,47 @@ java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary
 
     <p>
         This will make a concatentated VCF. Although this is not a valid VCF file, VarSim is ok with it.
-        You can also provide your own COSMIC VCF file too. Just make sure it is a single file.
+        You can also provide your own COSMIC VCF file too. Just make sure it is a single file. VarSim uses the "COS"
+        in the cosmic SNP annotations to separate them out. This will change in future versions.
+    </p>
+
+    <p>
+        <b>Step 3:</b> Simulate tumor reads and variants by running the following command:
+    </p>
+
+    <pre>
+        varsim_somatic.py --reference hs37d5.fa --id cosmic --som_num_snp 10000 \
+        --som_num_ins 2000 --som_num_del 2000 \
+        --som_num_mnp 200 \
+        --som_num_complex 200 \
+        --cosmic_vcf cosmic.vcf.gz \
+        --normal_vcf out/simu.truth.vcf \
+        --nlanes 5 --total_coverage 1 \
+        --simulator art \
+        --simulator_executable ART/art_bin_VanillaIceCream/art_illumina \
+        --out_dir som_out --log_dir som_log --work_dir som_work &> somatic.log
+    </pre>
+
+    <p>
+        <b>Step 4 [optional]:</b>  Mix in some normal reads into the tumor. In order to roughly simulate normal
+        contamination you can take advantage of the multiple lanes easily mix the normal and tumor reads.
+    </p>
+
+    <p>
+        For example, in order to simulate reads with 50x coverage of a normal sample and 50x coverage of
+        a tumor sample with tumor allele frequency of 0.3. One possible way to achieve this is to
+        simulate 7 lanes of normal sample at 70x coverage and 3 lanes of tumor sample at 30x coverage.
+        Take the first 5 lanes of the simulated normal sample as the pure normal. Then take the remaining
+        two lanes of normal with all the simulated tumor samples lanes as the contaminated tumor.
+    </p>
+
+    <p>
+        <b>Step 5:</b> Run somatic analysis pipeline with the simulated reads
+    </p>
+
+    <p>
+        <b>Step 6:</b> Validate alignments and variants called in the same way as before for the germline case.
+        The truth VCF is in the file <code>som_out/cosmic_somatic.vcf</code>.
     </p>
 
     <h2>Command Line Options</h2>
