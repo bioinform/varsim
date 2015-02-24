@@ -15,4 +15,9 @@ public class SimulatedReadPair {
         this.read1.alignedBases2 = this.read2.alignedBases2;
         this.read2.alignedBases1 = this.read1.alignedBases1;
     }
+
+    public SimulatedReadPair(final SimulatedRead read1) {
+        this.read1 = read1;
+        this.read2 = null;
+    }
 }
