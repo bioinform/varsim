@@ -89,6 +89,38 @@ public class SAMcompare {
         return out;
     }
 
+    /**
+     * This class is for outputting as a JSON
+     */
+    private static class output_class {
+        CompareParams params;
+        MapRatioRecordSum stats;
+
+        output_class(CompareParams params, MapRatioRecordSum stats) {
+            this.params = params;
+            this.stats = stats;
+        }
+
+        output_class() {
+        }
+
+        public MapRatioRecordSum getStats() {
+            return stats;
+        }
+
+        public void setStats(MapRatioRecordSum stats) {
+            this.stats = stats;
+        }
+
+        public CompareParams getParams() {
+            return params;
+        }
+
+        public void setParams(CompareParams params) {
+            this.params = params;
+        }
+    }
+
     public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
@@ -112,7 +144,6 @@ public class SAMcompare {
             return;
         }
 
-
         BedFile intersector = null;
 
         boolean bed_exists = false;
@@ -129,40 +160,6 @@ public class SAMcompare {
         if (bed_exists) {
             intersector = new BedFile(bed_filename);
         }
-
-
-        /**
-         * This class is for outputting as a JSON
-         */
-        class output_class {
-            CompareParams params;
-            MapRatioRecordSum stats;
-
-            output_class(CompareParams params, MapRatioRecordSum stats) {
-                this.params = params;
-                this.stats = stats;
-            }
-
-            output_class() {
-            }
-
-            public MapRatioRecordSum getStats() {
-                return stats;
-            }
-
-            public void setStats(MapRatioRecordSum stats) {
-                this.stats = stats;
-            }
-
-            public CompareParams getParams() {
-                return params;
-            }
-
-            public void setParams(CompareParams params) {
-                this.params = params;
-            }
-        }
-
 
         output_class output_blob = new output_class();
 
@@ -219,8 +216,10 @@ public class SAMcompare {
                     // parse the name
                     // TODO need to check for errors here
                     SimulatedRead true_read = new SimulatedRead(name);
-
-                    int pair_idx = getPairIdx(rec.getFirstOfPairFlag());
+                    int pair_idx = 0;
+                    if(rec.getReadPairedFlag()) {
+                        pair_idx = getPairIdx(rec.getFirstOfPairFlag());
+                    }
 
                     List<GenomeLocation> true_locs;
                     if (pair_idx == 0) {
@@ -228,7 +227,6 @@ public class SAMcompare {
                     } else {
                         true_locs = true_read.locs2;
                     }
-
 
                     if (!(intersector == null)) {
                         boolean contained_in_bed = false;
@@ -245,8 +243,7 @@ public class SAMcompare {
                     }
 
                     boolean true_unmapped;
-
-
+                    
                     HashSet<String> features = new HashSet<>(4);
                     features.add("All");
 
