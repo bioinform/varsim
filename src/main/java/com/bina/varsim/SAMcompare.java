@@ -205,6 +205,11 @@ public class SAMcompare {
             final SamReader reader = factory.open(new File(filename));
             try {
                 for (SAMRecord rec : reader) {
+
+                    if(rec.getNotPrimaryAlignmentFlag()){
+                        continue;
+                    }
+
                     num_read++;
 
                     if (num_read % 100000 == 0) {
