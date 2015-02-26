@@ -17,7 +17,7 @@ import java.util.Random;
 public class RandDGV2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
 
-    @Option(name = "-all", usage = "Output all variants")
+    @Option(name = "-all", usage = "Output all variants, don't sample")
     boolean output_all;
 
     static final int SEED_ARG = 333;
