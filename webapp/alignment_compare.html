@@ -13,6 +13,7 @@
     <script>
     <!--varsim_data-->
 
+
     </script>
 
     <!-- Bootstrap core CSS -->
@@ -110,7 +111,8 @@
 						<input type="file" id="files" name="files[]" multiple/>
 					</span>
 
-            <span> &nbsp; Add data set to see results or <a href="javascript:load_demo()">load some demo data</a> </span>
+            <span> &nbsp; Add data set to see results or <a href="javascript:load_demo()">load some demo
+                data</a> </span>
 
             <p>
 
@@ -698,34 +700,37 @@
                 }
 
                 var AUC_data = [];
+                if(temp_data[type].length > 2){
+                    for (var idx in temp_data[type]) {
+                        AUC_data.push([compute_fdr(temp_data[type][idx]), compute_tpr(temp_data[type][idx])]);
+                    }
+                    //AUC_data.sort();
+                    AUC_data.reverse();
 
-                for (var idx in temp_data[type]) {
-                    AUC_data.push([compute_fdr(temp_data[type][idx]), compute_tpr(temp_data[type][idx])]);
+                    var curr_auc_val = 0;
+                    var i = 0;
+                    for (i = 0; i < AUC_data.length - 2; i++) {
+                        var fdr1 = AUC_data[i][0][0];
+                        var tpr1 = AUC_data[i][1][0];
+                        var fdr2 = AUC_data[i + 1][0][0];
+                        var tpr2 = AUC_data[i + 1][1][0];
+
+                        var width = Math.abs(fdr2 - fdr1);
+                        var height_1 = Math.abs(tpr2 - tpr1);
+                        var height_2 = Math.max(tpr2, tpr1);
+
+                        curr_auc_val += (height_2 * width) - (0.5 * width * height_1);
+                    }
+
+                    // add the last block in the AUC
+                    var fdr2 = AUC_data[AUC_data.length - 2][0][0];
+                    var tpr2 = AUC_data[AUC_data.length - 2][1][0];
+                    curr_auc_val += (1 - fdr2) * tpr2;
+
+                    AUC_vals[filename] = curr_auc_val;
+                }else{
+                    AUC_vals[filename] = NaN;
                 }
-                //AUC_data.sort();
-                AUC_data.reverse();
-
-                var curr_auc_val = 0;
-                var i = 0;
-                for (i = 0; i < AUC_data.length - 2; i++) {
-                    var fdr1 = AUC_data[i][0][0];
-                    var tpr1 = AUC_data[i][1][0];
-                    var fdr2 = AUC_data[i + 1][0][0];
-                    var tpr2 = AUC_data[i + 1][1][0];
-
-                    var width = Math.abs(fdr2 - fdr1);
-                    var height_1 = Math.abs(tpr2 - tpr1);
-                    var height_2 = Math.max(tpr2, tpr1);
-
-                    curr_auc_val += (height_2 * width) - (0.5 * width * height_1);
-                }
-
-                // add the last block in the AUC
-                var fdr2 = AUC_data[AUC_data.length - 2][0][0];
-                var tpr2 = AUC_data[AUC_data.length - 2][1][0];
-                curr_auc_val += (1 - fdr2) * tpr2;
-
-                AUC_vals[filename] = curr_auc_val;
             }
 
             if (type != 'True_Unmapped') {
@@ -1232,7 +1237,7 @@
         scroll_to('parameters');
         
         // check for existence of varsim_data
-		if(typeof varsim_data != undefined){
+		if(typeof varsim_data != "undefined"){
 			// load the data if the variable exists
 			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
             process_json(varsim_data, filename, false)
@@ -1240,6 +1245,7 @@
             redraw_plots(stats_data, 'stats');
             show_id('stats_plot');
 		}
+
 
 </script>
 </body>
