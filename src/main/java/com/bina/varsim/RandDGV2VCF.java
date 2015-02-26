@@ -17,7 +17,7 @@ import java.util.Random;
 public class RandDGV2VCF extends randVCFgenerator {
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
 
-    @Option(name = "-all", usage = "Output all variants")
+    @Option(name = "-all", usage = "Output all variants, don't sample")
     boolean output_all;
 
     static final int SEED_ARG = 333;
@@ -63,6 +63,10 @@ public class RandDGV2VCF extends randVCFgenerator {
 
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
+
+    static final double PROP_HET_ARG = 0.6;
+    @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
+    double prop_het = PROP_HET_ARG;
 
     int num_novel_added = 0;
 
@@ -215,7 +219,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             ChrString chr = var.getChr();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand);
+            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
             selected_geno.add(geno);
             total_lines++;
 
