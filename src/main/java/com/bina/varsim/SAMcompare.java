@@ -243,7 +243,7 @@ public class SAMcompare {
                     }
 
                     boolean true_unmapped;
-                    
+
                     HashSet<String> features = new HashSet<>(4);
                     features.add("All");
 
