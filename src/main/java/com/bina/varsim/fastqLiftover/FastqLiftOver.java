@@ -24,6 +24,10 @@ public class FastqLiftOver {
     private List<File> fastqFiles;
     @Option(name = "-aln", usage = "ART aln file", metaVar = "file")
     private List<File> alnFiles;
+    @Option(name = "-maf", usage = "PBSIM maf file", metaVar = "file")
+    private List<File> mafFiles;
+    @Option(name = "-ref", usage = "PBSIM fasta headers of references", metaVar = "file")
+    private List<File> refFiles;
     @Option(name = "-out", usage = "Output file", metaVar = "file")
     private List<File> outFiles;
     @Option(name = "-compress", usage = "Use GZIP compression")
@@ -98,6 +102,15 @@ public class FastqLiftOver {
             log.info("outFiles   " + outFiles.get(0).getName() + " " + outFiles.get(1).getName());
             doLiftOverArtFastqMap(mapBlocks, getOutStream(outFiles.get(0), compress), getOutStream(outFiles.get(1), compress));
         }
+
+        if (fastqType.equals("pbsim")) {
+            log.info("fastqFiles " + fastqFiles.get(0).getName() + "  ");
+            log.info("mafFiles   " + mafFiles.get(0).getName() + "  ");
+            log.info("refFiles   " + refFiles.get(0).getName() + "  ");
+            log.info("outFiles   " + outFiles.get(0).getName() + "  ");
+            doLiftOverPbsimFastqMap(mapBlocks, getOutStream(outFiles.get(0), compress));
+        }
+
         log.info("Conversion took " + (System.currentTimeMillis() - tStart) / 1e3 + " seconds.");
     }
 
@@ -117,37 +130,55 @@ public class FastqLiftOver {
         doLiftOverPairedFastq(mapBlocks, new DWGSIMPairedFastqReader(br1, br2, forceFiveBaseEncoding), ps1, ps2);
     }
 
+    public void doLiftOverPbsimFastqMap(final MapBlocks mapBlocks, final PrintStream ps) throws IOException {
+        BufferedReader brFastq = new BufferedReader(new InputStreamReader(decompressStream(fastqFiles.get(0))));
+        BufferedReader brMAF = new BufferedReader(new InputStreamReader(decompressStream(mafFiles.get(0))));
+        BufferedReader brREF = new BufferedReader(new InputStreamReader(decompressStream(refFiles.get(0))));
+
+        doLiftOverPairedFastq(mapBlocks, new PBSIMFastqReader(brREF,brMAF, brFastq, forceFiveBaseEncoding), ps, null);
+    }
+
     public void doLiftOverPairedFastq(final MapBlocks mapBlocks, final PairedFastqReader pfr, final PrintStream ps1, final PrintStream ps2) throws IOException {
         SimulatedReadPair readPair;
         int readCount = 0;
         while ((readPair = pfr.getNextReadPair()) != null) {
-            readPair.read1.laneId = laneId;
-            readPair.read2.laneId = laneId;
 
+            final boolean hasRead2 = readPair.read2 != null;
+            if( hasRead2 && (ps2 == null) ) throw new RuntimeException("found read2 but read2 output not provided");
+
+            readPair.read1.laneId = laneId;
+            if(hasRead2) {
+                readPair.read2.laneId = laneId;
+            }
+
+            // if read2 not present, set locs2 to output the same as locs1 to preserve pair-ended behavior
             final GenomeLocation loc1 = readPair.read1.locs1.get(0);
-            final GenomeLocation loc2 = readPair.read2.locs2.get(0);
+            final GenomeLocation loc2 = hasRead2 ? readPair.read2.locs2.get(0) : loc1;
             final List<GenomeLocation> newLocs1 = mapBlocks.liftOverInterval(loc1.chromosome, loc1.location, loc1.location + readPair.read1.alignedBases1, loc1.direction);
-            final List<GenomeLocation> newLocs2 = mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction);
+            final List<GenomeLocation> newLocs2 = hasRead2 ? mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction) : newLocs1;
 
             readPair.read1.locs1 = newLocs1;
             readPair.read1.locs2 = newLocs2;
             readPair.read1.origLocs1 = new ArrayList<>();
             readPair.read1.origLocs2 = new ArrayList<>();
-            readPair.read2.locs1 = newLocs1;
-            readPair.read2.locs2 = newLocs2;
-            readPair.read2.origLocs1 = new ArrayList<>();
-            readPair.read2.origLocs2 = new ArrayList<>();
-
+            ++readCount;
             ps1.println(readPair.read1);
-            ps2.println(readPair.read2);
 
-            readCount += 2;
+            if(hasRead2) {
+                readPair.read2.locs1 = newLocs1;
+                readPair.read2.locs2 = newLocs2;
+                readPair.read2.origLocs1 = new ArrayList<>();
+                readPair.read2.origLocs2 = new ArrayList<>();
+                ++readCount;
+                ps2.println(readPair.read2);
+            }
+
             if ((readCount % 1000000) == 0) {
                 log.info(readCount + " reads processed");
             }
         }
         ps1.close();
-        ps2.close();
+        if (ps2!=null) ps2.close();
         log.info("Processed " + readCount + " reads.");
     }
 }

@@ -37,7 +37,7 @@ main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/F
                          choices=["MALE", "FEMALE"], default="MALE")
 main_parser.add_argument("--id", metavar="ID", help="Sample ID to be put in output VCF file", required=True)
 main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", required=False, type=str,
-                         choices=["art", "dwgsim"], default="art")
+                         choices=["art", "dwgsim", "pbsim"], default="art")
 main_parser.add_argument("--simulator_executable", metavar="PATH", help="Path to the executable of the read simulator chosen"
                          , required=True, type=file)
 main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file, default=default_varsim_jar,
@@ -101,6 +101,9 @@ art_group = main_parser.add_argument_group("ART options")
 art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default=None, type=file)
 art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default=None, type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
+
+pbsim_group = main_parser.add_argument_group("PBSIM options")
+pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
 
 args = main_parser.parse_args()
 
@@ -306,7 +309,7 @@ if processes:
 
 merged_map = os.path.join(args.out_dir, "%s.map" % (args.id))
 
-# Now generate the reads using dwgsim
+# Now generate the reads using art/pbsim/dwgsim
 tmp_files = []
 if not args.disable_sim:
     fifos = []
@@ -322,12 +325,20 @@ if not args.disable_sim:
                 fifo_src_dst.append(
                     ("simulated.lane%d.read%d.fastq" % (i, end),
                      "simulated.lane%d.read%d.fq.gz" % (i, end)))
-    if args.simulator == "art":
+    elif args.simulator == "art":
         for i in xrange(args.nlanes):
             for end in [1, 2]:
                 for suffix in ["fq", "aln"]:
                     fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
                                          "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
+    elif args.simulator == "pbsim":
+        for i in xrange(args.nlanes):
+            for end in [1, 2]: # the '2' read files are empty, and for compatibility only
+                for suffix in ["fq", "maf"]:
+                    fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
+                                         "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
+    else:
+        raise NotImplementedError("simulation method "+args.simulator+" not implemented");
 
     for fifo_name, dst in fifo_src_dst:
         fifos.append(os.path.join(args.out_dir, fifo_name))
@@ -358,8 +369,7 @@ if not args.disable_sim:
             dwgsim_p.start()
             processes.append(dwgsim_p)
             logger.info("Executing command " + dwgsim_command + " with pid " + str(dwgsim_p.pid))
-
-    if args.simulator == "art":
+    elif args.simulator == "art":
         profile_opts = []
         if args.profile_1 is not None and args.profile_2 is not None:
             profile_opts = ["-1", args.profile_1.name, "-2", args.profile_2.name]
@@ -382,6 +392,43 @@ if not args.disable_sim:
             art_p.start()
             processes.append(art_p)
             logger.info("Executing command " + art_command + " with pid " + str(art_p.pid))
+    elif args.simulator == "pbsim":
+        nRef = 0;
+        with open(merged_reference,'r') as fa:
+            nRef = sum( 1 for line in fa if len(line)>0 and line[0] == '>' )
+        assert nRef > 0 and nRef < 10000
+
+        for i in xrange(args.nlanes):
+            tmp_prefix = os.path.join(args.out_dir,"simulated.lane%d"%(i));
+            tmp_fastq_list = " ".join( "%s_%s.fastq"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            tmp_maf_list = " ".join( "%s_%s.maf"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            tmp_ref_list = " ".join( "%s_%s.ref"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            pbsim_command = [os.path.realpath(args.simulator_executable.name),
+                             "--data-type", "CLR",
+                             "--depth", str(coverage_per_lane),
+                             "--model_qc", args.model_qc,
+                             "--seed", str(2089*(i+1)),
+                             merged_reference,
+                             "--prefix", tmp_prefix,
+                             "&& ( cat", tmp_fastq_list, "> %s.read1.fq"%(tmp_prefix), ")", #this cat is i/o bound, need optimization of piping
+                             "&& ( cat", tmp_maf_list, "> %s.read1.maf"%(tmp_prefix), ")" #this cat is i/o bound, need optimization of piping
+                             "&& ( head -q -n1 ", tmp_ref_list, "> %s.ref"%(tmp_prefix), ")" #make reference header list
+                             "&& ( echo > %s.read2.fq"%(tmp_prefix), ")", #dummy file
+                             "&& ( echo > %s.read2.maf"%(tmp_prefix), ")" #dummy file
+                             ]
+
+            pbsim_command = " ".join(pbsim_command)
+
+            pbsim_stdout = open(os.path.join(args.log_dir, "pbsim.lane%d.out" % (i)), "w")
+            pbsim_stderr = open(os.path.join(args.log_dir, "pbsim.lane%d.err" % (i)), "w")
+            pbsim_p = Process(target=run_shell_command, args=(pbsim_command, pbsim_stdout, pbsim_stderr))
+            pbsim_p.start()
+            processes.append(pbsim_p)
+            logger.info("Executing command " + pbsim_command + " with pid " + str(pbsim_p.pid))
+    else:
+        raise NotImplementedError("simulation method "+args.simulator+" not implemented");
+
+
 
     monitor_multiprocesses(processes, logger)
     processes = []
@@ -409,6 +456,10 @@ if not args.disable_sim:
                                       "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
                                       "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
                                           args.out_dir, i, args.out_dir, i)
+        elif args.simulator == "pbsim":
+            fastq_liftover_command += " -type pbsim " \
+                                      "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
+                                      "-ref %s/simulated.lane%d.ref "% (args.out_dir, i, args.out_dir, i)
         fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
         liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
         liftover_p.start()
