@@ -64,6 +64,10 @@ public class RandDGV2VCF extends randVCFgenerator {
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
 
+    static final double PROP_HET_ARG = 0.6;
+    @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
+    double prop_het = PROP_HET_ARG;
+
     int num_novel_added = 0;
 
     RandDGV2VCF() {
@@ -215,7 +219,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             ChrString chr = var.getChr();
             int num_alt = var.get_num_alt();
 
-            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand);
+            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
             selected_geno.add(geno);
             total_lines++;
 
