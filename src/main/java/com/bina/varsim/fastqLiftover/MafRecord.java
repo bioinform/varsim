@@ -51,15 +51,16 @@ public class MafRecord {
 
     @Override
     public String toString() {
-        String out = header() + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append(header()+'\n');
         for (MafEntry entry: entries_){
-            out +=   entry.src + " "
-                   + Integer.toString(entry.start0) + " "
-                   + Integer.toString(entry.size) + " "
-                   + (entry.strand?"+":"-") + " "
-                   + Integer.toString(entry.srcSize) + " "
-                   + Integer.toString(entry.srcSize) + "\n";
+            sb.append(  entry.src + " "
+                      + Integer.toString(entry.start0) + " "
+                      + Integer.toString(entry.size) + " "
+                      + (entry.strand?"+":"-") + " "
+                      + Integer.toString(entry.srcSize) + " "
+                      + Integer.toString(entry.srcSize) + "\n");
         }
-        return out;
+        return sb.toString();
     }
 }

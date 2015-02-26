@@ -396,13 +396,13 @@ if not args.disable_sim:
         nRef = 0;
         with open(merged_reference,'r') as fa:
             nRef = sum( 1 for line in fa if len(line)>0 and line[0] == '>' )
-        assert nRef > 0
+        assert nRef > 0 and nRef < 10000
 
         for i in xrange(args.nlanes):
             tmp_prefix = os.path.join(args.out_dir,"simulated.lane%d"%(i));
-            tmp_fastq_list = " ".join( "%s_000%d.fastq"%(tmp_prefix,idx) for idx in range(1,nRef+1) )
-            tmp_maf_list = " ".join( "%s_000%d.maf"%(tmp_prefix,idx) for idx in range(1,nRef+1) )
-            tmp_ref_list = " ".join( "%s_000%d.ref"%(tmp_prefix,idx) for idx in range(1,nRef+1) )
+            tmp_fastq_list = " ".join( "%s_%s.fastq"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            tmp_maf_list = " ".join( "%s_%s.maf"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            tmp_ref_list = " ".join( "%s_%s.ref"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
             pbsim_command = [os.path.realpath(args.simulator_executable.name),
                              "--data-type", "CLR",
                              "--depth", str(coverage_per_lane),
