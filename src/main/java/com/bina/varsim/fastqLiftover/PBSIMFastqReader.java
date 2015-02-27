@@ -54,7 +54,11 @@ public class PBSIMFastqReader implements PairedFastqReader {
 
             read.locs1.add(loc);
             read.origLocs1.add(loc);
-            read.alignedBases1 = maf_entry.get(1).size;
+            read.alignedBases1 = maf_entry.get(0).size; // set as size on reference
+
+            //obviously not the most efficient implementation but this facilitates minimal code change
+            //@TODO refactor this out to other implementations of PairFastqReader
+            read.ref2read = new RefPos2ReadPos(maf_entry.get(0),maf_entry.get(1));
 
             return new SimulatedReadPair(read);
         } else {

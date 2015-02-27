@@ -154,8 +154,8 @@ public class FastqLiftOver {
             // if read2 not present, set locs2 to output the same as locs1 to preserve pair-ended behavior
             final GenomeLocation loc1 = readPair.read1.locs1.get(0);
             final GenomeLocation loc2 = hasRead2 ? readPair.read2.locs2.get(0) : loc1;
-            final List<GenomeLocation> newLocs1 = mapBlocks.liftOverInterval(loc1.chromosome, loc1.location, loc1.location + readPair.read1.alignedBases1, loc1.direction);
-            final List<GenomeLocation> newLocs2 = hasRead2 ? mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction) : newLocs1;
+            final List<GenomeLocation> newLocs1 = mapBlocks.liftOverInterval(loc1.chromosome, loc1.location, loc1.location + readPair.read1.alignedBases1, loc1.direction, readPair.read1.ref2read);
+            final List<GenomeLocation> newLocs2 = hasRead2 ? mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction, readPair.read2.ref2read) : newLocs1;
 
             readPair.read1.locs1 = newLocs1;
             readPair.read1.locs2 = newLocs2;

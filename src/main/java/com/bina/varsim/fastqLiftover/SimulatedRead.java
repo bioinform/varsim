@@ -29,6 +29,7 @@ public class SimulatedRead {
     public String quality;
     public int alignedBases1 = 0;
     public int alignedBases2 = 0;
+    public RefPos2ReadPos ref2read; // if not null, can be used to map reference->read position
 
     public SimulatedRead() {
         locs1 = new ArrayList<>();

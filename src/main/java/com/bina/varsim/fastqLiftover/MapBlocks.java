@@ -26,7 +26,7 @@ public class MapBlocks {
     }
 
     // Half-open interval
-    public List<GenomeLocation> liftOverInterval(final String chromosome, final int start, final int end, final int direction) {
+    public List<GenomeLocation> liftOverInterval(final String chromosome, final int start, final int end, final int direction, RefPos2ReadPos ref2read) {
         final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
         final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end - 1));
 
@@ -45,9 +45,13 @@ public class MapBlocks {
         boolean seenDel = false;
         while (it.hasNext()) {
             final MapBlock b = it.next();
+            log.trace("current block " + b);
             if (b.blockType == MapBlock.BlockType.INS || b.blockType == MapBlock.BlockType.DEL) {
                 if ((b.blockType == MapBlock.BlockType.INS && !seenIns) || (b.blockType == MapBlock.BlockType.DEL && !seenDel)) {
                     GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
+                    if (ref2read != null) {
+                        liftedLoc.read_location1 = ref2read.get(start,1);
+                    }
                     liftedLoc.feature = b.blockType.toString();
                     liftedLoc.direction = direction;
                     liftedLocs.add(liftedLoc);
@@ -75,8 +79,14 @@ public class MapBlocks {
             if (b.direction == 0) {
                 liftedLoc.location = b.dstLoc.location + start - b.srcLoc.location;
                 liftedLoc.direction = direction;
+                if (ref2read != null) {
+                    liftedLoc.read_location1 = ref2read.get(start,1);
+                }
             } else {
                 liftedLoc.location = b.dstLoc.location + b.size - (end - (b.srcLoc.location + 1));
+                if (ref2read != null) {
+                    liftedLoc.read_location1 = ref2read.get(end - 1,1);
+                }
                 liftedLoc.direction = 1 - direction;
             }
             log.trace(chromosome + ":[" + intervalStart + "," + intervalEnd + "](" + direction + ") lifted to " + liftedLoc + " using block " + b);

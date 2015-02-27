@@ -3,6 +3,7 @@ package com.bina.varsim.fastqLiftover;
 public class GenomeLocation implements Comparable<GenomeLocation> {
     public String chromosome;
     public int location = 0;
+    public int read_location1 = -1; // if >=0, this is the index corresponding to a location in a read
     public int direction = 0;
     public String feature;
 
@@ -42,7 +43,8 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     }
 
     public String toString() {
-        return chromosome + "-" + encodeInt(location) + "-" + ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
+        return chromosome + "-" + encodeInt(location) + "("+Integer.toString(read_location1)+")-" +
+                ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
     }
 
     @Override
