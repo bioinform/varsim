@@ -35,6 +35,31 @@ public class GenomeLocationTest
 
         assertEquals("1", genomeLocation.chromosome);
         assertEquals(100, genomeLocation.location);
+        assertEquals(-1, genomeLocation.read_location1);
+        assertEquals("INV", genomeLocation.feature);
+        assertEquals(1, genomeLocation.direction);
+    }
+
+    public void testGenomeLocationSlash()
+    {
+        final String locationString = "1-100/-INV-";
+        final GenomeLocation genomeLocation = new GenomeLocation(locationString);
+
+        assertEquals("1", genomeLocation.chromosome);
+        assertEquals(100, genomeLocation.location);
+        assertEquals(-1, genomeLocation.read_location1);
+        assertEquals("INV", genomeLocation.feature);
+        assertEquals(1, genomeLocation.direction);
+    }
+
+    public void testGenomeLocationReadLoc()
+    {
+        final String locationString = "1-100/7-INV-";
+        final GenomeLocation genomeLocation = new GenomeLocation(locationString);
+
+        assertEquals("1", genomeLocation.chromosome);
+        assertEquals(100, genomeLocation.location);
+        assertEquals(7, genomeLocation.read_location1);
         assertEquals("INV", genomeLocation.feature);
         assertEquals(1, genomeLocation.direction);
     }
