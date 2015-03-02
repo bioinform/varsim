@@ -12,7 +12,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     public GenomeLocation(final String locationString) {
         final String fields[] = locationString.split("-", -1);
         this.chromosome = fields[0];
-        String [] location_fields = fields[1].split("/");
+        String [] location_fields = fields[1].split(";");
         this.location = "".equals(location_fields[0]) ? 0 : Integer.parseInt(location_fields[0]);
         switch (location_fields.length) {
             case 1: this.read_location = null; break;
@@ -52,7 +52,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
 
     public String toString() {
         return chromosome + "-" +
-               encodeInt(location) + "/"+ (read_location!=null?read_location.toStringAsBase(1):"") +"-" +
+               encodeInt(location) + ";"+ (read_location!=null?read_location.toStringAsBase(1):"") +"-" +
                 ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
     }
 

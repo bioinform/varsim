@@ -42,7 +42,7 @@ public class GenomeLocationTest
 
     public void testGenomeLocationSlash()
     {
-        final String locationString = "1-100/-INV-";
+        final String locationString = "1-100;-INV-";
         final GenomeLocation genomeLocation = new GenomeLocation(locationString);
 
         assertEquals("1", genomeLocation.chromosome);
@@ -54,7 +54,7 @@ public class GenomeLocationTest
 
     public void testGenomeLocationReadLoc()
     {
-        final String locationString = "1-100/7-INV-";
+        final String locationString = "1-100;7-INV-";
         final GenomeLocation genomeLocation = new GenomeLocation(locationString);
 
         assertEquals("1", genomeLocation.chromosome);
