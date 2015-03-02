@@ -4,12 +4,10 @@ package com.bina.varsim.util;
  * base class for base-0 or base-1 location
  */
 public abstract class Position extends Number{
-    private long pos_;
+    private final long pos_;
 
     // only derived class can call constructor
-    protected Position(long pos) {
-        pos_ = pos;
-    }
+    protected Position(long pos) { pos_ = pos; }
 
     /**
      * @return the base in which position is represented
@@ -17,11 +15,14 @@ public abstract class Position extends Number{
     public abstract int base();
 
     /**
-     * @return the location in the specified base
+     * @return the location in base-b
      */
-    public long asBase(long base) {
-        return pos_ - this.base() + base;
-    }
+    public long asBase(long b) { return pos_ - this.base() + b; }
+
+    /**
+     * @return the string representation in base-b
+     */
+    public String toStringAsBase(long b) { return Long.toString(this.asBase(b)); }
 
     @Override
     public int intValue() {

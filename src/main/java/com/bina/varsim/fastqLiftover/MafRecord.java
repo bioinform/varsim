@@ -18,7 +18,7 @@ public class MafRecord {
             if (fields.length != 7) throw new RuntimeException("Unexpected MAF line: "+entry);
             if (! fields[0].equals("s")) throw new RuntimeException("Unexpected MAF line: "+entry);
             src = fields[1];
-            start = new Position0(Long.parseLong(fields[2]));
+            start = Position0.valueOf(fields[2],0);
             size = Integer.parseInt(fields[3]);
             strand = fields[4].equals("+"); // true if "+", false if "-"
             if (! strand && !fields[4].equals("-") ) throw new RuntimeException("Unexpected MAF line: "+entry);
