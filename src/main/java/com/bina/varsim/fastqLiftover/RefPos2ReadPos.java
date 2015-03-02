@@ -29,7 +29,7 @@ public class RefPos2ReadPos {
         final int alignment_length = ref.text.length();
         if( alignment_length != seq.text.length() ) throw new RuntimeException("corrupted alignment strings");
         map0_ = new int[ref.size];
-        shift0_ = ref.start0;
+        shift0_ = ref.start.intValue();
 
         int r_pos = 0;
         int s_count = 0;

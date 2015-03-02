@@ -11,7 +11,17 @@ public abstract class Position extends Number{
         pos_ = pos;
     }
 
+    /**
+     * @return the base in which position is represented
+     */
     public abstract int base();
+
+    /**
+     * @return the location in the specified base
+     */
+    public long asBase(long base) {
+        return pos_ - this.base() + base;
+    }
 
     @Override
     public int intValue() {
