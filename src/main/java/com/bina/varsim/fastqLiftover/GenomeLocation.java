@@ -1,9 +1,11 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.util.*;
+
 public class GenomeLocation implements Comparable<GenomeLocation> {
     public String chromosome;
     public int location = 0;
-    public int read_location1 = -1; // if >=0, this is the 1-base index corresponding to a location in a read
+    public Position1 read_location;
     public int direction = 0;
     public String feature;
 
@@ -13,8 +15,8 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
         String [] location_fields = fields[1].split("/");
         this.location = "".equals(location_fields[0]) ? 0 : Integer.parseInt(location_fields[0]);
         switch (location_fields.length) {
-            case 1: this.read_location1 = -1; break;
-            case 2: this.read_location1 = Integer.parseInt(location_fields[1]); break;
+            case 1: this.read_location = null; break;
+            case 2: this.read_location = new Position1(Long.parseLong(location_fields[1])); break;
             default: throw new RuntimeException("unexpected location field in " + locationString);
         }
         this.feature = "".equals(fields[2]) ? "S" : fields[2];
@@ -24,7 +26,6 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     public GenomeLocation(final String chromosome, final int location) {
         this.chromosome = chromosome;
         this.location = location;
-        this.read_location1 = -1;
         this.direction = 0;
         this.feature = "";
     }
@@ -32,7 +33,6 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     public GenomeLocation(final String chromosome, final int location, final int direction) {
         this.chromosome = chromosome;
         this.location = location;
-        this.read_location1 = -1;
         this.direction = direction;
         this.feature = "";
     }
@@ -52,7 +52,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
 
     public String toString() {
         return chromosome + "-" +
-               encodeInt(location) + "/"+ (read_location1>=0?Integer.toString(read_location1):"") +"-" +
+               encodeInt(location) + "/"+ (read_location!=null?Long.toString(read_location.longValue()):"") +"-" +
                 ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
     }
 

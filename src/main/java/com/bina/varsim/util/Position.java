@@ -1,16 +1,12 @@
 package com.bina.varsim.util;
 
 /**
- * Created by bayo on 2/28/15.
  * base class for base-0 or base-1 location
- * in C++ this can be done with template<char val> class Position; I'm not so sure about java
  */
 public abstract class Position extends Number{
     private long pos_;
 
     // only derived class can call constructor
-    // in C++ this whole mess can be avoided with template<char val> class Position;
-    // I'm not so sure about java
     protected Position(long pos) {
         pos_ = pos;
     }

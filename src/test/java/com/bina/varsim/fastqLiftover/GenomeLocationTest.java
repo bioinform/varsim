@@ -35,7 +35,7 @@ public class GenomeLocationTest
 
         assertEquals("1", genomeLocation.chromosome);
         assertEquals(100, genomeLocation.location);
-        assertEquals(-1, genomeLocation.read_location1);
+        assertEquals(null, genomeLocation.read_location);
         assertEquals("INV", genomeLocation.feature);
         assertEquals(1, genomeLocation.direction);
     }
@@ -47,7 +47,7 @@ public class GenomeLocationTest
 
         assertEquals("1", genomeLocation.chromosome);
         assertEquals(100, genomeLocation.location);
-        assertEquals(-1, genomeLocation.read_location1);
+        assertEquals(null, genomeLocation.read_location);
         assertEquals("INV", genomeLocation.feature);
         assertEquals(1, genomeLocation.direction);
     }
@@ -59,7 +59,7 @@ public class GenomeLocationTest
 
         assertEquals("1", genomeLocation.chromosome);
         assertEquals(100, genomeLocation.location);
-        assertEquals(7, genomeLocation.read_location1);
+        assertEquals(7, genomeLocation.read_location.longValue());
         assertEquals("INV", genomeLocation.feature);
         assertEquals(1, genomeLocation.direction);
     }

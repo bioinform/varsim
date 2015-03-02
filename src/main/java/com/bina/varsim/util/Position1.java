@@ -4,7 +4,7 @@ package com.bina.varsim.util;
  * A class to store a base-1 location.
  */
 public final class Position1 extends Position {
-    public static final int BASE = 1;
+    private static final Integer BASE = 1;
 
     public Position1(long pos) {
         super(pos);
@@ -12,10 +12,9 @@ public final class Position1 extends Position {
     }
 
     public Position1(Position other) {
-        super(other.longValue() - other.base() + this.BASE);
+        super(other.longValue() - other.base() + BASE);
     }
 
     @Override
-    public int base() { return this.BASE; }
+    public int base() { return BASE; }
 }
-

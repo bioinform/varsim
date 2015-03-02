@@ -12,9 +12,9 @@ public final class Position0 extends Position {
     }
 
     public Position0(Position other) {
-        super(other.longValue() - other.base() + this.BASE);
+        super(other.longValue() - other.base() + BASE);
     }
 
     @Override
-    public int base() { return this.BASE; }
+    public int base() { return BASE; }
 }

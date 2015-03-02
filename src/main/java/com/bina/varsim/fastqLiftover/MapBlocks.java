@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import com.bina.varsim.util.*;
+
 public class MapBlocks {
     public final static Logger log = Logger.getLogger(MapBlocks.class.getName());
     public final static int MIN_LENGTH_INTERVAL = 10;
@@ -50,7 +52,7 @@ public class MapBlocks {
                 if ((b.blockType == MapBlock.BlockType.INS && !seenIns) || (b.blockType == MapBlock.BlockType.DEL && !seenDel)) {
                     GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
                     if (ref2read != null) {
-                        liftedLoc.read_location1 = ref2read.get(start,1);
+                        liftedLoc.read_location = new Position1(ref2read.get(start,1));
                     }
                     liftedLoc.feature = b.blockType.toString();
                     liftedLoc.direction = direction;
@@ -82,12 +84,12 @@ public class MapBlocks {
                 liftedLoc.location = b.dstLoc.location + start - b.srcLoc.location;
                 liftedLoc.direction = direction;
                 if (ref2read != null) {
-                    liftedLoc.read_location1 = ref2read.get(start,1);
+                    liftedLoc.read_location = new Position1(ref2read.get(start,1));
                 }
             } else {
                 liftedLoc.location = b.dstLoc.location + b.size - (end - (b.srcLoc.location + 1));
                 if (ref2read != null) {
-                    liftedLoc.read_location1 = ref2read.get(end - 1,1);
+                    liftedLoc.read_location = new Position1(ref2read.get(end - 1,1));
                 }
                 liftedLoc.direction = 1 - direction;
             }
