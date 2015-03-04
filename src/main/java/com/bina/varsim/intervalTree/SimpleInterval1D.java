@@ -2,6 +2,8 @@ package com.bina.varsim.intervalTree;
 
 import org.apache.log4j.Logger;
 
+import java.util.Random;
+
 /**
  * Simple interval, End-points inclusive, immutable
  *
@@ -30,6 +32,17 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
     public SimpleInterval1D(Interval1D reg) {
         this.left = reg.getLeft();
         this.right = reg.getRight();
+    }
+
+    /**
+     * Initialise with a random interval
+     * @param r
+     */
+    public SimpleInterval1D(Random r) {
+        long a = r.nextLong();
+        long b = r.nextLong();
+        this.left = Math.min(a, b);
+        this.right = Math.max(a, b);
     }
 
     /**
