@@ -2,6 +2,9 @@ package com.bina.varsim.intervalTree;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 public class SimpleInterval1DTest extends TestCase {
     SimpleInterval1D A;
     SimpleInterval1D B;
@@ -59,5 +62,50 @@ public class SimpleInterval1DTest extends TestCase {
 
     public void testGetCenter() throws Exception {
         assertEquals(5,A.getCenter());
+    }
+
+    public void testRandomIntervals() throws Exception {
+        Random r = new Random(0);
+        ArrayList<SimpleInterval1D> intervals = new ArrayList<>();
+        for(int i = 0;i<10000;i++){
+            intervals.add(new SimpleInterval1D(r,-100000,100000));
+        }
+
+        IntervalTree<SimpleInterval1D> tree = new IntervalTree<>();
+
+        // add a bunch of random intervals
+        for(SimpleInterval1D interval : intervals){
+            tree.add(interval);
+        }
+
+        // see if we can still find each of them
+        for(SimpleInterval1D interval : intervals){
+            assertEquals(true,tree.contains(new SimpleInterval1D(interval.getLeft(),interval.getLeft())));
+            assertEquals(true,tree.contains(new SimpleInterval1D(interval.getRight(),interval.getRight())));
+            assertEquals(true,tree.contains(new SimpleInterval1D(interval.getLeft(),interval.getRight()),1,0));
+        }
+    }
+
+    public void testRandomIntervals2() throws Exception {
+        Random r = new Random(0);
+        ArrayList<SimpleInterval1D> intervals = new ArrayList<>();
+        for(int i = 0;i<10000;i++){
+            intervals.add(new SimpleInterval1D(r));
+        }
+
+        IntervalTree<SimpleInterval1D> tree = new IntervalTree<>();
+
+        // add a bunch of random intervals
+        for(SimpleInterval1D interval : intervals){
+            tree.add(interval);
+        }
+
+        // see if we can still find each of them
+        for(SimpleInterval1D interval : intervals){
+            assertEquals(true,tree.contains(new SimpleInterval1D(interval.getLeft(),interval.getLeft())));
+            assertEquals(true,tree.contains(new SimpleInterval1D(interval.getRight(),interval.getRight())));
+            assertEquals(true,tree.contains(interval,1,0));
+            assertEquals(true,tree.contains(interval,1,1));
+        }
     }
 }
