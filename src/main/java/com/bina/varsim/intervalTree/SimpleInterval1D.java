@@ -21,15 +21,18 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @param right Right end-point (inclusive)
      */
     public SimpleInterval1D(long left, long right) {
-        if (left <= right) {
+        if ((left <= right) && ((((right / 2) + 1) - ((left / 2) - 1)) < (Long.MAX_VALUE / 2))) {
             this.left = left;
             this.right = right;
         } else {
-            throw new RuntimeException("Illegal interval: " + left + "-" + right);
+            throw new RuntimeException("Illegal SimpleInterval1D (negative range or too large range): " + left + "-" + right);
         }
     }
 
     public SimpleInterval1D(Interval1D reg) {
+        if(reg.length() < 0){
+            throw new RuntimeException("Illegal SimpleInterval1D (negative range or too large range): " + reg);
+        }
         this.left = reg.getLeft();
         this.right = reg.getRight();
     }
@@ -39,8 +42,21 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @param r
      */
     public SimpleInterval1D(Random r) {
-        long a = r.nextLong();
-        long b = r.nextLong();
+        long left;
+        long right;
+        do {
+            long a = r.nextLong();
+            long b = r.nextLong();
+            left = Math.min(a, b);
+            right = Math.max(a, b);
+        }while(right - left + 1 < 0);
+        this.left = left;
+        this.right = right;
+    }
+
+    public SimpleInterval1D(Random r, int lower, int upper) {
+        long a = r.nextInt(upper - lower) + lower;
+        long b = r.nextInt(upper - lower) + lower;
         this.left = Math.min(a, b);
         this.right = Math.max(a, b);
     }
@@ -135,6 +151,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * does this interval reciprocal overlap intersect that one, with a particular
      * ratio. The ratio is rounded up. Require at least one base overlap.
      *
+     * Can suffer from floating point precision issues for large numbers
+     *
      * @param that            Interval to compare to
      * @param reciprocalRatio Ratio between 0 and 1, values outside this range will have undefined behaviour
      * @return True if it intersects, with the required reciprocal overlap
@@ -144,10 +162,10 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
             return intersects(that);
         }
         // Note: The max may be able to be removed in this case, left to be safe
-        long thisLen = (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1);
-        long thatLen = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
+        long thisLen = reciprocalRatio == 1.0 ? this.length():(long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1l);
+        long thatLen = reciprocalRatio == 1.0 ? that.length():(long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1l);
         long overlap = Math.min(this.getRight(), that.getRight())
-                - Math.max(this.getLeft(), that.getLeft()) + 1;
+                - Math.max(this.getLeft(), that.getLeft()) + 1l;
         if (overlap >= Math.max(thisLen, thatLen)) {
             return true;
         }
@@ -156,6 +174,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
 
     /**
      * Checks reciprocal overlap with wiggle, each possible shift within the wiggle is checked
+     *
+     * TODO this is really slow, better to do simple intersect then further filter in most cases
      *
      * @param that            Interval to compare with
      * @param reciprocalRatio Ratio between 0 and 1, values outside this range will have undefined behaviour
@@ -166,8 +186,8 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         if (wiggle == 0) {
             return intersects(that, reciprocalRatio);
         }
-        long len_this = (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1);
-        long len_that = (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1);
+        long len_this = reciprocalRatio == 1.0 ? this.length():(long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1l);
+        long len_that = reciprocalRatio == 1.0 ? that.length():(long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1l);
 
         long maxOverlap = 0;
         long rightLim;
@@ -179,10 +199,10 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         } else {
             rightLim = Math.max(that.getRight(), getRight() - wiggle);
         }
-        leftLim = rightLim - length() + 1;
+        leftLim = rightLim - length() + 1l;
 
         long overlap = Math.min(rightLim, that.getRight())
-                - Math.max(leftLim, that.getLeft()) + 1;
+                - Math.max(leftLim, that.getLeft()) + 1l;
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
@@ -192,10 +212,10 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         } else {
             leftLim = Math.max(that.getLeft(), getLeft() - wiggle);
         }
-        rightLim = leftLim + length() - 1;
+        rightLim = leftLim + length() - 1l;
 
         overlap = Math.min(rightLim, that.getRight())
-                - Math.max(leftLim, that.getLeft()) + 1;
+                - Math.max(leftLim, that.getLeft()) + 1l;
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
@@ -244,7 +264,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @return The midpoint of the interval floor((right+left)/2)
      */
     public long getCenter() {
-        return ((getRight() + getLeft()) / 2);
+        return (((getRight() / 2) + (getLeft() / 2)));
     }
 
     public String toString() {

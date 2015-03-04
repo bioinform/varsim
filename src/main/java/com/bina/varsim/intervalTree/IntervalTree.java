@@ -376,6 +376,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param child
      */
     private void bubbleChildrenUp(IntervalTreeNode<Key> head, IntervalTreeNode<Key> child) {
+        if(child == null) return;
         ArrayList<Key> newChildCenter = new ArrayList<>();
         for (Key center : child.getCenter()) {
             if (head.addKey(center) != 0) {
@@ -425,9 +426,6 @@ public class IntervalTree<Key extends Interval1D> {
                 bfNewHead = bfChild + 1;
             }
         }
-
-        //log.trace("r-bfNewHead: " + bfNewHead);
-        //log.trace("r-bfNewChild: " + bfNewChild);
 
         IntervalTreeNode<Key> newHead = head.getLeft();
         newHead.setBalanceFactor(bfNewHead);
@@ -494,9 +492,6 @@ public class IntervalTree<Key extends Interval1D> {
                 bfNewHead = bfHead - 2;
             }
         }
-
-        //log.trace("l-bfNewHead: " + bfNewHead);
-        //log.trace("l-bfNewChild: " + bfNewChild);
 
         IntervalTreeNode<Key> newHead = head.getRight();
         newHead.setBalanceFactor(bfNewHead);
