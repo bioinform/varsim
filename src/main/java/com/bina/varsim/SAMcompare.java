@@ -268,13 +268,14 @@ public class SAMcompare {
                             // TODO check this with marghoob
                             if (!(feat == BlockTypeOut.INS) && !(feat == BlockTypeOut.DEL)) {
                                 true_unmapped = false;
-                                output_blob.getStats().incT(features); // this records the mappable reads
                             }
                         }
                     }
 
                     if (true_unmapped) {
                         features.add("True_Unmapped");
+                    }else{
+                        output_blob.getStats().incT(features); // this records the mappable reads
                     }
 
 
