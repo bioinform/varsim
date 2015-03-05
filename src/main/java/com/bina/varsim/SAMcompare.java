@@ -274,9 +274,11 @@ public class SAMcompare {
 
                     if (true_unmapped) {
                         features.add("True_Unmapped");
+                    }else{
+                        output_blob.getStats().incT(features); // this records the mappable reads
                     }
 
-                    output_blob.getStats().incT(features);
+
 
                     boolean unmapped = rec.getReadUnmappedFlag();
                     int mapping_quality = rec.getMappingQuality();
