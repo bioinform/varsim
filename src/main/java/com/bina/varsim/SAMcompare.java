@@ -206,7 +206,8 @@ public class SAMcompare {
             try {
                 for (SAMRecord rec : reader) {
 
-                    if(rec.getNotPrimaryAlignmentFlag()){
+                    // TODO this will need to change when we start considering supplementary alignements
+                    if(rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag()){
                         continue;
                     }
 

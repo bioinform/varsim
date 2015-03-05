@@ -15,8 +15,8 @@ import java.util.ArrayList;
  */
 public class IntervalTree<Key extends Interval1D> {
     private final static Logger log = Logger.getLogger(IntervalTree.class.getName());
-    private IntervalTreeNode<Key> root = null;
     long numEntries = 0;
+    private IntervalTreeNode<Key> root = null;
 
     public IntervalTree() {
     }
@@ -164,7 +164,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param k key to add
      */
     public void add(Key k) {
-        log.trace("adding: " + k);
+        //log.trace("adding: " + k);
 
         numEntries++;
         if (root == null) {
@@ -370,6 +370,23 @@ public class IntervalTree<Key extends Interval1D> {
     }
 
     /**
+     * Move intervals in child that overlap head into head
+     *
+     * @param head
+     * @param child
+     */
+    private void bubbleChildrenUp(IntervalTreeNode<Key> head, IntervalTreeNode<Key> child) {
+        if(child == null) return;
+        ArrayList<Key> newChildCenter = new ArrayList<>();
+        for (Key center : child.getCenter()) {
+            if (head.addKey(center) != 0) {
+                newChildCenter.add(center);
+            }
+        }
+        child.setCenter(newChildCenter);
+    }
+
+    /**
      * Rotate the tree rooted at head right.
      * It will also adjust the balance factor
      *
@@ -410,15 +427,15 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
-        //log.trace("r-bfNewHead: " + bfNewHead);
-        //log.trace("r-bfNewChild: " + bfNewChild);
-
         IntervalTreeNode<Key> newHead = head.getLeft();
         newHead.setBalanceFactor(bfNewHead);
         head.setBalanceFactor(bfNewChild);
         IntervalTreeNode<Key> temp = newHead.getRight();
         newHead.setRight(head);
         head.setLeft(temp);
+
+        bubbleChildrenUp(newHead, head);
+
         return newHead;
     }
 
@@ -476,15 +493,15 @@ public class IntervalTree<Key extends Interval1D> {
             }
         }
 
-        //log.trace("l-bfNewHead: " + bfNewHead);
-        //log.trace("l-bfNewChild: " + bfNewChild);
-
         IntervalTreeNode<Key> newHead = head.getRight();
         newHead.setBalanceFactor(bfNewHead);
         head.setBalanceFactor(bfNewChild);
         IntervalTreeNode<Key> temp = newHead.getLeft();
         newHead.setLeft(head);
         head.setRight(temp);
+
+        bubbleChildrenUp(newHead, head);
+
         return newHead;
     }
 

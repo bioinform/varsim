@@ -50,10 +50,10 @@ public class VCFcompare {
     int wiggle = WIGGLE_ARG;
 
     @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
-    boolean ignore_ins_len;
+    boolean ignore_ins_len = false;
 
     @Option(name = "-match_geno", usage = "Also ensures genotypes match")
-    boolean match_geno;
+    boolean match_geno = false;
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
