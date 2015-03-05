@@ -57,10 +57,8 @@ public class MapBlocks {
                     liftedLoc.feature = b.blockType.toString();
                     liftedLoc.direction = direction;
                     liftedLocs.add(liftedLoc);
-                    /* disable filtering
                     if (b.blockType == MapBlock.BlockType.INS) seenIns = true;
                     if (b.blockType == MapBlock.BlockType.DEL) seenDel = true;
-                    */
                 } else {
                     log.trace("Skipping block " + b + " since it's an INS/DEL");
                 }
