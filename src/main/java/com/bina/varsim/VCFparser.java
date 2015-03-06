@@ -280,7 +280,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return null;
         }
 
-        if (_pass && !FILTER.contains("PASS")) {
+        if (_pass && !(FILTER.contains("PASS") || FILTER.equals("."))) {
             //log.warn("not pass line" + line);
             return null; // Filtered out
         }

@@ -73,6 +73,9 @@ public class VCFcompare {
     @Option(name = "-sample", usage = "Sample to read from new VCF, otherwise will read first one [Optional]", metaVar = "String")
     String sample_name = null;
 
+    @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the INFO column")
+    boolean exclude_filtered = false;
+
     public static void main(String[] args) {
         new VCFcompare().run(args);
     }
@@ -615,7 +618,7 @@ public class VCFcompare {
         // iterate over new VCF and collect stats
 
         for (String curr_vcf_file : new_vcf_filename) {
-            VCFparser new_parser = new VCFparser(curr_vcf_file, sample_name, false);
+            VCFparser new_parser = new VCFparser(curr_vcf_file, sample_name, exclude_filtered);
 
             while (new_parser.hasMoreInput()) {
                 Variant var = new_parser.parseLine();
