@@ -73,7 +73,7 @@ public class VCFcompare {
     @Option(name = "-sample", usage = "Sample to read from new VCF, otherwise will read first one [Optional]", metaVar = "String")
     String sample_name = null;
 
-    @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the INFO column")
+    @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the FILTER column")
     boolean exclude_filtered = false;
 
     public static void main(String[] args) {
