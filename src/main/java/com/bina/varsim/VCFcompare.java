@@ -15,9 +15,7 @@ import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
+import java.util.*;
 
 /**
  * Compare two VCF files, output the TPR and FDR for various bins and variant types
@@ -75,6 +73,9 @@ public class VCFcompare {
 
     @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the FILTER column")
     boolean exclude_filtered = false;
+
+    @Option(name = "-include_chr", usage = "Comma separated list of chromosomes to include, default is include all")
+    String include_chr_str = null;
 
     public static void main(String[] args) {
         new VCFcompare().run(args);
@@ -419,7 +420,6 @@ public class VCFcompare {
         }
 
         BedFile intersector = null;
-
         boolean bed_exists = false;
         // check if the file exists
         try {
@@ -439,6 +439,13 @@ public class VCFcompare {
                 log.warn("No BED file specified but used exclude parameters");
             }
         }
+
+        Set<String> chrAcceptor = null;
+        if(include_chr_str != null){
+            chrAcceptor = new HashSet<>(Arrays.asList(include_chr_str.split(",")));
+            log.info("Only accepting chromosomes: " + Arrays.toString(chrAcceptor.toArray()));
+        }
+
 
         // load true VCF into interval tree
         log.info("Load True VCF");
@@ -524,6 +531,10 @@ public class VCFcompare {
 
             ChrString chr = var.getChr();
             Variant.OverallType orig_type = var.getType();
+
+            if(chrAcceptor != null && !chrAcceptor.contains(chr.getName())){
+                continue;
+            }
 
             // determine max variant region
             // when comparing genotypes, we need to individually compare
@@ -631,6 +642,11 @@ public class VCFcompare {
                 Genotypes geno;
 
                 ChrString chr = var.getChr();
+
+                if(chrAcceptor != null && !chrAcceptor.contains(chr.getName())){
+                    continue;
+                }
+
                 SimpleInterval1D var_reg = var.get_geno_interval();
 
                 boolean skipFP = false;
@@ -755,6 +771,11 @@ public class VCFcompare {
         for (Variant var : true_var_list) {
 
             ChrString chr = var.getChr();
+
+            if(chrAcceptor != null && !chrAcceptor.contains(chr.getName())){
+                continue;
+            }
+
             SimpleInterval1D curr_var_reg = var.get_geno_interval();
 
             if (intersector == null || bed_exclude_tpr || intersector.containsEndpoints(chr, curr_var_reg, bed_either)) {
