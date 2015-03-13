@@ -74,7 +74,7 @@ public class VCFcompare {
     @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the FILTER column")
     boolean exclude_filtered = false;
 
-    @Option(name = "-include_chr", usage = "Comma separated list of chromosomes to include, default is include all")
+    @Option(name = "-include_chr", usage = "Comma separated list of chromosomes to include, default is include all", metaVar = "CHR_LIST")
     String include_chr_str = null;
 
     public static void main(String[] args) {
