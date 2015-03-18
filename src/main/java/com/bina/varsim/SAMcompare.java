@@ -126,6 +126,8 @@ public class SAMcompare {
         String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
                 "bed_file restricts the analysis to the bed regions\n";
 
+        System.err.println(VERSION);
+
         CmdLineParser parser = new CmdLineParser(this);
 
         // if you have a wider console, you could increase the value;
@@ -135,7 +137,6 @@ public class SAMcompare {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(VERSION);
             System.err.println(e.getMessage());
             System.err.println("java -jar VarSim.jar samcompare [options...] bam_files ...");
             // print the list of available options
