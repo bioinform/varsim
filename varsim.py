@@ -104,6 +104,7 @@ art_group.add_argument("--art_options", help="ART command-line options", default
 
 pbsim_group = main_parser.add_argument_group("PBSIM options")
 pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
+pbsim_group.add_argument("--accuracy_mean", metavar="accuracy_mean", help="PBSIM mean accuracy", default=None, type=float)
 
 args = main_parser.parse_args()
 
@@ -405,9 +406,14 @@ if not args.disable_sim:
             tmp_ref_list = " ".join( "%s_%s.ref"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
             pbsim_command = [os.path.realpath(args.simulator_executable.name),
                              "--data-type", "CLR",
+                             "--difference-ratio", "1:12:2",
                              "--depth", str(coverage_per_lane),
                              "--model_qc", args.model_qc,
                              "--seed", str(2089*(i+1)),
+                             "--length-max", "50000",
+                             "--length-mean", str(args.mean_fragment_size),
+                             "--length-sd", str(args.sd_fragment_size),
+                             "--accuracy-mean", str(args.accuracy_mean),
                              merged_reference,
                              "--prefix", tmp_prefix,
                              "&& ( cat", tmp_fastq_list, "> %s.read1.fq"%(tmp_prefix), ")", #this cat is i/o bound, need optimization of piping

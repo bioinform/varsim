@@ -1,15 +1,24 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.util.*;
+
 public class GenomeLocation implements Comparable<GenomeLocation> {
     public String chromosome;
     public int location = 0;
+    public Position1 read_location;
     public int direction = 0;
     public String feature;
 
     public GenomeLocation(final String locationString) {
         final String fields[] = locationString.split("-", -1);
         this.chromosome = fields[0];
-        this.location = "".equals(fields[1]) ? 0 : Integer.parseInt(fields[1]);
+        String [] location_fields = fields[1].split(";");
+        this.location = "".equals(location_fields[0]) ? 0 : Integer.parseInt(location_fields[0]);
+        switch (location_fields.length) {
+            case 1: this.read_location = null; break;
+            case 2: this.read_location = Position1.valueOf(location_fields[1],1); break;
+            default: throw new RuntimeException("unexpected location field in " + locationString);
+        }
         this.feature = "".equals(fields[2]) ? "S" : fields[2];
         this.direction = (fields.length > 3) ? 1 : 0;
     }
@@ -42,7 +51,9 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     }
 
     public String toString() {
-        return chromosome + "-" + encodeInt(location) + "-" + ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
+        return chromosome + "-" +
+               encodeInt(location) + ";"+ (read_location!=null?read_location.toStringAsBase(1):"") +"-" +
+                ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
     }
 
     @Override

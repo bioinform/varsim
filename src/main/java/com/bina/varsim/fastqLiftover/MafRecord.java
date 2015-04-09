@@ -1,12 +1,13 @@
 package com.bina.varsim.fastqLiftover;
 
 import java.util.ArrayList;
+import com.bina.varsim.util.*;
 
 public class MafRecord {
     static public class MafEntry {
         //https://cgwb.nci.nih.gov/FAQ/FAQformat.html#format5
         public final String src;
-        public final int start0; //0-based
+        public final Position0 start;
         public final int size;
         public final boolean strand;
         public final int srcSize;
@@ -17,7 +18,7 @@ public class MafRecord {
             if (fields.length != 7) throw new RuntimeException("Unexpected MAF line: "+entry);
             if (! fields[0].equals("s")) throw new RuntimeException("Unexpected MAF line: "+entry);
             src = fields[1];
-            start0 = Integer.parseInt(fields[2]);
+            start = Position0.valueOf(fields[2],0);
             size = Integer.parseInt(fields[3]);
             strand = fields[4].equals("+"); // true if "+", false if "-"
             if (! strand && !fields[4].equals("-") ) throw new RuntimeException("Unexpected MAF line: "+entry);
@@ -55,7 +56,7 @@ public class MafRecord {
         sb.append(header()+'\n');
         for (MafEntry entry: entries_){
             sb.append(  entry.src + " "
-                      + Integer.toString(entry.start0) + " "
+                      + Long.toString(entry.start.longValue()) + " "
                       + Integer.toString(entry.size) + " "
                       + (entry.strand?"+":"-") + " "
                       + Integer.toString(entry.srcSize) + " "

@@ -49,12 +49,16 @@ public class PBSIMFastqReader implements PairedFastqReader {
 
             final GenomeLocation loc = new GenomeLocation(
                     idx2chr_.get(Integer.parseInt(tags[0])),
-                    maf_entry.get(0).start0+1, // 0-base to 1-base conversion
+                    (int) maf_entry.get(0).start.asBase(1),
                     maf_entry.get(0).strand?0:1); // MAF's "+" maps to 0, "-" to 1
 
             read.locs1.add(loc);
             read.origLocs1.add(loc);
-            read.alignedBases1 = maf_entry.get(1).size;
+            read.alignedBases1 = maf_entry.get(0).size; // set as size on reference
+
+            //obviously not the most efficient implementation but this facilitates minimal code change
+            //@TODO refactor this out to other implementations of PairFastqReader
+            read.ref2read = new RefPos2ReadPos(maf_entry.get(0),maf_entry.get(1));
 
             return new SimulatedReadPair(read);
         } else {
