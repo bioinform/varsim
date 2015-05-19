@@ -1,4 +1,7 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
+
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
+import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 
 import java.io.BufferedReader;
 import java.io.IOException;

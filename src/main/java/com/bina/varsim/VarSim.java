@@ -1,13 +1,13 @@
 package com.bina.varsim;
 
-import com.bina.varsim.evaluation.JSONInserter;
-import com.bina.varsim.evaluation.SAMcompare;
-import com.bina.varsim.evaluation.VCFcompare;
+import com.bina.varsim.tools.evaluation.JSONInserter;
+import com.bina.varsim.tools.evaluation.SAMcompare;
+import com.bina.varsim.tools.evaluation.VCFcompare;
 import com.bina.varsim.fastqLiftover.FastqLiftOver;
-import com.bina.varsim.simulation.RandBED2VCF;
-import com.bina.varsim.simulation.RandDGV2VCF;
-import com.bina.varsim.simulation.RandVCF2VCF;
-import com.bina.varsim.simulation.VCF2diploid;
+import com.bina.varsim.tools.simulation.RandBED2VCF;
+import com.bina.varsim.tools.simulation.RandDGV2VCF;
+import com.bina.varsim.tools.simulation.RandVCF2VCF;
+import com.bina.varsim.tools.simulation.VCF2diploid;
 import com.bina.varsim.tools.*;
 import org.apache.log4j.Logger;
 

@@ -1,4 +1,6 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
+
+import com.bina.varsim.fastqLiftover.types.MafRecord;
 
 import java.util.Iterator;
 import java.util.ArrayList;

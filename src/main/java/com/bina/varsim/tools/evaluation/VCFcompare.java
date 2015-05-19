@@ -1,4 +1,4 @@
-package com.bina.varsim.evaluation;
+package com.bina.varsim.tools.evaluation;
 
 import com.bina.varsim.types.stats.EnumStatsRatioCounter;
 import com.bina.varsim.types.Genotypes;

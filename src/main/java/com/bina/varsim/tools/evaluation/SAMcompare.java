@@ -1,4 +1,4 @@
-package com.bina.varsim.evaluation;
+package com.bina.varsim.tools.evaluation;
 
 /**
  * Read in SAM file with appropriately formatted read names and output accuracy statistics
@@ -7,9 +7,9 @@ package com.bina.varsim.evaluation;
 
 
 import com.bina.varsim.types.stats.MapRatioRecordSum;
-import com.bina.varsim.fastqLiftover.GenomeLocation;
-import com.bina.varsim.fastqLiftover.MapBlock;
-import com.bina.varsim.fastqLiftover.SimulatedRead;
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.MapBlock;
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
 import com.fasterxml.jackson.core.JsonGenerator;

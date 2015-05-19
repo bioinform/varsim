@@ -1,4 +1,4 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.types;
 
 import java.util.ArrayList;
 
@@ -37,7 +37,7 @@ public class MafRecord {
         return entries_.size();
     }
 
-    MafEntry get(int ii) {
+    public MafEntry get(int ii) {
         return entries_.get(ii);
     }
 

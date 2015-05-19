@@ -1,5 +1,7 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
 
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;

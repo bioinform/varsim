@@ -1,4 +1,4 @@
-package com.bina.varsim.simulation;
+package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.Sample_params;

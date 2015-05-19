@@ -1,9 +1,13 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
 
 import java.util.ArrayList;
 import java.io.IOException;
 import java.io.BufferedReader;
 
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.MafRecord;
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
+import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 

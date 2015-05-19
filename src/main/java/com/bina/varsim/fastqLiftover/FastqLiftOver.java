@@ -1,5 +1,12 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.fastqLiftover.readers.ARTPairedFastqAlnReader;
+import com.bina.varsim.fastqLiftover.readers.DWGSIMPairedFastqReader;
+import com.bina.varsim.fastqLiftover.readers.PBSIMFastqReader;
+import com.bina.varsim.fastqLiftover.readers.PairedFastqReader;
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.MapBlocks;
+import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;

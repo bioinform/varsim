@@ -1,4 +1,6 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
+
+import com.bina.varsim.fastqLiftover.types.MapBlock;
 
 import java.io.File;
 import java.io.IOException;

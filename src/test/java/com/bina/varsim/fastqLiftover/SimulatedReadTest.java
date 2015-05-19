@@ -1,5 +1,7 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

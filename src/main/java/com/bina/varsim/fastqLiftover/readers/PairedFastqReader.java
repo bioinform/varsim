@@ -1,4 +1,6 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.readers;
+
+import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 
 import java.io.IOException;
 

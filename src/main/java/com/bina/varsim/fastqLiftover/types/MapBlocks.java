@@ -1,5 +1,6 @@
-package com.bina.varsim.fastqLiftover;
+package com.bina.varsim.fastqLiftover.types;
 
+import com.bina.varsim.fastqLiftover.readers.MapFileReader;
 import org.apache.log4j.Logger;
 
 import java.io.File;
