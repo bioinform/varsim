@@ -1,4 +1,4 @@
-package com.bina.varsim.tools;
+package com.bina.varsim.simulation;
 
 //--- Java imports ---
 

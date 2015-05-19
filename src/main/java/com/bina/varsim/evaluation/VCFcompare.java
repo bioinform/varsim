@@ -1,6 +1,6 @@
-package com.bina.varsim.tools;
+package com.bina.varsim.evaluation;
 
-import com.bina.varsim.tools.stats.EnumStatsRatioCounter;
+import com.bina.varsim.types.stats.EnumStatsRatioCounter;
 import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.util.VCFparser;
 import com.bina.varsim.types.Variant;

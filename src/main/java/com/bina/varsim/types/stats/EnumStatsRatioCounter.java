@@ -1,4 +1,4 @@
-package com.bina.varsim.tools.stats;
+package com.bina.varsim.types.stats;
 
 import java.util.*;
 

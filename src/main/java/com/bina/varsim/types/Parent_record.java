@@ -1,7 +1,4 @@
-package com.bina.varsim.tools.types;
-
-import com.bina.varsim.types.BedFile;
-import com.bina.varsim.types.Variant;
+package com.bina.varsim.types;
 
 
 /**

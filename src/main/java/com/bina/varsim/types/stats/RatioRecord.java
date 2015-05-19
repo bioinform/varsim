@@ -1,4 +1,4 @@
-package com.bina.varsim.tools.stats;
+package com.bina.varsim.types.stats;
 
 /**
  * Stores everything required to compute precision and recall

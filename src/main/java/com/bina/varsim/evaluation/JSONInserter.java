@@ -1,4 +1,4 @@
-package com.bina.varsim.tools;
+package com.bina.varsim.evaluation;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;

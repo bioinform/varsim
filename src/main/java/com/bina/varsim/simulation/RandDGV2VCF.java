@@ -1,4 +1,4 @@
-package com.bina.varsim.tools;
+package com.bina.varsim.simulation;
 
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
