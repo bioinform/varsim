@@ -1,6 +1,9 @@
-package com.bina.varsim;
+package com.bina.varsim.tools;
 
 import com.bina.varsim.constants.Constant;
+import com.bina.varsim.types.*;
+import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;

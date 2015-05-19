@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.types;
 
 /**
  * Used to represent the chromosome name, able to useful things like determine sex

@@ -1,8 +1,11 @@
-package com.bina.varsim;
+package com.bina.varsim.util;
 
 //--- Java imports ---
 
 
+import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.Variant;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;

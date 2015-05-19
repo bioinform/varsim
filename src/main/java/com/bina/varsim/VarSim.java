@@ -1,6 +1,7 @@
 package com.bina.varsim;
 
 import com.bina.varsim.fastqLiftover.FastqLiftOver;
+import com.bina.varsim.tools.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

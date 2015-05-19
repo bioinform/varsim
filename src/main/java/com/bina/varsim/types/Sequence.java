@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.types;
 
 import java.util.Arrays;
 import java.util.StringTokenizer;

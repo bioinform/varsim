@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.types;
 
 //--- Java imports ---
 
@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import com.bina.varsim.intervalTree.SimpleInterval1D;
+import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
 public class Variant {
@@ -786,7 +787,7 @@ public class Variant {
         return sbStr.toString();
     }
 
-    byte getgood_paternal() {
+    public byte getgood_paternal() {
         if (_paternal < 0) {
             return 1;
         } else {
@@ -794,7 +795,7 @@ public class Variant {
         }
     }
 
-    byte getgood_maternal() {
+    public byte getgood_maternal() {
         if (_maternal < 0) {
             return 1;
         } else {

@@ -1,7 +1,14 @@
-package com.bina.varsim;
+package com.bina.varsim.tools;
 
 //--- Java imports ---
 
+import com.bina.varsim.types.GenderType;
+import com.bina.varsim.types.Sequence;
+import com.bina.varsim.util.VCFparser;
+import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
 import java.io.*;

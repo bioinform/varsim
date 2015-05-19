@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.types;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;

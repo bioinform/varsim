@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.util;
 
 import java.io.*;
 import java.util.zip.GZIPInputStream;

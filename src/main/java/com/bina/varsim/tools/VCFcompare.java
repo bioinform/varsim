@@ -1,8 +1,16 @@
-package com.bina.varsim;
+package com.bina.varsim.tools;
 
+import com.bina.varsim.tools.stats.EnumStatsRatioCounter;
+import com.bina.varsim.types.Genotypes;
+import com.bina.varsim.util.VCFparser;
+import com.bina.varsim.types.Variant;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.intervalTree.SimpleInterval1D;
 import com.bina.varsim.intervalTree.ValueInterval1D;
+import com.bina.varsim.types.BedFile;
+import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.util.chrSearchTree;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;

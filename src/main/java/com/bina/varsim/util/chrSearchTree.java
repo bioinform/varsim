@@ -1,4 +1,4 @@
-package com.bina.varsim;
+package com.bina.varsim.util;
 
 
 /**
@@ -9,6 +9,7 @@ package com.bina.varsim;
 import com.bina.varsim.intervalTree.Interval1D;
 import com.bina.varsim.intervalTree.IntervalTree;
 import com.bina.varsim.intervalTree.SimpleInterval1D;
+import com.bina.varsim.types.ChrString;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
