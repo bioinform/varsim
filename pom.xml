@@ -84,14 +84,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.seqdoop</groupId>
+            <groupId>com.github.samtools</groupId>
             <artifactId>htsjdk</artifactId>
-            <version>1.118</version>
-        </dependency>
-        <dependency>
-            <groupId>org.broad.tribble</groupId>
-            <artifactId>tribble</artifactId>
-            <version>46</version>
+            <version>1.132</version>
         </dependency>
 
         <dependency>
