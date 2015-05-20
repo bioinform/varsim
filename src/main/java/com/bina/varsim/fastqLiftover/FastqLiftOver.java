@@ -142,7 +142,7 @@ public class FastqLiftOver {
         BufferedReader brMAF = new BufferedReader(new InputStreamReader(decompressStream(mafFiles.get(0))));
         BufferedReader brREF = new BufferedReader(new InputStreamReader(decompressStream(refFiles.get(0))));
 
-        doLiftOverPairedFastq(mapBlocks, new PBSIMFastqReader(brREF,brMAF, brFastq, forceFiveBaseEncoding), ps, null);
+        doLiftOverPairedFastq(mapBlocks, new PBSIMFastqReader(brREF, brMAF, brFastq, forceFiveBaseEncoding), ps, null);
     }
 
     public void doLiftOverPairedFastq(final MapBlocks mapBlocks, final PairedFastqReader pfr, final PrintStream ps1, final PrintStream ps2) throws IOException {
@@ -151,10 +151,10 @@ public class FastqLiftOver {
         while ((readPair = pfr.getNextReadPair()) != null) {
 
             final boolean hasRead2 = readPair.read2 != null;
-            if( hasRead2 && (ps2 == null) ) throw new RuntimeException("found read2 but read2 output not provided");
+            if (hasRead2 && (ps2 == null)) throw new RuntimeException("found read2 but read2 output not provided");
 
             readPair.read1.laneId = laneId;
-            if(hasRead2) {
+            if (hasRead2) {
                 readPair.read2.laneId = laneId;
             }
 
@@ -171,7 +171,7 @@ public class FastqLiftOver {
             ++readCount;
             ps1.println(readPair.read1);
 
-            if(hasRead2) {
+            if (hasRead2) {
                 readPair.read2.locs1 = newLocs1;
                 readPair.read2.locs2 = newLocs2;
                 readPair.read2.origLocs1 = new ArrayList<>();
@@ -185,7 +185,7 @@ public class FastqLiftOver {
             }
         }
         ps1.close();
-        if (ps2!=null) ps2.close();
+        if (ps2 != null) ps2.close();
         log.info("Processed " + readCount + " reads.");
     }
 }
