@@ -19,7 +19,7 @@ public class Genotypes {
      * @param num_alt Number of alternate alleles possible
      * @param rand    Random number generator
      */
-    Genotypes(ChrString chr, GenderType male, int num_alt, Random rand) {
+    public Genotypes(ChrString chr, GenderType male, int num_alt, Random rand) {
         this(chr, male, num_alt, rand, 0.6);
     }
 
@@ -31,7 +31,7 @@ public class Genotypes {
      * @param rand     Random number generator
      * @param prop_het proportion heterozygous, rest are homo
      */
-    Genotypes(ChrString chr, GenderType male, int num_alt, Random rand, double prop_het) {
+    public Genotypes(ChrString chr, GenderType male, int num_alt, Random rand, double prop_het) {
         geno = new byte[2];
 
         if (chr.isHaploid(male)) {
@@ -67,7 +67,7 @@ public class Genotypes {
      * @param geno0 First allele
      * @param geno1 Second allele
      */
-    Genotypes(byte geno0, byte geno1) {
+    public Genotypes(byte geno0, byte geno1) {
         geno = new byte[2];
         this.geno[0] = geno0;
         this.geno[1] = geno1;

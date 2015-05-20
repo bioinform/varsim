@@ -61,13 +61,13 @@ public class RandBED2VCF extends randVCFgenerator {
     @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]", metaVar = "BED_file", required = true)
     String inv_bed_filename;
 
-    RandBED2VCF() {
+    public RandBED2VCF() {
         super();
         num_novel_added = 0;
         var_idx = 0;
     }
 
-    RandBED2VCF(long seed) {
+    public RandBED2VCF(long seed) {
         super(seed);
         num_novel_added = 0;
         var_idx = 0;

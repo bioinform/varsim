@@ -38,17 +38,17 @@ public class PBSIMFastqReader implements PairedFastqReader {
 
             SimulatedRead read = new SimulatedRead();
             read.fragment = 1; //always read-1 since there is no pair-ended-ness
-            read.readId = fastq_entry.getReadHeader();
+            read.setReadId(fastq_entry.getReadHeader());
 
             read.sequence = fastq_entry.getReadString();
             read.quality = fastq_entry.getBaseQualityString();
 
             if (maf_entry.size() != 2) throw new RuntimeException("unexpected MAF data");
             if ( !maf_entry.get(0).src.equals("ref")) throw new RuntimeException("unexpected MAF data");
-            if( !maf_entry.get(1).src.equals(read.readId)) throw new RuntimeException("unmatched read names");
+            if( !maf_entry.get(1).src.equals(read.getReadId())) throw new RuntimeException("unmatched read names");
 
             //read name is S%d_%d, where the first integer is CHR index and second integer is read number
-            final String[] tags = read.readId.substring(1).split("_");
+            final String[] tags = read.getReadId().substring(1).split("_");
             if (tags.length != 2) throw new RuntimeException("unexpected MAF data");
 
             final GenomeLocation loc = new GenomeLocation(

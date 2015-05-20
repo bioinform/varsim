@@ -31,7 +31,7 @@ public class DWGSIMFastqReader {
         final String nameFields[] = StringUtils.replaceChars(nameLine.trim().substring(1), "/_", "::").split(":");
         read = new SimulatedRead();
         read.fragment = Integer.parseInt(nameFields[nameFields.length - 1]);
-        read.readId = nameFields[nameFields.length - 2];
+        read.setReadId(nameFields[nameFields.length - 2]);
         read.indels2 = Integer.parseInt(nameFields[nameFields.length - 3]);
         read.snps2 = Integer.parseInt(nameFields[nameFields.length - 4]);
         read.seqErrors2 = Integer.parseInt(nameFields[nameFields.length - 5]);

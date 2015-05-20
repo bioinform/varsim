@@ -30,7 +30,7 @@ public class ARTFastqAlnReader {
         final String nameFields[] = nameLine.trim().substring(1).split("[-/]");
         read = new SimulatedRead();
         read.fragment = Integer.parseInt(nameFields[nameFields.length - 1]);
-        read.readId = nameFields[nameFields.length - 2];
+        read.setReadId(nameFields[nameFields.length - 2]);
 
         read.sequence = fastqBr.readLine().trim();
         if (forceFiveBaseEncoding) {

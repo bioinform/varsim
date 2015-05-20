@@ -73,12 +73,12 @@ public class RandDGV2VCF extends randVCFgenerator {
 
     int num_novel_added = 0;
 
-    RandDGV2VCF() {
+    public RandDGV2VCF() {
         super();
         num_novel_added = 0;
     }
 
-    RandDGV2VCF(long seed) {
+    public RandDGV2VCF(long seed) {
         super(seed);
         num_novel_added = 0;
     }

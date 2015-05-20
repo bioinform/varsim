@@ -78,7 +78,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
     int num_novel_added;
 
-    RandVCF2VCF() {
+    public RandVCF2VCF() {
         super();
         num_novel_added = 0;
     }
