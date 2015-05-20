@@ -376,7 +376,7 @@ public class IntervalTree<Key extends Interval1D> {
      * @param child
      */
     private void bubbleChildrenUp(IntervalTreeNode<Key> head, IntervalTreeNode<Key> child) {
-        if(child == null) return;
+        if (child == null) return;
         ArrayList<Key> newChildCenter = new ArrayList<>();
         for (Key center : child.getCenter()) {
             if (head.addKey(center) != 0) {

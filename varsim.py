@@ -27,68 +27,104 @@ if not os.path.isfile(default_varsim_jar): require_varsim_jar = None
 
 main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-main_parser.add_argument("--out_dir", metavar="DIR", help="Output directory for the simulated genome, reads and variants", required=False, default="out")
-main_parser.add_argument("--work_dir", metavar="DIR", help="Work directory, currently not used", required=False, default="work")
+main_parser.add_argument("--out_dir", metavar="DIR",
+                         help="Output directory for the simulated genome, reads and variants", required=False,
+                         default="out")
+main_parser.add_argument("--work_dir", metavar="DIR", help="Work directory, currently not used", required=False,
+                         default="work")
 main_parser.add_argument("--log_dir", metavar="DIR", help="Log files of all steps are kept here", required=False,
                          default="log")
-main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into", required=True, type=file)
+main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into",
+                         required=True, type=file)
 main_parser.add_argument("--seed", metavar="seed", help="Random number seed for reproducibility", type=int, default=0)
 main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
                          choices=["MALE", "FEMALE"], default="MALE")
 main_parser.add_argument("--id", metavar="ID", help="Sample ID to be put in output VCF file", required=True)
 main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", required=False, type=str,
                          choices=["art", "dwgsim", "pbsim"], default="art")
-main_parser.add_argument("--simulator_executable", metavar="PATH", help="Path to the executable of the read simulator chosen"
+main_parser.add_argument("--simulator_executable", metavar="PATH",
+                         help="Path to the executable of the read simulator chosen"
                          , required=True, type=file)
-main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file, default=default_varsim_jar,
+main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file,
+                         default=default_varsim_jar,
                          required=require_varsim_jar)
 main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
-main_parser.add_argument("--nlanes", metavar="INTEGER", help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files", default=1, type=int)
-main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0, type=float)
+main_parser.add_argument("--nlanes", metavar="INTEGER",
+                         help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
+                         default=1, type=int)
+main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0,
+                         type=float)
 main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragment size to simulate", default=350,
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size to simulate",
                          default=50, type=int)
-main_parser.add_argument("--vcfs", metavar="VCF", help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+", default=[])
+main_parser.add_argument("--vcfs", metavar="VCF",
+                         help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+",
+                         default=[])
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force output bases to be only ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
-pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable sampling from the provided small variant VCF")
-pipeline_control_group.add_argument("--disable_rand_dgv", action="store_true", help="Disable sampline from the provided DGV file")
-pipeline_control_group.add_argument("--disable_vcf2diploid", action="store_true", help="Disable diploid genome simulation")
+pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true",
+                                    help="Disable sampling from the provided small variant VCF")
+pipeline_control_group.add_argument("--disable_rand_dgv", action="store_true",
+                                    help="Disable sampline from the provided DGV file")
+pipeline_control_group.add_argument("--disable_vcf2diploid", action="store_true",
+                                    help="Disable diploid genome simulation")
 pipeline_control_group.add_argument("--disable_sim", action="store_true", help="Disable read simulation")
 
 # RandVCF2VCF seed num_SNP num_INS num_DEL num_MNP num_COMPLEX percent_novel min_length_lim max_length_lim reference_file file.vcf
 rand_vcf_group = main_parser.add_argument_group("Small variant simulation options")
-rand_vcf_group.add_argument("--vc_num_snp", metavar="INTEGER", help="Number of SNPs to sample from small variant VCF", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_ins", metavar="INTEGER", help="Number of insertions to sample from small variant VCF", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_del", metavar="INTEGER", help="Number of deletions to sample from small variant VCF", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_mnp", metavar="INTEGER", help="Number of MNPs to sample from small variant VCF", default=0, type=int)
-rand_vcf_group.add_argument("--vc_num_complex", metavar="INTEGER", help="Number of complex variants to sample from small variant VCF", default=0,
+rand_vcf_group.add_argument("--vc_num_snp", metavar="INTEGER", help="Number of SNPs to sample from small variant VCF",
+                            default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_ins", metavar="INTEGER",
+                            help="Number of insertions to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_del", metavar="INTEGER",
+                            help="Number of deletions to sample from small variant VCF", default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_mnp", metavar="INTEGER", help="Number of MNPs to sample from small variant VCF",
+                            default=0, type=int)
+rand_vcf_group.add_argument("--vc_num_complex", metavar="INTEGER",
+                            help="Number of complex variants to sample from small variant VCF", default=0,
                             type=int)
-rand_vcf_group.add_argument("--vc_percent_novel", metavar="FLOAT", help="Percent variants sampled from small variant VCF that will be moved to novel positions", default=0, type=float)
-rand_vcf_group.add_argument("--vc_min_length_lim", metavar="INTEGER", help="Min length of small variant to accept [inclusive]", default=0, type=int)
-rand_vcf_group.add_argument("--vc_max_length_lim", metavar="INTEGER", help="Max length of small variant to accept [inclusive]", default=99,
+rand_vcf_group.add_argument("--vc_percent_novel", metavar="FLOAT",
+                            help="Percent variants sampled from small variant VCF that will be moved to novel positions",
+                            default=0, type=float)
+rand_vcf_group.add_argument("--vc_min_length_lim", metavar="INTEGER",
+                            help="Min length of small variant to accept [inclusive]", default=0, type=int)
+rand_vcf_group.add_argument("--vc_max_length_lim", metavar="INTEGER",
+                            help="Max length of small variant to accept [inclusive]", default=99,
                             type=int)
-rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP", type=file, required=False)
-rand_vcf_group.add_argument("--vc_prop_het", metavar="FLOAT", help="Proportion of heterozygous small variants", default=0.6,
+rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP", type=file,
+                            required=False)
+rand_vcf_group.add_argument("--vc_prop_het", metavar="FLOAT", help="Proportion of heterozygous small variants",
+                            default=0.6,
                             type=float)
 
 # RandDGV2VCF seed num_INS num_DEL num_DUP num_INV percent_novel min_length_lim max_length_lim reference_file insert_seq.txt dgv_file.txt
 rand_dgv_group = main_parser.add_argument_group("Structural variant simulation options")
-rand_dgv_group.add_argument("--sv_num_ins", metavar="INTEGER", help="Number of insertions to sample from DGV", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_del", metavar="INTEGER", help="Number of deletions to sample from DGV", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_dup", metavar="INTEGER", help="Number of duplications to sample from DGV", default=20, type=int)
-rand_dgv_group.add_argument("--sv_num_inv", metavar="INTEGER", help="Number of inversions to sample from DGV", default=20, type=int)
-rand_dgv_group.add_argument("--sv_percent_novel", metavar="FLOAT", help="Percent variants sampled from DGV that will be moved to novel positions", default=0, type=float)
-rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim", help="Min length of structural variant to accept [inclusive]", default=100,
+rand_dgv_group.add_argument("--sv_num_ins", metavar="INTEGER", help="Number of insertions to sample from DGV",
+                            default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_del", metavar="INTEGER", help="Number of deletions to sample from DGV",
+                            default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_dup", metavar="INTEGER", help="Number of duplications to sample from DGV",
+                            default=20, type=int)
+rand_dgv_group.add_argument("--sv_num_inv", metavar="INTEGER", help="Number of inversions to sample from DGV",
+                            default=20, type=int)
+rand_dgv_group.add_argument("--sv_percent_novel", metavar="FLOAT",
+                            help="Percent variants sampled from DGV that will be moved to novel positions", default=0,
+                            type=float)
+rand_dgv_group.add_argument("--sv_min_length_lim", metavar="min_length_lim",
+                            help="Min length of structural variant to accept [inclusive]", default=100,
                             type=int)
-rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim", help="Max length of structural variant to accept [inclusive]", default=1000000,
+rand_dgv_group.add_argument("--sv_max_length_lim", metavar="max_length_lim",
+                            help="Max length of structural variant to accept [inclusive]", default=1000000,
                             type=int)
-rand_dgv_group.add_argument("--sv_insert_seq", metavar="FILE", help="Path to file containing concatenation of real insertion sequences", type=file, required=False)
-rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants", type=file, required=False)
+rand_dgv_group.add_argument("--sv_insert_seq", metavar="FILE",
+                            help="Path to file containing concatenation of real insertion sequences", type=file,
+                            required=False)
+rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants", type=file,
+                            required=False)
 
 dwgsim_group = main_parser.add_argument_group("DWGSIM options")
 dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base",
@@ -98,8 +134,10 @@ dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help
 dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
 
 art_group = main_parser.add_argument_group("ART options")
-art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default=None, type=file)
-art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default=None, type=file)
+art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default=None,
+                       type=file)
+art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default=None,
+                       type=file)
 art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
 
 pbsim_group = main_parser.add_argument_group("PBSIM options")
@@ -333,12 +371,12 @@ if not args.disable_sim:
                                          "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
     elif args.simulator == "pbsim":
         for i in xrange(args.nlanes):
-            for end in [1, 2]: # the '2' read files are empty, and for compatibility only
+            for end in [1, 2]:  # the '2' read files are empty, and for compatibility only
                 for suffix in ["fq", "maf"]:
                     fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
                                          "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
     else:
-        raise NotImplementedError("simulation method "+args.simulator+" not implemented");
+        raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
     for fifo_name, dst in fifo_src_dst:
         fifos.append(os.path.join(args.out_dir, fifo_name))
@@ -394,27 +432,33 @@ if not args.disable_sim:
             logger.info("Executing command " + art_command + " with pid " + str(art_p.pid))
     elif args.simulator == "pbsim":
         nRef = 0;
-        with open(merged_reference,'r') as fa:
-            nRef = sum( 1 for line in fa if len(line)>0 and line[0] == '>' )
-        assert nRef > 0 and nRef < 10000
+        with open(merged_reference, 'r') as fa:
+            nRef = sum(1 for line in fa if len(line) > 0 and line[0] == '>')
+        assert 0 < nRef < 10000
 
         for i in xrange(args.nlanes):
-            tmp_prefix = os.path.join(args.out_dir,"simulated.lane%d"%(i));
-            tmp_fastq_list = " ".join( "%s_%s.fastq"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
-            tmp_maf_list = " ".join( "%s_%s.maf"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
-            tmp_ref_list = " ".join( "%s_%s.ref"%(tmp_prefix,"0"*(4-len(str(idx)))+str(idx)) for idx in range(1,nRef+1) )
+            tmp_prefix = os.path.join(args.out_dir, "simulated.lane%d" % (i));
+            tmp_fastq_list = " ".join(
+                "%s_%s.fastq" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
+            tmp_maf_list = " ".join(
+                "%s_%s.maf" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
+            tmp_ref_list = " ".join(
+                "%s_%s.ref" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
             pbsim_command = [os.path.realpath(args.simulator_executable.name),
                              "--data-type", "CLR",
                              "--depth", str(coverage_per_lane),
                              "--model_qc", args.model_qc,
-                             "--seed", str(2089*(i+1)),
+                             "--seed", str(2089 * (i + 1)),
                              merged_reference,
                              "--prefix", tmp_prefix,
-                             "&& ( cat", tmp_fastq_list, "> %s.read1.fq"%(tmp_prefix), ")", #this cat is i/o bound, need optimization of piping
-                             "&& ( cat", tmp_maf_list, "> %s.read1.maf"%(tmp_prefix), ")" #this cat is i/o bound, need optimization of piping
-                             "&& ( head -q -n1 ", tmp_ref_list, "> %s.ref"%(tmp_prefix), ")" #make reference header list
-                             "&& ( echo > %s.read2.fq"%(tmp_prefix), ")", #dummy file
-                             "&& ( echo > %s.read2.maf"%(tmp_prefix), ")" #dummy file
+                             "&& ( cat", tmp_fastq_list, "> %s.read1.fq" % (tmp_prefix), ")",
+                             # this cat is i/o bound, need optimization of piping
+                             "&& ( cat", tmp_maf_list, "> %s.read1.maf" % (tmp_prefix),
+                             ")"  # this cat is i/o bound, need optimization of piping
+                             "&& ( head -q -n1 ", tmp_ref_list, "> %s.ref" % (tmp_prefix),
+                             ")"  # make reference header list
+                             "&& ( echo > %s.read2.fq" % (tmp_prefix), ")",  # dummy file
+                             "&& ( echo > %s.read2.maf" % (tmp_prefix), ")"  # dummy file
                              ]
 
             pbsim_command = " ".join(pbsim_command)
@@ -426,9 +470,7 @@ if not args.disable_sim:
             processes.append(pbsim_p)
             logger.info("Executing command " + pbsim_command + " with pid " + str(pbsim_p.pid))
     else:
-        raise NotImplementedError("simulation method "+args.simulator+" not implemented");
-
-
+        raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
     monitor_multiprocesses(processes, logger)
     processes = []
@@ -459,7 +501,7 @@ if not args.disable_sim:
         elif args.simulator == "pbsim":
             fastq_liftover_command += " -type pbsim " \
                                       "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
-                                      "-ref %s/simulated.lane%d.ref "% (args.out_dir, i, args.out_dir, i)
+                                      "-ref %s/simulated.lane%d.ref " % (args.out_dir, i, args.out_dir, i)
         fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
         liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
         liftover_p.start()

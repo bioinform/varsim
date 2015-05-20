@@ -1,5 +1,13 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.fastqLiftover.readers.ARTPairedFastqAlnReader;
+import com.bina.varsim.fastqLiftover.readers.DWGSIMPairedFastqReader;
+import com.bina.varsim.fastqLiftover.readers.PBSIMFastqReader;
+import com.bina.varsim.fastqLiftover.readers.PairedFastqReader;
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import com.bina.varsim.fastqLiftover.types.MapBlocks;
+import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -13,9 +21,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FastqLiftOver {
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file")
     private File mapFile;
     @Option(name = "-type", usage = "Type of FASTQ (art/dwgsim)", metaVar = "fastqType")
@@ -135,7 +142,7 @@ public class FastqLiftOver {
         BufferedReader brMAF = new BufferedReader(new InputStreamReader(decompressStream(mafFiles.get(0))));
         BufferedReader brREF = new BufferedReader(new InputStreamReader(decompressStream(refFiles.get(0))));
 
-        doLiftOverPairedFastq(mapBlocks, new PBSIMFastqReader(brREF,brMAF, brFastq, forceFiveBaseEncoding), ps, null);
+        doLiftOverPairedFastq(mapBlocks, new PBSIMFastqReader(brREF, brMAF, brFastq, forceFiveBaseEncoding), ps, null);
     }
 
     public void doLiftOverPairedFastq(final MapBlocks mapBlocks, final PairedFastqReader pfr, final PrintStream ps1, final PrintStream ps2) throws IOException {
@@ -144,10 +151,10 @@ public class FastqLiftOver {
         while ((readPair = pfr.getNextReadPair()) != null) {
 
             final boolean hasRead2 = readPair.read2 != null;
-            if( hasRead2 && (ps2 == null) ) throw new RuntimeException("found read2 but read2 output not provided");
+            if (hasRead2 && (ps2 == null)) throw new RuntimeException("found read2 but read2 output not provided");
 
             readPair.read1.laneId = laneId;
-            if(hasRead2) {
+            if (hasRead2) {
                 readPair.read2.laneId = laneId;
             }
 
@@ -157,16 +164,20 @@ public class FastqLiftOver {
             final List<GenomeLocation> newLocs1 = mapBlocks.liftOverInterval(loc1.chromosome, loc1.location, loc1.location + readPair.read1.alignedBases1, loc1.direction);
             final List<GenomeLocation> newLocs2 = hasRead2 ? mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction) : newLocs1;
 
+            String readId = Base64.encodeBase64String(String.valueOf(readCount).getBytes());
+
             readPair.read1.locs1 = newLocs1;
             readPair.read1.locs2 = newLocs2;
+            readPair.read1.setReadId(readPair.read1.getReadId() + readId);
             readPair.read1.origLocs1 = new ArrayList<>();
             readPair.read1.origLocs2 = new ArrayList<>();
             ++readCount;
             ps1.println(readPair.read1);
 
-            if(hasRead2) {
+            if (hasRead2) {
                 readPair.read2.locs1 = newLocs1;
                 readPair.read2.locs2 = newLocs2;
+                readPair.read2.setReadId(readPair.read2.getReadId() + readId);
                 readPair.read2.origLocs1 = new ArrayList<>();
                 readPair.read2.origLocs2 = new ArrayList<>();
                 ++readCount;
@@ -178,7 +189,7 @@ public class FastqLiftOver {
             }
         }
         ps1.close();
-        if (ps2!=null) ps2.close();
+        if (ps2 != null) ps2.close();
         log.info("Processed " + readCount + " reads.");
     }
 }
