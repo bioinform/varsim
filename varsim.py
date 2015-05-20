@@ -434,7 +434,7 @@ if not args.disable_sim:
         nRef = 0;
         with open(merged_reference, 'r') as fa:
             nRef = sum(1 for line in fa if len(line) > 0 and line[0] == '>')
-        assert nRef > 0 and nRef < 10000
+        assert 0 < nRef < 10000
 
         for i in xrange(args.nlanes):
             tmp_prefix = os.path.join(args.out_dir, "simulated.lane%d" % (i));

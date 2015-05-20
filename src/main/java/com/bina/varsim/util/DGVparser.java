@@ -82,29 +82,39 @@ public class DGVparser extends GzFileParser<Variant> {
 
         switch (varianttype) {
             case "CNV":
-                if (variantsubtype.equals("Gain")) {
-                    type = Variant.Type.Tandem_Duplication;
-                } else if (variantsubtype.equals("Loss")) {
-                    type = Variant.Type.Deletion;
-                } else if (variantsubtype.equals("CNV")) {
-                    type = Variant.Type.Tandem_Duplication;
-                } else if (variantsubtype.equals("Duplication")) {
-                    type = Variant.Type.Tandem_Duplication;
-                } else if (variantsubtype.equals("Insertion")) {
-                    type = Variant.Type.Insertion;
-                } else if (variantsubtype.equals("Deletion")) {
-                    type = Variant.Type.Deletion;
-                } else {
-                    return null;
+                switch (variantsubtype) {
+                    case "Gain":
+                        type = Variant.Type.Tandem_Duplication;
+                        break;
+                    case "Loss":
+                        type = Variant.Type.Deletion;
+                        break;
+                    case "CNV":
+                        type = Variant.Type.Tandem_Duplication;
+                        break;
+                    case "Duplication":
+                        type = Variant.Type.Tandem_Duplication;
+                        break;
+                    case "Insertion":
+                        type = Variant.Type.Insertion;
+                        break;
+                    case "Deletion":
+                        type = Variant.Type.Deletion;
+                        break;
+                    default:
+                        return null;
                 }
                 break;
             case "OTHER":
-                if (variantsubtype.equals("Tandem Duplication")) {
-                    type = Variant.Type.Tandem_Duplication;
-                } else if (variantsubtype.equals("Inversion")) {
-                    type = Variant.Type.Inversion;
-                } else {
-                    return null;
+                switch (variantsubtype) {
+                    case "Tandem Duplication":
+                        type = Variant.Type.Tandem_Duplication;
+                        break;
+                    case "Inversion":
+                        type = Variant.Type.Inversion;
+                        break;
+                    default:
+                        return null;
                 }
                 break;
             default:

@@ -43,7 +43,7 @@ public class SimulatedReadTest
         assertEquals(0, testRead.seqErrors2);
         assertEquals(0, testRead.snps2);
         assertEquals(0, testRead.indels2);
-        assertEquals("", testRead.readId);
+        assertEquals("", testRead.getReadId());
         assertEquals(2, testRead.laneId);
     }
 
@@ -72,7 +72,7 @@ public class SimulatedReadTest
         assertEquals(1, testRead.seqErrors2);
         assertEquals(0, testRead.snps2);
         assertEquals(0, testRead.indels2);
-        assertEquals("e9f", testRead.readId);
+        assertEquals("e9f", testRead.getReadId());
         assertEquals(2, testRead.laneId);
     }
 }
