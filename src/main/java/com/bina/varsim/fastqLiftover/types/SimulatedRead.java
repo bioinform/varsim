@@ -22,7 +22,7 @@ public class SimulatedRead {
     public int seqErrors2 = 0;
     public int snps2 = 0;
     public int indels2 = 0;
-    public String readId = "";
+    protected String readId = "";
     public int fragment = 1;
     public int laneId = 0;
     public String sequence;
@@ -117,6 +117,14 @@ public class SimulatedRead {
         return joiner.join(selectLocs(locs1)) + ":" + joiner.join(selectLocs(locs2)) + ":" + joiner.join(origLocs1) + ":" + joiner.join(origLocs2)
                 + encodeInts(random1, random2, seqErrors1, snps1, indels1, seqErrors2, snps2, indels2) + ":" + readId + ":" + laneId + "/" + fragment;
 
+    }
+
+    public String getReadId() {
+        return readId;
+    }
+
+    public void setReadId(String readId) {
+        this.readId = readId;
     }
 
     public String toString() {

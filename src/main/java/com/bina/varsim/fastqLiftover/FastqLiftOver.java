@@ -7,6 +7,7 @@ import com.bina.varsim.fastqLiftover.readers.PairedFastqReader;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlocks;
 import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -164,8 +165,11 @@ public class FastqLiftOver {
             final List<GenomeLocation> newLocs1 = mapBlocks.liftOverInterval(loc1.chromosome, loc1.location, loc1.location + readPair.read1.alignedBases1, loc1.direction);
             final List<GenomeLocation> newLocs2 = hasRead2 ? mapBlocks.liftOverInterval(loc2.chromosome, loc2.location, loc2.location + readPair.read2.alignedBases2, loc2.direction) : newLocs1;
 
+            String readId = Base64.encodeBase64String(String.valueOf(readCount).getBytes());
+
             readPair.read1.locs1 = newLocs1;
             readPair.read1.locs2 = newLocs2;
+            readPair.read1.setReadId(readPair.read1.getReadId() + readId);
             readPair.read1.origLocs1 = new ArrayList<>();
             readPair.read1.origLocs2 = new ArrayList<>();
             ++readCount;
@@ -174,6 +178,7 @@ public class FastqLiftOver {
             if (hasRead2) {
                 readPair.read2.locs1 = newLocs1;
                 readPair.read2.locs2 = newLocs2;
+                readPair.read2.setReadId(readPair.read2.getReadId() + readId);
                 readPair.read2.origLocs1 = new ArrayList<>();
                 readPair.read2.origLocs2 = new ArrayList<>();
                 ++readCount;
