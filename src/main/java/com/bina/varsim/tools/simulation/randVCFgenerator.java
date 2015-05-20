@@ -1,9 +1,9 @@
 package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.types.FlexSeq;
-import com.bina.varsim.types.VariantOverallType;
+import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.Sample_params;
-import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.variant.Variant;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

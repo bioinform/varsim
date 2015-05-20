@@ -1,8 +1,12 @@
-package com.bina.varsim.types;
+package com.bina.varsim.types.variant;
 
 //--- Java imports ---
 
 import com.bina.varsim.intervalTree.SimpleInterval1D;
+import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.GenderType;
+import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 

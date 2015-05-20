@@ -5,8 +5,8 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
-import com.bina.varsim.types.VariantType;
-import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.variant.VariantType;
+import com.bina.varsim.types.variant.Variant;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;

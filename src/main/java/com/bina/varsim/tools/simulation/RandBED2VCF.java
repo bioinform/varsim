@@ -2,6 +2,8 @@ package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;

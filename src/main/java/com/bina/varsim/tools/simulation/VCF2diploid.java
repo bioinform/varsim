@@ -3,6 +3,9 @@ package com.bina.varsim.tools.simulation;
 //--- Java imports ---
 
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantOverallType;
+import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;

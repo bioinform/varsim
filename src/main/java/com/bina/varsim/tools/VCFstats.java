@@ -6,7 +6,7 @@ package com.bina.varsim.tools;
 
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.Parent_record;
-import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;

@@ -1,4 +1,4 @@
-package com.bina.varsim.types;
+package com.bina.varsim.types.variant;
 
 /**
  * Created by johnmu on 5/20/15.

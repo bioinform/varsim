@@ -1,5 +1,7 @@
 package com.bina.varsim.types;
 
+import com.bina.varsim.types.variant.VariantType;
+
 import java.util.HashMap;
 import java.util.Map;
 

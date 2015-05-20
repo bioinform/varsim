@@ -1,6 +1,10 @@
 package com.bina.varsim.types;
 
 
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantOverallType;
+import com.bina.varsim.types.variant.VariantType;
+
 /**
  * Stores the data for each haplotype separately
  */
