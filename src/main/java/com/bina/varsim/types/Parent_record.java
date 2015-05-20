@@ -8,12 +8,12 @@ public class Parent_record {
     // 0 = paternal, 1 = maternal
     public final static int PATERNAL = 0;
     public final static int MATERNAL = 1;
-    Type_record<Variant.Type>[] data;
-    Type_record<Variant.OverallType> overall_data;
+    Type_record<VariantType>[] data;
+    Type_record<VariantOverallType> overall_data;
     int total_count;
 
     public Parent_record() {
-        data = (Type_record<Variant.Type>[]) new Type_record[2];
+        data = (Type_record<VariantType>[]) new Type_record[2];
         data[PATERNAL] = new Type_record<>();
         data[MATERNAL] = new Type_record<>();
         overall_data = new Type_record<>();

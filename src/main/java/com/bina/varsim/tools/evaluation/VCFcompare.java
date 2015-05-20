@@ -72,15 +72,16 @@ public class VCFcompare {
     File html_file = null;
 
     @Option(name = "-sample", usage = "Sample to read from new VCF, otherwise will read first one [Optional]", metaVar = "String")
-    String sample_name = null;
+    String sampleName = null;
 
     @Option(name = "-exclude_filtered", usage = "Exclude filtered variants. Will only load variants with '.' or 'PASS' in the FILTER column")
-    boolean exclude_filtered = false;
+    boolean excludeFiltered = false;
 
     @Option(name = "-include_chr", usage = "Comma separated list of chromosomes to include, default is include all", metaVar = "CHR_LIST")
-    String include_chr_str = null;
+    String includeChrStr = null;
 
-
+    @Option(name = "-con", usage = "One or more constraints on the accuracy of the output", metaVar = "CONSTRAINT")
+    List<String> constraintArgs = null;
 
     public static void main(String[] args) {
         new VCFcompare().run(args);
@@ -195,7 +196,7 @@ public class VCFcompare {
         // if the variant is an MNP or SNP, break it dooooownnn
 
         boolean no_split = false;
-        if (var.getType() == Variant.OverallType.SNP) {
+        if (var.getType() == VariantOverallType.SNP) {
             no_split = true;
         }
         if (var.getgood_paternal() == 0 && var.getgood_maternal() == 0) {
@@ -220,8 +221,8 @@ public class VCFcompare {
         }
 
 
-        if (var.getType(var.getgood_paternal()) != Variant.Type.Reference
-                && var.getType(var.getgood_maternal()) != Variant.Type.Reference) {
+        if (var.getType(var.getgood_paternal()) != VariantType.Reference
+                && var.getType(var.getgood_maternal()) != VariantType.Reference) {
 
             int[] allele = {var.get_allele(0), var.get_allele(1)};
             byte[][] alt = {var.getAlt(allele[0]).getSeq(), var.getAlt(allele[1]).getSeq()};
@@ -320,9 +321,9 @@ public class VCFcompare {
         } else {
             for (int a = 0; a < 2; a++) {
                 int allele = var.get_allele(a);
-                if (var.getType(allele) == Variant.Type.Complex
-                        || var.getType(allele) == Variant.Type.MNP
-                        || var.getType(allele) == Variant.Type.SNP) {
+                if (var.getType(allele) == VariantType.Complex
+                        || var.getType(allele) == VariantType.MNP
+                        || var.getType(allele) == VariantType.SNP) {
                     byte[] alt = var.getAlt(allele).getSeq();
                     byte[] ref = var.getRef();
                     int curr_pos = var.getPos();
@@ -447,8 +448,8 @@ public class VCFcompare {
         }
 
         Set<String> chrAcceptor = null;
-        if (include_chr_str != null) {
-            chrAcceptor = new HashSet<>(Arrays.asList(include_chr_str.split(",")));
+        if (includeChrStr != null) {
+            chrAcceptor = new HashSet<>(Arrays.asList(includeChrStr.split(",")));
             log.info("Only accepting chromosomes: " + Arrays.toString(chrAcceptor.toArray()));
         }
 
@@ -461,9 +462,9 @@ public class VCFcompare {
          */
         class output_class {
             CompareParams params;
-            EnumStatsRatioCounter<Variant.OverallType> num_true_correct;
+            EnumStatsRatioCounter<VariantOverallType> num_true_correct;
 
-            output_class(CompareParams params, EnumStatsRatioCounter<Variant.OverallType> num_true_correct) {
+            output_class(CompareParams params, EnumStatsRatioCounter<VariantOverallType> num_true_correct) {
                 this.params = params;
                 this.num_true_correct = num_true_correct;
             }
@@ -479,11 +480,11 @@ public class VCFcompare {
                 this.params = params;
             }
 
-            public EnumStatsRatioCounter<Variant.OverallType> getNum_true_correct() {
+            public EnumStatsRatioCounter<VariantOverallType> getNum_true_correct() {
                 return num_true_correct;
             }
 
-            public void setNum_true_correct(EnumStatsRatioCounter<Variant.OverallType> num_true_correct) {
+            public void setNum_true_correct(EnumStatsRatioCounter<VariantOverallType> num_true_correct) {
                 this.num_true_correct = num_true_correct;
             }
         }
@@ -514,7 +515,7 @@ public class VCFcompare {
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
-        output_blob.setNum_true_correct(new EnumStatsRatioCounter<Variant.OverallType>());
+        output_blob.setNum_true_correct(new EnumStatsRatioCounter<VariantOverallType>());
 
         // For called variants, break down into canonical ones and count based on that
         // if any called variant overlaps a complex variant or MNP, count it as "complex"
@@ -536,7 +537,7 @@ public class VCFcompare {
             }
 
             ChrString chr = var.getChr();
-            Variant.OverallType orig_type = var.getType();
+            VariantOverallType orig_type = var.getType();
 
             if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
                 continue;
@@ -635,7 +636,7 @@ public class VCFcompare {
         // iterate over new VCF and collect stats
 
         for (String curr_vcf_file : new_vcf_filename) {
-            VCFparser new_parser = new VCFparser(curr_vcf_file, sample_name, exclude_filtered);
+            VCFparser new_parser = new VCFparser(curr_vcf_file, sampleName, excludeFiltered);
 
             while (new_parser.hasMoreInput()) {
                 Variant var = new_parser.parseLine();
@@ -663,7 +664,7 @@ public class VCFcompare {
                 }
 
                 // the overall type of the called variant
-                Variant.OverallType curr_var_type = var.getType();
+                VariantOverallType curr_var_type = var.getType();
 
                 // if called as complex variant convert to indel+snps
                 ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var));
@@ -742,7 +743,7 @@ public class VCFcompare {
                         } else if (compute_as_split) {
                             if (!skipFP) {
                                 output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
-                                if (curr_var.getType() == Variant.OverallType.SNP && curr_var.max_len() > 1) {
+                                if (curr_var.getType() == VariantOverallType.SNP && curr_var.max_len() > 1) {
                                     log.warn("SNP with bad length: " + curr_var);
                                 }
                                 FP_writer.println(var);
@@ -757,7 +758,7 @@ public class VCFcompare {
                     if (!skipFP) {
                         // this is a false positive!
                         output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
-                        if (curr_var_type == Variant.OverallType.SNP && var.max_len() > 1) {
+                        if (curr_var_type == VariantOverallType.SNP && var.max_len() > 1) {
                             log.warn("SNP with bad length: " + var);
                         }
                         FP_writer.println(var);
@@ -1021,10 +1022,10 @@ public class VCFcompare {
         public int compare_variant(Variant var, int geno, BitSet validated) {
             double overlap_ratio = _overlap_ratio;
             // consider type to change overlap percent
-            Variant.Type type = var.getType(geno);
+            VariantType type = var.getType(geno);
             ChrString chr = var.getChr();
             SimpleInterval1D orig_inter;
-            if (type == Variant.Type.Insertion && _ignore_ins_len) {
+            if (type == VariantType.Insertion && _ignore_ins_len) {
                 orig_inter = new SimpleInterval1D(var.getPos(), var.getPos());
             } else {
                 orig_inter = var.get_var_interval(geno);
@@ -1034,7 +1035,7 @@ public class VCFcompare {
             int max_true_var_len = 0;
 
             // sometimes MNPs are called as SNPs?
-            if (type == Variant.Type.SNP) {
+            if (type == VariantType.SNP) {
                 // handle SNPs differently
                 // require SNP content to match
                 Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr, orig_inter);
@@ -1049,7 +1050,7 @@ public class VCFcompare {
                         int idx = true_var.idx;
                         int full_idx = true_var.full_idx;
 
-                        if (true_var.original_type == Variant.OverallType.Complex) {
+                        if (true_var.original_type == VariantOverallType.Complex) {
                             //System.err.println("Overlap complex SNP!");
                             _overlap_complex = true;
                         }
@@ -1062,7 +1063,7 @@ public class VCFcompare {
                         // check genotype
                         if (true_var.isHom()) {
                             // position is correct, check genotype
-                            if (true_var.getType(true_var.getgood_paternal()) == Variant.Type.SNP
+                            if (true_var.getType(true_var.getgood_paternal()) == VariantType.SNP
                                     && var.getPos() == true_var.getPos()) {
                                 if (val == true_var.getAlt(true_var.getgood_paternal()).getSeq()[0]) {
                                     matches_hom.add(new dual_idx(idx, full_idx));
@@ -1073,7 +1074,7 @@ public class VCFcompare {
                             for (int parent = 0; parent < 2; parent++) {
                                 int allele = true_var.get_allele(parent);
                                 if (allele > 0) {
-                                    if (true_var.getType(allele) == Variant.Type.SNP
+                                    if (true_var.getType(allele) == VariantType.SNP
                                             && var.getPos() == true_var.getPos()) {
                                         if (val == true_var.getAlt(allele).getSeq()[0]) {
                                             matches_het.get(parent).add(new dual_idx(idx, full_idx));
@@ -1112,7 +1113,7 @@ public class VCFcompare {
                     int idx = true_var.idx;
                     int full_idx = true_var.full_idx;
 
-                    if (true_var.original_type == Variant.OverallType.Complex) {
+                    if (true_var.original_type == VariantOverallType.Complex) {
                         _overlap_complex = true;
                     }
 
@@ -1141,7 +1142,7 @@ public class VCFcompare {
 
                         boolean matched = false;
 
-                        if (type == Variant.Type.Insertion && _ignore_ins_len) {
+                        if (type == VariantType.Insertion && _ignore_ins_len) {
                             // this is the case where we want to ignore insertion lengths when comparing
                             // just do a check of the start position
 

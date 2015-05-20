@@ -43,7 +43,7 @@ public class Type_record<T extends Enum> {
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
             sb.append(entry.getKey().name()).append("\n");
             sb.append('\n');
-            if (entry.getKey() == Variant.Type.SNP) {
+            if (entry.getKey() == VariantType.SNP) {
                 sb.append(entry.getValue().toString(1));
             } else {
                 sb.append(entry.getValue());
