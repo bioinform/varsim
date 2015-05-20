@@ -3,6 +3,7 @@ package com.bina.varsim.util;
 
 /**
  * Chromosome search tree, essentially a map from chromosome name to an interval tree
+ *
  * @author johnmu
  */
 

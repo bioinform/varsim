@@ -1,15 +1,15 @@
 package com.bina.varsim.fastqLiftover.readers;
 
-import java.util.ArrayList;
-import java.io.IOException;
-import java.io.BufferedReader;
-
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MafRecord;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class PBSIMFastqReader implements PairedFastqReader {
 
@@ -31,7 +31,7 @@ public class PBSIMFastqReader implements PairedFastqReader {
     @Override
     public SimulatedReadPair getNextReadPair() throws IOException {
         if (fastq_.hasNext()) {
-            if ( !maf_.hasNext() ) throw new RuntimeException(); //should formally use zipped iterator
+            if (!maf_.hasNext()) throw new RuntimeException(); //should formally use zipped iterator
 
             FastqRecord fastq_entry = fastq_.next();
             MafRecord maf_entry = maf_.next();
@@ -44,8 +44,8 @@ public class PBSIMFastqReader implements PairedFastqReader {
             read.quality = fastq_entry.getBaseQualityString();
 
             if (maf_entry.size() != 2) throw new RuntimeException("unexpected MAF data");
-            if ( !maf_entry.get(0).src.equals("ref")) throw new RuntimeException("unexpected MAF data");
-            if( !maf_entry.get(1).src.equals(read.getReadId())) throw new RuntimeException("unmatched read names");
+            if (!maf_entry.get(0).src.equals("ref")) throw new RuntimeException("unexpected MAF data");
+            if (!maf_entry.get(1).src.equals(read.getReadId())) throw new RuntimeException("unmatched read names");
 
             //read name is S%d_%d, where the first integer is CHR index and second integer is read number
             final String[] tags = read.getReadId().substring(1).split("_");
@@ -53,8 +53,8 @@ public class PBSIMFastqReader implements PairedFastqReader {
 
             final GenomeLocation loc = new GenomeLocation(
                     idx2chr_.get(Integer.parseInt(tags[0])),
-                    maf_entry.get(0).start0+1, // 0-base to 1-base conversion
-                    maf_entry.get(0).strand?0:1); // MAF's "+" maps to 0, "-" to 1
+                    maf_entry.get(0).start0 + 1, // 0-base to 1-base conversion
+                    maf_entry.get(0).strand ? 0 : 1); // MAF's "+" maps to 0, "-" to 1
 
             read.locs1.add(loc);
             read.origLocs1.add(loc);
@@ -68,14 +68,16 @@ public class PBSIMFastqReader implements PairedFastqReader {
 
     static private class Idx2Chr {
         private final ArrayList<String> data_;
-        public Idx2Chr(final BufferedReader br) throws IOException{
+
+        public Idx2Chr(final BufferedReader br) throws IOException {
             ArrayList<String> tmp = new ArrayList<String>(5);
             tmp.add(null); // index-0 should not be used, make it break
-            for(String buffer = br.readLine() ; buffer != null ; buffer = br.readLine()) {
+            for (String buffer = br.readLine(); buffer != null; buffer = br.readLine()) {
                 tmp.add(buffer.substring(1));
             }
             data_ = tmp;
         }
+
         String get(int index) {
             return data_.get(index);
         }

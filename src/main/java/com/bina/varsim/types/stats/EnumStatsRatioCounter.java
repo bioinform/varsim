@@ -1,6 +1,7 @@
 package com.bina.varsim.types.stats;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by johnmu on 3/28/14.

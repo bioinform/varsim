@@ -1,7 +1,5 @@
 package com.bina.varsim.types.stats;
 
-import com.bina.varsim.types.stats.RatioRecordSum;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;

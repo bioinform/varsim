@@ -15,7 +15,7 @@ public class Genotypes {
     /**
      * generate random genotypes, make sure het-hom ration is 1.5
      *
-     * @param chr Chromosome name in number format
+     * @param chr     Chromosome name in number format
      * @param num_alt Number of alternate alleles possible
      * @param rand    Random number generator
      */
@@ -26,7 +26,7 @@ public class Genotypes {
     /**
      * generate random genotypes
      *
-     * @param chr  Chromosome name in number format
+     * @param chr      Chromosome name in number format
      * @param num_alt  Number of alternate alleles possible
      * @param rand     Random number generator
      * @param prop_het proportion heterozygous, rest are homo

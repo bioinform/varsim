@@ -2,50 +2,14 @@ package com.bina.varsim.types;
 
 /**
  * Used to represent the chromosome name, able to useful things like determine sex
- *
+ * <p/>
  * Created by johnmu on 1/27/15.
  */
 public class ChrString {
     final String name;
 
-    public ChrString(String name){
+    public ChrString(String name) {
         this.name = stripChr(name);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString(){
-        return name;
-    }
-
-    public boolean isX(){
-        return name.equals("X");
-    }
-
-    public boolean isY(){
-        return name.equals("Y");
-    }
-
-    public boolean isMT(){
-        return name.equals("MT");
-    }
-
-    /**
-     * Checks if the chromosome is haploid.
-     * TODO ignore the alternate contigs for now
-     * @param gender Gender of individual
-     * @return True if the chromosome is haploid given the sex
-     */
-    public boolean isHaploid(GenderType gender){
-        if(isMT()){
-            return true;
-        }else if(gender == GenderType.MALE){
-            return (isX() || isY());
-        }
-        return false;
     }
 
     /**
@@ -62,6 +26,43 @@ public class ChrString {
             chr = "MT";
         }
         return chr;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public boolean isX() {
+        return name.equals("X");
+    }
+
+    public boolean isY() {
+        return name.equals("Y");
+    }
+
+    public boolean isMT() {
+        return name.equals("MT");
+    }
+
+    /**
+     * Checks if the chromosome is haploid.
+     * TODO ignore the alternate contigs for now
+     *
+     * @param gender Gender of individual
+     * @return True if the chromosome is haploid given the sex
+     */
+    public boolean isHaploid(GenderType gender) {
+        if (isMT()) {
+            return true;
+        } else if (gender == GenderType.MALE) {
+            return (isX() || isY());
+        }
+        return false;
     }
 
     @Override

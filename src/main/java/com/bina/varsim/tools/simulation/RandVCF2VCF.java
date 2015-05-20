@@ -24,45 +24,35 @@ import java.util.Random;
 
 
 public class RandVCF2VCF extends randVCFgenerator {
-    private final static Logger log = Logger.getLogger(RandVCF2VCF.class.getName());
-
     static final int SEED_ARG = 333;
+    static final int NUM_SNP_ARG = 3000000;
+    static final int NUM_INS_ARG = 100000;
+    static final int NUM_DEL_ARG = 100000;
+    static final int NUM_MNP_ARG = 20000;
+    static final int NUM_COMPLEX_ARG = 20000;
+    static final double NOVEL_RATIO_ARG = 0.01;
+    static final int MIN_LEN_ARG = 1;
+    static final int MAX_LEN_ARG = Constant.SVLEN - 1;
+    static final double PROP_HET_ARG = 0.6;
+    private final static Logger log = Logger.getLogger(RandVCF2VCF.class.getName());
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     int seed = SEED_ARG;
-
-    static final int NUM_SNP_ARG = 3000000;
     @Option(name = "-num_snp", usage = "Number of SNPs to sample [" + NUM_SNP_ARG + "]")
     int num_SNP = NUM_SNP_ARG;
-
-    static final int NUM_INS_ARG = 100000;
     @Option(name = "-num_ins", usage = "Number of simple insertions to sample [" + NUM_INS_ARG + "]")
     int num_INS = NUM_INS_ARG;
-
-    static final int NUM_DEL_ARG = 100000;
     @Option(name = "-num_del", usage = "Number of simple deletions to sample [" + NUM_DEL_ARG + "]")
     int num_DEL = NUM_DEL_ARG;
-
-    static final int NUM_MNP_ARG = 20000;
     @Option(name = "-num_mnp", usage = "Number of MNPs to sample [" + NUM_MNP_ARG + "]")
     int num_MNP = NUM_MNP_ARG;
-
-    static final int NUM_COMPLEX_ARG = 20000;
     @Option(name = "-num_complex", usage = "Number of complex variants (other ones) to sample [" + NUM_COMPLEX_ARG + "]")
     int num_COMPLEX = NUM_COMPLEX_ARG;
-
-    static final double NOVEL_RATIO_ARG = 0.01;
     @Option(name = "-novel", usage = "Average ratio of novel variants[" + NOVEL_RATIO_ARG + "]")
     double ratio_novel = NOVEL_RATIO_ARG;
-
-    static final int MIN_LEN_ARG = 1;
     @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int min_length_lim = MIN_LEN_ARG;
-
-    static final int MAX_LEN_ARG = Constant.SVLEN - 1;
     @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int max_length_lim = MAX_LEN_ARG;
-
-    static final double PROP_HET_ARG = 0.6;
     @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
     double prop_het = PROP_HET_ARG;
 

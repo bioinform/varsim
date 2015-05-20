@@ -18,56 +18,42 @@ import java.util.Random;
  */
 
 public class RandDGV2VCF extends randVCFgenerator {
-    private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
-
-    @Option(name = "-all", usage = "Output all variants, don't sample")
-    boolean output_all;
-
     static final int SEED_ARG = 333;
+    static final int NUM_INS_ARG = 2000;
+    static final int NUM_DEL_ARG = 2000;
+    static final int NUM_DUP_ARG = 500;
+    static final int NUM_INV_ARG = 500;
+    static final double NOVEL_RATIO_ARG = 0.01;
+    static final int MIN_LEN_ARG = Constant.SVLEN;
+    static final int MAX_LEN_ARG = 1000000;
+    static final double PROP_HET_ARG = 0.6;
+    private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     static int seed = SEED_ARG;
-
-    static final int NUM_INS_ARG = 2000;
+    @Option(name = "-all", usage = "Output all variants, don't sample")
+    boolean output_all;
     @Option(name = "-num_ins", usage = "Number of insertion SV to sample [" + NUM_INS_ARG + "]")
     int num_INS = NUM_INS_ARG;
-
-    static final int NUM_DEL_ARG = 2000;
     @Option(name = "-num_del", usage = "Number of deletion SV to sample [" + NUM_DEL_ARG + "]")
     int num_DEL = NUM_DEL_ARG;
-
-    static final int NUM_DUP_ARG = 500;
     @Option(name = "-num_dup", usage = "Number of duplications to sample [" + NUM_DUP_ARG + "]")
     int num_DUP = NUM_DUP_ARG;
-
-    static final int NUM_INV_ARG = 500;
     @Option(name = "-num_inv", usage = "Number of inversions to sample [" + NUM_INV_ARG + "]")
     int num_INV = NUM_INV_ARG;
-
-    static final double NOVEL_RATIO_ARG = 0.01;
     @Option(name = "-novel", usage = "Average ratio of novel variants[" + NOVEL_RATIO_ARG + "]")
     double ratio_novel = NOVEL_RATIO_ARG;
-
-    static final int MIN_LEN_ARG = Constant.SVLEN;
     @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int min_length_lim = MIN_LEN_ARG;
-
-    static final int MAX_LEN_ARG = 1000000;
     @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int max_length_lim = MAX_LEN_ARG;
-
     @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
     String reference_filename;
-
     @Option(name = "-ins", usage = "Known Insertion Sequences [Required]", metaVar = "file", required = true)
     String insert_filename;
-
     @Option(name = "-dgv", usage = "DGV database flat file [Required]", metaVar = "file", required = true)
     String dgv_filename;
-
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
-
-    static final double PROP_HET_ARG = 0.6;
     @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
     double prop_het = PROP_HET_ARG;
 

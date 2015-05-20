@@ -5,18 +5,17 @@ package com.bina.varsim.tools;
  */
 
 import com.bina.varsim.types.BedFile;
-import com.bina.varsim.util.VCFparser;
-import com.bina.varsim.types.Variant;
 import com.bina.varsim.types.Parent_record;
+import com.bina.varsim.types.Variant;
+import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 public class VCFstats {
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     private final static Logger log = Logger.getLogger(VCFstats.class.getName());
-
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     BedFile bed_file;
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")

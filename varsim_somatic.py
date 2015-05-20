@@ -9,7 +9,6 @@ import subprocess
 import logging
 import time
 import signal
-from multiprocessing import Process
 
 
 def get_contigs_list(reference):
@@ -47,13 +46,18 @@ main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/F
 main_parser.add_argument("--id", metavar="id", help="Sample ID", required=True)
 main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator to use", required=False, type=str,
                          choices=["art", "dwgsim"], default="art")
-main_parser.add_argument("--simulator_executable", metavar="PATH", help="Path to the executable of the read simulator chosen"
+main_parser.add_argument("--simulator_executable", metavar="PATH",
+                         help="Path to the executable of the read simulator chosen"
                          , required=True, type=file)
-main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file, default=default_varsim_jar,
+main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file,
+                         default=default_varsim_jar,
                          required=require_varsim_jar)
 main_parser.add_argument("--read_length", metavar="INT", help="Length of read to simulate", default=100, type=int)
-main_parser.add_argument("--nlanes", metavar="INT", help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files", default=3, type=int)
-main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0, type=float)
+main_parser.add_argument("--nlanes", metavar="INT",
+                         help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
+                         default=3, type=int)
+main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0,
+                         type=float)
 main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragment size", default=350,
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
@@ -87,7 +91,7 @@ rand_vcf_group.add_argument("--som_min_length_lim", metavar="INT", help="Min len
                             type=int)
 rand_vcf_group.add_argument("--som_max_length_lim", metavar="INT", help="Max length lim", default=49,
                             type=int)
-#rand_vcf_group.add_argument("--som_vcf", metavar="in_vcf", help="Input somatic variant database VCF", type=file, required=False)
+# rand_vcf_group.add_argument("--som_vcf", metavar="in_vcf", help="Input somatic variant database VCF", type=file, required=False)
 rand_vcf_group.add_argument("--som_prop_het", metavar="FLOAT", help="Proportion of somatic heterozygous variants",
                             default=1.0, type=float)
 

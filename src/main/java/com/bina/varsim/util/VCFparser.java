@@ -83,6 +83,18 @@ public class VCFparser extends GzFileParser<Variant> {
         this(fileName, null, pass, null);
     }
 
+    public static void main(String args[]) {
+        VCFparser runner = new VCFparser();
+        Variant v = runner.process_line("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
+        v = runner.process_line("12\t29557989\t.\tACTTT\tACGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
+        v = runner.process_line("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
+        System.err.println(v);
+        v = runner.process_line("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
+        System.err.println(v); // TODO this one fails for now
+    }
+
     /**
      * gets the SVLEN value
      *
@@ -205,7 +217,6 @@ public class VCFparser extends GzFileParser<Variant> {
 
         return is_phased;
     }
-
 
     public Variant process_line(String line) {
 
@@ -580,18 +591,6 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         return process_line(line);
-    }
-
-    public static void main(String args[]) {
-        VCFparser runner = new VCFparser();
-        Variant v = runner.process_line("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("12\t29557989\t.\tACTTT\tACGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
-        System.err.println(v); // TODO this one fails for now
     }
 
 }

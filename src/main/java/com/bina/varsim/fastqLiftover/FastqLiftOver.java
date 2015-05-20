@@ -21,9 +21,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FastqLiftOver {
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
+    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file")
     private File mapFile;
     @Option(name = "-type", usage = "Type of FASTQ (art/dwgsim)", metaVar = "fastqType")

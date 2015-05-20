@@ -9,29 +9,25 @@ import junit.framework.TestSuite;
 /**
  * Unit test for SimulatedRead
  */
-public class SimulatedReadTest 
-    extends TestCase
-{
+public class SimulatedReadTest
+        extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public SimulatedReadTest( String testName )
-    {
-        super( testName );
+    public SimulatedReadTest(String testName) {
+        super(testName);
     }
 
     /**
      * @return the suite of tests being tested
      */
-    public static Test suite()
-    {
-        return new TestSuite( SimulatedReadTest.class );
+    public static Test suite() {
+        return new TestSuite(SimulatedReadTest.class);
     }
 
-    public void testSimulatedReadNameParsingEmpty()
-    {
+    public void testSimulatedReadNameParsingEmpty() {
         final String readName = ":::::::::::::2/2";
         final SimulatedRead testRead = new SimulatedRead(readName);
 
@@ -51,8 +47,7 @@ public class SimulatedReadTest
         assertEquals(2, testRead.laneId);
     }
 
-    public void testSimulatedReadNameParsingNormal()
-    {
+    public void testSimulatedReadNameParsingNormal() {
         final String readName = "1-223167089--,1-223167099-:1-223167425--:1_paternal-223817897-:1_paternal-223818223--:::0:::1:::e9f:2/1";
         final SimulatedRead testRead = new SimulatedRead(readName);
 

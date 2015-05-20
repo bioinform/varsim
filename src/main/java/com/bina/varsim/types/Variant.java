@@ -2,26 +2,22 @@ package com.bina.varsim.types;
 
 //--- Java imports ---
 
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Random;
-
 import com.bina.varsim.intervalTree.SimpleInterval1D;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Random;
+
 public class Variant {
     private final static Logger log = Logger.getLogger(Variant.class.getName());
-
-    // use a seed for reproducibility, should be an option or global
-    private Random _rand = null;
-
     public int idx = 0; // this is hopefully a unique index, for the split variants
     public int full_idx = 0; // this is hopefully a unique index, for the whole variants
-
     // this is the type before the variant was split into canonical ones
     public OverallType original_type = null;
-
+    // use a seed for reproducibility, should be an option or global
+    private Random _rand = null;
     private int _pos = -1, _del = -1;
     private byte[] _ref;
     private ChrString _chr;
@@ -586,6 +582,7 @@ public class Variant {
 
     /**
      * Randomize the genotype
+     *
      * @param gender
      */
     public void randomizeGenotype(GenderType gender) {

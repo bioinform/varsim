@@ -2,19 +2,23 @@ package com.bina.varsim.tools.evaluation;
 
 /**
  * Read in SAM file with appropriately formatted read names and output accuracy statistics
+ *
  * @author johnmu
  */
 
 
-import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -30,23 +34,18 @@ import java.util.HashSet;
 import java.util.List;
 
 public class SAMcompare {
-    private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
-
-    @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
-    private ArrayList<String> bam_filename = new ArrayList<>();
-
     static final int WIGGLE_ARG = 20;
+    private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
     @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
-
     @Option(name = "-prefix", usage = "Prefix for output file [Required]", metaVar = "file", required = true)
     String out_prefix;
-
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
-
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
+    @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
+    private ArrayList<String> bam_filename = new ArrayList<>();
 
     /**
      * @param args
@@ -90,38 +89,6 @@ public class SAMcompare {
         }
 
         return out;
-    }
-
-    /**
-     * This class is for outputting as a JSON
-     */
-    private static class output_class {
-        CompareParams params;
-        MapRatioRecordSum stats;
-
-        output_class(CompareParams params, MapRatioRecordSum stats) {
-            this.params = params;
-            this.stats = stats;
-        }
-
-        output_class() {
-        }
-
-        public MapRatioRecordSum getStats() {
-            return stats;
-        }
-
-        public void setStats(MapRatioRecordSum stats) {
-            this.stats = stats;
-        }
-
-        public CompareParams getParams() {
-            return params;
-        }
-
-        public void setParams(CompareParams params) {
-            this.params = params;
-        }
     }
 
     public void run(String[] args) {
@@ -211,7 +178,7 @@ public class SAMcompare {
                 for (SAMRecord rec : reader) {
 
                     // TODO this will need to change when we start considering supplementary alignements
-                    if(rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag()){
+                    if (rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag()) {
                         continue;
                     }
 
@@ -227,7 +194,7 @@ public class SAMcompare {
                     // TODO need to check for errors here
                     SimulatedRead true_read = new SimulatedRead(name);
                     int pair_idx = 0;
-                    if(rec.getReadPairedFlag()) {
+                    if (rec.getReadPairedFlag()) {
                         pair_idx = getPairIdx(rec.getFirstOfPairFlag());
                     }
 
@@ -278,10 +245,9 @@ public class SAMcompare {
 
                     if (true_unmapped) {
                         features.add("True_Unmapped");
-                    }else{
+                    } else {
                         output_blob.getStats().incT(features); // this records the mappable reads
                     }
-
 
 
                     boolean unmapped = rec.getReadUnmappedFlag();
@@ -425,6 +391,38 @@ public class SAMcompare {
 
         public String toString() {
             return name;
+        }
+    }
+
+    /**
+     * This class is for outputting as a JSON
+     */
+    private static class output_class {
+        CompareParams params;
+        MapRatioRecordSum stats;
+
+        output_class(CompareParams params, MapRatioRecordSum stats) {
+            this.params = params;
+            this.stats = stats;
+        }
+
+        output_class() {
+        }
+
+        public MapRatioRecordSum getStats() {
+            return stats;
+        }
+
+        public void setStats(MapRatioRecordSum stats) {
+            this.stats = stats;
+        }
+
+        public CompareParams getParams() {
+            return params;
+        }
+
+        public void setParams(CompareParams params) {
+            this.params = params;
         }
     }
 

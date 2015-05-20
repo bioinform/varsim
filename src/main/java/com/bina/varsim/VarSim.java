@@ -1,14 +1,14 @@
 package com.bina.varsim;
 
+import com.bina.varsim.fastqLiftover.FastqLiftOver;
+import com.bina.varsim.tools.VCFstats;
 import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
 import com.bina.varsim.tools.evaluation.VCFcompare;
-import com.bina.varsim.fastqLiftover.FastqLiftOver;
 import com.bina.varsim.tools.simulation.RandBED2VCF;
 import com.bina.varsim.tools.simulation.RandDGV2VCF;
 import com.bina.varsim.tools.simulation.RandVCF2VCF;
 import com.bina.varsim.tools.simulation.VCF2diploid;
-import com.bina.varsim.tools.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -27,6 +27,11 @@ public class VarSim {
     private final static Logger log = Logger.getLogger(VarSim.class.getName());
 
     String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+
+    public static void main(String[] args) throws IOException {
+        VarSim runner = new VarSim();
+        runner.run(args);
+    }
 
     public void run(String[] args) throws IOException {
         String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
@@ -84,11 +89,6 @@ public class VarSim {
                 break;
         }
 
-    }
-
-    public static void main(String[] args) throws IOException {
-        VarSim runner = new VarSim();
-        runner.run(args);
     }
 
 }

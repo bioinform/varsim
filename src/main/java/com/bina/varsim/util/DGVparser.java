@@ -55,7 +55,7 @@ public class DGVparser extends GzFileParser<Variant> {
             return null;
         }
 
-        if (line.charAt(0) == '#'){
+        if (line.charAt(0) == '#') {
             return null;
         }
 

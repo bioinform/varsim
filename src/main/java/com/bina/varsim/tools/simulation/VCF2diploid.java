@@ -2,21 +2,16 @@ package com.bina.varsim.tools.simulation;
 
 //--- Java imports ---
 
-import com.bina.varsim.types.GenderType;
-import com.bina.varsim.types.Sequence;
-import com.bina.varsim.util.VCFparser;
-import com.bina.varsim.types.Variant;
-import com.bina.varsim.types.ChrString;
-import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.*;
 import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
-
-import java.io.*;
-import java.util.*;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * Class to construct diploid genome from genome reference and genome variants
@@ -26,36 +21,35 @@ import org.kohsuke.args4j.Option;
  */
 
 public class VCF2diploid {
+    static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
-
-    private Random _rand = null;
-
+    private final static char DELETED_BASE = '~';
     // arguments
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType _gender = GenderType.MALE;
-
     @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]", metaVar = "FASTA_file", required = true)
     ArrayList<String> _chrFiles = null;
-
     @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]", metaVar = "VCF_file", required = true)
     ArrayList<String> _vcfFiles = null;
-
-    @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
-    private String _id = "varsim";
-
-    @Option(name = "-pass", usage = "Only accept the PASS variants")
-    private boolean _pass = false;
-
-    static final long SEED_ARG = 3333;
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     long seed = 3333;
-
-    private final static char DELETED_BASE = '~';
-
+    private Random _rand = null;
+    @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
+    private String _id = "varsim";
+    @Option(name = "-pass", usage = "Only accept the PASS variants")
+    private boolean _pass = false;
     private HashMap<ChrString, ArrayList<Variant>> _variants = new HashMap<>();
 
     public VCF2diploid() {
         _rand = new Random(seed);
+    }
+
+    /**
+     * Main function.
+     */
+    public static void main(String[] args) {
+        VCF2diploid runner = new VCF2diploid();
+        runner.run(args);
     }
 
     public void run(String[] args) {
@@ -126,23 +120,15 @@ public class VCF2diploid {
         makeDiploid();
     }
 
-    private void addVariant(ChrString chr, Variant var){
+    private void addVariant(ChrString chr, Variant var) {
         ArrayList<Variant> temp = _variants.get(chr);
-        if (temp == null){
+        if (temp == null) {
             temp = new ArrayList<>();
             temp.add(var);
-            _variants.put(chr,temp);
-        }else{
+            _variants.put(chr, temp);
+        } else {
             temp.add(var);
         }
-    }
-
-    /**
-     * Main function.
-     */
-    public static void main(String[] args) {
-        VCF2diploid runner = new VCF2diploid();
-        runner.run(args);
     }
 
     // This is the main function that makes the diploid genome
@@ -193,7 +179,7 @@ public class VCF2diploid {
 
             // this is the list of variants for the chromosome of question
             ArrayList<Variant> varList = _variants.get(chr);
-            if(varList == null){
+            if (varList == null) {
                 varList = new ArrayList<>();
             }
 

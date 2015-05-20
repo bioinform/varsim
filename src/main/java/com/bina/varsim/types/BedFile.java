@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Reads in a BED file and allows testing of regions
  * Remember that a BED file is 0-based
- *
+ * <p/>
  * TODO this current implementation ignores the other bed columns other than chr,start,end
  * TODO implement the other types of overlap
  */
@@ -106,10 +106,10 @@ public class BedFile {
         if (interval.getLeft() == interval.getRight()) {
             return bedST.contains(chr, interval);
         } else {
-            if(either) {
+            if (either) {
                 return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) ||
                         bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
-            }else{
+            } else {
                 return bedST.contains(chr, new SimpleInterval1D(interval.getLeft(), interval.getLeft())) &&
                         bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
             }

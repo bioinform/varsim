@@ -9,28 +9,24 @@ import junit.framework.TestSuite;
  * Unit test for GenomeLocation
  */
 public class GenomeLocationTest
-    extends TestCase
-{
+        extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public GenomeLocationTest( String testName )
-    {
-        super( testName );
+    public GenomeLocationTest(String testName) {
+        super(testName);
     }
 
     /**
      * @return the suite of tests being tested
      */
-    public static Test suite()
-    {
-        return new TestSuite( GenomeLocationTest.class );
+    public static Test suite() {
+        return new TestSuite(GenomeLocationTest.class);
     }
 
-    public void testGenomeLocationSimple()
-    {
+    public void testGenomeLocationSimple() {
         final String locationString = "1-100-INV-";
         final GenomeLocation genomeLocation = new GenomeLocation(locationString);
 

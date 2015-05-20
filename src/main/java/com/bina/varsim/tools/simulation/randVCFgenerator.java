@@ -39,7 +39,7 @@ abstract public class randVCFgenerator {
      * @return
      */
     public byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
-                         int num_total, boolean output_all) {
+                                int num_total, boolean output_all) {
         if (!output_all) {
             if (seen_added.added_num < num_sample) {
                 double rand_num = _rand.nextDouble();
@@ -69,7 +69,7 @@ abstract public class randVCFgenerator {
      * @return
      */
     public byte sample_genotype(byte geno, Sample_params seen_added, int num_sample,
-                         int num_total) {
+                                int num_total) {
         return sample_genotype(geno, seen_added, num_sample, num_total, false);
     }
 

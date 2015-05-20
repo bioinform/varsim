@@ -1,12 +1,13 @@
 package com.bina.varsim.util;
 
 /**
- *  Reads in a FASTA reference to memory and allows fast queries
- *  @author johnmu
+ * Reads in a FASTA reference to memory and allows fast queries
+ *
+ * @author johnmu
  */
 
-import com.bina.varsim.types.Sequence;
 import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.Sequence;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;

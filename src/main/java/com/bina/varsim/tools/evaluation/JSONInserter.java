@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.evaluation;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.log4j.Logger;
@@ -7,7 +8,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +19,20 @@ import java.util.TreeMap;
  */
 public class JSONInserter {
     private final static Logger log = Logger.getLogger(JSONInserter.class.getName());
-
+    @Option(name = "-html", usage = "VarSim HTML to insert the JSON into", metaVar = "file", required = true)
+    File html_file;
     @Argument(usage = "One or more JSON files from VarSim", metaVar = "json_files ...", required = true)
     private ArrayList<String> jsonFilename = new ArrayList<>();
 
-    @Option(name = "-html", usage = "VarSim HTML to insert the JSON into", metaVar = "file", required = true)
-    File html_file;
+    public static String insertJSON(String varsim_html, String jsonStr) {
+        TreeMap<String, String> lookup = new TreeMap<>();
+        lookup.put("varsim_data", "var varsim_data = \"" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\";");
+        return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
+    }
+
+    public static void main(String[] args) throws IOException {
+        new JSONInserter().run(args);
+    }
 
     public void run(String[] args) throws IOException {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
@@ -64,15 +72,5 @@ public class JSONInserter {
             String jsonStr = StringEscapeUtils.escapeEcmaScript(FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", ""));
             FileUtils.writeStringToFile(outFile, insertJSON(varsim_html, jsonStr));
         }
-    }
-
-    public static String insertJSON(String varsim_html, String jsonStr) {
-        TreeMap<String, String> lookup = new TreeMap<>();
-        lookup.put("varsim_data", "var varsim_data = \"" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\";");
-        return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
-    }
-
-    public static void main(String[] args) throws IOException {
-        new JSONInserter().run(args);
     }
 }

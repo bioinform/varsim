@@ -20,26 +20,21 @@ import java.util.Random;
  */
 
 public class RandBED2VCF extends randVCFgenerator {
+    // parameters
+    static final int MIN_LEN_ARG = Constant.SVLEN;
+    static final int MAX_LEN_ARG = 1000000;
+    static final long SEED_ARG = 333;
     private final static Logger log = Logger.getLogger(RandBED2VCF.class.getName());
-
+    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
+    static long seed = 333;
     SimpleReference ref;
     int num_novel_added = 0;
     int var_idx = 0;
     byte[] insert_seq = null;
-
-    // parameters
-    static final int MIN_LEN_ARG = Constant.SVLEN;
     @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int min_length_lim = MIN_LEN_ARG;
-
-    static final int MAX_LEN_ARG = 1000000;
     @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int max_length_lim = MAX_LEN_ARG;
-
-    static final long SEED_ARG = 333;
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    static long seed = 333;
-
     @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
     String reference_filename;
 
@@ -100,7 +95,7 @@ public class RandBED2VCF extends randVCFgenerator {
         String[] ll = line.split("\t");
         if (ll.length < 4) return new Variant(_rand);
 
-        if(ll[0].charAt(0) == '#'){
+        if (ll[0].charAt(0) == '#') {
             return null;
         }
 

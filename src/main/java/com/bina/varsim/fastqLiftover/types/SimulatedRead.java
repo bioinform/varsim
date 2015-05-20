@@ -22,13 +22,13 @@ public class SimulatedRead {
     public int seqErrors2 = 0;
     public int snps2 = 0;
     public int indels2 = 0;
-    protected String readId = "";
     public int fragment = 1;
     public int laneId = 0;
     public String sequence;
     public String quality;
     public int alignedBases1 = 0;
     public int alignedBases2 = 0;
+    protected String readId = "";
 
     public SimulatedRead() {
         locs1 = new ArrayList<>();
