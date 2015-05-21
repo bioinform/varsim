@@ -1,6 +1,7 @@
 package com.bina.varsim.types;
 
 
+import com.bina.varsim.types.stats.Type_record;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;

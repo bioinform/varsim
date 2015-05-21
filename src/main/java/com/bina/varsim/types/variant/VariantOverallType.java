@@ -7,6 +7,13 @@ public enum VariantOverallType {
     Reference, SNP, Deletion, Insertion, Inversion, Tandem_Duplication, Complex;
 
     public static VariantOverallType fromString(String s){
+        for (VariantOverallType type : VariantOverallType.values()) {
+            if(s.equalsIgnoreCase(type.toString())){
+                return type;
+            }
+        }
+
+        // Shorter ones
         switch(s.toUpperCase()){
             case "DEL":
                 return Deletion;

@@ -2,6 +2,7 @@ package com.bina.varsim.types.stats;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by johnmu on 3/28/14.
@@ -15,11 +16,11 @@ import java.util.Map;
  */
 public class EnumStatsRatioCounter<Value extends Enum> {
 
-    private HashMap<Value, StatsRatioRecord> data;
+    private TreeMap<Value, StatsRatioRecord> data;
     private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {
-        data = new HashMap<>();
+        data = new TreeMap<>();
         all_data = new StatsRatioRecord();
     }
 
@@ -62,11 +63,11 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         all_data.addT(len);
     }
 
-    public HashMap<Value, StatsRatioRecord> getData() {
+    public TreeMap<Value, StatsRatioRecord> getData() {
         return data;
     }
 
-    public void setData(HashMap<Value, StatsRatioRecord> data) {
+    public void setData(TreeMap<Value, StatsRatioRecord> data) {
         this.data = data;
     }
 
