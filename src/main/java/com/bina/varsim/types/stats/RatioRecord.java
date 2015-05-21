@@ -120,11 +120,11 @@ public class RatioRecord {
         this.upper = upper;
     }
 
-    public double getF1(){
+    public double getF1() {
         double precision = 1 - getFDR();
         double recall = getTPR();
 
-        return 2 * (precision * recall)/(precision + recall);
+        return 2 * (precision * recall) / (precision + recall);
     }
 
     public String rangeStr() {
@@ -148,7 +148,7 @@ public class RatioRecord {
     }
 
     public String toString() {
-        return String.format("%s,%s,%d,%d,%d,%s", String.format("%.4f", 100 * getTPR()), String.format("%.4f", 100 * getFDR()), _TP, _FP, _T, getF1());
+        return String.format("%.4f,%.4f,%d,%d,%d,%.4f", 100 * getTPR(), 100 * getFDR(), _TP, _FP, _T, getF1());
     }
 
     @Override
