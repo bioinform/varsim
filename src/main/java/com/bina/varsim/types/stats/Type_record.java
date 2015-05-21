@@ -11,7 +11,7 @@ import java.util.Map;
 public class Type_record<T extends Enum> {
     HashMap<T, Stats_record> data;
 
-    Type_record() {
+    public Type_record() {
         data = new HashMap<>();
     }
 
