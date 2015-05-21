@@ -54,7 +54,7 @@ public class ConstraintRecord {
         return isSatisfied(getStatsValue());
     }
 
-    protected double getStatsValue(){
+    public double getStatsValue(){
         switch (constraint.getMetric()){
             case F1:
                 double precision = 1 - stats.getFDR();
@@ -69,7 +69,7 @@ public class ConstraintRecord {
         }
     }
 
-    protected boolean isSatisfied(double value){
+    public boolean isSatisfied(double value){
         switch (constraint.getOperation()){
             case GT:
                 return value > constraint.getCutoff();

@@ -34,9 +34,9 @@ public class ConstraintValidator {
     }
 
     public void testValidity() throws UnsatisfiedConstraintException{
-        ArrayList<Constraint> unsatisfiedConstraints = new ArrayList<>();
+        ArrayList<UnsatisfiedConstraintException.valuePair> unsatisfiedConstraints = new ArrayList<>();
         for (ConstraintRecord record : constraintRecords) {
-            if(!record.isValid()) unsatisfiedConstraints.add(record.getConstraint());
+            if(!record.isValid()) unsatisfiedConstraints.add(new UnsatisfiedConstraintException.valuePair(record.getConstraint(),record.getStatsValue()));
         }
         if(unsatisfiedConstraints.size() > 0) throw new UnsatisfiedConstraintException(unsatisfiedConstraints);
     }

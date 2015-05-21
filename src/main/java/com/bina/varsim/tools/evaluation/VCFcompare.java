@@ -861,8 +861,8 @@ public class VCFcompare {
             validator.testValidity();
         }catch(UnsatisfiedConstraintException e){
             log.error("A number of constraints were not satisfied:");
-            for (Constraint constraint : e.getConstraints()) {
-                log.error(constraint);
+            for (UnsatisfiedConstraintException.valuePair constraint : e.getConstraints()) {
+                log.error(String.format("%.4f : %s",constraint.getActualValue(),constraint.getConstraint()));
             }
             System.exit(1);
         }
