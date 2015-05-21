@@ -51,6 +51,17 @@ public class Constraint {
         return new SimpleInterval1D(Long.parseLong(tokens[0]), Long.parseLong(tokens[1]));
     }
 
+    @Override
+    public String toString() {
+        return "Constraint{" +
+                "varType=" + varType +
+                ", range=" + range +
+                ", metric=" + metric +
+                ", operation=" + operation +
+                ", cutoff=" + cutoff +
+                '}';
+    }
+
     public VariantOverallType getVarType() {
         return varType;
     }

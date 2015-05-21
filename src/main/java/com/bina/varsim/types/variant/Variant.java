@@ -232,24 +232,24 @@ public class Variant {
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
     // and deletion
-    public int max_len(int ind) {
+    public int maxLen(int ind) {
         if (ind <= 0 || ind > _alts.length)
             return 0;
         return Math.max(_del, _alts[ind - 1].length());
     }
 
-    public int max_len() {
+    public int maxLen() {
         int len = 0;
         for (int i = 0; i < 2; i++) {
-            len = Math.max(max_len(get_allele(i)), len);
+            len = Math.max(maxLen(get_allele(i)), len);
         }
         return len;
     }
 
     // this is the minimum length of the variants
-    public int min_len() {
-        int len = max_len(get_allele(0));
-        len = Math.min(max_len(get_allele(1)), len);
+    public int minLen() {
+        int len = maxLen(get_allele(0));
+        len = Math.min(maxLen(get_allele(1)), len);
 
         return len;
     }
@@ -275,16 +275,16 @@ public class Variant {
             }
 
             // TODO hmm unsafe
-            if (max_len(ind) == Integer.MAX_VALUE) {
+            if (maxLen(ind) == Integer.MAX_VALUE) {
                 return new SimpleInterval1D(_pos, _pos);
             } else {
-                return new SimpleInterval1D(_pos, _pos + max_len(ind) - 1);
+                return new SimpleInterval1D(_pos, _pos + maxLen(ind) - 1);
             }
         } catch (RuntimeException e) {
             log.error("Bad variant interval: " + toString());
             log.error("_pos: " + _pos);
             log.error("ind: " + ind);
-            log.error("max_len(ind): " + max_len(ind));
+            log.error("maxLen(ind): " + maxLen(ind));
             e.printStackTrace();
             return null;
         }

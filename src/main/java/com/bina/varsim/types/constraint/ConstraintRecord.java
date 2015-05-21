@@ -16,6 +16,11 @@ public class ConstraintRecord {
         stats = new RatioRecord();
     }
 
+    public ConstraintRecord(String constraintArg) {
+        this.constraint = new Constraint(constraintArg);
+        stats = new RatioRecord();
+    }
+
     public void inc(StatsNamespace stat, VariantOverallType type, long len){
         if(constraint.getVarType() == type && constraint.getRange().contains(len)){
             switch (stat) {
@@ -75,4 +80,7 @@ public class ConstraintRecord {
         }
     }
 
+    public Constraint getConstraint() {
+        return constraint;
+    }
 }

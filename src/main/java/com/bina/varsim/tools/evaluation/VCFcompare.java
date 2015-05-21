@@ -4,10 +4,14 @@ import com.bina.varsim.constants.Constant;
 import com.bina.varsim.intervalTree.SimpleInterval1D;
 import com.bina.varsim.intervalTree.ValueInterval1D;
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.constraint.Constraint;
+import com.bina.varsim.types.constraint.UnsatisfiedConstraintException;
 import com.bina.varsim.types.stats.EnumStatsRatioCounter;
+import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
+import com.bina.varsim.util.ConstraintValidator;
 import com.bina.varsim.util.VCFparser;
 import com.bina.varsim.util.chrSearchTree;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -456,6 +460,8 @@ public class VCFcompare {
             log.info("Only accepting chromosomes: " + Arrays.toString(chrAcceptor.toArray()));
         }
 
+        ConstraintValidator validator = new ConstraintValidator(constraintArgs);
+
 
         // load true VCF into interval tree
         log.info("Load True VCF");
@@ -558,7 +564,7 @@ public class VCFcompare {
             // add to interval tree
             for (Variant curr_var : var_list) {
 
-                int curr_len = curr_var.max_len();
+                int curr_len = curr_var.maxLen();
 
                 if (curr_len > max_len) {
                     max_len = curr_len;
@@ -586,7 +592,7 @@ public class VCFcompare {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant curr_var : var_list) {
-                    int curr_len = curr_var.max_len();
+                    int curr_len = curr_var.maxLen();
                     full_validated_total.add(curr_len);
                     true_var_list.add(curr_var);
                     num_read++;
@@ -677,9 +683,9 @@ public class VCFcompare {
                 double max_len = 0;
 
                 for (Variant curr_var : var_list) {
-                    total_len += curr_var.max_len();
-                    if (max_len < curr_var.max_len()) {
-                        max_len = curr_var.max_len();
+                    total_len += curr_var.maxLen();
+                    if (max_len < curr_var.maxLen()) {
+                        max_len = curr_var.maxLen();
                     }
                 }
 
@@ -708,10 +714,11 @@ public class VCFcompare {
                             // validated
                             validated_true.set(idx.idx);
                             full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
-                            validated_len += curr_var.max_len();
+                            validated_len += curr_var.maxLen();
                         } else if (compute_as_split) {
                             if (!skipFP) {
-                                output_blob.getNum_true_correct().addFP(curr_var.getType(), var.max_len());
+                                output_blob.getNum_true_correct().incFP(curr_var.getType(), var.maxLen());
+                                validator.inc(StatsNamespace.FP,curr_var.getType(),var.maxLen());
                                 FP_writer.println(var);
                             } else {
                                 unknown_FP_writer.println(var);
@@ -741,12 +748,13 @@ public class VCFcompare {
 
                         if (idx.idx >= 0) {
                             validated_true.set(idx.idx);
-                            full_validated_count[idx.full_idx] += curr_var.max_len(); // this 'should' be overlap len
-                            validated_len += curr_var.max_len();
+                            full_validated_count[idx.full_idx] += curr_var.maxLen(); // this 'should' be overlap len
+                            validated_len += curr_var.maxLen();
                         } else if (compute_as_split) {
                             if (!skipFP) {
-                                output_blob.getNum_true_correct().addFP(curr_var.getType(), curr_var.max_len());
-                                if (curr_var.getType() == VariantOverallType.SNP && curr_var.max_len() > 1) {
+                                output_blob.getNum_true_correct().incFP(curr_var.getType(), curr_var.maxLen());
+                                validator.inc(StatsNamespace.FP,curr_var.getType(),curr_var.maxLen());
+                                if (curr_var.getType() == VariantOverallType.SNP && curr_var.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + curr_var);
                                 }
                                 FP_writer.println(var);
@@ -760,8 +768,9 @@ public class VCFcompare {
                 if (!compute_as_split && validated_len < (total_len * overlap_ratio)) {
                     if (!skipFP) {
                         // this is a false positive!
-                        output_blob.getNum_true_correct().addFP(curr_var_type, var.max_len());
-                        if (curr_var_type == VariantOverallType.SNP && var.max_len() > 1) {
+                        output_blob.getNum_true_correct().incFP(curr_var_type, var.maxLen());
+                        validator.inc(StatsNamespace.FP,curr_var_type,var.maxLen());
+                        if (curr_var_type == VariantOverallType.SNP && var.maxLen() > 1) {
                             log.warn("SNP with bad length: " + var);
                         }
                         FP_writer.println(var);
@@ -794,13 +803,15 @@ public class VCFcompare {
 
                 if (validated_len >= (overlap_ratio * total_len)) {
                     // validated
-                    output_blob.getNum_true_correct().addTP(var.getType(), var.max_len());
+                    output_blob.getNum_true_correct().incTP(var.getType(), var.maxLen());
+                    validator.inc(StatsNamespace.TP,var.getType(),var.maxLen());
                     TP_writer.println(var);
                 } else {
                     FN_writer.println(var);
                 }
 
-                output_blob.getNum_true_correct().addT(var.getType(), var.max_len());
+                output_blob.getNum_true_correct().incT(var.getType(), var.maxLen());
+                validator.inc(StatsNamespace.T,var.getType(),var.maxLen());
             } else {
                 unknown_TP_writer.println(var);
             }
@@ -843,6 +854,17 @@ public class VCFcompare {
             JSON_writer.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        // Check the validity
+        try{
+            validator.testValidity();
+        }catch(UnsatisfiedConstraintException e){
+            log.error("A number of constraints were not satisfied:");
+            for (Constraint constraint : e.getConstraints()) {
+                log.error(constraint);
+            }
+            System.exit(1);
         }
 
         log.info("Done!"); // used to record the time
@@ -1181,7 +1203,7 @@ public class VCFcompare {
                         }
 
                         if (matched) {
-                            int len = true_var.max_len(allele);
+                            int len = true_var.maxLen(allele);
                             if (len > max_true_var_len) {
                                 max_true_var_len = len;
                             }

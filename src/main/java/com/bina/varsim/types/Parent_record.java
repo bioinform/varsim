@@ -32,19 +32,19 @@ public class Parent_record {
         boolean added = false;
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_interval(paternal_allele))) {
-            data[PATERNAL].add(var.getType(paternal_allele), var.max_len(paternal_allele));
+            data[PATERNAL].add(var.getType(paternal_allele), var.maxLen(paternal_allele));
             added = true;
         }
 
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_interval(maternal_allele))) {
-            data[MATERNAL].add(var.getType(maternal_allele), var.max_len(maternal_allele));
+            data[MATERNAL].add(var.getType(maternal_allele), var.maxLen(maternal_allele));
             added = true;
         }
 
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_geno_interval())) {
-            overall_data.add(var.getType(), var.max_len());
+            overall_data.add(var.getType(), var.maxLen());
             added = true;
         }
 

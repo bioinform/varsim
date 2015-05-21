@@ -2,6 +2,7 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.constraint.Constraint;
 import com.bina.varsim.types.constraint.ConstraintRecord;
+import com.bina.varsim.types.constraint.UnsatisfiedConstraintException;
 import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.types.variant.VariantOverallType;
 
@@ -17,9 +18,11 @@ public class ConstraintValidator {
     public ConstraintValidator() {
     }
 
-    public ConstraintValidator(Collection<Constraint> constraints){
-        for (Constraint constraint : constraints) {
-            constraintRecords.add(new ConstraintRecord(constraint));
+    public ConstraintValidator(Collection<String> constraintArgs){
+        if(constraintArgs != null) {
+            for (String constraint : constraintArgs) {
+                constraintRecords.add(new ConstraintRecord(constraint));
+            }
         }
     }
 
@@ -28,6 +31,14 @@ public class ConstraintValidator {
             if(!record.isValid()) return false;
         }
         return true;
+    }
+
+    public void testValidity() throws UnsatisfiedConstraintException{
+        ArrayList<Constraint> unsatisfiedConstraints = new ArrayList<>();
+        for (ConstraintRecord record : constraintRecords) {
+            if(!record.isValid()) unsatisfiedConstraints.add(record.getConstraint());
+        }
+        if(unsatisfiedConstraints.size() > 0) throw new UnsatisfiedConstraintException(unsatisfiedConstraints);
     }
 
     public void inc(StatsNamespace stats, VariantOverallType type, long len){
