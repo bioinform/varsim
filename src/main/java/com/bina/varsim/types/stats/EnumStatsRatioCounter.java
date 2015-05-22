@@ -2,6 +2,7 @@ package com.bina.varsim.types.stats;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by johnmu on 3/28/14.
@@ -15,15 +16,15 @@ import java.util.Map;
  */
 public class EnumStatsRatioCounter<Value extends Enum> {
 
-    private HashMap<Value, StatsRatioRecord> data;
+    private TreeMap<Value, StatsRatioRecord> data;
     private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {
-        data = new HashMap<>();
+        data = new TreeMap<>();
         all_data = new StatsRatioRecord();
     }
 
-    public void addTP(Value a, int len) {
+    public void incTP(Value a, int len) {
         StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addTP(len);
@@ -36,7 +37,7 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         all_data.addTP(len);
     }
 
-    public void addFP(Value a, int len) {
+    public void incFP(Value a, int len) {
         StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addFP(len);
@@ -49,7 +50,7 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         all_data.addFP(len);
     }
 
-    public void addT(Value a, int len) {
+    public void incT(Value a, int len) {
         StatsRatioRecord count = data.get(a);
         if (count != null) {
             count.addT(len);
@@ -62,11 +63,11 @@ public class EnumStatsRatioCounter<Value extends Enum> {
         all_data.addT(len);
     }
 
-    public HashMap<Value, StatsRatioRecord> getData() {
+    public TreeMap<Value, StatsRatioRecord> getData() {
         return data;
     }
 
-    public void setData(HashMap<Value, StatsRatioRecord> data) {
+    public void setData(TreeMap<Value, StatsRatioRecord> data) {
         this.data = data;
     }
 

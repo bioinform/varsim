@@ -104,7 +104,7 @@ public class StatsRatioRecord {
         StringBuilder sb = new StringBuilder();
 
         // write overall TPR/FDR;
-        sb.append("TPR,FDR,TP,FP,T:\n");
+        sb.append("TPR,FDR,TP,FP,T,F1:\n");
         sb.append("ALL");
         sb.append(':');
         sb.append(sum_count);

@@ -1,4 +1,6 @@
-package com.bina.varsim.types;
+package com.bina.varsim.types.stats;
+
+import com.bina.varsim.types.variant.VariantType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +11,7 @@ import java.util.Map;
 public class Type_record<T extends Enum> {
     HashMap<T, Stats_record> data;
 
-    Type_record() {
+    public Type_record() {
         data = new HashMap<>();
     }
 
@@ -43,7 +45,7 @@ public class Type_record<T extends Enum> {
         for (Map.Entry<T, Stats_record> entry : data.entrySet()) {
             sb.append(entry.getKey().name()).append("\n");
             sb.append('\n');
-            if (entry.getKey() == Variant.Type.SNP) {
+            if (entry.getKey() == VariantType.SNP) {
                 sb.append(entry.getValue().toString(1));
             } else {
                 sb.append(entry.getValue());

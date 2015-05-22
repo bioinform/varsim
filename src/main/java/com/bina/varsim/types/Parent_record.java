@@ -1,6 +1,11 @@
 package com.bina.varsim.types;
 
 
+import com.bina.varsim.types.stats.Type_record;
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantOverallType;
+import com.bina.varsim.types.variant.VariantType;
+
 /**
  * Stores the data for each haplotype separately
  */
@@ -8,12 +13,12 @@ public class Parent_record {
     // 0 = paternal, 1 = maternal
     public final static int PATERNAL = 0;
     public final static int MATERNAL = 1;
-    Type_record<Variant.Type>[] data;
-    Type_record<Variant.OverallType> overall_data;
+    Type_record<VariantType>[] data;
+    Type_record<VariantOverallType> overall_data;
     int total_count;
 
     public Parent_record() {
-        data = (Type_record<Variant.Type>[]) new Type_record[2];
+        data = (Type_record<VariantType>[]) new Type_record[2];
         data[PATERNAL] = new Type_record<>();
         data[MATERNAL] = new Type_record<>();
         overall_data = new Type_record<>();
@@ -27,19 +32,19 @@ public class Parent_record {
         boolean added = false;
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_interval(paternal_allele))) {
-            data[PATERNAL].add(var.getType(paternal_allele), var.max_len(paternal_allele));
+            data[PATERNAL].add(var.getType(paternal_allele), var.maxLen(paternal_allele));
             added = true;
         }
 
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_interval(maternal_allele))) {
-            data[MATERNAL].add(var.getType(maternal_allele), var.max_len(maternal_allele));
+            data[MATERNAL].add(var.getType(maternal_allele), var.maxLen(maternal_allele));
             added = true;
         }
 
         if (bed_file == null
                 || bed_file.contains(var.getChr(), var.get_geno_interval())) {
-            overall_data.add(var.getType(), var.max_len());
+            overall_data.add(var.getType(), var.maxLen());
             added = true;
         }
 

@@ -5,7 +5,8 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
-import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.variant.VariantType;
+import com.bina.varsim.types.variant.Variant;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -76,7 +77,7 @@ public class DGVparser extends GzFileParser<Variant> {
         */
 
         // determine variant type
-        Variant.Type type;
+        VariantType type;
         String varianttype = ll[4];
         String variantsubtype = ll[5];
 
@@ -84,22 +85,22 @@ public class DGVparser extends GzFileParser<Variant> {
             case "CNV":
                 switch (variantsubtype) {
                     case "Gain":
-                        type = Variant.Type.Tandem_Duplication;
+                        type = VariantType.Tandem_Duplication;
                         break;
                     case "Loss":
-                        type = Variant.Type.Deletion;
+                        type = VariantType.Deletion;
                         break;
                     case "CNV":
-                        type = Variant.Type.Tandem_Duplication;
+                        type = VariantType.Tandem_Duplication;
                         break;
                     case "Duplication":
-                        type = Variant.Type.Tandem_Duplication;
+                        type = VariantType.Tandem_Duplication;
                         break;
                     case "Insertion":
-                        type = Variant.Type.Insertion;
+                        type = VariantType.Insertion;
                         break;
                     case "Deletion":
-                        type = Variant.Type.Deletion;
+                        type = VariantType.Deletion;
                         break;
                     default:
                         return null;
@@ -108,10 +109,10 @@ public class DGVparser extends GzFileParser<Variant> {
             case "OTHER":
                 switch (variantsubtype) {
                     case "Tandem Duplication":
-                        type = Variant.Type.Tandem_Duplication;
+                        type = VariantType.Tandem_Duplication;
                         break;
                     case "Inversion":
-                        type = Variant.Type.Inversion;
+                        type = VariantType.Inversion;
                         break;
                     default:
                         return null;

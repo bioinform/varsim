@@ -3,6 +3,9 @@ package com.bina.varsim.tools.simulation;
 //--- Java imports ---
 
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantOverallType;
+import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
@@ -321,7 +324,7 @@ public class VCF2diploid {
         int pos = variant.getPos();
         int del = variant.deletion();
         byte[] ins = variant.insertion(allele);
-        Variant.Type var_type = variant.getType(allele);
+        VariantType var_type = variant.getType(allele);
 
         //System.err.println(variant);
         //System.err.println(var_type);
@@ -367,7 +370,7 @@ public class VCF2diploid {
             } else {
                 new_seq[pos - 1] = (byte) Character.toUpperCase((char) ins[0]);
             }
-        } else if (var_type == Variant.Type.MNP) {
+        } else if (var_type == VariantType.MNP) {
             // add this as a bunch of SNPs
             // TODO this may result in other variants getting added in between
             for (int i = pos; i < pos + del; i++) {
@@ -399,14 +402,14 @@ public class VCF2diploid {
                 return false;
             }
 
-            if (var_type == Variant.Type.Inversion) {
+            if (var_type == VariantType.Inversion) {
                 // Treat this as deletion then insertion of reverse complement
                 //System.err.println("Insert INV");
                 del = variant.insertion_len(allele);
                 ins = ref_seq.revComp(pos, pos + del);
             }
 
-            if (var_type == Variant.Type.Tandem_Duplication) {
+            if (var_type == VariantType.Tandem_Duplication) {
                 // treat this as deletion then insertion of several copies
                 // this prevents the original sequence to be altered and
                 // become less like a duplication
@@ -841,11 +844,11 @@ public class VCF2diploid {
                     // INFO
                     // TODO write len here
                     StringBuilder sbStr = new StringBuilder();
-                    if (curr_var.getType() == Variant.OverallType.Tandem_Duplication) {
+                    if (curr_var.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());
-                    } else if (curr_var.getType() == Variant.OverallType.Inversion) {
+                    } else if (curr_var.getType() == VariantOverallType.Inversion) {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());

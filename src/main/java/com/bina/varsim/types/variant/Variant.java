@@ -1,8 +1,12 @@
-package com.bina.varsim.types;
+package com.bina.varsim.types.variant;
 
 //--- Java imports ---
 
 import com.bina.varsim.intervalTree.SimpleInterval1D;
+import com.bina.varsim.types.ChrString;
+import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.GenderType;
+import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
@@ -15,7 +19,7 @@ public class Variant {
     public int idx = 0; // this is hopefully a unique index, for the split variants
     public int full_idx = 0; // this is hopefully a unique index, for the whole variants
     // this is the type before the variant was split into canonical ones
-    public OverallType original_type = null;
+    public VariantOverallType original_type = null;
     // use a seed for reproducibility, should be an option or global
     private Random _rand = null;
     private int _pos = -1, _del = -1;
@@ -228,24 +232,24 @@ public class Variant {
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
     // and deletion
-    public int max_len(int ind) {
+    public int maxLen(int ind) {
         if (ind <= 0 || ind > _alts.length)
             return 0;
         return Math.max(_del, _alts[ind - 1].length());
     }
 
-    public int max_len() {
+    public int maxLen() {
         int len = 0;
         for (int i = 0; i < 2; i++) {
-            len = Math.max(max_len(get_allele(i)), len);
+            len = Math.max(maxLen(get_allele(i)), len);
         }
         return len;
     }
 
     // this is the minimum length of the variants
-    public int min_len() {
-        int len = max_len(get_allele(0));
-        len = Math.min(max_len(get_allele(1)), len);
+    public int minLen() {
+        int len = maxLen(get_allele(0));
+        len = Math.min(maxLen(get_allele(1)), len);
 
         return len;
     }
@@ -271,16 +275,16 @@ public class Variant {
             }
 
             // TODO hmm unsafe
-            if (max_len(ind) == Integer.MAX_VALUE) {
+            if (maxLen(ind) == Integer.MAX_VALUE) {
                 return new SimpleInterval1D(_pos, _pos);
             } else {
-                return new SimpleInterval1D(_pos, _pos + max_len(ind) - 1);
+                return new SimpleInterval1D(_pos, _pos + maxLen(ind) - 1);
             }
         } catch (RuntimeException e) {
             log.error("Bad variant interval: " + toString());
             log.error("_pos: " + _pos);
             log.error("ind: " + ind);
-            log.error("max_len(ind): " + max_len(ind));
+            log.error("maxLen(ind): " + maxLen(ind));
             e.printStackTrace();
             return null;
         }
@@ -336,19 +340,19 @@ public class Variant {
      * @param ind index of allele (starts at 1, 0 is reference)
      * @return type of allele at index ind
      */
-    public Type getType(int ind) {
+    public VariantType getType(int ind) {
         if (ind == 0) {
-            return Type.Reference;
+            return VariantType.Reference;
         }
 
         FlexSeq.Type type = _alts[ind - 1].getType();
         switch (type) {
             case DUP:
-                return Type.Tandem_Duplication;
+                return VariantType.Tandem_Duplication;
             case INS:
-                return Type.Insertion;
+                return VariantType.Insertion;
             case INV:
-                return Type.Inversion;
+                return VariantType.Inversion;
             default:
                 break;
         }
@@ -356,95 +360,95 @@ public class Variant {
         int inslen = insertion_len(ind);
         int dellen = _del;
         if (inslen == 0 && dellen == 0) {
-            return Type.Reference;
+            return VariantType.Reference;
         } else if (inslen == 1 && dellen == 1) {
-            return Type.SNP;
+            return VariantType.SNP;
         } else if (inslen == 0 && dellen > 0) {
-            return Type.Deletion;
+            return VariantType.Deletion;
         } else if (inslen > 0 && dellen == 0) {
-            return Type.Insertion;
+            return VariantType.Insertion;
         } else if (inslen == dellen) {
-            return Type.MNP;
+            return VariantType.MNP;
         }
-        return Type.Complex;
+        return VariantType.Complex;
     }
 
     /**
      * @return overall type of the variant considering both alleles
      */
-    public OverallType getType() {
+    public VariantOverallType getType() {
         int[] allele = {get_allele(0), get_allele(1)};
 
         // check Reference
         boolean is_ref = true;
         for (int a = 0; a < 2; a++) {
-            if (getType(allele[a]) != Type.Reference) {
+            if (getType(allele[a]) != VariantType.Reference) {
                 is_ref = false;
                 break;
             }
         }
         if (is_ref) {
-            return OverallType.Reference;
+            return VariantOverallType.Reference;
         }
 
         // check SNP
         boolean is_snp = true;
         for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != Type.SNP) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.SNP) {
                 is_snp = false;
                 break;
             }
         }
         if (is_snp) {
-            return OverallType.SNP;
+            return VariantOverallType.SNP;
         }
 
         // check INV
         boolean is_inv = true;
         for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != Type.Inversion) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Inversion) {
                 is_inv = false;
                 break;
             }
         }
         if (is_inv) {
-            return OverallType.Inversion;
+            return VariantOverallType.Inversion;
         }
 
         // check DUP
         boolean is_dup = true;
         for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != Type.Tandem_Duplication) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Tandem_Duplication) {
                 is_dup = false;
                 break;
             }
         }
         if (is_dup) {
-            return OverallType.Tandem_Duplication;
+            return VariantOverallType.Tandem_Duplication;
         }
 
         // check Deletion
         boolean is_del = true;
         for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != Type.Deletion) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Deletion) {
                 is_del = false;
                 break;
             }
         }
         if (is_del) {
-            return OverallType.Deletion;
+            return VariantOverallType.Deletion;
         }
 
         // check DUP
         boolean is_ins = true;
         for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != Type.Insertion) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Insertion) {
                 is_ins = false;
                 break;
             }
         }
         if (is_ins) {
-            return OverallType.Insertion;
+            return VariantOverallType.Insertion;
         }
 
         /* Treat these as complex for now
@@ -457,7 +461,7 @@ public class Variant {
             }
         }
         if (is_indel) {
-            return OverallType.INDEL;
+            return VariantOverallType.INDEL;
         }
 
         // check MNP
@@ -469,12 +473,12 @@ public class Variant {
             }
         }
         if (is_mnp) {
-            return OverallType.MNP;
+            return VariantOverallType.MNP;
         }
         */
 
         // otherwise it is complex
-        return OverallType.Complex;
+        return VariantOverallType.Complex;
     }
 
     public FlexSeq getAlt(int ind) {
@@ -674,11 +678,11 @@ public class Variant {
                 len.append(',');
             }
 
-            Type t = getType(i + 1);
+            VariantType t = getType(i + 1);
 
-            if (t == Type.Deletion) {
+            if (t == VariantType.Deletion) {
                 len.append(-_del);  // negative for deletions
-            } else if (t == Type.Complex) {
+            } else if (t == VariantType.Complex) {
                 int alt_len = _alts[i].length();
                 if (_del > alt_len) {
                     len.append(-_del);
@@ -720,11 +724,11 @@ public class Variant {
         sbStr.append(_filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == OverallType.Tandem_Duplication) {
+        if (getType() == VariantOverallType.Tandem_Duplication) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
             sbStr.append(getLength());
-        } else if (getType() == OverallType.Inversion) {
+        } else if (getType() == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
             sbStr.append(getLength());
@@ -801,15 +805,5 @@ public class Variant {
     }
 
     // type for one allele
-
-    public enum Type {
-        Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Complex
-    }
-
-    // Type for whole variant
-    public enum OverallType {
-        //Reference, SNP, INDEL, Deletion, Insertion, MNP, Inversion, Tandem_Duplication, Complex
-        Reference, SNP, Deletion, Insertion, Inversion, Tandem_Duplication, Complex
-    }
 
 }

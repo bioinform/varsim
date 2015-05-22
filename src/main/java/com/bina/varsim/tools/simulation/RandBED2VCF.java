@@ -2,6 +2,8 @@ package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -90,7 +92,7 @@ public class RandBED2VCF extends randVCFgenerator {
     }
 
     // remember BED is 0-based
-    Variant parse_bed_line(String line, Variant.Type type) {
+    Variant parse_bed_line(String line, VariantType type) {
         line = line.trim();
         String[] ll = line.split("\t");
         if (ll.length < 4) return new Variant(_rand);
@@ -122,7 +124,7 @@ public class RandBED2VCF extends randVCFgenerator {
         FlexSeq[] alts = new FlexSeq[1];
         String var_idx_str;
         byte[] ref_seq;
-        if (type == Variant.Type.Deletion) {
+        if (type == VariantType.Deletion) {
             alts[0] = new FlexSeq();
             var_idx_str = "del_";
             ref_seq = ref.byteRange(chr, pos, pos + len);
@@ -131,7 +133,7 @@ public class RandBED2VCF extends randVCFgenerator {
                 log.error("Range error: " + line);
             }
 
-        } else if (type == Variant.Type.Insertion) {
+        } else if (type == VariantType.Insertion) {
             if (ins_seq != null) {
                 alts[0] = new FlexSeq(ins_seq);
             } else {
@@ -139,11 +141,11 @@ public class RandBED2VCF extends randVCFgenerator {
             }
             var_idx_str = "ins_";
             ref_seq = new byte[0];
-        } else if (type == Variant.Type.Tandem_Duplication) {
+        } else if (type == VariantType.Tandem_Duplication) {
             alts[0] = new FlexSeq(FlexSeq.Type.DUP, len, 2);
             var_idx_str = "dup_";
             ref_seq = new byte[0];
-        } else if (type == Variant.Type.Inversion) {
+        } else if (type == VariantType.Inversion) {
             alts[0] = new FlexSeq(FlexSeq.Type.INV, len);
             var_idx_str = "inv_";
             ref_seq = new byte[0];
@@ -163,7 +165,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
     }
 
-    private void process_bed(BufferedWriter out, BufferedReader bed_reader, Variant.Type type)
+    private void process_bed(BufferedWriter out, BufferedReader bed_reader, VariantType type)
             throws IOException {
 
         String line;
@@ -277,10 +279,10 @@ public class RandBED2VCF extends randVCFgenerator {
         }
 
         try {
-            process_bed(out, del_bed_reader, Variant.Type.Deletion);
-            process_bed(out, ins_bed_reader, Variant.Type.Insertion);
-            process_bed(out, dup_bed_reader, Variant.Type.Tandem_Duplication);
-            process_bed(out, inv_bed_reader, Variant.Type.Inversion);
+            process_bed(out, del_bed_reader, VariantType.Deletion);
+            process_bed(out, ins_bed_reader, VariantType.Insertion);
+            process_bed(out, dup_bed_reader, VariantType.Tandem_Duplication);
+            process_bed(out, inv_bed_reader, VariantType.Inversion);
 
             out.flush();
             out.close();

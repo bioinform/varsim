@@ -203,7 +203,7 @@ if not args.disable_rand_vcf:
                         "-num_complex", str(args.som_num_complex),
                         # "-novel", str(args.som_percent_novel), # Not able to support novel yet (COS)
                         "-min_len", str(args.som_min_length_lim),
-                        "-max_len", str(args.som_max_length_lim),
+                        "-maxLen", str(args.som_max_length_lim),
                         "-ref", os.path.realpath(args.reference.name),
                         "-prop_het", str(args.som_prop_het),
                         "-vcf", os.path.realpath(args.cosmic_vcf)]

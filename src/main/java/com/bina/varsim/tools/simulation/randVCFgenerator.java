@@ -1,8 +1,9 @@
 package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.Sample_params;
-import com.bina.varsim.types.Variant;
+import com.bina.varsim.types.variant.Variant;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -153,11 +154,11 @@ abstract public class randVCFgenerator {
         // the SV info is written here
         StringBuilder sbStr = new StringBuilder();
         // assume the SV type is consistent across alleles
-        if (var.getType() == Variant.OverallType.Tandem_Duplication) {
+        if (var.getType() == VariantOverallType.Tandem_Duplication) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
             sbStr.append(var.getLength());
-        } else if (var.getType() == Variant.OverallType.Inversion) {
+        } else if (var.getType() == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
             sbStr.append(var.getLength());

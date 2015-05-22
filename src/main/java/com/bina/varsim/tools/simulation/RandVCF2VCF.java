@@ -2,6 +2,7 @@ package com.bina.varsim.tools.simulation;
 
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
@@ -98,8 +99,8 @@ public class RandVCF2VCF extends randVCFgenerator {
             int chr_len = ref.getRefLen(chr);
             int buffer = Math.max(
                     10,
-                    Math.max(var.max_len(geno.geno[0]),
-                            var.max_len(geno.geno[1])));
+                    Math.max(var.maxLen(geno.geno[0]),
+                            var.maxLen(geno.geno[1])));
             int start_val = Math.min(buffer, Math.max(chr_len - buffer, 0));
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
@@ -194,8 +195,8 @@ public class RandVCF2VCF extends randVCFgenerator {
             // this is ok because var is not changed later
             prev_var = var;
 
-            if (var.max_len() > max_length_lim
-                    || var.min_len() < min_length_lim) {
+            if (var.maxLen() > max_length_lim
+                    || var.minLen() < min_length_lim) {
                 continue;
             }
 
@@ -287,8 +288,8 @@ public class RandVCF2VCF extends randVCFgenerator {
 
             prev_var = var;
 
-            if (var.max_len() > max_length_lim
-                    || var.min_len() < min_length_lim) {
+            if (var.maxLen() > max_length_lim
+                    || var.minLen() < min_length_lim) {
                 continue;
             }
 
