@@ -1,4 +1,4 @@
-package com.bina.intervalTree;
+package com.bina.intervaltree;
 
 import junit.framework.TestCase;
 

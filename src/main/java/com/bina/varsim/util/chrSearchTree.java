@@ -7,9 +7,9 @@ package com.bina.varsim.util;
  * @author johnmu
  */
 
-import com.bina.intervalTree.Interval1D;
-import com.bina.intervalTree.IntervalTree;
-import com.bina.intervalTree.SimpleInterval1D;
+import com.bina.intervaltree.Interval1D;
+import com.bina.intervaltree.IntervalTree;
+import com.bina.intervaltree.SimpleInterval1D;
 import com.bina.varsim.types.ChrString;
 import org.apache.log4j.Logger;
 

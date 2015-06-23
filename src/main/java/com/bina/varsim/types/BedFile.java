@@ -1,6 +1,6 @@
 package com.bina.varsim.types;
 
-import com.bina.intervalTree.SimpleInterval1D;
+import com.bina.intervaltree.SimpleInterval1D;
 import com.bina.varsim.util.chrSearchTree;
 
 import java.io.BufferedReader;

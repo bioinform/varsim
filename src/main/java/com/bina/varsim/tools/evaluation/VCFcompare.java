@@ -1,8 +1,8 @@
 package com.bina.varsim.tools.evaluation;
 
 import com.bina.varsim.constants.Constant;
-import com.bina.intervalTree.SimpleInterval1D;
-import com.bina.intervalTree.ValueInterval1D;
+import com.bina.intervaltree.SimpleInterval1D;
+import com.bina.intervaltree.ValueInterval1D;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.constraint.UnsatisfiedConstraintException;
 import com.bina.varsim.types.stats.EnumStatsRatioCounter;

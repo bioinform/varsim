@@ -1,4 +1,4 @@
-package com.bina.intervalTree;
+package com.bina.intervaltree;
 
 /**
  * Created by johnmu on 12/17/14.
