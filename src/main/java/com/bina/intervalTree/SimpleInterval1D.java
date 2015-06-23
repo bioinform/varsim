@@ -1,4 +1,4 @@
-package com.bina.varsim.intervalTree;
+package com.bina.intervalTree;
 
 import org.apache.log4j.Logger;
 

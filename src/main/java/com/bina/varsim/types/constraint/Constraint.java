@@ -1,6 +1,6 @@
 package com.bina.varsim.types.constraint;
 
-import com.bina.varsim.intervalTree.SimpleInterval1D;
+import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.varsim.types.variant.VariantOverallType;
 import org.apache.commons.lang3.StringUtils;
 

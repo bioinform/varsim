@@ -1,4 +1,4 @@
-package com.bina.varsim.intervalTree;
+package com.bina.intervalTree;
 
 /**
  * Created by johnmu on 12/17/14.
