@@ -60,6 +60,11 @@ public class RatioRecord {
         return _TP / ((double) _TP + _FP);
     }
 
+    // specificiy
+    public double getSPC() {
+        return _TN / ((double) _TN + _FP);
+    }
+
     public boolean isEmpty() {
         return _TP == 0 && _FP == 0 && _T == 0;
     }
