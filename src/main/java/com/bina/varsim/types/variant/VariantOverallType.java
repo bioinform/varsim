@@ -3,8 +3,19 @@ package com.bina.varsim.types.variant;
 /**
  * Created by johnmu on 5/20/15.
  */ // Type for whole variant
-public enum VariantOverallType {
-    Reference, SNP, Deletion, Insertion, Inversion, Tandem_Duplication, Complex;
+public enum VariantOverallType implements INonReference{
+    Reference(false), SNP(false), Deletion(false), Insertion(true), Inversion(false), Tandem_Duplication(false), Complex(false);
+
+    boolean nonReference;
+
+    VariantOverallType(boolean nonReference){
+        this.nonReference = nonReference;
+    }
+
+    @Override
+    public boolean isNonReference() {
+        return nonReference;
+    }
 
     public static VariantOverallType fromString(String s){
         for (VariantOverallType type : VariantOverallType.values()) {

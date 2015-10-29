@@ -1,5 +1,7 @@
 package com.bina.varsim.types.stats;
 
+import com.bina.varsim.types.variant.INonReference;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,7 +16,7 @@ import java.util.TreeMap;
  *
  * @param <Value> This is usually a string
  */
-public class EnumStatsRatioCounter<Value extends Enum> {
+public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
 
     private TreeMap<Value, StatsRatioRecord> data;
     private StatsRatioRecord all_data; // this records regardless of type
@@ -53,14 +55,14 @@ public class EnumStatsRatioCounter<Value extends Enum> {
     public void incT(Value a, int len) {
         StatsRatioRecord count = data.get(a);
         if (count != null) {
-            count.addT(len);
+            count.addT(len, a.isNonReference() ? 0 : len);
         } else {
             StatsRatioRecord contents = new StatsRatioRecord();
-            contents.addT(len);
+            contents.addT(len, a.isNonReference() ? 0 : len);
             data.put(a, contents);
         }
 
-        all_data.addT(len);
+        all_data.addT(len, a.isNonReference() ? 0 : len);
     }
 
     public TreeMap<Value, StatsRatioRecord> getData() {

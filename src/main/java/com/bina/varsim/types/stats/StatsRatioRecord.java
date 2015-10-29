@@ -9,6 +9,7 @@ public class StatsRatioRecord {
     private RatioRecord[] bin_counts; // the last bin is for anything larger, this is the number correct
     private RatioRecord sum_count;
     private RatioRecord svSumCount;
+    private RatioRecord sum_per_base_count;
 
     private int[] bin_breaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
@@ -35,6 +36,7 @@ public class StatsRatioRecord {
     }
 
     public void addTP(int val) {
+        sum_per_base_count.incTP(val);
         sum_count.incTP();
         if (val >= Constant.SVLEN) {
             svSumCount.incTP();
@@ -49,6 +51,7 @@ public class StatsRatioRecord {
     }
 
     public void addFP(int val) {
+        sum_per_base_count.incFP(val);
         sum_count.incFP();
         if (val >= Constant.SVLEN) {
             svSumCount.incFP();
@@ -62,7 +65,8 @@ public class StatsRatioRecord {
         bin_counts[bin_breaks.length].incFP();
     }
 
-    public void addT(int val) {
+    public void addT(int val, int referenceBases) {
+        sum_per_base_count.incT(referenceBases);
         sum_count.incT();
         if (val >= Constant.SVLEN) {
             svSumCount.incT();
@@ -74,6 +78,15 @@ public class StatsRatioRecord {
             }
         }
         bin_counts[bin_breaks.length].incT();
+    }
+
+    /**
+     * This only computes it for sum_per_base_count
+     * @param numNonNReferenceBases
+     */
+    public void computeTN(int numNonNReferenceBases){
+        int conditionNegative = numNonNReferenceBases - sum_per_base_count.get_T();
+        sum_per_base_count.set_TN(conditionNegative - sum_per_base_count.get_FP());
     }
 
     public RatioRecord[] getBin_counts() {
@@ -94,6 +107,14 @@ public class StatsRatioRecord {
 
     public int[] getBin_breaks() {
         return bin_breaks;
+    }
+
+    public RatioRecord getSum_per_base_count() {
+        return sum_per_base_count;
+    }
+
+    public void setSum_per_base_count(RatioRecord sum_per_base_count) {
+        this.sum_per_base_count = sum_per_base_count;
     }
 
     public String toString() {

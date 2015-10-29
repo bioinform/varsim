@@ -140,6 +140,18 @@ public class SimpleReference {
     }
 
     /**
+     * This is computed lazily, so the first call to this will be slow
+     * @return number of non-N bases in the sequence
+     */
+    public long getNumNonNBases(){
+        long count = 0;
+        for (Sequence sequence : data.values()) {
+            count += sequence.getNumNonNBases();
+        }
+        return count;
+    }
+
+    /**
      * @return Chromosomes currently loaded
      */
     public Set<ChrString> keySet() {

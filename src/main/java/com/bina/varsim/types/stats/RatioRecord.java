@@ -30,6 +30,10 @@ public class RatioRecord {
         _TP++;
     }
 
+    public void incTP(final int TP) {
+        _TP += TP;
+    }
+
     public void incTN() {
         _TN++;
     }
@@ -38,12 +42,20 @@ public class RatioRecord {
         _FP++;
     }
 
+    public void incFP(final int FP) {
+        _FP += FP;
+    }
+
     public void incFN() {
         _FN++;
     }
 
     public void incT() {
         _T++;
+    }
+
+    public void incT(final int T) {
+        _T += T;
     }
 
     // recall
