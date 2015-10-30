@@ -33,6 +33,7 @@ public class StatsRatioRecord {
 
         sum_count = new RatioRecord();
         svSumCount = new RatioRecord();
+        sum_per_base_count = new RatioRecord();
     }
 
     public void addTP(int val) {
