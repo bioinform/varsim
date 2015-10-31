@@ -75,8 +75,8 @@ public class Sequence {
             for (byte b : _seq) {
                 if(!isN(b)) count++;
             }
+            numNonNBases = count;
         }
-        numNonNBases = count;
         return numNonNBases;
     }
 
