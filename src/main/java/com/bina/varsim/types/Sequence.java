@@ -13,6 +13,7 @@ public class Sequence {
             A = 'A', C = 'C', G = 'G', T = 'T', N = 'N';
     private String _header = "", _name = "";
     private byte[] _seq = null;
+    private Integer numNonNBases = null; // This is computed lazily
 
     public Sequence(String header, byte[] seq, int len) {
         _header = header;
@@ -58,6 +59,25 @@ public class Sequence {
             default:
                 return b;
         }
+    }
+
+    public static boolean isN(final byte b){
+        return b == N || b == n;
+    }
+
+    /**
+     * This is computed lazily, so the first call to this will be slow
+     * @return number of non-N bases in the sequence
+     */
+    public int getNumNonNBases(){
+        int count = 0;
+        if(numNonNBases == null){
+            for (byte b : _seq) {
+                if(!isN(b)) count++;
+            }
+            numNonNBases = count;
+        }
+        return numNonNBases;
     }
 
     /**
