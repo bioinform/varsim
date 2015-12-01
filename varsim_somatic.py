@@ -298,7 +298,7 @@ processes = monitor_processes(processes)
 tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
 normal_vcf = os.path.join(args.out_dir, "%s_norm.vcf" % args.id)
 somatic_vcf = os.path.join(args.out_dir, "%s_somatic.vcf" % args.id)
-logger.info("Splitting the truth VCF into normal and somatic VCFs")
+logger.info("Splitting the truth VCF %s into normal and somatic VCFs" % tumor_vcf)
 with open(tumor_vcf, "r") as tumor_truth_fd, \
     open(normal_vcf, "w") as normal_vcf_fd, \
     open(somatic_vcf, "w") as somatic_vcf_fd:
