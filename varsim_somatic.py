@@ -62,9 +62,9 @@ main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragm
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
                          default=50, type=int)
-main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF", default=[], required=True)
-main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", default=[],
-                         required=True)
+main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF")
+main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
+main_parser.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF")
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
@@ -188,12 +188,13 @@ processes = []
 
 t_s = time.time()
 
-vcf_files = [os.path.realpath(args.normal_vcf)]
-
+cosmic_sampled_vcf = None
 if not args.disable_rand_vcf:
+    if not args.cosmic_vcf:
+        raise Exception("COSMIC database VCF not specified using --cosmic_vcf")
     rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-    vcf_files.insert(0, os.path.realpath(rand_vcf_stdout.name))
+    cosmic_sampled_vcf = rand_vcf_stdout.name
 
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                         "-num_snp", str(args.som_num_snp),
@@ -213,6 +214,8 @@ if not args.disable_rand_vcf:
     processes.append(p_rand_vcf)
 
 processes = monitor_processes(processes, logger)
+
+vcf_files = map(os.path.realpath, filter(None, [cosmic_sampled_vcf] + args.somatic_vcfs + [args.normal_vcf]))
 
 processes = []
 for in_vcf in vcf_files:
