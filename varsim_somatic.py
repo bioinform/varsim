@@ -18,6 +18,12 @@ def get_contigs_list(reference):
     return contigs
 
 
+def makedirs(dirs):
+    for d in dirs:
+        if not os.path.exists(d):
+            os.makedirs(d)
+
+
 my_dir = os.path.dirname(os.path.realpath(__file__))
 
 default_varsim_jar = os.path.join(my_dir, "VarSim.jar")
@@ -123,12 +129,6 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     sys.exit(retcode)
 
 
-def makedirs(dirs):
-    for d in dirs:
-        if not os.path.exists(d):
-            os.makedirs(d)  
-
-
 def monitor_processes(processes):
     logger = logging.getLogger(monitor_processes.__name__)
     while processes:
@@ -161,12 +161,13 @@ def monitor_processes(processes):
 
 
 def check_executable(fpath):
+    logger = logging.getLogger(check_executable.__name__)
     if not os.path.isfile(fpath):
-        sys.stderr.write("ERROR: File %s does not exist\n" % (fpath))
-        sys.exit(1)
+        logger.error("File %s does not exist" % fpath)
+        sys.exit(os.EX_NOINPUT)
     if not os.access(fpath, os.X_OK):
-        sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
-        sys.exit(1)
+        logger.error("File %s is not executable" % fpath)
+        sys.exit(os.EX_NOINPUT)
 
 
 def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
@@ -185,16 +186,10 @@ def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
 
 
 if not args.disable_sim:
-    if args.simulator == "dwgsim":
-        if args.simulator_executable is None:
-            sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
-            sys.exit(1)
-        check_executable(args.simulator_executable.name)
-    if args.simulator == "art":
-        if args.simulator_executable is None:
-            sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
-            sys.exit(1)
-        check_executable(args.simulator_executable.name)
+    if not args.simulator_executable:
+        logger.error("Please specify %s binary with --simulator_executable option" % args.simulator)
+        sys.exit(os.EX_USAGE)
+    check_executable(args.simulator_executable.name)
 
 processes = []
 
