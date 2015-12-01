@@ -5,6 +5,7 @@
 import argparse
 import os
 import sys
+import re
 import subprocess
 import logging
 import time
@@ -33,11 +34,11 @@ if not os.path.isfile(default_varsim):
 
 main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False,
+main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory",
                          default="somatic_out")
-main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False,
+main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory",
                          default="somatic_work")
-main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False,
+main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to",
                          default="somatic_log")
 main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome", required=True, type=file)
 main_parser.add_argument("--seed", metavar="INT", help="Random number seed", type=int, default=0)
@@ -64,7 +65,7 @@ main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard dev
                          default=50, type=int)
 main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF")
 main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
-main_parser.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF")
+main_parser.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF. Make sure that the VCF entries have the SOMATIC flag")
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
@@ -275,26 +276,17 @@ processes = monitor_processes(processes, logger)
 # This is a bit dodgy
 # grep -v "COS" art_cosmic/out/sv.truth.vcf > out/sv_norm.vcf &
 # grep  "COS" art_cosmic/out/sv.truth.vcf > out/sv_cosmic.vcf &
-
-grep_norm_stdout = open(os.path.join(args.out_dir, str(args.id) + "_norm.vcf"), "w")
-grep_norm_stderr = open(os.path.join(args.log_dir, str(args.id) + "_norm.err"), "w")
-
-grep_norm_command = ["grep", "-v", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) + ".truth.vcf")]
-
-p_grep_norm = subprocess.Popen(grep_norm_command, stdout=grep_norm_stdout, stderr=grep_norm_stderr)
-logger.info("Executing command " + " ".join(grep_norm_command) + " with pid " + str(p_grep_norm.pid))
-processes.append(p_grep_norm)
-
-grep_cos_stdout = open(os.path.join(args.out_dir, str(args.id) + "_somatic.vcf"), "w")
-grep_cos_stderr = open(os.path.join(args.log_dir, str(args.id) + "_somatic.err"), "w")
-
-grep_cos_command = ["grep", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) + ".truth.vcf")]
-
-p_grep_cos = subprocess.Popen(grep_cos_command, stdout=grep_cos_stdout, stderr=grep_cos_stderr)
-logger.info("Executing command " + " ".join(grep_cos_command) + " with pid " + str(p_grep_cos.pid))
-processes.append(p_grep_cos)
-
-processes = monitor_processes(processes, logger)
+tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
+logger.info("Splitting the truth VCF into normal and somatic VCFs")
+with open(tumor_vcf, "r") as tumor_truth_fd, \
+    open(os.path.join(args.out_dir, "%s_norm.vcf" % args.id), "w") as normal_vcf_fd, \
+    open(os.path.join(args.out_dir, "%s_somatic.vcf" % args.id), "w") as somatic_vcf_fd:
+    pattern = re.compile("COS|SOMATIC")
+    for line in tumor_truth_fd:
+        if pattern.match(line):
+            somatic_vcf_fd.write(line)
+        else:
+            normal_vcf_fd.write(line)
 
 vcfstats_stdout = open(os.path.join(args.out_dir, "%s.norm.vcf.stats" % (args.id)), "w")
 vcfstats_stderr = open(os.path.join(args.log_dir, "%s.norm.vcf.vcfstats.err" % (args.id)), "w")
