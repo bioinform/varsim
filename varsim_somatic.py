@@ -110,7 +110,7 @@ art_group.add_argument("--art_options", help="ART command-line options", default
 
 args = main_parser.parse_args()
 
-for d in [args.log_dir, args.out_dir, args.work_dir]:
+for d in [args.log_dir, args.out_dir]:
     if not os.path.exists(d):
         os.makedirs(d)
 
@@ -269,10 +269,7 @@ processes.append(p_varsim)
 
 processes = monitor_processes(processes)
 
-# grep out the cosmic variants
-# This is a bit dodgy
-# grep -v "COS" art_cosmic/out/sv.truth.vcf > out/sv_norm.vcf &
-# grep  "COS" art_cosmic/out/sv.truth.vcf > out/sv_cosmic.vcf &
+# Split the tumor truth VCF into normal variants and somatic variants
 tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
 normal_vcf = os.path.join(args.out_dir, "%s_norm.vcf" % args.id)
 somatic_vcf = os.path.join(args.out_dir, "%s_somatic.vcf" % args.id)
