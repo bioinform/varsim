@@ -126,7 +126,7 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
 
 
 def monitor_processes(processes):
-    logger = logging.getLogger("%s.%s" % (__file__, monitor_processes.__name__))
+    logger = logging.getLogger(monitor_processes.__name__)
     while processes:
         time.sleep(1)
         kill_all = False
@@ -166,7 +166,7 @@ def check_executable(fpath):
 
 
 def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
-    logger = logging.getLogger("%s.%s" % (__file__, run_vcfstats.__name__))
+    logger = logging.getLogger(run_vcfstats.__name__)
     processes = []
     for in_vcf in vcfs:
         out_prefix = os.path.basename(in_vcf)
