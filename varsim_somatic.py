@@ -233,9 +233,9 @@ fixed_somatic_vcfs = []
 if somatic_vcfs:
     vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
     makedirs([vcfs_dir])
-    logger.info("Copying somatic VCFs %s over and adding SOMATIC flag to entries if missing" % (", ".join(somatic_vcfs)))
     for index, vcf in enumerate(somatic_vcfs):
         copied_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
+        logger.info("Copying somatic VCF %s to %s and adding SOMATIC flag to entries if missing" % (vcf, copied_vcf))
         with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
             for line in vcf_fd:
                 if line.startswith("#"):
