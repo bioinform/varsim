@@ -5,7 +5,7 @@
 import argparse
 import os
 import sys
-import re
+import itertools
 import subprocess
 import logging
 import time
@@ -69,14 +69,18 @@ main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragm
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
                          default=50, type=int)
-main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")
-main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
-main_parser.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF. Make sure that the VCF entries have the SOMATIC flag", default=[])
+
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
 main_parser.add_argument("--varsim_py", metavar="PATH", help="Path to VarSim.py", type=file,
                          default=default_varsim, required=require_varsim)
+
+input_vcf_group = main_parser.add_argument_group("Input VCFs options")
+input_vcf_group.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")
+input_vcf_group.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
+input_vcf_group.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF", default=[])
+input_vcf_group.add_argument("--merge_priority", choices=["sn", "ns"], help="Priority of merging (lowest first) somatic (s) and normal truth (n).", default="sn")
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
 pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable RandVCF2VCF somatic")
@@ -195,14 +199,14 @@ processes = []
 
 t_s = time.time()
 
-cosmic_sampled_vcf = []
+cosmic_sampled_vcfs = []
 if not args.disable_rand_vcf:
     if not args.cosmic_vcf:
         logger.error("COSMIC database VCF not specified using --cosmic_vcf")
         sys.exit(os.EX_USAGE)
     rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-    cosmic_sampled_vcf = [rand_vcf_stdout.name]
+    cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                         "-num_snp", str(args.som_num_snp),
@@ -223,14 +227,15 @@ if not args.disable_rand_vcf:
 
 processes = monitor_processes(processes)
 
-somatic_vcfs = cosmic_sampled_vcf + args.somatic_vcfs
+normal_vcfs = [args.normal_vcf]
+somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
 fixed_somatic_vcfs = []
 if somatic_vcfs:
-    somatic_vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
-    makedirs([somatic_vcfs_dir])
+    vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
+    makedirs([vcfs_dir])
     logger.info("Copying somatic VCFs over and adding SOMATIC flag to entries if missing")
     for index, vcf in enumerate(somatic_vcfs):
-        copied_vcf = os.path.join(somatic_vcfs_dir, "%d.vcf" % index)
+        copied_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
         with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
             for line in vcf_fd:
                 if line.startswith("#"):
@@ -242,8 +247,8 @@ if somatic_vcfs:
                     copied_vcf_fd.write("\t".join(line_fields))
         fixed_somatic_vcfs.append(copied_vcf)
             
-
-vcf_files = map(os.path.realpath, filter(None, fixed_somatic_vcfs + [args.normal_vcf]))
+vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "cn" else (normal_vcfs + fixed_somatic_vcfs)
+vcf_files = map(os.path.realpath, filter(None, vcf_files))
 
 processes = run_vcfstats(vcf_files, args.varsim_jar.name, args.out_dir, args.log_dir)
 
@@ -263,7 +268,7 @@ profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not No
 varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--out_dir", str(os.path.realpath(args.out_dir)),
                   "--work_dir", str(os.path.realpath(args.work_dir)),
-                  "--log_dir", str(os.path.realpath(args.log_dir)),
+                  "--log_dir", str(os.path.realpath(os.path.join(args.log_dir, "varsim"))),
                   "--reference", str(os.path.realpath(args.reference.name)),
                   "--seed", str(args.seed),
                   "--sex", str(args.sex),
