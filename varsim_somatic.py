@@ -110,9 +110,7 @@ art_group.add_argument("--art_options", help="ART command-line options", default
 
 args = main_parser.parse_args()
 
-for d in [args.log_dir, args.out_dir]:
-    if not os.path.exists(d):
-        os.makedirs(d)
+makedirs([args.log_dir, args.out_dir])
 
 FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
 logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
@@ -123,6 +121,12 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
     retcode = subproc.wait()
     sys.exit(retcode)
+
+
+def makedirs(dirs):
+    for d in dirs:
+        if not os.path.exists(d):
+            os.makedirs(d)  
 
 
 def monitor_processes(processes):
@@ -196,13 +200,13 @@ processes = []
 
 t_s = time.time()
 
-cosmic_sampled_vcf = None
+cosmic_sampled_vcf = []
 if not args.disable_rand_vcf:
     if not args.cosmic_vcf:
         raise Exception("COSMIC database VCF not specified using --cosmic_vcf")
     rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-    cosmic_sampled_vcf = rand_vcf_stdout.name
+    cosmic_sampled_vcf = [rand_vcf_stdout.name]
 
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                         "-num_snp", str(args.som_num_snp),
@@ -223,7 +227,27 @@ if not args.disable_rand_vcf:
 
 processes = monitor_processes(processes)
 
-vcf_files = map(os.path.realpath, filter(None, [cosmic_sampled_vcf] + args.somatic_vcfs + [args.normal_vcf]))
+somatic_vcfs = cosmic_sampled_vcf + args.somatic_vcfs
+fixed_somatic_vcfs = []
+if somatic_vcfs:
+    somatic_vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
+    makedirs([somatic_vcfs_dir])
+    logger.info("Copying somatic VCFs over and adding SOMATIC flag to entries if missing")
+    for index, vcf in enumerate(somatic_vcfs):
+        copied_vcf = os.path.join(somatic_vcfs_dir, "%d.vcf" % index)
+        with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
+            for line in vcf_fd:
+                if line.startswith("#"):
+                    copied_vcf_fd.write(line)
+                else:
+                    line_fields = line.split("\t")
+                    if line_fields[7].find("SOMATIC") < 0:
+                        line_fields[7] += ";SOMATIC"
+                    copied_vcf_fd.write("\t".join(line_fields))
+        fixed_somatic_vcfs.append(copied_vcf)
+            
+
+vcf_files = map(os.path.realpath, filter(None, fixed_somatic_vcfs + [args.normal_vcf]))
 
 processes = run_vcfstats(vcf_files, args.varsim_jar.name, args.out_dir, args.log_dir)
 
@@ -277,9 +301,12 @@ logger.info("Splitting the truth VCF into normal and somatic VCFs")
 with open(tumor_vcf, "r") as tumor_truth_fd, \
     open(normal_vcf, "w") as normal_vcf_fd, \
     open(somatic_vcf, "w") as somatic_vcf_fd:
-    pattern = re.compile("COS|SOMATIC")
     for line in tumor_truth_fd:
-        if pattern.match(line):
+        if line.startswith("#"):
+            somatic_vcf_fd.write(line)
+            normal_vcf_fd.write(line)
+            continue
+        if line.find("SOMATIC") >= 0:
             somatic_vcf_fd.write(line)
         else:
             normal_vcf_fd.write(line)
