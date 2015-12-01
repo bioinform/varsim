@@ -277,9 +277,13 @@ logger.info("Splitting the truth VCF into normal and somatic VCFs")
 with open(tumor_vcf, "r") as tumor_truth_fd, \
     open(normal_vcf, "w") as normal_vcf_fd, \
     open(somatic_vcf, "w") as somatic_vcf_fd:
-    pattern = re.compile("COS|SOMATIC")
     for line in tumor_truth_fd:
-        if pattern.match(line):
+        if line.startswith("#"):
+            somatic_vcf_fd.write(line)
+            normal_vcf_fd.write(line)
+            continue
+        line_fields = line.split("\t")
+        if line_fields[2].find("COS") >= 0 or line_fields[7].find("SOMATIC") >= 0:
             somatic_vcf_fd.write(line)
         else:
             normal_vcf_fd.write(line)
