@@ -69,7 +69,7 @@ main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragm
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
                          default=50, type=int)
-main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF")
+main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")
 main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
 main_parser.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF. Make sure that the VCF entries have the SOMATIC flag", default=[])
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
@@ -154,7 +154,7 @@ def monitor_processes(processes):
                         try:
                             p.terminate()
                         except OSError, ex:
-                            logger.write("Could not kill the process %d\n" % p.pid)
+                            logger.error("Could not kill the process %d\n" % p.pid)
             sys.exit(1)
         processes = processes_running
     return []
@@ -198,7 +198,8 @@ t_s = time.time()
 cosmic_sampled_vcf = []
 if not args.disable_rand_vcf:
     if not args.cosmic_vcf:
-        raise Exception("COSMIC database VCF not specified using --cosmic_vcf")
+        logger.error("COSMIC database VCF not specified using --cosmic_vcf")
+        sys.exit(os.EX_USAGE)
     rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
     cosmic_sampled_vcf = [rand_vcf_stdout.name]
