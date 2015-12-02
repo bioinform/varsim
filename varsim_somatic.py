@@ -248,7 +248,7 @@ if somatic_vcfs:
                     count += 1
         fixed_somatic_vcfs.append(copied_vcf)
             
-vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "cn" else (normal_vcfs + fixed_somatic_vcfs)
+vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "sn" else (normal_vcfs + fixed_somatic_vcfs)
 vcf_files = map(os.path.realpath, filter(None, vcf_files))
 
 processes = run_vcfstats(vcf_files, args.varsim_jar.name, args.out_dir, args.log_dir)
