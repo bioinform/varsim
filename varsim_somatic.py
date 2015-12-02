@@ -233,18 +233,19 @@ fixed_somatic_vcfs = []
 if somatic_vcfs:
     vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
     makedirs([vcfs_dir])
+    count = 0
     for index, vcf in enumerate(somatic_vcfs):
         copied_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
-        logger.info("Copying somatic VCF %s to %s and adding SOMATIC flag to entries if missing" % (vcf, copied_vcf))
+        logger.info("Copying somatic VCF %s to %s and adding VARSIMSOMATIC id to entries if missing" % (vcf, copied_vcf))
         with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
             for line in vcf_fd:
                 if line.startswith("#"):
                     copied_vcf_fd.write(line)
                 else:
                     line_fields = line.split("\t")
-                    if line_fields[7].find("SOMATIC") < 0:
-                        line_fields[7] += ";SOMATIC"
+                    line_fields[2] = ("VARSIMSOMATIC%d" % count) if line_fields[2] == "." else ("%s,VARSIMSOMATIC%d" % (line_fields[2], count))
                     copied_vcf_fd.write("\t".join(line_fields))
+                    count += 1
         fixed_somatic_vcfs.append(copied_vcf)
             
 vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "cn" else (normal_vcfs + fixed_somatic_vcfs)
@@ -307,7 +308,7 @@ with open(tumor_vcf, "r") as tumor_truth_fd, \
             somatic_vcf_fd.write(line)
             normal_vcf_fd.write(line)
             continue
-        if line.find("SOMATIC") >= 0:
+        if line.find("VARSIMSOMATIC") >= 0:
             somatic_vcf_fd.write(line)
         else:
             normal_vcf_fd.write(line)
