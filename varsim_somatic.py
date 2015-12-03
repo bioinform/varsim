@@ -5,6 +5,7 @@
 import argparse
 import os
 import sys
+import itertools
 import subprocess
 import logging
 import time
@@ -15,6 +16,12 @@ def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
     return contigs
+
+
+def makedirs(dirs):
+    for d in dirs:
+        if not os.path.exists(d):
+            os.makedirs(d)
 
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
@@ -33,11 +40,11 @@ if not os.path.isfile(default_varsim):
 
 main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory", required=False,
+main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory",
                          default="somatic_out")
-main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory", required=False,
+main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory",
                          default="somatic_work")
-main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to", required=False,
+main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to",
                          default="somatic_log")
 main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome", required=True, type=file)
 main_parser.add_argument("--seed", metavar="INT", help="Random number seed", type=int, default=0)
@@ -62,14 +69,18 @@ main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragm
                          type=int)
 main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size",
                          default=50, type=int)
-main_parser.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF", default=[], required=True)
-main_parser.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", default=[],
-                         required=True)
+
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
 main_parser.add_argument("--varsim_py", metavar="PATH", help="Path to VarSim.py", type=file,
                          default=default_varsim, required=require_varsim)
+
+input_vcf_group = main_parser.add_argument_group("Input VCFs options")
+input_vcf_group.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")
+input_vcf_group.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
+input_vcf_group.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF", default=[])
+input_vcf_group.add_argument("--merge_priority", choices=["sn", "ns"], help="Priority of merging (lowest first) somatic (s) and normal truth (n).", default="sn")
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
 pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true", help="Disable RandVCF2VCF somatic")
@@ -109,11 +120,9 @@ art_group.add_argument("--art_options", help="ART command-line options", default
 
 args = main_parser.parse_args()
 
-for d in [args.log_dir, args.out_dir, args.work_dir]:
-    if not os.path.exists(d):
-        os.makedirs(d)
+makedirs([args.log_dir, args.out_dir])
 
-FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
+FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
 logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
@@ -124,16 +133,8 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     sys.exit(retcode)
 
 
-def monitor_multiprocesses(processes, logger):
-    for p in processes:
-        p.join()
-        if p.exitcode != 0:
-            logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))
-        else:
-            logger.info("Process with pid %d finished successfully" % (p.pid))
-
-
-def monitor_processes(processes, logger):
+def monitor_processes(processes):
+    logger = logging.getLogger(monitor_processes.__name__)
     while processes:
         time.sleep(1)
         kill_all = False
@@ -157,43 +158,55 @@ def monitor_processes(processes, logger):
                         try:
                             p.terminate()
                         except OSError, ex:
-                            logger.write("Could not kill the process\n")
+                            logger.error("Could not kill the process %d\n" % p.pid)
             sys.exit(1)
         processes = processes_running
     return []
 
 
 def check_executable(fpath):
+    logger = logging.getLogger(check_executable.__name__)
     if not os.path.isfile(fpath):
-        sys.stderr.write("ERROR: File %s does not exist\n" % (fpath))
-        sys.exit(1)
+        logger.error("File %s does not exist" % fpath)
+        sys.exit(os.EX_NOINPUT)
     if not os.access(fpath, os.X_OK):
-        sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
-        sys.exit(1)
+        logger.error("File %s is not executable" % fpath)
+        sys.exit(os.EX_NOINPUT)
+
+
+def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
+    logger = logging.getLogger(run_vcfstats.__name__)
+    processes = []
+    for in_vcf in vcfs:
+        out_prefix = os.path.basename(in_vcf)
+        vcfstats_stdout = open(os.path.join(out_dir, "%s.stats" % (out_prefix)), "w")
+        vcfstats_stderr = open(os.path.join(log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
+        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(varsim_jar), "vcfstats", "-vcf",
+                        in_vcf]
+        p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+        logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
+        processes.append(p_vcfstats)
+    return processes
 
 
 if not args.disable_sim:
-    if args.simulator == "dwgsim":
-        if args.simulator_executable is None:
-            sys.stderr.write("ERROR: Please specify the DWGSIM binary with --dwgsim option\n")
-            sys.exit(1)
-        check_executable(args.simulator_executable.name)
-    if args.simulator == "art":
-        if args.simulator_executable is None:
-            sys.stderr.write("ERROR: Please specify the ART binary with --art option\n")
-            sys.exit(1)
-        check_executable(args.simulator_executable.name)
+    if not args.simulator_executable:
+        logger.error("Please specify %s binary with --simulator_executable option" % args.simulator)
+        sys.exit(os.EX_USAGE)
+    check_executable(args.simulator_executable.name)
 
 processes = []
 
 t_s = time.time()
 
-vcf_files = [os.path.realpath(args.normal_vcf)]
-
+cosmic_sampled_vcfs = []
 if not args.disable_rand_vcf:
+    if not args.cosmic_vcf:
+        logger.error("COSMIC database VCF not specified using --cosmic_vcf")
+        sys.exit(os.EX_USAGE)
     rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-    vcf_files.insert(0, os.path.realpath(rand_vcf_stdout.name))
+    cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                         "-num_snp", str(args.som_num_snp),
@@ -203,7 +216,7 @@ if not args.disable_rand_vcf:
                         "-num_complex", str(args.som_num_complex),
                         # "-novel", str(args.som_percent_novel), # Not able to support novel yet (COS)
                         "-min_len", str(args.som_min_length_lim),
-                        "-maxLen", str(args.som_max_length_lim),
+                        "-max_len", str(args.som_max_length_lim),
                         "-ref", os.path.realpath(args.reference.name),
                         "-prop_het", str(args.som_prop_het),
                         "-vcf", os.path.realpath(args.cosmic_vcf)]
@@ -212,19 +225,33 @@ if not args.disable_rand_vcf:
     logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
     processes.append(p_rand_vcf)
 
-processes = monitor_processes(processes, logger)
+processes = monitor_processes(processes)
 
-processes = []
-for in_vcf in vcf_files:
-    out_prefix = os.path.basename(in_vcf)
-    vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
-    vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-    vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf",
-                        in_vcf]
-    p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-    logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
-    processes.append(p_vcfstats)
+normal_vcfs = [args.normal_vcf]
+somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
+fixed_somatic_vcfs = []
+if somatic_vcfs:
+    vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
+    makedirs([vcfs_dir])
+    count = 0
+    for index, vcf in enumerate(somatic_vcfs):
+        copied_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
+        logger.info("Copying somatic VCF %s to %s and adding VARSIMSOMATIC id to entries if missing" % (vcf, copied_vcf))
+        with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
+            for line in vcf_fd:
+                if line.startswith("#"):
+                    copied_vcf_fd.write(line)
+                else:
+                    line_fields = line.split("\t")
+                    line_fields[2] = ("VARSIMSOMATIC%d" % count) if line_fields[2] == "." else ("%s,VARSIMSOMATIC%d" % (line_fields[2], count))
+                    copied_vcf_fd.write("\t".join(line_fields))
+                    count += 1
+        fixed_somatic_vcfs.append(copied_vcf)
+            
+vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "sn" else (normal_vcfs + fixed_somatic_vcfs)
+vcf_files = map(os.path.realpath, filter(None, vcf_files))
 
+processes = run_vcfstats(vcf_files, args.varsim_jar.name, args.out_dir, args.log_dir)
 
 # Run VarSim 
 varsim_stdout = open(os.path.join(args.log_dir, "som_varsim.out"), "w")
@@ -242,7 +269,7 @@ profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not No
 varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--out_dir", str(os.path.realpath(args.out_dir)),
                   "--work_dir", str(os.path.realpath(args.work_dir)),
-                  "--log_dir", str(os.path.realpath(args.log_dir)),
+                  "--log_dir", str(os.path.realpath(os.path.join(args.log_dir, "varsim"))),
                   "--reference", str(os.path.realpath(args.reference.name)),
                   "--seed", str(args.seed),
                   "--sex", str(args.sex),
@@ -266,49 +293,26 @@ p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_
 logger.info("Executing command " + " ".join(varsim_command) + " with pid " + str(p_varsim.pid))
 processes.append(p_varsim)
 
-processes = monitor_processes(processes, logger)
+processes = monitor_processes(processes)
 
-# grep out the cosmic variants
-# This is a bit dodgy
-# grep -v "COS" art_cosmic/out/sv.truth.vcf > out/sv_norm.vcf &
-# grep  "COS" art_cosmic/out/sv.truth.vcf > out/sv_cosmic.vcf &
+# Split the tumor truth VCF into normal variants and somatic variants
+tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
+normal_vcf = os.path.join(args.out_dir, "%s_norm.vcf" % args.id)
+somatic_vcf = os.path.join(args.out_dir, "%s_somatic.vcf" % args.id)
+logger.info("Splitting the truth VCF %s into normal and somatic VCFs" % tumor_vcf)
+with open(tumor_vcf, "r") as tumor_truth_fd, \
+    open(normal_vcf, "w") as normal_vcf_fd, \
+    open(somatic_vcf, "w") as somatic_vcf_fd:
+    for line in tumor_truth_fd:
+        if line.startswith("#"):
+            somatic_vcf_fd.write(line)
+            normal_vcf_fd.write(line)
+            continue
+        if line.find("VARSIMSOMATIC") >= 0:
+            somatic_vcf_fd.write(line)
+        else:
+            normal_vcf_fd.write(line)
 
-grep_norm_stdout = open(os.path.join(args.out_dir, str(args.id) + "_norm.vcf"), "w")
-grep_norm_stderr = open(os.path.join(args.log_dir, str(args.id) + "_norm.err"), "w")
-
-grep_norm_command = ["grep", "-v", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) + ".truth.vcf")]
-
-p_grep_norm = subprocess.Popen(grep_norm_command, stdout=grep_norm_stdout, stderr=grep_norm_stderr)
-logger.info("Executing command " + " ".join(grep_norm_command) + " with pid " + str(p_grep_norm.pid))
-processes.append(p_grep_norm)
-
-grep_cos_stdout = open(os.path.join(args.out_dir, str(args.id) + "_somatic.vcf"), "w")
-grep_cos_stderr = open(os.path.join(args.log_dir, str(args.id) + "_somatic.err"), "w")
-
-grep_cos_command = ["grep", "COS", os.path.realpath(str(args.out_dir) + "/" + str(args.id) + ".truth.vcf")]
-
-p_grep_cos = subprocess.Popen(grep_cos_command, stdout=grep_cos_stdout, stderr=grep_cos_stderr)
-logger.info("Executing command " + " ".join(grep_cos_command) + " with pid " + str(p_grep_cos.pid))
-processes.append(p_grep_cos)
-
-processes = monitor_processes(processes, logger)
-
-vcfstats_stdout = open(os.path.join(args.out_dir, "%s.norm.vcf.stats" % (args.id)), "w")
-vcfstats_stderr = open(os.path.join(args.log_dir, "%s.norm.vcf.vcfstats.err" % (args.id)), "w")
-p_vcfstats = subprocess.Popen(
-    ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf",
-     os.path.join(args.out_dir, str(args.id) + "_norm.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
-processes.append(p_vcfstats)
-
-vcfstats_stdout = open(os.path.join(args.out_dir, "%s.somatic.vcf.stats" % (args.id)), "w")
-vcfstats_stderr = open(os.path.join(args.log_dir, "%s.somatic.vcf.vcfstats.err" % (args.id)), "w")
-p_vcfstats = subprocess.Popen(
-    ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf",
-     os.path.join(args.out_dir, str(args.id) + "_somatic.vcf")], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
-processes.append(p_vcfstats)
-
-monitor_processes(processes, logger)
+monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.varsim_jar.name, args.out_dir, args.log_dir))
 
 logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
