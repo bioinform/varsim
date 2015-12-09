@@ -800,11 +800,24 @@ public class VCF2diploid {
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            bw.write("##fileformat=VCFv4.1\n");
-            bw.write("##reference=" + _chrFiles.get(0) + "\n");
-            bw.write("##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n");
-            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
-            bw.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
+            bw.write("##fileformat=VCFv4.1\n" +
+                     "##reference=" + _chrFiles.get(0) + "\n" +
+                     "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                     "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
+                     "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                     "##ALT=<ID=DEL,Description=\"Deletion\">\n" + 
+                     "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
+                     "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
+                     "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
+                     "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
+                     "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
+                     "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
+                     "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
+                     "##ALT=<ID=INV,Description=\"Inversion\">\n" +
+                     "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
+                     "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
+                     "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n" +
+                     "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + _id + "\n");
 
             int num_vars = varList.size();
             for (int i = 0; i < num_vars; i++) {
