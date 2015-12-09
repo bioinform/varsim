@@ -800,7 +800,9 @@ public class VCF2diploid {
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            bw.write("##fileformat=VCFv4.0\n");
+            bw.write("##fileformat=VCFv4.1\n");
+            bw.write("##reference=" + _chrFiles.get(0) + "\n");
+            bw.write("##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n");
             bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
             bw.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
 
