@@ -820,7 +820,14 @@ public class VCF2diploid {
                      "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + _id + "\n");
 
             int num_vars = varList.size();
+            final Map<Variant, Integer> indexMap = new HashMap<>();
             for (int i = 0; i < num_vars; i++) {
+                indexMap.put(varList.get(i), i);
+            }
+            Collections.sort(varList);
+
+            for (int i_ = 0; i_ < num_vars; i_++) {
+                final int i = indexMap.get(varList.get(i_));
 
                 if (!output_maternal && output_paternal && !paternal_added_variants.get(i)) {
                     continue;
@@ -833,7 +840,7 @@ public class VCF2diploid {
 
                     // System.err.println("write var: " + i);
 
-                    Variant curr_var = varList.get(i);
+                    Variant curr_var = varList.get(i_);
 
                     // chromosome name
                     bw.write(curr_var.getChr().toString());
