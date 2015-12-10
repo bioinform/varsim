@@ -14,7 +14,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Random;
 
-public class Variant {
+public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
     public int idx = 0; // this is hopefully a unique index, for the split variants
     public int full_idx = 0; // this is hopefully a unique index, for the whole variants
@@ -668,6 +668,16 @@ public class Variant {
         result = 31 * result + (_var_id != null ? _var_id.hashCode() : 0);
         result = 31 * result + (_ref_deleted != null ? _ref_deleted.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public int compareTo(Variant other) {
+        final int chrCmp = _chr.compareTo(other._chr);
+        if (chrCmp != 0) {
+            return chrCmp;
+        }
+
+        return getPos() - getRef_deleted().length() - (other.getPos() - other.getRef_deleted().length());
     }
 
     public String getLength() {
