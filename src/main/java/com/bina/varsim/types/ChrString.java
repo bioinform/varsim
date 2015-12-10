@@ -5,7 +5,7 @@ package com.bina.varsim.types;
  * <p/>
  * Created by johnmu on 1/27/15.
  */
-public class ChrString {
+public class ChrString implements Comparable<ChrString>{
     final String name;
 
     public ChrString(String name) {
@@ -79,5 +79,10 @@ public class ChrString {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    @Override
+    public int compareTo(ChrString other) {
+        return name.compareTo(other.getName());
     }
 }
