@@ -26,7 +26,7 @@ public class JSONInserter {
 
     public static String insertJSON(String varsim_html, String jsonStr) {
         TreeMap<String, String> lookup = new TreeMap<>();
-        lookup.put("varsim_data", "var varsim_data = \"" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\";");
+        lookup.put("varsim_data", "var varsim_data = \'" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\';");
         return new StrSubstitutor(lookup, "<!--", "-->").replace(varsim_html);
     }
 
@@ -69,7 +69,7 @@ public class JSONInserter {
             File outFile = new File(outName);
 
             // construct string to insert
-            String jsonStr = StringEscapeUtils.escapeEcmaScript(FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", ""));
+            String jsonStr = FileUtils.readFileToString(new File(filename)).trim().replace("\n", "").replace("\r", "");
             FileUtils.writeStringToFile(outFile, insertJSON(varsim_html, jsonStr));
         }
     }
