@@ -44,6 +44,8 @@ public class SAMcompare {
     String bed_filename = "";
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
+    @Option(name = "-read_map", usage = "Read MAP file [Optional]")
+    String read_map_filename = "";
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
