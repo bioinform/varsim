@@ -210,9 +210,7 @@ public class SAMcompare {
                             features.add(feat.getLongName());
 
                             // TODO check this with marghoob
-                            if (!(feat == BlockType.INS) && !(feat == BlockType.DEL)) {
-                                true_unmapped = false;
-                            }
+                            true_unmapped &= !feat.isMappable();
                         }
                     }
 
@@ -258,12 +256,7 @@ public class SAMcompare {
                             for (GenomeLocation loc : true_locs) {
                                 final BlockType feat = loc.feature;
 
-                                if ((feat == BlockType.INS) || (feat == BlockType.DEL)) {
-                                    continue;
-                                }
-
-                                if (chr.equals(loc.chromosome)) {
-
+                                if (feat.isMappable() && chr.equals(loc.chromosome)) {
                                     if (Math.abs(loc.location - pos) <= wiggle) {
                                         good_aln = true;
                                     }
