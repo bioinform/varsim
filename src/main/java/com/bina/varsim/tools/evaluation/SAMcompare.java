@@ -13,6 +13,7 @@ import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.stats.MapRatioRecordSum;
+import com.bina.varsim.types.stats.StatsNamespace;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.SAMRecord;
@@ -208,52 +209,35 @@ public class SAMcompare {
                     if (true_unmapped) {
                         features.add("True_Unmapped");
                     } else {
-                        output_blob.getStats().incT(features); // this records the mappable reads
+                        output_blob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
                     }
 
 
                     boolean unmapped = rec.getReadUnmappedFlag();
                     int mapping_quality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
-
+                    final StatsNamespace validationStatus;
                     if (unmapped) {
-                        if (true_unmapped) {
-                            // correctly aligned
-                            output_blob.getStats().incTN(features, mapping_quality);
-                        } else {
-                            // incorrectly unmapped
-                            output_blob.getStats().incFN(features, mapping_quality);
-                        }
+                        validationStatus = true_unmapped ? StatsNamespace.TN : StatsNamespace.FN;
+                        output_blob.getStats().incStat(features, mapping_quality, validationStatus);
                     } else {
                         // check if the it mapped to the correct location
                         if (true_unmapped) {
-                            output_blob.getStats().incFP(features, mapping_quality);
+                            validationStatus = StatsNamespace.FP;
 
                             if (mapping_quality > mapqCutoff) {
                                 TUM_FP_writer.println(rec.getSAMString());
-
                             }
                         } else {
-                            String chr = rec.getReferenceName();
-
-                            // unclipped start adjusts for clipped bases
-                            int pos = rec.getUnclippedStart();
+                            // Use unclipped location since the true locations are also unclipped
+                            final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
 
                             boolean good_aln = false;
-
                             for (GenomeLocation loc : true_locs) {
-                                final BlockType feat = loc.feature;
-
-                                if (feat.isMappable() && chr.equals(loc.chromosome)) {
-                                    if (Math.abs(loc.location - pos) <= wiggle) {
-                                        good_aln = true;
-                                    }
-                                }
+                                good_aln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
                             }
+                            validationStatus = good_aln ? StatsNamespace.TP : StatsNamespace.FP;
 
-                            if (good_aln) {
-                                output_blob.getStats().incTP(features, mapping_quality);
-                            } else {
-                                output_blob.getStats().incFP(features, mapping_quality);
+                            if (!good_aln) {
                                 if (mapping_quality > mapqCutoff) {
                                     FP_writer.println(rec.getSAMString());
                                     for (final BlockType blockType : BlockType.values()) {
@@ -265,6 +249,7 @@ public class SAMcompare {
                             }
                         }
                     }
+                    output_blob.getStats().incStat(features, mapping_quality, validationStatus);
                 }
 
             } finally {
