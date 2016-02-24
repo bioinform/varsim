@@ -189,7 +189,7 @@ public class SAMcompare {
 
                     boolean true_unmapped;
 
-                    HashSet<String> features = new HashSet<>(4);
+                    Set<String> features = new HashSet<>(4);
                     features.add("All");
 
                     // determine if the read really should be unmapped
@@ -218,7 +218,6 @@ public class SAMcompare {
                     final StatsNamespace validationStatus;
                     if (unmapped) {
                         validationStatus = true_unmapped ? StatsNamespace.TN : StatsNamespace.FN;
-                        output_blob.getStats().incStat(features, mapping_quality, validationStatus);
                     } else {
                         // check if the it mapped to the correct location
                         if (true_unmapped) {
