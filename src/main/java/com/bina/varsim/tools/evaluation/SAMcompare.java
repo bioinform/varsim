@@ -34,6 +34,7 @@ import java.util.*;
 public class SAMcompare {
     static final int WIGGLE_ARG = 20;
     static final int MAPQ_CUTOFF = 10;
+    static final int MAPQ_UNMAPPED = 255;
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
     @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
@@ -168,18 +169,8 @@ public class SAMcompare {
 
                     // parse the name
                     // TODO need to check for errors here
-                    SimulatedRead true_read = new SimulatedRead(name);
-                    int pair_idx = 0;
-                    if (rec.getReadPairedFlag()) {
-                        pair_idx = getPairIdx(rec.getFirstOfPairFlag());
-                    }
-
-                    List<GenomeLocation> true_locs;
-                    if (pair_idx == 0) {
-                        true_locs = true_read.locs1;
-                    } else {
-                        true_locs = true_read.locs2;
-                    }
+                    int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
+                    Collection<GenomeLocation> true_locs = new SimulatedRead(name).getLocs(pair_idx);
 
                     if (!(intersector == null)) {
                         boolean contained_in_bed = false;
@@ -222,13 +213,9 @@ public class SAMcompare {
 
 
                     boolean unmapped = rec.getReadUnmappedFlag();
-                    int mapping_quality = rec.getMappingQuality();
+                    int mapping_quality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
 
                     if (unmapped) {
-                        // set mapping quality of unmapped reads to 255 since it is unknown
-                        // otherwise it will not be counted in the simulation
-                        mapping_quality = 255;
-
                         if (true_unmapped) {
                             // correctly aligned
                             output_blob.getStats().incTN(features, mapping_quality);
