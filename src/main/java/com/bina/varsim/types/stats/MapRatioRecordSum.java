@@ -19,6 +19,27 @@ public class MapRatioRecordSum {
         all_data = new RatioRecordSum();
     }
 
+    public void incStat(final Set<String> a, final int val, final StatsNamespace stat) {
+        switch(stat) {
+            case TP:
+                incTP(a, val);
+                break;
+            case FP:
+                incFP(a, val);
+                break;
+            case TN:
+                incTN(a, val);
+                break;
+            case FN:
+                incFN(a, val);
+                break;
+            case T:
+                incT(a);
+                break;
+            default:
+        }
+    }
+
     public void incTP(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
