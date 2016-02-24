@@ -2,6 +2,7 @@ package com.bina.varsim.types.stats;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -18,7 +19,7 @@ public class MapRatioRecordSum {
         all_data = new RatioRecordSum();
     }
 
-    public void incTP(HashSet<String> a, int val) {
+    public void incTP(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -46,7 +47,7 @@ public class MapRatioRecordSum {
         all_data.incTP(val);
     }
 
-    public void incTN(HashSet<String> a, int val) {
+    public void incTN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -74,7 +75,7 @@ public class MapRatioRecordSum {
         all_data.incTN(val);
     }
 
-    public void incFP(HashSet<String> a, int val) {
+    public void incFP(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -103,7 +104,7 @@ public class MapRatioRecordSum {
     }
 
 
-    public void incFN(HashSet<String> a, int val) {
+    public void incFN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -131,7 +132,7 @@ public class MapRatioRecordSum {
         all_data.incFN(val);
     }
 
-    public void incT(HashSet<String> a) {
+    public void incT(Set<String> a) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
