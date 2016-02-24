@@ -8,7 +8,7 @@ package com.bina.varsim.tools.evaluation;
 
 
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
-import com.bina.varsim.fastqLiftover.types.MapBlock;
+import com.bina.varsim.fastqLiftover.types.MapBlock.BlockType;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
@@ -29,23 +29,24 @@ import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class SAMcompare {
     static final int WIGGLE_ARG = 20;
+    static final int MAPQ_CUTOFF = 10;
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
     @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
+    @Option(name = "-mapq_cutoff", usage = "Mapping quality cutoff [" + MAPQ_CUTOFF + "]")
+    int mapqCutoff = MAPQ_CUTOFF;
     @Option(name = "-prefix", usage = "Prefix for output file [Required]", metaVar = "file", required = true)
     String out_prefix;
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bed_filename = "";
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File html_file = null;
-    @Option(name = "-read_map", usage = "Read MAP file [Optional]")
-    String read_map_filename = "";
+    @Option(name = "-read_map", usage = "Read MAP file [Optional]", metaVar = "ReadMap_file")
+    File readMapFile = null;
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
@@ -69,29 +70,6 @@ public class SAMcompare {
         }
     }
 
-    /**
-     * @param orig_name original variant feature name as a string
-     * @return convert the string name to a variable
-     */
-    private BlockTypeOut convert_feature_name(String orig_name) {
-        BlockTypeOut out = BlockTypeOut.UNKNOWN;
-
-        if (orig_name.equals(MapBlock.BlockType.DEL.toString())) {
-            out = BlockTypeOut.DEL;
-        } else if (orig_name.equals(MapBlock.BlockType.INS.toString())) {
-            out = BlockTypeOut.INS;
-        } else if (orig_name.equals(MapBlock.BlockType.DUP_TANDEM.toString())) {
-            out = BlockTypeOut.DUP_TANDEM;
-        } else if (orig_name.equals(MapBlock.BlockType.INV.toString())) {
-            out = BlockTypeOut.INV;
-        } else if (orig_name.equals(MapBlock.BlockType.SEQ.toString())) {
-            out = BlockTypeOut.SEQ;
-        } else if (orig_name.equals(MapBlock.BlockType.UNKNOWN.toString())) {
-            out = BlockTypeOut.UNKNOWN;
-        }
-
-        return out;
-    }
 
     public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
@@ -143,20 +121,16 @@ public class SAMcompare {
         // generate the output files
         PrintWriter JSON_writer = null;
         PrintWriter FP_writer = null;
-        PrintWriter DEL_FP_writer = null;
-        PrintWriter INV_FP_writer = null;
-        PrintWriter INS_FP_writer = null;
-        PrintWriter SEQ_FP_writer = null;
-        PrintWriter TD_FP_writer = null;
         PrintWriter TUM_FP_writer = null;
+        final Map<BlockType, PrintWriter> blockPrintWriters = new HashMap<>();
         try {
             JSON_writer = new PrintWriter(out_prefix + "_report.json", "UTF-8");
             FP_writer = new PrintWriter(out_prefix + "_FP.SAM", "UTF-8");
-            DEL_FP_writer = new PrintWriter(out_prefix + "_DEL_FP.SAM", "UTF-8");
-            INV_FP_writer = new PrintWriter(out_prefix + "_INV_FP.SAM", "UTF-8");
-            INS_FP_writer = new PrintWriter(out_prefix + "_INS_FP.SAM", "UTF-8");
-            SEQ_FP_writer = new PrintWriter(out_prefix + "_SEQ_FP.SAM", "UTF-8");
-            TD_FP_writer = new PrintWriter(out_prefix + "_TD_FP.SAM", "UTF-8");
+            blockPrintWriters.put(BlockType.DEL, new PrintWriter(out_prefix + "_DEL_FP.SAM", "UTF-8"));
+            blockPrintWriters.put(BlockType.INV, new PrintWriter(out_prefix + "_INV_FP.SAM", "UTF-8"));
+            blockPrintWriters.put(BlockType.INS, new PrintWriter(out_prefix + "_INS_FP.SAM", "UTF-8"));
+            blockPrintWriters.put(BlockType.SEQ, new PrintWriter(out_prefix + "_SEQ_FP.SAM", "UTF-8"));
+            blockPrintWriters.put(BlockType.DUP_TANDEM, new PrintWriter(out_prefix + "_TD_FP.SAM", "UTF-8"));
             TUM_FP_writer = new PrintWriter(out_prefix + "_TUM_FP.SAM", "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
@@ -227,19 +201,16 @@ public class SAMcompare {
                     features.add("All");
 
                     // determine if the read really should be unmapped
-                    if (true_locs.isEmpty()) {
-                        true_unmapped = true;
-                    } else {
-                        true_unmapped = true;
-
+                    true_unmapped = true;
+                    if (!true_locs.isEmpty()) {
                         // get types of genome features
                         // if only insertions and deletions then it is also unmapped
                         for (GenomeLocation loc : true_locs) {
-                            BlockTypeOut feat = convert_feature_name(loc.feature);
-                            features.add(feat.toString());
+                            final BlockType feat = loc.feature;
+                            features.add(feat.getLongName());
 
                             // TODO check this with marghoob
-                            if (!(feat == BlockTypeOut.INS) && !(feat == BlockTypeOut.DEL)) {
+                            if (!(feat == BlockType.INS) && !(feat == BlockType.DEL)) {
                                 true_unmapped = false;
                             }
                         }
@@ -272,7 +243,7 @@ public class SAMcompare {
                         if (true_unmapped) {
                             output_blob.getStats().incFP(features, mapping_quality);
 
-                            if (mapping_quality > 10) {
+                            if (mapping_quality > mapqCutoff) {
                                 TUM_FP_writer.println(rec.getSAMString());
 
                             }
@@ -285,9 +256,9 @@ public class SAMcompare {
                             boolean good_aln = false;
 
                             for (GenomeLocation loc : true_locs) {
-                                BlockTypeOut feat = convert_feature_name(loc.feature);
+                                final BlockType feat = loc.feature;
 
-                                if ((feat == BlockTypeOut.INS) || (feat == BlockTypeOut.DEL)) {
+                                if ((feat == BlockType.INS) || (feat == BlockType.DEL)) {
                                     continue;
                                 }
 
@@ -303,26 +274,12 @@ public class SAMcompare {
                                 output_blob.getStats().incTP(features, mapping_quality);
                             } else {
                                 output_blob.getStats().incFP(features, mapping_quality);
-                                if (mapping_quality > 10) {
+                                if (mapping_quality > mapqCutoff) {
                                     FP_writer.println(rec.getSAMString());
-                                    if (features.contains(BlockTypeOut.DEL.toString())) {
-                                        DEL_FP_writer.println(rec.getSAMString());
-                                    }
-
-                                    if (features.contains(BlockTypeOut.INV.toString())) {
-                                        INV_FP_writer.println(rec.getSAMString());
-                                    }
-
-                                    if (features.contains(BlockTypeOut.INS.toString())) {
-                                        INS_FP_writer.println(rec.getSAMString());
-                                    }
-
-                                    if (features.contains(BlockTypeOut.SEQ.toString())) {
-                                        SEQ_FP_writer.println(rec.getSAMString());
-                                    }
-
-                                    if (features.contains(BlockTypeOut.DUP_TANDEM.toString())) {
-                                        TD_FP_writer.println(rec.getSAMString());
+                                    for (final BlockType blockType : BlockType.values()) {
+                                        if (blockPrintWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
+                                            blockPrintWriters.get(blockType).println(rec.getSAMString());
+                                        }
                                     }
                                 }
                             }
@@ -368,32 +325,12 @@ public class SAMcompare {
 
         JSON_writer.close();
         FP_writer.close();
-        DEL_FP_writer.close();
-        INV_FP_writer.close();
-        INS_FP_writer.close();
-        SEQ_FP_writer.close();
-        TD_FP_writer.close();
+        for (final PrintWriter pw : blockPrintWriters.values()) {
+            pw.close();
+        }
         TUM_FP_writer.close();
 
         log.info("Done!"); // used to record the time
-    }
-
-    /**
-     * This encodes the variant type as a string.
-     * WARNING: the string must not have spaces, or it will break the javascript later
-     */
-    public enum BlockTypeOut {
-        SEQ("Sequence"), INS("Insertion"), DEL("Deletion"), INV("Inversion"), DUP_TANDEM("Tandem_Duplication"), UNKNOWN("Unknown");
-
-        private final String name;
-
-        private BlockTypeOut(String s) {
-            name = s;
-        }
-
-        public String toString() {
-            return name;
-        }
     }
 
     /**
