@@ -231,13 +231,13 @@ public class SAMcompare {
                             // Use unclipped location since the true locations are also unclipped
                             final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
 
-                            boolean good_aln = false;
+                            boolean closeAln = false;
                             for (GenomeLocation loc : true_locs) {
-                                good_aln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
+                                closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
                             }
-                            validationStatus = good_aln ? StatsNamespace.TP : StatsNamespace.FP;
+                            validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
 
-                            if (!good_aln) {
+                            if (!closeAln) {
                                 if (mapping_quality > mapqCutoff) {
                                     FP_writer.println(rec.getSAMString());
                                     for (final BlockType blockType : BlockType.values()) {
