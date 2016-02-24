@@ -45,14 +45,16 @@ public class MapBlock implements Comparable<MapBlock> {
     }
 
     public enum BlockType {
-        SEQ("S", "Sequence"), INS("I", "Insertion"), DEL("D", "Deletion"), INV("V", "Inversion"), DUP_TANDEM("T", "Tandem_Duplication"), UNKNOWN("U", "Unknown");
+        SEQ("S", "Sequence", true), INS("I", "Insertion", false), DEL("D", "Deletion", false), INV("V", "Inversion", true), DUP_TANDEM("T", "Tandem_Duplication", true), UNKNOWN("U", "Unknown", true);
 
         private final String shortName;
         private final String longName;
+        private final boolean mappable;
 
-        BlockType(String shortName, String longName) {
+        BlockType(String shortName, String longName, final boolean mappable) {
             this.shortName = shortName;
             this.longName = longName;
+            this.mappable = mappable;
         }
 
         public static BlockType fromName(final String s) {
@@ -79,5 +81,7 @@ public class MapBlock implements Comparable<MapBlock> {
         public String getLongName() {
             return longName;
         }
+
+        public boolean isMappable() { return mappable; }
     }
 }
