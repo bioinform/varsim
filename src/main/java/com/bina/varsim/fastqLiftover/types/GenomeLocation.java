@@ -4,13 +4,13 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     public String chromosome;
     public int location = 0;
     public int direction = 0;
-    public String feature;
+    public MapBlock.BlockType feature;
 
     public GenomeLocation(final String locationString) {
         final String fields[] = locationString.split("-", -1);
         this.chromosome = fields[0];
         this.location = "".equals(fields[1]) ? 0 : Integer.parseInt(fields[1]);
-        this.feature = "".equals(fields[2]) ? "S" : fields[2];
+        this.feature = MapBlock.BlockType.fromName(fields[2]);
         this.direction = (fields.length > 3) ? 1 : 0;
     }
 
@@ -18,14 +18,14 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
         this.chromosome = chromosome;
         this.location = location;
         this.direction = 0;
-        this.feature = "";
+        this.feature = MapBlock.BlockType.SEQ;
     }
 
     public GenomeLocation(final String chromosome, final int location, final int direction) {
         this.chromosome = chromosome;
         this.location = location;
         this.direction = direction;
-        this.feature = "";
+        this.feature = MapBlock.BlockType.SEQ;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     }
 
     public String toString() {
-        return chromosome + "-" + encodeInt(location) + "-" + ("S".equals(feature) ? "" : feature) + ((direction == 0) ? "" : "-");
+        return chromosome + "-" + encodeInt(location) + "-" + (feature == MapBlock.BlockType.SEQ ? "" : feature.getShortName()) + ((direction == 0) ? "" : "-");
     }
 
     @Override
