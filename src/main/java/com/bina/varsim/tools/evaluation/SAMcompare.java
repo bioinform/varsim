@@ -220,9 +220,8 @@ public class SAMcompare {
                         validationStatus = true_unmapped ? StatsNamespace.TN : StatsNamespace.FN;
                     } else {
                         // check if the it mapped to the correct location
+                        boolean closeAln = false;
                         if (true_unmapped) {
-                            validationStatus = StatsNamespace.FP;
-
                             if (mapping_quality > mapqCutoff) {
                                 TUM_FP_writer.println(rec.getSAMString());
                             }
@@ -230,11 +229,9 @@ public class SAMcompare {
                             // Use unclipped location since the true locations are also unclipped
                             final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
 
-                            boolean closeAln = false;
                             for (GenomeLocation loc : true_locs) {
                                 closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
                             }
-                            validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
 
                             if (!closeAln) {
                                 if (mapping_quality > mapqCutoff) {
@@ -247,6 +244,7 @@ public class SAMcompare {
                                 }
                             }
                         }
+                        validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
                     output_blob.getStats().incStat(features, mapping_quality, validationStatus);
                 }
