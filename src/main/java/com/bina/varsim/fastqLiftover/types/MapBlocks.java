@@ -49,7 +49,7 @@ public class MapBlocks {
             if (b.blockType == MapBlock.BlockType.INS || b.blockType == MapBlock.BlockType.DEL) {
                 if ((b.blockType == MapBlock.BlockType.INS && !seenIns) || (b.blockType == MapBlock.BlockType.DEL && !seenDel)) {
                     GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
-                    liftedLoc.feature = b.blockType.toString();
+                    liftedLoc.feature = b.blockType;
                     liftedLoc.direction = direction;
                     liftedLocs.add(liftedLoc);
                     if (b.blockType == MapBlock.BlockType.INS) seenIns = true;
@@ -72,7 +72,7 @@ public class MapBlocks {
             }
 
             GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
-            liftedLoc.feature = b.blockType.toString();
+            liftedLoc.feature = b.blockType;
             if (b.direction == 0) {
                 liftedLoc.location = b.dstLoc.location + start - b.srcLoc.location;
                 liftedLoc.direction = direction;
