@@ -34,19 +34,6 @@ public class MapRatioRecordSum {
         all_data.incTP(val);
     }
 
-    public void incTP(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incTP(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incTP(val);
-            data.put(a, contents);
-        }
-
-        all_data.incTP(val);
-    }
-
     public void incTN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
@@ -57,19 +44,6 @@ public class MapRatioRecordSum {
                 contents.incTN(val);
                 data.put(key, contents);
             }
-        }
-
-        all_data.incTN(val);
-    }
-
-    public void incTN(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incTN(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incTN(val);
-            data.put(a, contents);
         }
 
         all_data.incTN(val);
@@ -90,20 +64,6 @@ public class MapRatioRecordSum {
         all_data.incFP(val);
     }
 
-    public void incFP(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incFP(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incFP(val);
-            data.put(a, contents);
-        }
-
-        all_data.incFP(val);
-    }
-
-
     public void incFN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
@@ -119,19 +79,6 @@ public class MapRatioRecordSum {
         all_data.incFN(val);
     }
 
-    public void incFN(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incFN(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incFN(val);
-            data.put(a, contents);
-        }
-
-        all_data.incFN(val);
-    }
-
     public void incT(Set<String> a) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
@@ -142,19 +89,6 @@ public class MapRatioRecordSum {
                 contents.incT();
                 data.put(key, contents);
             }
-        }
-
-        all_data.incT();
-    }
-
-    public void incT(String a) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incT();
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incT();
-            data.put(a, contents);
         }
 
         all_data.incT();
