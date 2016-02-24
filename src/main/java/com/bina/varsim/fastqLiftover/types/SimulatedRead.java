@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class SimulatedRead {
@@ -134,5 +135,9 @@ public class SimulatedRead {
             name = getShortName();
         }
         return "@" + name + "\n" + sequence + "\n+\n" + quality;
+    }
+
+    public Collection<GenomeLocation> getLocs(int index) {
+        return (index == 0) ? locs1 : locs2;
     }
 }
