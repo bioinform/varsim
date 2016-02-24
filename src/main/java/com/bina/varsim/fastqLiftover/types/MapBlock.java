@@ -25,6 +25,10 @@ public class MapBlock implements Comparable<MapBlock> {
         this.direction = 0;
     }
 
+    public boolean isMappable() {
+        return blockType.isMappable();
+    }
+
     @Override
     public int compareTo(MapBlock rhs) {
         return srcLoc.location - rhs.srcLoc.location;
