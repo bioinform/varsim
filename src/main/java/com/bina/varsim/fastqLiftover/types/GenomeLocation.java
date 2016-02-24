@@ -28,6 +28,14 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
         this.feature = MapBlock.BlockType.SEQ;
     }
 
+    public boolean isClose(final String chromosome, final int location, final int wiggle) {
+        return this.chromosome.equals(chromosome) && Math.abs(this.location - location) <= wiggle;
+    }
+
+    public boolean isClose(final GenomeLocation other, final int wiggle) {
+        return chromosome.equals(other.chromosome) && Math.abs(location - other.location) <= wiggle;
+    }
+
     @Override
     public int compareTo(final GenomeLocation rhs) {
         final int chrCmp = this.chromosome.compareTo(rhs.chromosome);
