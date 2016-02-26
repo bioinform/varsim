@@ -1,13 +1,15 @@
 package com.bina.varsim.fastqLiftover.types;
 
 public class GenomeLocation implements Comparable<GenomeLocation> {
+    protected static final String SEPARATOR = "-";
+
     public String chromosome;
     public int location = 0;
     public int direction = 0;
     public MapBlock.BlockType feature;
 
     public GenomeLocation(final String locationString) {
-        final String fields[] = locationString.split("-", -1);
+        final String fields[] = locationString.split(SEPARATOR, -1);
         this.chromosome = fields[0];
         this.location = "".equals(fields[1]) ? 0 : Integer.parseInt(fields[1]);
         this.feature = MapBlock.BlockType.fromName(fields[2]);
@@ -50,7 +52,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
     }
 
     public String toString() {
-        return chromosome + "-" + encodeInt(location) + "-" + (feature == MapBlock.BlockType.SEQ ? "" : feature.getShortName()) + ((direction == 0) ? "" : "-");
+        return chromosome + SEPARATOR + encodeInt(location) + SEPARATOR + (feature == MapBlock.BlockType.SEQ ? "" : feature.getShortName()) + ((direction == 0) ? "" : "-");
     }
 
     @Override
