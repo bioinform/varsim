@@ -4,7 +4,7 @@ public class MapBlock implements Comparable<MapBlock> {
     public int size;
     public GenomeLocation srcLoc;
     public GenomeLocation dstLoc;
-    public BlockType blockType;
+    public BlockType blockType = BlockType.UNKNOWN;
     public int direction;
     public String name;
 
@@ -49,7 +49,7 @@ public class MapBlock implements Comparable<MapBlock> {
     }
 
     public enum BlockType {
-        SEQ("S", "Sequence", true), INS("I", "Insertion", false), DEL("D", "Deletion", false), INV("V", "Inversion", true), DUP_TANDEM("T", "Tandem_Duplication", true), UNKNOWN("U", "Unknown", true);
+        SEQ("S", "Sequence", true), INS("I", "Insertion", false), DEL("D", "Deletion", false), INV("V", "Inversion", true), DUP_TANDEM("T", "Tandem_Duplication", true), UNKNOWN("U", "Unknown", false);
 
         private final String shortName;
         private final String longName;
