@@ -1,6 +1,8 @@
 package com.bina.varsim.fastqLiftover.types;
 
 import com.bina.varsim.fastqLiftover.readers.MapFileReader;
+import com.bina.varsim.types.ReadMapBlock;
+import htsjdk.tribble.annotation.Strand;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -84,5 +86,59 @@ public class MapBlocks {
             liftedLocs.add(liftedLoc);
         }
         return liftedLocs;
+    }
+
+    public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval) {
+        final Collection<ReadMapBlock> readMapBlocks = new ArrayList<>();
+
+        final String chromosome = interval.chromosome;
+        final int start = interval.start;
+        final int end = interval.end;
+
+        final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
+        final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end - 1));
+
+        if (!chrBlocks.containsKey(chromosome)) {
+            return readMapBlocks;
+        }
+
+        final NavigableSet<MapBlock> blocks = chrBlocks.get(chromosome);
+        final NavigableSet<MapBlock> subset = blocks.headSet(keyEnd, true).tailSet(blocks.headSet(keyStart, true).last(), true);
+
+        Iterator<MapBlock> it = subset.iterator();
+        log.trace("Going to lift over " + interval);
+
+        int intervalOffset = 0;
+        while (it.hasNext()) {
+            final MapBlock b = it.next();
+
+            int srcStart = Math.max(start, b.srcLoc.location);
+            int srcEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
+            int lengthOfInterval = srcEnd - srcStart + 1;
+
+            log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
+
+            if (lengthOfInterval < MIN_LENGTH_INTERVAL) {
+                log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
+            } else {
+                final GenomeInterval liftedInterval = new GenomeInterval();
+                liftedInterval.chromosome = b.dstLoc.chromosome;
+                liftedInterval.feature = b.blockType;
+                if (b.direction == 0) {
+                    liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location;
+                    liftedInterval.end = liftedInterval.start + lengthOfInterval;
+                    liftedInterval.strand = interval.strand;
+                } else {
+                    liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd);
+                    liftedInterval.end = liftedInterval.start + lengthOfInterval;
+                    liftedInterval.strand = interval.strand == Strand.POSITIVE ? Strand.NEGATIVE : Strand.POSITIVE;
+                }
+
+                readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfInterval, liftedInterval));
+            }
+            intervalOffset += lengthOfInterval;
+        }
+
+        return readMapBlocks;
     }
 }
