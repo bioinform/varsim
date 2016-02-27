@@ -1,5 +1,6 @@
 package com.bina.varsim.readers.longislnd;
 
+import com.bina.varsim.types.ReadMapRecord;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.bed.BEDCodec;
@@ -16,7 +17,7 @@ import java.util.TreeMap;
  * Created by mohiyudm on 2/22/16.
  */
 public class LongISLNDReadAlignmentMap {
-    final protected Map<String, LongISLNDReadMapRecord> readAlignmentMap = new TreeMap<>();
+    final protected Map<String, ReadMapRecord> readAlignmentMap = new TreeMap<>();
 
     public LongISLNDReadAlignmentMap(final File readAlignmentMapFile) throws IOException {
         final AbstractFeatureReader<BEDFeature, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(readAlignmentMapFile.getName(), new BEDCodec(), false);
@@ -24,7 +25,7 @@ public class LongISLNDReadAlignmentMap {
             final CloseableTribbleIterator<BEDFeature> featureIterator = featureReader.iterator();
             while (featureIterator.hasNext()) {
                 final BEDFeature feature = featureIterator.next();
-                readAlignmentMap.put(feature.getName(), new LongISLNDReadMapRecord(feature));
+                readAlignmentMap.put(feature.getName(), new LongISLNDReadMapRecord(feature).toReadMapRecord());
             }
         } finally {
             featureReader.close();
@@ -33,9 +34,13 @@ public class LongISLNDReadAlignmentMap {
 
     public void writeReadMap(final File outFile) throws IOException {
         final PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile)));
-        for (final Map.Entry<String, LongISLNDReadMapRecord> entry : readAlignmentMap.entrySet()) {
+        for (final Map.Entry<String, ReadMapRecord> entry : readAlignmentMap.entrySet()) {
             ps.println(entry.getValue());
         }
         ps.close();
+    }
+
+    public Map<String, ReadMapRecord> getReadAlignmentMap() {
+        return readAlignmentMap;
     }
 }

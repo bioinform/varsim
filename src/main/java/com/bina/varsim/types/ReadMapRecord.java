@@ -17,6 +17,9 @@ public class ReadMapRecord {
 
     protected List<Collection<ReadMapBlock>> multiReadMapBlocks;
 
+    public ReadMapRecord() {
+    }
+
     public ReadMapRecord(final String readName, final List<Collection<ReadMapBlock>> multiReadMapBlocks) {
         this.readName = readName;
         this.multiReadMapBlocks = multiReadMapBlocks;
@@ -50,5 +53,21 @@ public class ReadMapRecord {
             stringBuilder.append(joiner.join(readMapBlocks));
         }
         return stringBuilder.toString();
+    }
+
+    public String getReadName() {
+        return readName;
+    }
+
+    public void setReadName(String readName) {
+        this.readName = readName;
+    }
+
+    public List<Collection<ReadMapBlock>> getMultiReadMapBlocks() {
+        return multiReadMapBlocks;
+    }
+
+    public void setMultiReadMapBlocks(List<Collection<ReadMapBlock>> multiReadMapBlocks) {
+        this.multiReadMapBlocks = multiReadMapBlocks;
     }
 }

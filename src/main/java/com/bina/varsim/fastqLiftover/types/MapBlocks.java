@@ -2,6 +2,7 @@ package com.bina.varsim.fastqLiftover.types;
 
 import com.bina.varsim.fastqLiftover.readers.MapFileReader;
 import com.bina.varsim.types.ReadMapBlock;
+import com.bina.varsim.types.ReadMapRecord;
 import htsjdk.tribble.annotation.Strand;
 import org.apache.log4j.Logger;
 
@@ -140,5 +141,20 @@ public class MapBlocks {
         }
 
         return readMapBlocks;
+    }
+
+    public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord) {
+        final List<Collection<ReadMapBlock>> liftedReadMaps = new ArrayList<>();
+        for (final Collection<ReadMapBlock> readMapBlocks : readMapRecord.getMultiReadMapBlocks()) {
+            final Collection<ReadMapBlock> liftedReadMapBlocks = new ArrayList<>();
+            for (final ReadMapBlock readMapBlock : readMapBlocks) {
+                final int offset = readMapBlock.getReadStart();
+                for (final ReadMapBlock liftedReadMapBlock : liftOverGenomeInterval(readMapBlock.getMapInterval())) {
+                    liftedReadMapBlocks.add(new ReadMapBlock(offset + liftedReadMapBlock.getReadStart(), offset + liftedReadMapBlock.getReadEnd(), liftedReadMapBlock.getMapInterval()));
+                }
+            }
+            liftedReadMaps.add(liftedReadMapBlocks);
+        }
+        return new ReadMapRecord(readMapRecord.getReadName(), liftedReadMaps);
     }
 }

@@ -81,6 +81,7 @@ public class LongISLNDReadMapLiftOver {
     }
 
     public void doLiftOver(final MapBlocks mapBlocks, final File longislnd, final PrintStream ps) throws IOException {
+        log.info("Reading read map file " + longislnd.getName());
         final Collection<ReadMapRecord> readMapRecords = new LongISLNDReadAlignmentMap(longislnd).getReadAlignmentMap().values();
         int readCount = 0;
         for (final ReadMapRecord readMapRecord : readMapRecords) {
