@@ -1,6 +1,7 @@
 package com.bina.varsim.types;
 
 import com.bina.varsim.fastqLiftover.types.GenomeInterval;
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.google.common.base.Joiner;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ReadMapRecord {
     }
 
     public ReadMapRecord(final String line) {
-        final String[] fields = line.split(COLUMN_SEPARATOR);
+        final String[] fields = line.trim().split(COLUMN_SEPARATOR);
         readName = fields[0];
         multiReadMapBlocks = new ArrayList<>();
         for (int i = 1; i < fields.length; i++) {
@@ -69,5 +70,17 @@ public class ReadMapRecord {
 
     public void setMultiReadMapBlocks(List<Collection<ReadMapBlock>> multiReadMapBlocks) {
         this.multiReadMapBlocks = multiReadMapBlocks;
+    }
+
+    public Collection<ReadMapBlock> getReadMapBlocks(final int index) {
+        return multiReadMapBlocks.get(index);
+    }
+
+    public Collection<GenomeLocation> getUnclippedStarts(final int index) {
+        final Collection<GenomeLocation> locations = new ArrayList<>();
+        for (final ReadMapBlock readMapBlock : getReadMapBlocks(index)) {
+            locations.add(readMapBlock.getUnclippedStart());
+        }
+        return locations;
     }
 }
