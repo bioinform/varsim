@@ -14,6 +14,7 @@ import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.bina.varsim.types.stats.StatsNamespace;
+import com.bina.varsim.util.ReadMap;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.SAMRecord;
@@ -148,6 +149,13 @@ public class SAMcompare {
                                 SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS)
                         .validationStringency(ValidationStringency.LENIENT);
 
+        ReadMap readMap = null;
+        try {
+            readMap = readMapFile != null ? new ReadMap(readMapFile) : null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         for (String filename : bam_filename) {
             log.info("Reading file: " + filename);
@@ -171,7 +179,7 @@ public class SAMcompare {
                     // parse the name
                     // TODO need to check for errors here
                     int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
-                    Collection<GenomeLocation> true_locs = new SimulatedRead(name).getLocs(pair_idx);
+                    final Collection<GenomeLocation> true_locs = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
                     if (!(intersector == null)) {
                         boolean contained_in_bed = false;
