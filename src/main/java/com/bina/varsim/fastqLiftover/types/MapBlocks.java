@@ -89,7 +89,7 @@ public class MapBlocks {
         return liftedLocs;
     }
 
-    public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval) {
+    public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval, final int minIntervalLength) {
         final Collection<ReadMapBlock> readMapBlocks = new ArrayList<>();
 
         final String chromosome = interval.chromosome;
@@ -119,7 +119,7 @@ public class MapBlocks {
 
             log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
 
-            if (lengthOfInterval < MIN_LENGTH_INTERVAL) {
+            if (lengthOfInterval < minIntervalLength) {
                 log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
             } else {
                 final GenomeInterval liftedInterval = new GenomeInterval();
@@ -143,18 +143,26 @@ public class MapBlocks {
         return readMapBlocks;
     }
 
-    public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord) {
+    public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval) {
+        return liftOverGenomeInterval(interval, MIN_LENGTH_INTERVAL);
+    }
+
+    public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord, final int minIntervalLength) {
         final List<Collection<ReadMapBlock>> liftedReadMaps = new ArrayList<>();
         for (final Collection<ReadMapBlock> readMapBlocks : readMapRecord.getMultiReadMapBlocks()) {
             final Collection<ReadMapBlock> liftedReadMapBlocks = new ArrayList<>();
             for (final ReadMapBlock readMapBlock : readMapBlocks) {
                 final int offset = readMapBlock.getReadStart();
-                for (final ReadMapBlock liftedReadMapBlock : liftOverGenomeInterval(readMapBlock.getMapInterval())) {
+                for (final ReadMapBlock liftedReadMapBlock : liftOverGenomeInterval(readMapBlock.getMapInterval(), minIntervalLength)) {
                     liftedReadMapBlocks.add(new ReadMapBlock(offset + liftedReadMapBlock.getReadStart(), offset + liftedReadMapBlock.getReadEnd(), liftedReadMapBlock.getMapInterval()));
                 }
             }
             liftedReadMaps.add(liftedReadMapBlocks);
         }
         return new ReadMapRecord(readMapRecord.getReadName(), liftedReadMaps);
+    }
+
+    public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord) {
+        return liftOverReadMapRecord(readMapRecord, MIN_LENGTH_INTERVAL);
     }
 }

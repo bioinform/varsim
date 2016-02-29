@@ -9,22 +9,24 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
 public class LongISLNDReadMapLiftOver {
     private final static Logger log = Logger.getLogger(LongISLNDReadMapLiftOver.class.getName());
     String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-    @Option(name = "-map", usage = "Map file", metaVar = "file")
+    @Option(name = "-map", usage = "Map file", metaVar = "file", required = true)
     private File mapFile;
-    @Option(name = "-longislnd", usage = "Read map files from LongISLND", metaVar = "file")
-    private Collection<File> longislnd;
-    @Option(name = "-out", usage = "Output file", metaVar = "file")
+    @Option(name = "-longislnd", usage = "Read map files from LongISLND", metaVar = "file", required = true)
+    private List<File> longislnd;
+    @Option(name = "-out", usage = "Output file", metaVar = "file", required = true)
     private File outFile;
     @Option(name = "-compress", usage = "Use GZIP compression")
     private boolean compress;
+    @Option(name = "-minIntervalLength", usage = "Minimum interval length in liftover")
+    private int minIntervalLength = MapBlocks.MIN_LENGTH_INTERVAL;
 
     public static void main(String[] args) throws IOException {
         new LongISLNDReadMapLiftOver().run(args);
@@ -75,7 +77,7 @@ public class LongISLNDReadMapLiftOver {
         final Collection<ReadMapRecord> readMapRecords = new LongISLNDReadAlignmentMap(longislnd).getReadAlignmentMap().values();
         int readCount = 0;
         for (final ReadMapRecord readMapRecord : readMapRecords) {
-            ps.println(mapBlocks.liftOverReadMapRecord(readMapRecord));
+            ps.println(mapBlocks.liftOverReadMapRecord(readMapRecord, minIntervalLength));
             if ((readCount % 100000) == 0) {
                 log.info(readCount + " reads processed");
             }
