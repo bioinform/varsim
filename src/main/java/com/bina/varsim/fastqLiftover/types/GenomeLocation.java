@@ -1,5 +1,7 @@
 package com.bina.varsim.fastqLiftover.types;
 
+import htsjdk.tribble.annotation.Strand;
+
 public class GenomeLocation implements Comparable<GenomeLocation> {
     protected static final String SEPARATOR = "-";
 
@@ -28,6 +30,13 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
         this.location = location;
         this.direction = direction;
         this.feature = MapBlock.BlockType.SEQ;
+    }
+
+    public GenomeLocation(final String chromosome, final int location, final Strand strand, final MapBlock.BlockType feature) {
+        this.chromosome = chromosome;
+        this.location = location;
+        direction = (strand == Strand.POSITIVE) ? 0 : 1;
+        this.feature = feature;
     }
 
     public boolean isClose(final String chromosome, final int location, final int wiggle) {
