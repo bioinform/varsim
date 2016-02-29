@@ -1,6 +1,7 @@
 package com.bina.varsim.types;
 
 import com.bina.varsim.fastqLiftover.types.GenomeInterval;
+import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 
 /**
  * Created by mohiyudm on 2/25/16.
@@ -44,5 +45,9 @@ public class ReadMapBlock {
 
     public GenomeInterval getMapInterval() {
         return mapInterval;
+    }
+
+    public GenomeLocation getUnclippedStart() {
+        return new GenomeLocation(mapInterval.getChromosome(), mapInterval.getStart() - readStart, mapInterval.getStrand(), mapInterval.getFeature());
     }
 }
