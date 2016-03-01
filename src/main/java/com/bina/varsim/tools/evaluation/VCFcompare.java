@@ -710,12 +710,7 @@ public class VCFcompare {
                     if (curr_var.isHom()) {
                         int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
 
-                        dual_idx idx;
-                        if (match_geno) {
-                            idx = comp.isHomMatch();
-                        } else {
-                            idx = comp.isMatch();
-                        }
+                        final dual_idx idx = match_geno ? comp.isHomMatch() : comp.isMatch();
 
                         if (idx.idx >= 0) {
                             // validated
@@ -746,12 +741,7 @@ public class VCFcompare {
                             }
                         }
 
-                        dual_idx idx;
-                        if (match_geno) {
-                            idx = comp.isHetMatch();
-                        } else {
-                            idx = comp.isMatch();
-                        }
+                        final dual_idx idx = match_geno ? comp.isHetMatch() : comp.isMatch();
 
                         if (idx.idx >= 0) {
                             validated_true.set(idx.idx);
