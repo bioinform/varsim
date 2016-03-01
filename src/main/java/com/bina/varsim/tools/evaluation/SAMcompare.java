@@ -17,10 +17,7 @@ import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.util.ReadMap;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -123,18 +120,9 @@ public class SAMcompare {
 
         // generate the output files
         PrintWriter JSON_writer = null;
-        PrintWriter FP_writer = null;
-        PrintWriter TUM_FP_writer = null;
-        final Map<BlockType, PrintWriter> blockPrintWriters = new HashMap<>();
+        final Map<BlockType, SAMFileWriter> fpWriters = new HashMap<>();
         try {
             JSON_writer = new PrintWriter(out_prefix + "_report.json", "UTF-8");
-            FP_writer = new PrintWriter(out_prefix + "_FP.SAM", "UTF-8");
-            blockPrintWriters.put(BlockType.DEL, new PrintWriter(out_prefix + "_DEL_FP.SAM", "UTF-8"));
-            blockPrintWriters.put(BlockType.INV, new PrintWriter(out_prefix + "_INV_FP.SAM", "UTF-8"));
-            blockPrintWriters.put(BlockType.INS, new PrintWriter(out_prefix + "_INS_FP.SAM", "UTF-8"));
-            blockPrintWriters.put(BlockType.SEQ, new PrintWriter(out_prefix + "_SEQ_FP.SAM", "UTF-8"));
-            blockPrintWriters.put(BlockType.DUP_TANDEM, new PrintWriter(out_prefix + "_TD_FP.SAM", "UTF-8"));
-            TUM_FP_writer = new PrintWriter(out_prefix + "_TUM_FP.SAM", "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -143,11 +131,21 @@ public class SAMcompare {
         // read sam/bam file
         int num_read = 0;
 
+        final SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
+
         final SamReaderFactory factory =
                 SamReaderFactory.makeDefault()
                         .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS,
                                 SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS)
                         .validationStringency(ValidationStringency.LENIENT);
+
+        final SAMFileWriter tumFPWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_TUM_FP.bam"));
+        final SAMFileWriter fpWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_FP.bam"));
+        for (final BlockType blockType : BlockType.values()) {
+            if (blockType != BlockType.UNKNOWN) {
+                fpWriters.put(blockType, writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_" + blockType.getShortName() + "_FP.bam")));
+            }
+        }
 
         ReadMap readMap = null;
         try {
@@ -232,7 +230,7 @@ public class SAMcompare {
                         boolean closeAln = false;
                         if (true_unmapped) {
                             if (mapping_quality > mapqCutoff) {
-                                TUM_FP_writer.println(rec.getSAMString());
+                                tumFPWriter.addAlignment(rec);
                             }
                         } else {
                             // Use unclipped location since the true locations are also unclipped
@@ -244,10 +242,10 @@ public class SAMcompare {
 
                             if (!closeAln) {
                                 if (mapping_quality > mapqCutoff) {
-                                    FP_writer.println(rec.getSAMString());
+                                    fpWriter.addAlignment(rec);
                                     for (final BlockType blockType : BlockType.values()) {
-                                        if (blockPrintWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
-                                            blockPrintWriters.get(blockType).println(rec.getSAMString());
+                                        if (fpWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
+                                            fpWriters.get(blockType).addAlignment(rec);
                                         }
                                     }
                                 }
@@ -295,11 +293,11 @@ public class SAMcompare {
         }
 
         JSON_writer.close();
-        FP_writer.close();
-        for (final PrintWriter pw : blockPrintWriters.values()) {
-            pw.close();
+        for (final SAMFileWriter fw : fpWriters.values()) {
+            fw.close();
         }
-        TUM_FP_writer.close();
+        fpWriter.close();
+        tumFPWriter.close();
 
         log.info("Done!"); // used to record the time
     }
