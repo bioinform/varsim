@@ -2,11 +2,14 @@ package com.bina.varsim.types;
 
 import com.bina.varsim.fastqLiftover.types.GenomeInterval;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
+import org.apache.log4j.Logger;
 
 /**
  * Created by mohiyudm on 2/25/16.
  */
 public class ReadMapBlock {
+    private final static Logger log = Logger.getLogger(ReadMapBlock.class.getName());
+
     public static final String SEPARATOR = GenomeInterval.SEPARATOR;
 
     protected int readStart;
@@ -25,6 +28,7 @@ public class ReadMapBlock {
     }
 
     public ReadMapBlock(final String s) {
+        log.trace("Parsing " + s);
         final String[] fields = s.split(SEPARATOR, -1);
         mapInterval = new GenomeInterval(fields);
         readStart = Integer.parseInt(fields[fields.length - 2]);

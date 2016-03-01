@@ -179,6 +179,7 @@ public class SAMcompare {
                     // parse the name
                     // TODO need to check for errors here
                     int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
+                    log.trace("Getting true locations for read " + name);
                     final Collection<GenomeLocation> true_locs = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
                     if (!(intersector == null)) {
