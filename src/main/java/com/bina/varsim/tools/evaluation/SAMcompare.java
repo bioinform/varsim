@@ -95,22 +95,7 @@ public class SAMcompare {
             return;
         }
 
-        BedFile intersector = null;
-
-        boolean bed_exists = false;
-        // check if the file exists
-        try {
-            File f = new File(bed_filename);
-            if (f.exists()) {
-                bed_exists = true;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (bed_exists) {
-            intersector = new BedFile(bed_filename);
-        }
+        final BedFile intersector = (bed_filename != null && new File(bed_filename).isFile()) ? new BedFile(bed_filename) : null;
 
         output_class output_blob = new output_class();
 
@@ -119,18 +104,16 @@ public class SAMcompare {
         output_blob.setStats(new MapRatioRecordSum());
 
         // generate the output files
-        PrintWriter JSON_writer = null;
+        PrintWriter jsonWriter = null;
         final Map<BlockType, SAMFileWriter> fpWriters = new HashMap<>();
         try {
-            JSON_writer = new PrintWriter(out_prefix + "_report.json", "UTF-8");
+            jsonWriter = new PrintWriter(out_prefix + "_report.json", "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
 
         // read sam/bam file
-        int num_read = 0;
-
         final SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
 
         final SamReaderFactory factory =
@@ -155,6 +138,7 @@ public class SAMcompare {
             System.exit(1);
         }
 
+        int numReads = 0;
         for (String filename : bam_filename) {
             log.info("Reading file: " + filename);
             final SamReader reader = factory.open(new File(filename));
@@ -166,10 +150,10 @@ public class SAMcompare {
                         continue;
                     }
 
-                    num_read++;
+                    numReads++;
 
-                    if (num_read % 100000 == 0) {
-                        log.info("Read " + num_read + " records ...");
+                    if (numReads % 100000 == 0) {
+                        log.info("Read " + numReads + " records ...");
                     }
 
                     String name = rec.getReadName();
@@ -266,7 +250,7 @@ public class SAMcompare {
 
         }
 
-        log.info("Number of reads read: " + num_read);
+        log.info("Number of reads read: " + numReads);
 
         // output the statistics
         System.err.println("Statistics for all reads");
@@ -279,10 +263,11 @@ public class SAMcompare {
         String jsonStr = "";
         try {
             jsonStr = mapper.writeValueAsString(output_blob);
-            JSON_writer.print(jsonStr);
+            jsonWriter.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        jsonWriter.close();
 
         if (html_file != null) {
             try {
@@ -292,7 +277,6 @@ public class SAMcompare {
             }
         }
 
-        JSON_writer.close();
         for (final SAMFileWriter fw : fpWriters.values()) {
             fw.close();
         }
