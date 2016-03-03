@@ -734,10 +734,7 @@ public class VCFcompare {
                         for (int i = 0; i < 2; i++) {
                             byte allele = geno.geno[i];
                             if (allele > 0) {
-                                int len = comp.compare_variant(curr_var, allele, validated_true);
-                                if (len > max_true_len) {
-                                    max_true_len = len;
-                                }
+                                max_true_len = Math.max(comp.compare_variant(curr_var, allele, validated_true), max_true_len);
                             }
                         }
 
