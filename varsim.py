@@ -9,6 +9,7 @@ import shutil
 import time
 import signal
 import itertools
+import glob
 from multiprocessing import Process
 
 
@@ -42,7 +43,7 @@ main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/F
                          choices=["MALE", "FEMALE"], default="MALE")
 main_parser.add_argument("--id", metavar="ID", help="Sample ID to be put in output VCF file", required=True)
 main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", required=False, type=str,
-                         choices=["art", "dwgsim", "pbsim"], default="art")
+                         choices=["art", "dwgsim", "longislnd"], default="art")
 main_parser.add_argument("--simulator_executable", metavar="PATH",
                          help="Path to the executable of the read simulator chosen"
                          , required=True, type=file)
@@ -143,6 +144,9 @@ art_group.add_argument("--art_options", help="ART command-line options", default
 
 pbsim_group = main_parser.add_argument_group("PBSIM options")
 pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
+
+longislnd_group = main_parser.add_argument_group("LongISLND options")
+longislnd_group.add_argument("--longislnd_opts", help="LongISLND options", default="")
 
 args = main_parser.parse_args()
 
@@ -374,6 +378,8 @@ if not args.disable_sim:
         for i, end, suffix in itertools.product(xrange(args.nlanes), [1, 2], ["fq", "maf"]): # the '2' read files are empty and for compatibility only
             fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
                                  "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
+    elif args.simulator == "longislnd":
+        pass
     else:
         raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
@@ -468,6 +474,14 @@ if not args.disable_sim:
             pbsim_p.start()
             processes.append(pbsim_p)
             logger.info("Executing command " + pbsim_command + " with pid " + str(pbsim_p.pid))
+    elif args.simulator == "longislnd":
+        longislnd_command = [args.simulator_executable, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
+        longislnd_stdout = open(os.path.join(args.log_dir, "longislnd.out"), "w")
+        longislnd_stderr = open(os.path.join(args.log_dir, "longislnd.err"), "w")
+        longislnd_p = Process(target=run_shell_command, args=(" ".join(longislnd_command), longislnd_stdout, longislnd_stderr))
+        longislnd_p.start()
+        processes.append(longislnd_p)
+        logger.info("Executing command " + " ".join(longislnd_command) + " with pid " + str(longislnd_p.pid))
     else:
         raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
@@ -479,34 +493,44 @@ if not args.disable_sim:
     sim_t_liftover = time.time()
 
     # Now start lifting over the gzipped files
-    for i in xrange(args.nlanes):
-        liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
-        liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
-        fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
-                                 "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
-                                 "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
-                                 "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
-                                 "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
-                                     os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i,
-                                     args.out_dir, i, args.out_dir, i,
-                                     args.out_dir, i)
-        if args.force_five_base_encoding:
-            fastq_liftover_command += " -force_five_base_encoding "
-        if args.simulator == "art":
-            fastq_liftover_command += " -type art " \
-                                      "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
-                                      "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
-                                          args.out_dir, i, args.out_dir, i)
-        elif args.simulator == "pbsim":
-            fastq_liftover_command += " -type pbsim " \
-                                      "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
-                                      "-ref %s/simulated.lane%d.ref " % (args.out_dir, i, args.out_dir, i)
-        fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
-        liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
-        liftover_p.start()
-        processes.append(liftover_p)
-        fastqs.append(os.path.join(args.out_dir, "lane%d.read%d.fq.gz" % (i, end)))
-        logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
+    if args.simulator != "longislnd":
+        for i in xrange(args.nlanes):
+            liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
+            liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
+            fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
+                                     "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
+                                     "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
+                                     "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
+                                     "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
+                                         os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i,
+                                         args.out_dir, i, args.out_dir, i,
+                                         args.out_dir, i)
+            if args.force_five_base_encoding:
+                fastq_liftover_command += " -force_five_base_encoding "
+            if args.simulator == "art":
+                fastq_liftover_command += " -type art " \
+                                          "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
+                                          "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
+                                              args.out_dir, i, args.out_dir, i)
+            elif args.simulator == "pbsim":
+                fastq_liftover_command += " -type pbsim " \
+                                          "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
+                                          "-ref %s/simulated.lane%d.ref " % (args.out_dir, i, args.out_dir, i)
+            fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
+            liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
+            liftover_p.start()
+            processes.append(liftover_p)
+            fastqs.append(os.path.join(args.out_dir, "lane%d.read%d.fq.gz" % (i, end)))
+            logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
+    else:
+        # liftover the read map files
+        read_maps = map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd", "*.bed")))
+        read_map_liftover_command = "java -server -jar %s longislnd_liftover " % args.varsim_jar.name + read_maps + " -map %s " % merged_map + " -outFile %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
+        read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
+        read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
+        read_map_liftover_p.start()
+        processes.append(read_map_liftover_p)
+        logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_command.pid))
 
     monitor_multiprocesses(processes, logger)
 
