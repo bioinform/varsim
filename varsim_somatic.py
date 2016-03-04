@@ -10,7 +10,7 @@ import subprocess
 import logging
 import time
 import signal
-from varsim import check_java
+from varsim import check_java, VERSION
 
 
 def get_contigs_list(reference):
@@ -76,6 +76,8 @@ main_parser.add_argument("--filter", action="store_true", help="Only use PASS va
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
 main_parser.add_argument("--varsim_py", metavar="PATH", help="Path to VarSim.py", type=file,
                          default=default_varsim, required=require_varsim)
+main_parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+
 
 input_vcf_group = main_parser.add_argument_group("Input VCFs options")
 input_vcf_group.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")

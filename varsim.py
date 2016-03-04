@@ -13,6 +13,7 @@ import glob
 from distutils.version import LooseVersion
 from multiprocessing import Process
 
+VERSION = "0.6"
 
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
@@ -74,6 +75,7 @@ main_parser.add_argument("--vcfs", metavar="VCF",
 main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force output bases to be only ACTGN")
 main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
 main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
+main_parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
 pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
 pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true",
