@@ -20,7 +20,7 @@ public class LongISLNDReadMapLiftOver {
     @Option(name = "-map", usage = "Map file", metaVar = "file", required = true)
     private File mapFile;
     @Option(name = "-longislnd", usage = "Read map files from LongISLND", metaVar = "file", required = true)
-    private List<File> longislnd;
+    private List<String> longislnd;
     @Option(name = "-out", usage = "Output file", metaVar = "file", required = true)
     private File outFile;
     @Option(name = "-compress", usage = "Use GZIP compression")
@@ -73,7 +73,7 @@ public class LongISLNDReadMapLiftOver {
         log.info("Conversion took " + (System.currentTimeMillis() - tStart) / 1e3 + " seconds.");
     }
 
-    public void doLiftOver(final MapBlocks mapBlocks, final Collection<File> longislnd, final PrintStream ps) throws IOException {
+    public void doLiftOver(final MapBlocks mapBlocks, final Collection<String> longislnd, final PrintStream ps) throws IOException {
         final Collection<ReadMapRecord> readMapRecords = new LongISLNDReadAlignmentMap(longislnd).getReadAlignmentMap().values();
         int readCount = 0;
         for (final ReadMapRecord readMapRecord : readMapRecords) {

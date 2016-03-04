@@ -19,10 +19,10 @@ public class LongISLNDReadAlignmentMap {
 
     final protected Map<String, ReadMapRecord> readAlignmentMap = new TreeMap<>();
 
-    public LongISLNDReadAlignmentMap(final Collection<File> readAlignmentMapFiles) throws IOException {
-        for (final File readAlignmentMapFile : readAlignmentMapFiles) {
-            log.info("Reading in read map from " + readAlignmentMapFile.getName());
-            final AbstractFeatureReader<BEDFeature, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(readAlignmentMapFile.getName(), new BEDCodec(), false);
+    public LongISLNDReadAlignmentMap(final Collection<String> readAlignmentMapFiles) throws IOException {
+        for (final String readAlignmentMapFileName : readAlignmentMapFiles) {
+            log.info("Reading in read map from " + readAlignmentMapFileName);
+            final AbstractFeatureReader<BEDFeature, LineIterator> featureReader = AbstractFeatureReader.getFeatureReader(readAlignmentMapFileName, new BEDCodec(), false);
             try {
                 final CloseableTribbleIterator<BEDFeature> featureIterator = featureReader.iterator();
                 while (featureIterator.hasNext()) {
