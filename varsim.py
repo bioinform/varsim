@@ -475,7 +475,7 @@ if not args.disable_sim:
             processes.append(pbsim_p)
             logger.info("Executing command " + pbsim_command + " with pid " + str(pbsim_p.pid))
     elif args.simulator == "longislnd":
-        longislnd_command = [args.simulator_executable, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
+        longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
         longislnd_command = " ".join(longislnd_command)
         longislnd_stdout = open(os.path.join(args.log_dir, "longislnd.out"), "w")
         longislnd_stderr = open(os.path.join(args.log_dir, "longislnd.err"), "w")
