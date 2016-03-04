@@ -19,6 +19,13 @@ def get_contigs_list(reference):
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
     return contigs
 
+# Check java version to make sure it is Java 8
+def check_java():
+    jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
+    if LooseVersion(jv) < LooseVersion("1.8"):
+        logger.error("VarSim requires Java 1.8 to be on the path.")
+        raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
+
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -218,11 +225,7 @@ def check_executable(fpath):
 
 # ####### END Some functions here ##########
 
-# Check java version to make sure it is Java 8
-jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
-if LooseVersion(jv) < LooseVersion("1.8"):
-    logger.error("VarSim requires Java 1.8 to be on the path.")
-    raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
+check_java()
 
 # Make sure we can actually execute the executable
 if not args.disable_sim:

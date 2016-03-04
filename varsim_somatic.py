@@ -10,6 +10,7 @@ import subprocess
 import logging
 import time
 import signal
+from varsim import check_java
 
 
 def get_contigs_list(reference):
@@ -189,6 +190,8 @@ def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
     return processes
 
 
+check_java()
+
 if not args.disable_sim:
     if not args.simulator_executable:
         logger.error("Please specify %s binary with --simulator_executable option" % args.simulator)
@@ -208,13 +211,13 @@ if not args.disable_rand_vcf:
     rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
     cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
+    # Not able to support novel yet for COSMIC variants
     rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
                         "-num_snp", str(args.som_num_snp),
                         "-num_ins", str(args.som_num_ins),
                         "-num_del", str(args.som_num_del),
                         "-num_mnp", str(args.som_num_mnp),
                         "-num_complex", str(args.som_num_complex),
-                        # "-novel", str(args.som_percent_novel), # Not able to support novel yet (COS)
                         "-min_len", str(args.som_min_length_lim),
                         "-max_len", str(args.som_max_length_lim),
                         "-ref", os.path.realpath(args.reference.name),
