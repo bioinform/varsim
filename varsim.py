@@ -482,7 +482,7 @@ if not args.disable_sim:
         longislnd_p = Process(target=run_shell_command, args=(longislnd_command, longislnd_stdout, longislnd_stderr))
         longislnd_p.start()
         processes.append(longislnd_p)
-        logger.info("Executing command " + " ".join(longislnd_command) + " with pid " + str(longislnd_p.pid))
+        logger.info("Executing command " + longislnd_command + " with pid " + str(longislnd_p.pid))
     else:
         raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
@@ -525,13 +525,13 @@ if not args.disable_sim:
             logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
     else:
         # liftover the read map files
-        read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd", "*.bed"))))
-        read_map_liftover_command = "java -server -jar %s longislnd_liftover " % args.varsim_jar.name + read_maps + " -map %s " % merged_map + " -outFile %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
+        read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed"))))
+        read_map_liftover_command = "java -server -jar %s longislnd_liftover " % args.varsim_jar.name + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
         read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
         read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
         read_map_liftover_p.start()
         processes.append(read_map_liftover_p)
-        logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_command.pid))
+        logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_p.pid))
 
     monitor_multiprocesses(processes, logger)
 
