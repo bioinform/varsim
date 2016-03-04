@@ -525,7 +525,7 @@ if not args.disable_sim:
             logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
     else:
         # liftover the read map files
-        read_maps = map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd", "*.bed")))
+        read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd", "*.bed"))))
         read_map_liftover_command = "java -server -jar %s longislnd_liftover " % args.varsim_jar.name + read_maps + " -map %s " % merged_map + " -outFile %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
         read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
         read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
