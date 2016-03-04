@@ -10,6 +10,7 @@ import time
 import signal
 import itertools
 import glob
+from distutils.version import LooseVersion
 from multiprocessing import Process
 
 
@@ -217,7 +218,11 @@ def check_executable(fpath):
 
 # ####### END Some functions here ##########
 
-
+# Check java version to make sure it is Java 8
+jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
+if LooseVersion(jv) < LooseVersion("1.8"):
+    logger.error("VarSim requires Java 1.8 to be on the path.")
+    sys.exit(1)
 
 # Make sure we can actually execute the executable
 if not args.disable_sim:
