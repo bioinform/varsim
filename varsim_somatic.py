@@ -264,8 +264,15 @@ filter_arg_list = ["--filter"] if args.filter else []
 disable_sim_arg_list = ["--disable_sim"] if args.disable_sim else []
 force_five_base_encoding_arg_list = ["--force_five_base_encoding"] if args.force_five_base_encoding else []
 keep_temp_arg_list = ["--keep_temp"] if args.keep_temp else []
-profile_1_arg_list = ["--profile_1", args.profile_1] if args.profile_1 is not None else []
-profile_2_arg_list = ["--profile_2", args.profile_2] if args.profile_2 is not None else []
+profile_1_arg_list = ["--profile_1", args.profile_1.name] if args.profile_1 is not None else []
+profile_2_arg_list = ["--profile_2", args.profile_2.name] if args.profile_2 is not None else []
+other_varsim_opts = []
+if args.simulator == "dwgsim":
+    other_varsim_opts = ["--dwgsim_start_e", str(args.dwgsim_start_e), "--dwgsim_end_e", str(args.dwgsim_end_e)]
+    if args.dwgsim_options: other_varsim_opts += ["--dwgsim_options", str(args.dwgsim_options)]
+elif args.simulator == "art" and args.art_options:
+    other_varsim_opts += ["--art_options", args.art_options]
+
 varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--out_dir", str(os.path.realpath(args.out_dir)),
                   "--work_dir", str(os.path.realpath(args.work_dir)),
@@ -282,15 +289,12 @@ varsim_command = ["python", os.path.realpath(args.varsim_py.name),
                   "--total_coverage", str(args.total_coverage),
                   "--mean_fragment_size", str(args.mean_fragment_size),
                   "--sd_fragment_size", str(args.sd_fragment_size),
-                  "--dwgsim_start_e", str(args.dwgsim_start_e),
-                  "--dwgsim_end_e", str(args.dwgsim_end_e),
-                  "--dwgsim_options", str(args.dwgsim_options),
-                  "--art_options", str(args.art_options),
                   "--disable_rand_vcf",
-                  "--disable_rand_dgv"] + vcf_arg_list + filter_arg_list + disable_sim_arg_list \
+                  "--disable_rand_dgv"] + other_varsim_opts + vcf_arg_list + filter_arg_list + disable_sim_arg_list \
                  + force_five_base_encoding_arg_list + keep_temp_arg_list + profile_1_arg_list + profile_2_arg_list
-p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_stderr)
-logger.info("Executing command " + " ".join(varsim_command) + " with pid " + str(p_varsim.pid))
+varsim_command = " ".join(varsim_command)
+p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_stderr, shell=True)
+logger.info("Executing command " + varsim_command + " with pid " + str(p_varsim.pid))
 processes.append(p_varsim)
 
 processes = monitor_processes(processes)
