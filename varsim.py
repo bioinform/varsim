@@ -222,7 +222,7 @@ def check_executable(fpath):
 jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
 if LooseVersion(jv) < LooseVersion("1.8"):
     logger.error("VarSim requires Java 1.8 to be on the path.")
-    sys.exit(1)
+    raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
 
 # Make sure we can actually execute the executable
 if not args.disable_sim:
