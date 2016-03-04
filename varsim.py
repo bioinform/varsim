@@ -146,7 +146,7 @@ pbsim_group = main_parser.add_argument_group("PBSIM options")
 pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
 
 longislnd_group = main_parser.add_argument_group("LongISLND options")
-longislnd_group.add_argument("--longislnd_opts", help="LongISLND options", default="")
+longislnd_group.add_argument("--longislnd_options", help="LongISLND options", default="")
 
 args = main_parser.parse_args()
 
