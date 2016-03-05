@@ -572,10 +572,7 @@ public class VCFcompare {
             for (Variant curr_var : var_list) {
 
                 int curr_len = curr_var.maxLen();
-
-                if (curr_len > max_len) {
-                    max_len = curr_len;
-                }
+                max_len = Math.max(max_len, curr_len);
 
                 total_len += curr_len;
                 SimpleInterval1D curr_var_reg = null;
@@ -691,9 +688,7 @@ public class VCFcompare {
 
                 for (Variant curr_var : var_list) {
                     total_len += curr_var.maxLen();
-                    if (max_len < curr_var.maxLen()) {
-                        max_len = curr_var.maxLen();
-                    }
+                    max_len = Math.max(max_len, curr_var.maxLen());
                 }
 
                 // split up variants that are basically one big variant and one small one
