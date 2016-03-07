@@ -17,7 +17,7 @@ VERSION = "0.6"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if not REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
+if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
@@ -53,7 +53,7 @@ def monitor_multiprocesses(processes, logger):
             logger.info("Process with pid %d finished successfully" % p.pid)
 
 
-def monitor_processes(processes, logger):
+def monitor_processes(processes):
     logger = logging.getLogger(monitor_processes.__name__)
     while processes:
         time.sleep(1)
@@ -294,7 +294,7 @@ if __name__ == "__main__":
         logger.info("Executing command " + " ".join(rand_dgv_command) + " with pid " + str(p_rand_dgv.pid))
         processes.append(p_rand_dgv)
 
-    processes = monitor_processes(processes, logger)
+    processes = monitor_processes(processes)
 
     merged_reference = os.path.join(args.out_dir, "%s.fa" % (args.id))
     merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))
@@ -318,7 +318,7 @@ if __name__ == "__main__":
         logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))
         processes.append(p_vcf2diploid)
 
-        processes = monitor_processes(processes, logger)
+        processes = monitor_processes(processes)
 
         # Now concatenate the .fa from vcf2diploid
         contigs = get_contigs_list(args.reference.name)
@@ -364,7 +364,7 @@ if __name__ == "__main__":
         monitor_processes(run_vcfstats([merged_truth_vcf], args.varsim_jar.name, args.out_dir, args.log_dir))
 
     if processes:
-        processes = monitor_processes(processes, logger)
+        processes = monitor_processes(processes)
 
     merged_map = os.path.join(args.out_dir, "%s.map" % (args.id))
 
