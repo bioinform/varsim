@@ -15,6 +15,7 @@ from multiprocessing import Process
 
 VERSION = "0.6"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
+VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
@@ -94,14 +95,14 @@ def check_executable(fpath):
         sys.exit(os.EX_NOINPUT)
 
 
-def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
+def run_vcfstats(vcfs, out_dir, log_dir):
     logger = logging.getLogger(run_vcfstats.__name__)
     processes = []
     for in_vcf in vcfs:
         out_prefix = os.path.basename(in_vcf)
         vcfstats_stdout = open(os.path.join(out_dir, "%s.stats" % (out_prefix)), "w")
         vcfstats_stderr = open(os.path.join(log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(varsim_jar), "vcfstats", "-vcf",
+        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "vcfstats", "-vcf",
                         in_vcf]
         p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
         logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
@@ -131,9 +132,9 @@ if __name__ == "__main__":
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen"
                              , required=True, type=file)
-    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file,
+    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)", type=file,
                              default=DEFAULT_VARSIMJAR,
-                             required=REQUIRE_VARSIMJAR)
+                             required=False)
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
@@ -262,7 +263,7 @@ if __name__ == "__main__":
         rand_vcf_stderr = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
         args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
 
-        rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
+        rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(args.seed),
                             "-t", args.sex,
                             "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del",
                             str(args.vc_num_del),
@@ -281,7 +282,7 @@ if __name__ == "__main__":
         rand_dgv_stderr = open(os.path.join(args.log_dir, "RandDGV2VCF.err"), "w")
         args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
 
-        rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", os.path.realpath(args.varsim_jar.name), "randdgv2vcf",
+        rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
                             "-t", args.sex,
                             "-seed", str(args.seed),
                             "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup",
@@ -300,7 +301,7 @@ if __name__ == "__main__":
     merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))
     merged_chain = os.path.join(args.out_dir, "merged.chain")
 
-    processes = run_vcfstats(args.vcfs, args.varsim_jar.name, args.out_dir, args.log_dir)
+    processes = run_vcfstats(args.vcfs, args.out_dir, args.log_dir)
 
     if not args.disable_vcf2diploid:
         args.vcfs.reverse()
@@ -308,7 +309,7 @@ if __name__ == "__main__":
         vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
         vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
         filter_arg_list = ["-pass"] if args.filter else []
-        vcf2diploid_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "vcf2diploid",
+        vcf2diploid_command = ["java", "-jar", VARSIMJAR, "vcf2diploid",
                                "-t", args.sex,
                                "-id", args.id,
                                "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
@@ -361,7 +362,7 @@ if __name__ == "__main__":
                 with open(os.path.join(args.out_dir, "%s.chain" % (strand))) as strand_chain:
                     shutil.copyfileobj(strand_chain, merged_chain_file)
 
-        monitor_processes(run_vcfstats([merged_truth_vcf], args.varsim_jar.name, args.out_dir, args.log_dir))
+        monitor_processes(run_vcfstats([merged_truth_vcf], args.out_dir, args.log_dir))
 
     if processes:
         processes = monitor_processes(processes)
@@ -516,7 +517,7 @@ if __name__ == "__main__":
                                          "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
                                          "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
                                          "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
-                                             os.path.realpath(args.varsim_jar.name), merged_map, i, args.out_dir, i,
+                                             VARSIMJAR, merged_map, i, args.out_dir, i,
                                              args.out_dir, i, args.out_dir, i,
                                              args.out_dir, i)
                 if args.force_five_base_encoding:
@@ -539,7 +540,7 @@ if __name__ == "__main__":
         else:
             # liftover the read map files
             read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed"))))
-            read_map_liftover_command = "java -server -jar %s longislnd_liftover " % args.varsim_jar.name + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
+            read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
             read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
             read_map_liftover_p.start()

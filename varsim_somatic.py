@@ -8,7 +8,7 @@ import sys
 import subprocess
 import logging
 import time
-from varsim import VERSION, MY_DIR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
+from varsim import VERSION, MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
 from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
@@ -33,9 +33,9 @@ if __name__ == "__main__":
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen"
                              , required=True, type=file)
-    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file,
+    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)", type=file,
                              default=DEFAULT_VARSIMJAR,
-                             required=REQUIRE_VARSIMJAR)
+                             required=False)
     main_parser.add_argument("--read_length", metavar="INT", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INT",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
         # Not able to support novel yet for COSMIC variants
-        rand_vcf_command = ["java", "-jar", os.path.realpath(args.varsim_jar.name), "randvcf2vcf", "-seed", str(args.seed),
+        rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(args.seed),
                             "-num_snp", str(args.som_num_snp),
                             "-num_ins", str(args.som_num_ins),
                             "-num_del", str(args.som_num_del),
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "sn" else (normal_vcfs + fixed_somatic_vcfs)
     vcf_files = map(os.path.realpath, filter(None, vcf_files))
 
-    processes = run_vcfstats(vcf_files, args.varsim_jar.name, args.out_dir, args.log_dir)
+    processes = run_vcfstats(vcf_files, args.out_dir, args.log_dir)
 
     # Run VarSim
     varsim_stdout = open(os.path.join(args.log_dir, "som_varsim.out"), "w")
@@ -199,7 +199,6 @@ if __name__ == "__main__":
                       "--id", str(args.id),
                       "--simulator", str(args.simulator),
                       "--simulator_executable", str(args.simulator_executable.name),
-                      "--varsim_jar", str(os.path.realpath(args.varsim_jar.name)),
                       "--read_length", str(args.read_length),
                       "--nlanes", str(args.nlanes),
                       "--total_coverage", str(args.total_coverage),
@@ -233,6 +232,6 @@ if __name__ == "__main__":
             else:
                 normal_vcf_fd.write(line)
 
-    monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.varsim_jar.name, args.out_dir, args.log_dir))
+    monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.out_dir, args.log_dir))
 
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
