@@ -110,10 +110,8 @@ def run_vcfstats(vcfs, out_dir, log_dir):
     return processes
 
 
-def run_randvcf(sampling_vcf, out_vcf, log_file, seed, sex, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, reference, prop_het):
+def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, reference, prop_het):
     logger = logging.getLogger(run_randvcf.__name__)
-    rand_vcf_stdout = open(out_vcf, "w")
-    rand_vcf_stderr = open(log_file, "w")
 
     rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(seed),
                         "-t", sex,
@@ -125,7 +123,7 @@ def run_randvcf(sampling_vcf, out_vcf, log_file, seed, sex, num_snp, num_ins, nu
                         os.path.realpath(reference),
                         "-prop_het", str(prop_het), "-vcf", sampling_vcf]
 
-    p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
+    p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
     logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
     return p_rand_vcf
 
@@ -262,7 +260,7 @@ if __name__ == "__main__":
             os.makedirs(d)
 
     # Setup logging
-    FORMAT = '%(levelname)s %(asctime)-15s %(message)s'
+    FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
     logger = logging.getLogger(__name__)
 
@@ -278,12 +276,16 @@ if __name__ == "__main__":
 
     args.vcfs = [os.path.realpath(vcf) for vcf in args.vcfs]
 
+    open_fds = []
     if not args.disable_rand_vcf:
-        rand_vcf_out = os.path.join(args.out_dir, "random.vc.vcf")
-        processes.append(run_randvcf(os.path.realpath(args.vc_in_vcf.name), rand_vcf_out, os.path.join(args.log_dir, "RandVCF2VCF.err"),
+        rand_vcf_out_fd = open(os.path.join(args.out_dir, "random.vc.vcf"), "w")
+        rand_vcf_log_fd = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
+        args.vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
+        processes.append(run_randvcf(os.path.realpath(args.vc_in_vcf.name), rand_vcf_out_fd, rand_vcf_log_fd,
                     args.seed, args.sex, args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp,
                     args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim,
                     args.reference.name, args.vc_prop_het))
+        open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
 
     if not args.disable_rand_dgv:
         rand_dgv_stdout = open(os.path.join(args.out_dir, "random.sv.vcf"), "w")
@@ -302,8 +304,11 @@ if __name__ == "__main__":
         p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
         logger.info("Executing command " + " ".join(rand_dgv_command) + " with pid " + str(p_rand_dgv.pid))
         processes.append(p_rand_dgv)
+        open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
     processes = monitor_processes(processes)
+    for open_fd in open_fds:
+        open_fd.close()
 
     merged_reference = os.path.join(args.out_dir, "%s.fa" % (args.id))
     merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))

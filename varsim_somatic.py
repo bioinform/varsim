@@ -9,7 +9,7 @@ import subprocess
 import logging
 import time
 from varsim import VERSION, MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
-from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats
+from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
 
@@ -111,8 +111,6 @@ if __name__ == "__main__":
             sys.exit(os.EX_USAGE)
         check_executable(args.simulator_executable.name)
 
-    processes = []
-
     t_s = time.time()
 
     cosmic_sampled_vcfs = []
@@ -125,23 +123,10 @@ if __name__ == "__main__":
         cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
         # Not able to support novel yet for COSMIC variants
-        rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(args.seed),
-                            "-num_snp", str(args.som_num_snp),
-                            "-num_ins", str(args.som_num_ins),
-                            "-num_del", str(args.som_num_del),
-                            "-num_mnp", str(args.som_num_mnp),
-                            "-num_complex", str(args.som_num_complex),
-                            "-min_len", str(args.som_min_length_lim),
-                            "-max_len", str(args.som_max_length_lim),
-                            "-ref", os.path.realpath(args.reference.name),
-                            "-prop_het", str(args.som_prop_het),
-                            "-vcf", os.path.realpath(args.cosmic_vcf)]
-
-        p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
-        logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
-        processes.append(p_rand_vcf)
-
-    processes = monitor_processes(processes)
+        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr,
+                         args.seed, args.sex, args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp,
+                         args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim,
+                         os.path.realpath(args.reference.name), args.som_prop_het)])
 
     normal_vcfs = [args.normal_vcf]
     somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
