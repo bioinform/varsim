@@ -110,6 +110,26 @@ def run_vcfstats(vcfs, out_dir, log_dir):
     return processes
 
 
+def run_randvcf(sampling_vcf, out_vcf, log_file, seed, sex, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, reference, prop_het):
+    logger = logging.getLogger(run_randvcf.__name__)
+    rand_vcf_stdout = open(out_vcf, "w")
+    rand_vcf_stderr = open(log_file, "w")
+
+    rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(seed),
+                        "-t", sex,
+                        "-num_snp", str(num_snp), "-num_ins", str(num_ins), "-num_del",
+                        str(num_del),
+                        "-num_mnp", str(num_mnp), "-num_complex", str(num_complex), "-novel",
+                        str(percent_novel),
+                        "-min_len", str(min_length), "-max_len", str(max_length), "-ref",
+                        os.path.realpath(reference),
+                        "-prop_het", str(prop_het), "-vcf", sampling_vcf]
+
+    p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
+    logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
+    return p_rand_vcf
+
+
 if __name__ == "__main__":
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
@@ -259,23 +279,11 @@ if __name__ == "__main__":
     args.vcfs = [os.path.realpath(vcf) for vcf in args.vcfs]
 
     if not args.disable_rand_vcf:
-        rand_vcf_stdout = open(os.path.join(args.out_dir, "random.vc.vcf"), "w")
-        rand_vcf_stderr = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
-        args.vcfs.append(os.path.realpath(rand_vcf_stdout.name))
-
-        rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(args.seed),
-                            "-t", args.sex,
-                            "-num_snp", str(args.vc_num_snp), "-num_ins", str(args.vc_num_ins), "-num_del",
-                            str(args.vc_num_del),
-                            "-num_mnp", str(args.vc_num_mnp), "-num_complex", str(args.vc_num_complex), "-novel",
-                            str(args.vc_percent_novel),
-                            "-min_len", str(args.vc_min_length_lim), "-max_len", str(args.vc_max_length_lim), "-ref",
-                            os.path.realpath(args.reference.name),
-                            "-prop_het", str(args.vc_prop_het), "-vcf", os.path.realpath(args.vc_in_vcf.name)]
-
-        p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=rand_vcf_stdout, stderr=rand_vcf_stderr)
-        logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
-        processes.append(p_rand_vcf)
+        rand_vcf_out = os.path.join(args.out_dir, "random.vc.vcf")
+        processes.append(run_randvcf(os.path.realpath(args.vc_in_vcf.name), rand_vcf_out, os.path.join(args.log_dir, "RandVCF2VCF.err"),
+                    args.seed, args.sex, args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp,
+                    args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim,
+                    args.reference.name, args.vc_prop_het))
 
     if not args.disable_rand_dgv:
         rand_dgv_stdout = open(os.path.join(args.out_dir, "random.sv.vcf"), "w")
