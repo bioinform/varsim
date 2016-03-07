@@ -15,7 +15,7 @@ from multiprocessing import Process
 
 VERSION = "0.6"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_VARSIMJAR = os.path.joun(MY_DIR, "VarSim.jar")
+DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if not REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
