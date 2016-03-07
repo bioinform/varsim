@@ -14,6 +14,10 @@ from distutils.version import LooseVersion
 from multiprocessing import Process
 
 VERSION = "0.6"
+MY_DIR = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_VARSIMJAR = os.path.joun(MY_DIR, "VarSim.jar")
+REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
+if not REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
@@ -27,11 +31,17 @@ def check_java():
         logger.error("VarSim requires Java 1.8 to be on the path.")
         raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
 
-# ####### Some functions here ##########
+
 def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
     retcode = subproc.wait()
     sys.exit(retcode)
+
+
+def makedirs(dirs):
+    for d in dirs:
+        if not os.path.exists(d):
+            os.makedirs(d)
 
 
 def monitor_multiprocesses(processes, logger):
@@ -44,6 +54,7 @@ def monitor_multiprocesses(processes, logger):
 
 
 def monitor_processes(processes, logger):
+    logger = logging.getLogger(monitor_processes.__name__)
     while processes:
         time.sleep(1)
         kill_all = False
@@ -74,22 +85,31 @@ def monitor_processes(processes, logger):
 
 
 def check_executable(fpath):
+    logger = logging.getLogger(check_executable.__name__)
     if not os.path.isfile(fpath):
-        sys.stderr.write("ERROR: File %s does not exist\n" % (fpath))
-        sys.exit(1)
+        logger.error("ERROR: File %s does not exist\n" % (fpath))
+        sys.exit(os.EX_NOINPUT)
     if not os.access(fpath, os.X_OK):
-        sys.stderr.write("ERROR: File %s is not executable\n" % (fpath))
-        sys.exit(1)
+        logger.error("ERROR: File %s is not executable\n" % (fpath))
+        sys.exit(os.EX_NOINPUT)
+
+
+def run_vcfstats(vcfs, varsim_jar, out_dir, log_dir):
+    logger = logging.getLogger(run_vcfstats.__name__)
+    processes = []
+    for in_vcf in vcfs:
+        out_prefix = os.path.basename(in_vcf)
+        vcfstats_stdout = open(os.path.join(out_dir, "%s.stats" % (out_prefix)), "w")
+        vcfstats_stderr = open(os.path.join(log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
+        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(varsim_jar), "vcfstats", "-vcf",
+                        in_vcf]
+        p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+        logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
+        processes.append(p_vcfstats)
+    return processes
 
 
 if __name__ == "__main__":
-    my_dir = os.path.dirname(os.path.realpath(__file__))
-
-    default_varsim_jar = os.path.join(my_dir, "VarSim.jar")
-
-    require_varsim_jar = not os.path.isfile(default_varsim_jar)
-
-    if not os.path.isfile(default_varsim_jar): require_varsim_jar = None
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -112,8 +132,8 @@ if __name__ == "__main__":
                              help="Path to the executable of the read simulator chosen"
                              , required=True, type=file)
     main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar", type=file,
-                             default=default_varsim_jar,
-                             required=require_varsim_jar)
+                             default=DEFAULT_VARSIMJAR,
+                             required=REQUIRE_VARSIMJAR)
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
@@ -280,16 +300,7 @@ if __name__ == "__main__":
     merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))
     merged_chain = os.path.join(args.out_dir, "merged.chain")
 
-    processes = []
-    for in_vcf in args.vcfs:
-        out_prefix = os.path.basename(in_vcf)
-        vcfstats_stdout = open(os.path.join(args.out_dir, "%s.stats" % (out_prefix)), "w")
-        vcfstats_stderr = open(os.path.join(args.log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf",
-                            in_vcf]
-        p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-        logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
-        processes.append(p_vcfstats)
+    processes = run_vcfstats(args.vcfs, args.varsim_jar.name, args.out_dir, args.log_dir)
 
     if not args.disable_vcf2diploid:
         args.vcfs.reverse()
@@ -350,13 +361,7 @@ if __name__ == "__main__":
                 with open(os.path.join(args.out_dir, "%s.chain" % (strand))) as strand_chain:
                     shutil.copyfileobj(strand_chain, merged_chain_file)
 
-        vcfstats_stdout = open(os.path.join(args.out_dir, "%s.truth.vcf.stats" % (args.id)), "w")
-        vcfstats_stderr = open(os.path.join(args.log_dir, "%s.truth.vcf.vcfstats.err" % (args.id)), "w")
-        p_vcfstats = subprocess.Popen(
-            ["java", "-Xmx1g", "-Xms1g", "-jar", os.path.realpath(args.varsim_jar.name), "vcfstats", "-vcf",
-             merged_truth_vcf], stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-        logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
-        monitor_processes([p_vcfstats], logger)
+        monitor_processes(run_vcfstats([merged_truth_vcf], args.varsim_jar.name, args.out_dir, args.log_dir))
 
     if processes:
         processes = monitor_processes(processes, logger)
