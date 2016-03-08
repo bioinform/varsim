@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -21,7 +22,7 @@ public class SimpleReference {
     private final static Logger log = Logger.getLogger(SimpleReference.class.getName());
 
     // chr_idx -> reference_string
-    private final HashMap<ChrString, Sequence> data;
+    private final Map<ChrString, Sequence> data;
 
     public SimpleReference() {
         data = new HashMap<>();
