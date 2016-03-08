@@ -27,13 +27,15 @@ public class VCF2diploid {
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
     private final static char DELETED_BASE = '~';
+    private final static String[] DIPLOID_CHRS = {"maternal", "paternal"};
+
     // arguments
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType _gender = GenderType.MALE;
     @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]", metaVar = "FASTA_file", required = true)
-    ArrayList<String> _chrFiles = null;
+    List<String> _chrFiles = null;
     @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]", metaVar = "VCF_file", required = true)
-    ArrayList<String> _vcfFiles = null;
+    List<String> _vcfFiles = null;
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     long seed = 3333;
     private Random _rand = null;
@@ -41,7 +43,7 @@ public class VCF2diploid {
     private String _id = "varsim";
     @Option(name = "-pass", usage = "Only accept the PASS variants")
     private boolean _pass = false;
-    private HashMap<ChrString, ArrayList<Variant>> _variants = new HashMap<>();
+    private Map<ChrString, List<Variant>> _variants = new HashMap<>();
 
     public VCF2diploid() {
         _rand = new Random(seed);
@@ -124,7 +126,7 @@ public class VCF2diploid {
     }
 
     private void addVariant(ChrString chr, Variant var) {
-        ArrayList<Variant> temp = _variants.get(chr);
+        List<Variant> temp = _variants.get(chr);
         if (temp == null) {
             temp = new ArrayList<>();
             temp.add(var);
@@ -181,13 +183,13 @@ public class VCF2diploid {
             }
 
             // this is the list of variants for the chromosome of question
-            ArrayList<Variant> varList = _variants.get(chr);
+            List<Variant> varList = _variants.get(chr);
             if (varList == null) {
                 varList = new ArrayList<>();
             }
 
-            ArrayList<Boolean> maternal_added_variants = new ArrayList<>();
-            ArrayList<Boolean> paternal_added_variants = new ArrayList<>();
+            final List<Boolean> maternal_added_variants = new ArrayList<>();
+            final List<Boolean> paternal_added_variants = new ArrayList<>();
 
             int len = ref_seq.length();
             byte[] maternal_seq = new byte[len];
@@ -708,34 +710,29 @@ public class VCF2diploid {
                               byte[] maternal, Hashtable<Integer, FlexSeq> pat_ins_seq,
                               Hashtable<Integer, FlexSeq> mat_ins_seq, boolean output_paternal,
                               boolean output_maternal) {
+        writeMultiploid(Arrays.asList(maternal, paternal),
+                Arrays.asList(mat_ins_seq, pat_ins_seq),
+                Arrays.asList(maternalName(ref_seq.getName()), paternalName(ref_seq.getName())),
+                Arrays.asList(maternalName(ref_seq.getName() + "_" + _id) + ".fa", paternalName(ref_seq.getName() + "_" + _id) + ".fa"),
+                Arrays.asList(output_maternal, output_paternal));
+    }
 
-        if (output_paternal) {
-            String file_name = paternalName(ref_seq.getName() + "_" + _id)
-                    + ".fa";
-            String name = paternalName(ref_seq.getName());
-            try {
-                FileWriter fw = new FileWriter(new File(file_name));
-                BufferedWriter bw = new BufferedWriter(fw);
-                writeGenome(bw, name, paternal, pat_ins_seq);
-                bw.close();
-                fw.close();
-            } catch (IOException ex) {
-                log.error(ex.toString());
-            }
-        }
-
-        if (output_maternal) {
-            String file_name = maternalName(ref_seq.getName() + "_" + _id)
-                    + ".fa";
-            String name = maternalName(ref_seq.getName());
-            try {
-                FileWriter fw = new FileWriter(new File(file_name));
-                BufferedWriter bw = new BufferedWriter(fw);
-                writeGenome(bw, name, maternal, mat_ins_seq);
-                bw.close();
-                fw.close();
-            } catch (IOException ex) {
-                log.error(ex.toString());
+    private void writeMultiploid(final List<byte[]> sequences,
+                            final List<Hashtable<Integer, FlexSeq>> insSequences,
+                            final List<String> sequenceNames, final List<String> sequenceFileNames,
+                            final List<Boolean> outputFlags) {
+        final int ploidy = outputFlags.size();
+        for (int i = 0; i < ploidy; i++) {
+            if (outputFlags.get(i)) {
+                try {
+                    FileWriter fw = new FileWriter(new File(sequenceFileNames.get(i)));
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    writeGenome(bw, sequenceNames.get(i), sequences.get(i), insSequences.get(i));
+                    bw.close();
+                    fw.close();
+                } catch (IOException ex) {
+                    log.error(ex.toString());
+                }
             }
         }
     }
@@ -789,10 +786,10 @@ public class VCF2diploid {
      * Writes out the vcf record for all variants that have added_variants =
      * true
      */
-    private void writeVCF(Sequence ref_seq, ArrayList<Variant> varList,
-                          ArrayList<Boolean> paternal_added_variants,
-                          ArrayList<Boolean> maternal_added_variants,
-                          boolean output_paternal, boolean output_maternal) {
+    private void writeVCF(final Sequence ref_seq, final List<Variant> varList,
+                          final List<Boolean> paternal_added_variants,
+                          final List<Boolean> maternal_added_variants,
+                          final boolean output_paternal, final boolean output_maternal) {
         String file_name = ref_seq.getName() + "_" + _id + ".vcf";
         log.info("Writing out the true variants for " + ref_seq.getName());
         try {
@@ -940,11 +937,18 @@ public class VCF2diploid {
     }
 
     private String maternalName(String name) {
-        return (name + "_maternal");
+        return (name + "_" + DIPLOID_CHRS[0]);
     }
 
     private String paternalName(String name) {
-        return (name + "_paternal");
+        return (name + "_" + DIPLOID_CHRS[1]);
+    }
+
+    private String chrSuffixFromIndex(final String name, final int index, final boolean isDiploid) {
+        if (isDiploid) {
+            return name + "_" + DIPLOID_CHRS[index];
+        }
+        return name + "_" + index;
     }
 
 
