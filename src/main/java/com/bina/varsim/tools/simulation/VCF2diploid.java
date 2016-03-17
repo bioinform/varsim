@@ -31,22 +31,22 @@ public class VCF2diploid {
 
     // arguments
     @Option(name = "-t", usage = "Gender of individual [MALE]")
-    GenderType _gender = GenderType.MALE;
+    GenderType gender = GenderType.MALE;
     @Option(name = "-chr", usage = "Comma separated list of reference genome files [Required]", metaVar = "FASTA_file", required = true)
-    List<String> _chrFiles = null;
+    List<String> chrfiles = null;
     @Option(name = "-vcf", usage = "Comma separated list of VCF files [Required]", metaVar = "VCF_file", required = true)
-    List<String> _vcfFiles = null;
+    List<String> vcfFiles = null;
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
     long seed = 3333;
-    private Random _rand = null;
+    private Random rand = null;
     @Option(name = "-id", usage = "ID of individual in VCF file [Optional]")
-    private String _id = "varsim";
+    private String id = "varsim";
     @Option(name = "-pass", usage = "Only accept the PASS variants")
-    private boolean _pass = false;
-    private Map<ChrString, List<Variant>> _variants = new HashMap<>();
+    private boolean pass = false;
+    private Map<ChrString, List<Variant>> variants = new HashMap<>();
 
     public VCF2diploid() {
-        _rand = new Random(seed);
+        rand = new Random(seed);
     }
 
     /**
@@ -81,17 +81,17 @@ public class VCF2diploid {
             return;
         }
 
-        if (_chrFiles.size() == 0) {
+        if (chrfiles.size() == 0) {
             log.error("No chromosome file(s) is given!\n" + usage);
             return;
         }
 
-        if (_vcfFiles.size() == 0) {
+        if (vcfFiles.size() == 0) {
             log.error("No VCF file(s) is given!");
         }
 
-        for (String _vcfFile : _vcfFiles) {
-            VCFparser parser = new VCFparser(_vcfFile, _id, _pass, _rand);
+        for (String _vcfFile : vcfFiles) {
+            VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
             int n_ev = 0, var_nucs = 0;
             while (parser.hasMoreInput()) {
                 Variant var = parser.parseLine();
@@ -106,7 +106,7 @@ public class VCF2diploid {
 
                 if (var.maternal() < 0 || var.paternal() < 0) {
                     // randomize the genotype
-                    var.randomizeGenotype(_gender);
+                    var.randomizeGenotype(gender);
                 }
 
                 ChrString chr = var.getChr();
@@ -126,11 +126,11 @@ public class VCF2diploid {
     }
 
     private void addVariant(ChrString chr, Variant var) {
-        List<Variant> temp = _variants.get(chr);
+        List<Variant> temp = variants.get(chr);
         if (temp == null) {
             temp = new ArrayList<>();
             temp.add(var);
-            _variants.put(chr, temp);
+            variants.put(chr, temp);
         } else {
             temp.add(var);
         }
@@ -145,10 +145,7 @@ public class VCF2diploid {
         StringBuilder map_string = new StringBuilder();
 
         // This is the loop if chromosomes exist in separate files
-        SimpleReference all_seqs = new SimpleReference();
-        for (String _chrFile : _chrFiles) {
-            all_seqs.addReference(_chrFile);
-        }
+        SimpleReference all_seqs = new SimpleReference(chrfiles);
 
         // This is the loop through each chromosome
         for (ChrString chr : all_seqs.keySet()) {
@@ -159,12 +156,12 @@ public class VCF2diploid {
             boolean output_paternal = true;
             boolean output_maternal = true;
 
-            if (_gender == GenderType.FEMALE) {
+            if (gender == GenderType.FEMALE) {
                 if (chr.isY()) {
                     output_paternal = false;
                     output_maternal = false;
                 }
-            } else if (_gender == GenderType.MALE) {
+            } else if (gender == GenderType.MALE) {
                 // only male and female
                 if (chr.isX()) {
                     output_paternal = false;
@@ -183,10 +180,7 @@ public class VCF2diploid {
             }
 
             // this is the list of variants for the chromosome of question
-            List<Variant> varList = _variants.get(chr);
-            if (varList == null) {
-                varList = new ArrayList<>();
-            }
+            final List<Variant> varList = variants.containsKey(chr) ? variants.get(chr) : Collections.EMPTY_LIST;
 
             final List<Boolean> maternal_added_variants = new ArrayList<>();
             final List<Boolean> paternal_added_variants = new ArrayList<>();
@@ -303,7 +297,7 @@ public class VCF2diploid {
         }
 
         try {
-            FileWriter fw = new FileWriter(new File(_id + ".map"));
+            FileWriter fw = new FileWriter(new File(id + ".map"));
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(map_string.toString());
             bw.newLine();
@@ -713,7 +707,7 @@ public class VCF2diploid {
         writeMultiploid(Arrays.asList(maternal, paternal),
                 Arrays.asList(mat_ins_seq, pat_ins_seq),
                 Arrays.asList(maternalName(ref_seq.getName()), paternalName(ref_seq.getName())),
-                Arrays.asList(maternalName(ref_seq.getName() + "_" + _id) + ".fa", paternalName(ref_seq.getName() + "_" + _id) + ".fa"),
+                Arrays.asList(maternalName(ref_seq.getName() + "_" + id) + ".fa", paternalName(ref_seq.getName() + "_" + id) + ".fa"),
                 Arrays.asList(output_maternal, output_paternal));
     }
 
@@ -790,7 +784,7 @@ public class VCF2diploid {
                           final List<Boolean> paternal_added_variants,
                           final List<Boolean> maternal_added_variants,
                           final boolean output_paternal, final boolean output_maternal) {
-        String file_name = ref_seq.getName() + "_" + _id + ".vcf";
+        String file_name = ref_seq.getName() + "_" + id + ".vcf";
         log.info("Writing out the true variants for " + ref_seq.getName());
         try {
             FileWriter fw = new FileWriter(new File(file_name));
@@ -798,7 +792,7 @@ public class VCF2diploid {
 
             // write header
             bw.write("##fileformat=VCFv4.1\n" +
-                     "##reference=" + _chrFiles.get(0) + "\n" +
+                     "##reference=" + chrfiles.get(0) + "\n" +
                      "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
                      "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                      "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
@@ -814,7 +808,7 @@ public class VCF2diploid {
                      "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
                      "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
                      "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n" +
-                     "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + _id + "\n");
+                     "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + id + "\n");
 
             int num_vars = varList.size();
             final Map<Variant, Integer> indexMap = new HashMap<>();

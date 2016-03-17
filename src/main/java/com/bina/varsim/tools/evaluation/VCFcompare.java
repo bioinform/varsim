@@ -98,7 +98,7 @@ public class VCFcompare {
     }
 
     // end = true will add the indel to the end, other wise it will add to start
-    private void add_indels(ArrayList<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
+    private void add_indels(List<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
                             Variant var, int curr_pos, boolean end) {
         // add insertions or deletions for complex variants
         if (diff[0] == diff[1] && diff[0] != 0) {
@@ -189,9 +189,9 @@ public class VCFcompare {
         }
     }
 
-    private ArrayList<Variant> convert_var_to_var_list(Variant var) {
-        ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
-        ArrayList<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
+    private List<Variant> convert_var_to_var_list(Variant var) {
+        List<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
+        List<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
         if (var_list_end.size() < var_list.size()) {
             var_list = var_list_end;
         }
@@ -199,8 +199,8 @@ public class VCFcompare {
     }
 
     //if end = true, we add indels to the end
-    private ArrayList<Variant> convert_var_to_var_list(Variant var, boolean end) {
-        ArrayList<Variant> var_list = new ArrayList<>();
+    private List<Variant> convert_var_to_var_list(Variant var, boolean end) {
+        List<Variant> var_list = new ArrayList<>();
 
         //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
@@ -563,7 +563,7 @@ public class VCFcompare {
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
 
-            ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var));
+            List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
             int total_len = 0;
             double max_len = 0;
@@ -680,7 +680,7 @@ public class VCFcompare {
                 VariantOverallType curr_var_type = var.getType();
 
                 // if called as complex variant convert to indel+snps
-                ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var));
+                List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
                 double total_len = 0;
                 double validated_len = 0;
