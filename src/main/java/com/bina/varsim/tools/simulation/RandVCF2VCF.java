@@ -3,6 +3,7 @@ package com.bina.varsim.tools.simulation;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
@@ -13,8 +14,7 @@ import org.kohsuke.args4j.Option;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 /**
  * TODO ignores the input genotypes for now
  */
@@ -161,15 +161,25 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         // read through VCF file and count the
         log.info("Counting variants and assigning genotypes");
-        ArrayList<Genotypes> selected_geno = new ArrayList<>();
+        final List<Genotypes> selected_geno = new ArrayList<>();
 
-        int total_num_SNP = 0;
-        int total_num_INS = 0;
-        int total_num_DEL = 0;
-        int total_num_MNP = 0;
-        int total_num_COMPLEX = 0;
         int total_num_other = 0;
         int total_num = 0;
+        final Set<VariantType> variantTypesToSample = EnumSet.of(VariantType.SNP, VariantType.Insertion,
+                VariantType.Deletion, VariantType.MNP, VariantType.Complex);
+
+        final Map<VariantType, Integer> variantTypeCounts = new HashMap<>();
+        for (final VariantType variantType : variantTypesToSample) {
+            variantTypeCounts.put(variantType, 0);
+        }
+
+        final Map<VariantType, Integer> variantCountsToSample = new HashMap<>();
+        variantCountsToSample.put(VariantType.SNP, num_SNP);
+        variantCountsToSample.put(VariantType.Insertion, num_INS);
+        variantCountsToSample.put(VariantType.Deletion, num_DEL);
+        variantCountsToSample.put(VariantType.MNP, num_MNP);
+        variantCountsToSample.put(VariantType.Complex, num_COMPLEX);
+
         VCFparser parser_one = new VCFparser(vcf_filename, null, false, _rand);
         Variant prev_var = new Variant(_rand);
 
@@ -209,36 +219,21 @@ public class RandVCF2VCF extends randVCFgenerator {
                 if (i == 1 && same_geno) {
                     break;
                 }
-                switch (var.getType(geno.geno[i])) {
-                    case SNP:
-                        total_num_SNP++;
-                        break;
-                    case Insertion:
-                        total_num_INS++;
-                        break;
-                    case Deletion:
-                        total_num_DEL++;
-                        break;
-                    case MNP:
-                        total_num_MNP++;
-                        break;
-                    case Complex:
-                        total_num_COMPLEX++;
-                        break;
-                    default:
-                        //log.error(i + " : " + geno.geno[i] + " : " + var.getType(geno.geno[i]) + " : OTHER : " + var);
-                        total_num_other++;
+                final VariantType variantType = var.getType(geno.geno[i]);
+                if (variantTypesToSample.contains(variantType)) {
+                    variantTypeCounts.put(variantType, variantTypeCounts.get(variantType) + 1);
+                } else {
+                    total_num_other++;
                 }
-
             }
             total_num++;
         }
 
-        log.info("total_num_SNP: " + total_num_SNP);
-        log.info("total_num_INS: " + total_num_INS);
-        log.info("total_num_DEL: " + total_num_DEL);
-        log.info("total_num_MNP: " + total_num_MNP);
-        log.info("total_num_COMPLEX: " + total_num_COMPLEX);
+        log.info("total_num_SNP: " + variantTypeCounts.get(VariantType.SNP));
+        log.info("total_num_INS: " + variantTypeCounts.get(VariantType.Insertion));
+        log.info("total_num_DEL: " + variantTypeCounts.get(VariantType.Deletion));
+        log.info("total_num_MNP: " + variantTypeCounts.get(VariantType.MNP));
+        log.info("total_num_COMPLEX: " + variantTypeCounts.get(VariantType.Complex));
         log.info("total_num_skipped: " + total_num_other);
         log.info("total_num: " + total_num);
 
@@ -252,11 +247,10 @@ public class RandVCF2VCF extends randVCFgenerator {
         System.out
                 .print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
 
-        Sample_params SNP_params = new Sample_params();
-        Sample_params INS_params = new Sample_params();
-        Sample_params DEL_params = new Sample_params();
-        Sample_params MNP_params = new Sample_params();
-        Sample_params COMPLEX_params = new Sample_params();
+        final Map<VariantType, Sample_params> variantTypeParams = new HashMap<>();
+        for (final VariantType variantType : variantTypesToSample) {
+            variantTypeParams.put(variantType, new Sample_params());
+        }
 
         BufferedWriter out = null;
         try {
@@ -305,31 +299,11 @@ public class RandVCF2VCF extends randVCFgenerator {
                     geno.geno[1] = geno.geno[0];
                     break;
                 }
-                switch (var.getType(geno.geno[i])) {
-                    case SNP:
-                        geno.geno[i] = sample_genotype(geno.geno[i], SNP_params, num_SNP,
-                                total_num_SNP);
-                        break;
-                    case Insertion:
-                        geno.geno[i] = sample_genotype(geno.geno[i], INS_params, num_INS,
-                                total_num_INS);
-                        break;
-                    case Deletion:
-                        geno.geno[i] = sample_genotype(geno.geno[i], DEL_params, num_DEL,
-                                total_num_DEL);
-                        break;
-                    case MNP:
-                        geno.geno[i] = sample_genotype(geno.geno[i], MNP_params, num_MNP,
-                                total_num_MNP);
-                        break;
-                    case Complex:
-                        geno.geno[i] = sample_genotype(geno.geno[i], COMPLEX_params, num_COMPLEX,
-                                total_num_COMPLEX);
-                        break;
-                    default:
-                        break;
+                final VariantType variantType = var.getType(geno.geno[i]);
+                if (variantTypeParams.containsKey(variantType)) {
+                    geno.geno[i] = sample_genotype(geno.geno[i], variantTypeParams.get(variantType),
+                            variantCountsToSample.get(variantType), variantTypeCounts.get(variantType));
                 }
-
             }
 
             // write out variant

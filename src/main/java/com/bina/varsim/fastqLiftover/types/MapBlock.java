@@ -4,7 +4,7 @@ public class MapBlock implements Comparable<MapBlock> {
     public int size;
     public GenomeLocation srcLoc;
     public GenomeLocation dstLoc;
-    public BlockType blockType;
+    public BlockType blockType = BlockType.UNKNOWN;
     public int direction;
     public String name;
 
@@ -13,7 +13,7 @@ public class MapBlock implements Comparable<MapBlock> {
         srcLoc = new GenomeLocation(srcChr, srcLocation);
         dstLoc = new GenomeLocation(dstChr, dstLocation);
         this.direction = direction.equals("+") ? 0 : 1;
-        this.blockType = BlockType.valueOf(featureType);
+        this.blockType = BlockType.fromName(featureType);
         this.name = name;
     }
 
@@ -23,6 +23,10 @@ public class MapBlock implements Comparable<MapBlock> {
         this.dstLoc = new GenomeLocation("", 0);
         this.blockType = BlockType.UNKNOWN;
         this.direction = 0;
+    }
+
+    public boolean isMappable() {
+        return blockType.isMappable();
     }
 
     @Override
@@ -45,20 +49,43 @@ public class MapBlock implements Comparable<MapBlock> {
     }
 
     public enum BlockType {
-        SEQ("S"), INS("I"), DEL("D"), INV("V"), DUP_TANDEM("T"), UNKNOWN("U");
+        SEQ("S", "Sequence", true), INS("I", "Insertion", false), DEL("D", "Deletion", false), INV("V", "Inversion", true), DUP_TANDEM("T", "Tandem_Duplication", true), UNKNOWN("U", "Unknown", false);
 
-        private final String name;
+        private final String shortName;
+        private final String longName;
+        private final boolean mappable;
 
-        private BlockType(String s) {
-            name = s;
+        BlockType(String shortName, String longName, final boolean mappable) {
+            this.shortName = shortName;
+            this.longName = longName;
+            this.mappable = mappable;
+        }
+
+        public static BlockType fromName(final String s) {
+            for (final BlockType blockType : values()) {
+                if (blockType.name().equals(s) || blockType.shortName.equals(s) || blockType.longName.equals(s)) {
+                    return blockType;
+                }
+            }
+            return "".equals(s) ? SEQ : UNKNOWN;
         }
 
         public boolean equalsName(String otherName) {
-            return (otherName == null) ? false : name.equals(otherName);
+            return (otherName == null) ? false : shortName.equals(otherName);
         }
 
         public String toString() {
-            return name;
+            return shortName;
         }
+
+        public String getShortName() {
+            return shortName;
+        }
+
+        public String getLongName() {
+            return longName;
+        }
+
+        public boolean isMappable() { return mappable; }
     }
 }

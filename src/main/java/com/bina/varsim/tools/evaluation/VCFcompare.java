@@ -98,7 +98,7 @@ public class VCFcompare {
     }
 
     // end = true will add the indel to the end, other wise it will add to start
-    private void add_indels(ArrayList<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
+    private void add_indels(List<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
                             Variant var, int curr_pos, boolean end) {
         // add insertions or deletions for complex variants
         if (diff[0] == diff[1] && diff[0] != 0) {
@@ -189,9 +189,9 @@ public class VCFcompare {
         }
     }
 
-    private ArrayList<Variant> convert_var_to_var_list(Variant var) {
-        ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
-        ArrayList<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
+    private List<Variant> convert_var_to_var_list(Variant var) {
+        List<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
+        List<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
         if (var_list_end.size() < var_list.size()) {
             var_list = var_list_end;
         }
@@ -199,8 +199,8 @@ public class VCFcompare {
     }
 
     //if end = true, we add indels to the end
-    private ArrayList<Variant> convert_var_to_var_list(Variant var, boolean end) {
-        ArrayList<Variant> var_list = new ArrayList<>();
+    private List<Variant> convert_var_to_var_list(Variant var, boolean end) {
+        List<Variant> var_list = new ArrayList<>();
 
         //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
@@ -563,7 +563,7 @@ public class VCFcompare {
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
 
-            ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var));
+            List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
             int total_len = 0;
             double max_len = 0;
@@ -572,10 +572,7 @@ public class VCFcompare {
             for (Variant curr_var : var_list) {
 
                 int curr_len = curr_var.maxLen();
-
-                if (curr_len > max_len) {
-                    max_len = curr_len;
-                }
+                max_len = Math.max(max_len, curr_len);
 
                 total_len += curr_len;
                 SimpleInterval1D curr_var_reg = null;
@@ -683,7 +680,7 @@ public class VCFcompare {
                 VariantOverallType curr_var_type = var.getType();
 
                 // if called as complex variant convert to indel+snps
-                ArrayList<Variant> var_list = convert_var_to_var_list(new Variant(var));
+                List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
                 double total_len = 0;
                 double validated_len = 0;
@@ -691,9 +688,7 @@ public class VCFcompare {
 
                 for (Variant curr_var : var_list) {
                     total_len += curr_var.maxLen();
-                    if (max_len < curr_var.maxLen()) {
-                        max_len = curr_var.maxLen();
-                    }
+                    max_len = Math.max(max_len, curr_var.maxLen());
                 }
 
                 // split up variants that are basically one big variant and one small one
@@ -710,12 +705,7 @@ public class VCFcompare {
                     if (curr_var.isHom()) {
                         int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
 
-                        dual_idx idx;
-                        if (match_geno) {
-                            idx = comp.isHomMatch();
-                        } else {
-                            idx = comp.isMatch();
-                        }
+                        final dual_idx idx = match_geno ? comp.isHomMatch() : comp.isMatch();
 
                         if (idx.idx >= 0) {
                             // validated
@@ -739,19 +729,11 @@ public class VCFcompare {
                         for (int i = 0; i < 2; i++) {
                             byte allele = geno.geno[i];
                             if (allele > 0) {
-                                int len = comp.compare_variant(curr_var, allele, validated_true);
-                                if (len > max_true_len) {
-                                    max_true_len = len;
-                                }
+                                max_true_len = Math.max(comp.compare_variant(curr_var, allele, validated_true), max_true_len);
                             }
                         }
 
-                        dual_idx idx;
-                        if (match_geno) {
-                            idx = comp.isHetMatch();
-                        } else {
-                            idx = comp.isMatch();
-                        }
+                        final dual_idx idx = match_geno ? comp.isHetMatch() : comp.isMatch();
 
                         if (idx.idx >= 0) {
                             validated_true.set(idx.idx);

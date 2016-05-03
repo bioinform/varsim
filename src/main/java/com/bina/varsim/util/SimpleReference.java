@@ -6,6 +6,7 @@ package com.bina.varsim.util;
  * @author johnmu
  */
 
+import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.Sequence;
 import htsjdk.samtools.reference.FastaSequenceFile;
@@ -13,7 +14,9 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -21,18 +24,24 @@ public class SimpleReference {
     private final static Logger log = Logger.getLogger(SimpleReference.class.getName());
 
     // chr_idx -> reference_string
-    private final HashMap<ChrString, Sequence> data;
+    private final Map<ChrString, Sequence> data = new HashMap<>();
 
     public SimpleReference() {
-        data = new HashMap<>();
     }
 
     /**
      * @param filename FASTA file, should include the fai index
      */
     public SimpleReference(String filename) {
-        this();
         addReference(filename);
+    }
+
+    public SimpleReference(final Collection<String> filenames) {
+        if (filenames != null) {
+            for (final String filename : filenames) {
+                addReference(filename);
+            }
+        }
     }
 
     /**

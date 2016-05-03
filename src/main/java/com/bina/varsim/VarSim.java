@@ -1,6 +1,7 @@
 package com.bina.varsim;
 
 import com.bina.varsim.fastqLiftover.FastqLiftOver;
+import com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver;
 import com.bina.varsim.tools.VCFstats;
 import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
@@ -81,6 +82,9 @@ public class VarSim {
                 break;
             case "json_inserter":
                 new JSONInserter().run(pass_args);
+                break;
+            case "longislnd_liftover":
+                new LongISLNDReadMapLiftOver().run(pass_args);
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);

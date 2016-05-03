@@ -2,6 +2,7 @@ package com.bina.varsim.types.stats;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -18,7 +19,28 @@ public class MapRatioRecordSum {
         all_data = new RatioRecordSum();
     }
 
-    public void incTP(HashSet<String> a, int val) {
+    public void incStat(final Set<String> a, final int val, final StatsNamespace stat) {
+        switch(stat) {
+            case TP:
+                incTP(a, val);
+                break;
+            case FP:
+                incFP(a, val);
+                break;
+            case TN:
+                incTN(a, val);
+                break;
+            case FN:
+                incFN(a, val);
+                break;
+            case T:
+                incT(a);
+                break;
+            default:
+        }
+    }
+
+    public void incTP(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -33,20 +55,7 @@ public class MapRatioRecordSum {
         all_data.incTP(val);
     }
 
-    public void incTP(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incTP(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incTP(val);
-            data.put(a, contents);
-        }
-
-        all_data.incTP(val);
-    }
-
-    public void incTN(HashSet<String> a, int val) {
+    public void incTN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -61,20 +70,7 @@ public class MapRatioRecordSum {
         all_data.incTN(val);
     }
 
-    public void incTN(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incTN(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incTN(val);
-            data.put(a, contents);
-        }
-
-        all_data.incTN(val);
-    }
-
-    public void incFP(HashSet<String> a, int val) {
+    public void incFP(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -89,21 +85,7 @@ public class MapRatioRecordSum {
         all_data.incFP(val);
     }
 
-    public void incFP(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incFP(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incFP(val);
-            data.put(a, contents);
-        }
-
-        all_data.incFP(val);
-    }
-
-
-    public void incFN(HashSet<String> a, int val) {
+    public void incFN(Set<String> a, int val) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -118,20 +100,7 @@ public class MapRatioRecordSum {
         all_data.incFN(val);
     }
 
-    public void incFN(String a, int val) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incFN(val);
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incFN(val);
-            data.put(a, contents);
-        }
-
-        all_data.incFN(val);
-    }
-
-    public void incT(HashSet<String> a) {
+    public void incT(Set<String> a) {
         for (String key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
@@ -141,19 +110,6 @@ public class MapRatioRecordSum {
                 contents.incT();
                 data.put(key, contents);
             }
-        }
-
-        all_data.incT();
-    }
-
-    public void incT(String a) {
-        RatioRecordSum count = data.get(a);
-        if (count != null) {
-            count.incT();
-        } else {
-            RatioRecordSum contents = new RatioRecordSum();
-            contents.incT();
-            data.put(a, contents);
         }
 
         all_data.incT();
