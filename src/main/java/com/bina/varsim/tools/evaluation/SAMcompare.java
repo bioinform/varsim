@@ -47,7 +47,7 @@ public class SAMcompare {
     File html_file = null;
     @Option(name = "-read_map", usage = "Read MAP file [Optional]", metaVar = "ReadMap_file")
     File readMapFile = null;
-    @Option(name = "-use_nonprimary", usage = "Do not skip primary alignments")
+    @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
