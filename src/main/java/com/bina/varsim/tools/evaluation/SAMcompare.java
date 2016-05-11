@@ -47,6 +47,8 @@ public class SAMcompare {
     File html_file = null;
     @Option(name = "-read_map", usage = "Read MAP file [Optional]", metaVar = "ReadMap_file")
     File readMapFile = null;
+    @Option(name = "-use_nonprimary", usage = "Do not skip primary alignments")
+    boolean useNonPrimary = false;
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
@@ -146,7 +148,7 @@ public class SAMcompare {
                 for (SAMRecord rec : reader) {
 
                     // TODO this will need to change when we start considering supplementary alignements
-                    if (rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag()) {
+                    if (!useNonPrimary && (rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag())) {
                         continue;
                     }
 
