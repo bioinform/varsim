@@ -84,6 +84,6 @@ public class LongISLNDReadMapLiftOver {
             readCount++;
         }
         ps.close();
-        log.info(readCount + "reads processed");
+        log.info(readCount + " reads processed");
     }
 }

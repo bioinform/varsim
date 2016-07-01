@@ -116,6 +116,8 @@ public class MapBlocks {
             int srcStart = Math.max(start, b.srcLoc.location);
             int srcEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
             int lengthOfInterval = srcEnd - srcStart + 1;
+            final int lengthOfIntervalOnRead = b.blockType != MapBlock.BlockType.DEL ? lengthOfInterval : 0;
+            final int lengthOfIntervalOnRef = b.blockType != MapBlock.BlockType.INS ? lengthOfInterval : 0;
 
             log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
 
@@ -127,17 +129,17 @@ public class MapBlocks {
                 liftedInterval.feature = b.blockType;
                 if (b.direction == 0) {
                     liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location;
-                    liftedInterval.end = liftedInterval.start + lengthOfInterval;
+                    liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
                     liftedInterval.strand = interval.strand;
                 } else {
                     liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd);
-                    liftedInterval.end = liftedInterval.start + lengthOfInterval;
+                    liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
                     liftedInterval.strand = interval.strand == Strand.POSITIVE ? Strand.NEGATIVE : Strand.POSITIVE;
                 }
 
-                readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfInterval, liftedInterval));
+                readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead, liftedInterval));
             }
-            intervalOffset += lengthOfInterval;
+            intervalOffset += lengthOfIntervalOnRead;
         }
 
         return readMapBlocks;

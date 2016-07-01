@@ -83,8 +83,10 @@ public class ReadMapRecord {
 
     public Collection<GenomeLocation> getUnclippedStarts(final int index) {
         final Collection<GenomeLocation> locations = new ArrayList<>();
-        for (final ReadMapBlock readMapBlock : getReadMapBlocks(index)) {
-            locations.add(readMapBlock.getUnclippedStart());
+        if (index >= 0 && index < multiReadMapBlocks.size()) {
+            for (final ReadMapBlock readMapBlock : getReadMapBlocks(index)) {
+                locations.add(readMapBlock.getUnclippedStart());
+            }
         }
         return locations;
     }
