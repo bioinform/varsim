@@ -8,6 +8,7 @@ import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -43,6 +44,8 @@ public class VCF2diploid {
     private String id = "varsim";
     @Option(name = "-pass", usage = "Only accept the PASS variants")
     private boolean pass = false;
+    @Option(name = "-outdir", usage = "Directory to output results in [current directory]")
+    File outDir = new File("").getAbsoluteFile();
     private Map<ChrString, List<Variant>> variants = new HashMap<>();
 
     public VCF2diploid() {
@@ -88,6 +91,11 @@ public class VCF2diploid {
 
         if (vcfFiles.size() == 0) {
             log.error("No VCF file(s) is given!");
+        }
+
+        if (!outDir.isDirectory()) {
+            log.info("Creating output directory " + outDir);
+            outDir.mkdirs();
         }
 
         for (String _vcfFile : vcfFiles) {
@@ -275,7 +283,7 @@ public class VCF2diploid {
         }
 
         try {
-            FileWriter fw = new FileWriter(new File("paternal.chain"));
+            FileWriter fw = new FileWriter(new File(outDir, "paternal.chain"));
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(paternal_chains.toString());
             bw.newLine();
@@ -286,7 +294,7 @@ public class VCF2diploid {
         }
 
         try {
-            FileWriter fw = new FileWriter(new File("maternal.chain"));
+            FileWriter fw = new FileWriter(new File(outDir, "maternal.chain"));
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(maternal_chains.toString());
             bw.newLine();
@@ -297,7 +305,7 @@ public class VCF2diploid {
         }
 
         try {
-            FileWriter fw = new FileWriter(new File(id + ".map"));
+            FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(map_string.toString());
             bw.newLine();
@@ -719,7 +727,7 @@ public class VCF2diploid {
         for (int i = 0; i < ploidy; i++) {
             if (outputFlags.get(i)) {
                 try {
-                    FileWriter fw = new FileWriter(new File(sequenceFileNames.get(i)));
+                    FileWriter fw = new FileWriter(new File(outDir, sequenceFileNames.get(i)));
                     BufferedWriter bw = new BufferedWriter(fw);
                     writeGenome(bw, sequenceNames.get(i), sequences.get(i), insSequences.get(i));
                     bw.close();
@@ -787,7 +795,7 @@ public class VCF2diploid {
         String file_name = ref_seq.getName() + "_" + id + ".vcf";
         log.info("Writing out the true variants for " + ref_seq.getName());
         try {
-            FileWriter fw = new FileWriter(new File(file_name));
+            FileWriter fw = new FileWriter(new File(outDir, file_name));
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
@@ -832,6 +840,7 @@ public class VCF2diploid {
                     // System.err.println("write var: " + i);
 
                     Variant curr_var = varList.get(i_);
+                    curr_var.calculateExtraBase(ref_seq);
 
                     // chromosome name
                     bw.write(curr_var.getChr().toString());
@@ -844,7 +853,7 @@ public class VCF2diploid {
                     bw.write(curr_var.getVar_id());
                     bw.write("\t");
                     // ref allele
-                    bw.write(curr_var.getOrig_Ref());
+                    bw.write(curr_var.getOrig_Ref() + curr_var.getExtraBase());
                     bw.write("\t");
                     // alt alleles
                     bw.write(curr_var.alt_string().toString());
