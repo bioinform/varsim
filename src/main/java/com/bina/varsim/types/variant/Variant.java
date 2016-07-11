@@ -3,10 +3,7 @@ package com.bina.varsim.types.variant;
 //--- Java imports ---
 
 import com.bina.intervalTree.SimpleInterval1D;
-import com.bina.varsim.types.ChrString;
-import com.bina.varsim.types.FlexSeq;
-import com.bina.varsim.types.GenderType;
-import com.bina.varsim.types.Genotypes;
+import com.bina.varsim.types.*;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
@@ -33,6 +30,7 @@ public class Variant implements Comparable<Variant>{
     // this is when the reference base is deleted
     // if it is the same as the first alt base
     private String _ref_deleted;
+    private String extraBase = "";
 
     public Variant(Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
@@ -554,7 +552,7 @@ public class Variant implements Comparable<Variant>{
                 sbStr.append(",");
             }
             if (_alts[i].isSeq()) {
-                sbStr.append(_ref_deleted).append(_alts[i].toString());
+                sbStr.append(_ref_deleted).append(_alts[i].toString()).append(extraBase);
             } else {
                 sbStr.append(_alts[i].toString());
             }
@@ -707,6 +705,14 @@ public class Variant implements Comparable<Variant>{
         return len.toString();
     }
 
+    public void calculateExtraBase(final Sequence refSeq) {
+        for (final FlexSeq alt : _alts) {
+            if (alt.isSeq() && alt.length() == 0) {
+                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _del));
+            }
+        }
+    }
+
 
     /**
      * @param sbStr will build a VCF record without genotype
@@ -814,6 +820,8 @@ public class Variant implements Comparable<Variant>{
         }
     }
 
-    // type for one allele
+    public String getExtraBase() {
+        return extraBase;
+    }
 
 }
