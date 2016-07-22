@@ -813,9 +813,12 @@ public class VCFcompare {
 
         // Compute and update the true negatives here so that we have specificity values
         if (referenceGenome != null) {
-            outputBlob.getNum_true_correct().getData().get(VariantOverallType.SNP).computeTN((int) referenceGenome.getNumNonNBases());
-            outputBlob.getNum_true_correct().getData().get(VariantOverallType.Insertion).computeTN((int) referenceGenome.getNumNonNBases());
-            outputBlob.getNum_true_correct().getData().get(VariantOverallType.Deletion).computeTN((int) referenceGenome.getNumNonNBases());
+            final VariantOverallType variantOverallTypes[] = {VariantOverallType.SNP, VariantOverallType.Insertion, VariantOverallType.Deletion};
+            for (final VariantOverallType variantOverallType : variantOverallTypes) {
+                if (outputBlob.getNum_true_correct().getData().containsKey(variantOverallType)) {
+                    outputBlob.getNum_true_correct().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases());
+                }
+            }
         }
 
 
