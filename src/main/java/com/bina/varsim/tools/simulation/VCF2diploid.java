@@ -60,6 +60,11 @@ public class VCF2diploid {
         runner.run(args);
     }
 
+    /**
+     * parse arguments, aggregate all variants from all VCFs
+     * then create perturbed diploid genomes (paternal + maternal)
+     * @param args
+     */
     public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
@@ -133,6 +138,11 @@ public class VCF2diploid {
         makeDiploid();
     }
 
+    /**
+     * add variant var on chromosome chr to variants
+     * @param chr chromosome where var is at
+     * @param var variant to be added
+     */
     private void addVariant(ChrString chr, Variant var) {
         List<Variant> temp = variants.get(chr);
         if (temp == null) {
@@ -144,7 +154,9 @@ public class VCF2diploid {
         }
     }
 
-    // This is the main function that makes the diploid genome
+    /**
+     * This is the main function that makes the diploid genome
+     */
     public void makeDiploid() {
         StringBuilder paternal_chains = new StringBuilder();
         StringBuilder maternal_chains = new StringBuilder();
@@ -316,17 +328,19 @@ public class VCF2diploid {
         }
     }
 
-    /*
-     * new_seq -- sequence to be modified ref_seq -- reference sequence pos --
-     * position of the variant del -- length of reference sequence of the
-     * deletion ins -- the insertion string ins_seq -- hashtable that records
-     * insertion locations
+    /**
+     * @param new_seq -- sequence to be modified
+     * @param ref_seq -- reference sequence
+     * @param ins_seq -- hashtable that records insertion locations
      */
     private boolean addVariant(byte[] new_seq, Sequence ref_seq,
                                Variant variant, int allele, Hashtable<Integer, FlexSeq> ins_seq) {
 
+        //pos     -- position of the variant
         int pos = variant.getPos();
+        //del     -- length of reference sequence of the deletion
         int del = variant.deletion();
+        //                ins -- the insertion string
         byte[] ins = variant.insertion(allele);
         VariantType var_type = variant.getType(allele);
 
