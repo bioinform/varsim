@@ -178,18 +178,18 @@ public class VCFparser extends GzFileParser<Variant> {
                 vals[0] = vals[1] = val;
             }
         } else if (geno.length() >= 3) {
-            // this is the case where phase looks like "1|0" or "10|4"
-            String[] ll = geno.split("[\\|/]");
-            int c1 = -1;
-            int c2 = -1;
-            char phasing = '/';
-            if (ll.length == 2) {
-                try {
-                    c1 = Integer.parseInt(ll[0]);
-                    c2 = Integer.parseInt(ll[1]);
-                    phasing = geno.charAt(ll[0].length());
-                } catch (NumberFormatException e) {
-                    strangePhase = true;
+                    // this is the case where phase looks like "1|0" or "10|4"
+                    String[] ll = geno.split("[\\|/]");
+                    int c1 = -1;
+                    int c2 = -1;
+                    char phasing = '/';
+                    if (ll.length == 2) {
+                        try {
+                            c1 = Integer.parseInt(ll[0]);
+                            c2 = Integer.parseInt(ll[1]);
+                            phasing = geno.charAt(ll[0].length());
+                        } catch (NumberFormatException e) {
+                            strangePhase = true;
                 }
             } else {
                 strangePhase = true;
@@ -218,6 +218,12 @@ public class VCFparser extends GzFileParser<Variant> {
         return is_phased;
     }
 
+    /**
+     * takes a line from a VCF file, parse it,
+     * return a Variant object
+     * @param line
+     * @return
+     */
     public Variant process_line(String line) {
 
         // try to determine the column we should read for the genotype
@@ -378,6 +384,12 @@ public class VCFparser extends GzFileParser<Variant> {
                     int copy_val = 1;
                     for (int j = 0; j < 2; j++) {
                         if ((i + 1) == phase_val[j]) {
+                            /*
+                            if i = 0, phase_val[0] = 1, phase_val[1] = 1
+                            copy_num_val[0] = 3, copy_num_val[1] = 2
+                            then copy_val = 2.
+                            what does copy_val mean in real world?
+                             */
                             if (copy_num_val[j] > 0) {
                                 copy_val = copy_num_val[j];
                             }
@@ -387,7 +399,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     int len_val = Math.max(Math.abs(dup_lens[i]), 1);
 
                     alts[i] = new FlexSeq(FlexSeq.Type.DUP, len_val, copy_val);
-                }
+            }
 
                 return new Variant(chr, pos, Math.abs(dup_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
@@ -503,10 +515,12 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
             }
 
-            // Adjustment of first base
-            // TODO This need to updated to account for multiple matching
-            // reference
-            // bases
+            /* Adjustment of first base
+             basically if first base of ref and alt match, first base of
+             ref and alt will both be removed, pos will increment by 1 to
+             account for the removal.
+            */
+             // TODO: This needs to be updated to account for multiple matching reference bases
 
             if (REF.length() > 0) {
                 boolean same = true;
@@ -538,17 +552,18 @@ public class VCFparser extends GzFileParser<Variant> {
 
                 int min_clip_len = Integer.MAX_VALUE;
                 for (int i = 0; i < n; i++) {
-                    int len = alts[i].length();
+                    int alt_len = alts[i].length();
 
+                    //what does clip_len represent?
                     int clip_len = 0;
-                    for (int j = 0; j < len; j++) {
+                    for (int j = 0; j < alt_len; j++) {
 
                         // make sure there is at least something in alt
-                        if (ref_len - j <= 0 || len - j <= 0) {
+                        if (ref_len - j <= 0 || alt_len - j <= 0) {
                             clip_len = j;
                             break;
                         }
-                        if (REF.charAt(ref_len - j - 1) != alts[i].charAt(len - j - 1)) {
+                        if (REF.charAt(ref_len - j - 1) != alts[i].charAt(alt_len - j - 1)) {
                             clip_len = j;
                             break;
                         }
@@ -560,6 +575,11 @@ public class VCFparser extends GzFileParser<Variant> {
                     }
                 }
 
+                /*
+                apparently this code block is part of normalization.
+                is this working properly, though? e.g. it converts
+                CGTG,CG => GT,""
+                 */
                 if (min_clip_len > 0) {
                     REF = REF.substring(0, ref_len - min_clip_len);
                     for (int i = 0; i < n; i++) {

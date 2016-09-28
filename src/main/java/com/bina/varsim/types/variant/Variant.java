@@ -19,6 +19,7 @@ public class Variant implements Comparable<Variant>{
     public VariantOverallType original_type = null;
     // use a seed for reproducibility, should be an option or global
     private Random _rand = null;
+    //what does _del mean exactly? length of reference allele?
     private int _pos = -1, _del = -1;
     private byte[] _ref;
     private ChrString _chr;
@@ -29,6 +30,7 @@ public class Variant implements Comparable<Variant>{
     private String _var_id;
     // this is when the reference base is deleted
     // if it is the same as the first alt base
+    //so _ref_deleted.length() <= 1 is always true?
     private String _ref_deleted;
     private String extraBase = "";
 
@@ -708,6 +710,7 @@ public class Variant implements Comparable<Variant>{
     public void calculateExtraBase(final Sequence refSeq) {
         for (final FlexSeq alt : _alts) {
             if (alt.isSeq() && alt.length() == 0) {
+                //why extrabase is only 1-bp long?
                 extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _del));
             }
         }
