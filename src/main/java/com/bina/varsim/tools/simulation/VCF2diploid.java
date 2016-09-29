@@ -32,6 +32,8 @@ public class VCF2diploid {
     private final static char DELETED_BASE = '~';
     private final static String[] DIPLOID_CHRS = {"maternal", "paternal"};
 
+    private File outputMap;
+
     // arguments
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
@@ -66,6 +68,10 @@ public class VCF2diploid {
     public static void main(String[] args) {
         VCF2diploid runner = new VCF2diploid();
         runner.run(args);
+    }
+
+    public File getOutputMap() {
+        return outputMap;
     }
 
     /**
@@ -112,6 +118,7 @@ public class VCF2diploid {
             outDir.mkdirs();
         }
 
+        //TODO: separate reading VCFs from the rest of run() method
         for (String _vcfFile : vcfFiles) {
             VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
             /*
@@ -355,6 +362,7 @@ public class VCF2diploid {
             bw.newLine();
             bw.close();
             fw.close();
+            outputMap = new File(outDir, id + ".map");
         } catch (IOException ex) {
             log.error(ex.toString());
         }
@@ -510,6 +518,11 @@ public class VCF2diploid {
 
                 //System.err.println("Real Insert: " + s.getType());
 
+                /*
+                so although we model SNP as del+ins, we do not record
+                their insert locus. We only record insert loci of indel
+                and SVs.
+                 */
                 ins_seq.put(new Integer(pos), s);
             }
         }
@@ -1130,7 +1143,6 @@ public class VCF2diploid {
 
             bw.close();
             fw.close();
-
         } catch (IOException ex) {
             ex.printStackTrace();
         }
