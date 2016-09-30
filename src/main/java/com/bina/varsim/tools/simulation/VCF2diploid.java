@@ -405,14 +405,20 @@ public class VCF2diploid {
 
         boolean overlap = false;
 
-        if (pos > new_seq.length || pos + del > new_seq.length) {
+        /*
+        assuming 1-based index, (pos + del - 1 ) - pos + 1 = del
+        so pos + del - 1 (instead of pos + del) is the correct
+        index for end, and it should not exceed length of original
+        sequence.
+         */
+        if (pos > new_seq.length || pos + del - 1> new_seq.length) {
             log.warn("Variant out of chromosome bounds at "
                     + ref_seq.getName() + ":" + pos + ", (del,ins) of (" + del
                     + "," + Arrays.toString(ins) + "). Skipping.");
             return false;
         }
 
-        for (int p = pos; p <= pos + del; p++) {
+        for (int p = pos; p < pos + del; p++) {
             // if any location of this variant overlap a deleted base or a SNP, we skip it
             // DELETED_BASE is used as a flag to mark that this position has been processed/modified
             if (new_seq[p - 1] == DELETED_BASE
@@ -774,7 +780,8 @@ public class VCF2diploid {
      * iterate over the original sequence, create map file records
      * for each block of sequence (each block consists of identical
      * events, e.g. insertion, or no-change), append records to
-     * sb
+     * stringBuilder. For details about map file format, look into
+     * the comments below.
      *
      * @param sb output string
      * @param chr_name name of haploid perturbed sequence
