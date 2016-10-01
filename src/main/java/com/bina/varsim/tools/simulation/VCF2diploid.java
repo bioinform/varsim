@@ -822,6 +822,12 @@ public class VCF2diploid {
         // INV is whether the block is inverted
         //bw.write("#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID");
         //bw.newLine();
+        /* in principle, if a record corresponds to a sequence not existent on host, then
+        we use the coordinate of host before that event; similarly, if a record corresponds
+        to a sequence not existent on reference (e.g. insertion, duplication), then we
+        use the coordinate of reference before that event. In other words, non-existent sequence
+        should always point to a locus upstream.
+         */
 
         // TODO deal with var_id
 

@@ -155,4 +155,29 @@ public class VCF2diploidTest {
         assertTrue(FileUtils.contentEquals(outputPaternalReferencePath.toFile(), new File(paternalReference)));
         assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
     }
+    @Test
+    public void DuplicationTest() throws IOException {
+        File wd = tmpFolder.newFolder("DuplicationTest");
+        String reference = "src/test/resources/DuplicationTest/oneDuplicationTest.fa";
+        String vcf = "src/test/resources/DuplicationTest/oneDuplicationTest.vcf";
+        String map = "src/test/resources/DuplicationTest/oneDuplicationTest.map";
+        String maternalReference = "src/test/resources/DuplicationTest/1_test_maternal.fa";
+        String paternalReference = "src/test/resources/DuplicationTest/1_test_paternal.fa";
+
+        Path outputVCFPath = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
+        Path outputMaternalReferencePath = Paths.get(wd.getCanonicalPath(), "1_test_maternal.fa");
+        Path outputPaternalReferencePath = Paths.get(wd.getCanonicalPath(), "1_test_paternal.fa");
+
+        VCF2diploid runner = new VCF2diploid();
+        String[] args = new String[]{
+                "-chr", reference, "-outdir", wd.getCanonicalPath(),
+                "-seed", Integer.toString(this.seed), "-id", "test",
+                "-t", "MALE", "-vcf", vcf
+        };
+        runner.run(args);
+        assertTrue(FileUtils.contentEquals(outputVCFPath.toFile(), new File(vcf)));
+        assertTrue(FileUtils.contentEquals(outputMaternalReferencePath.toFile(), new File(maternalReference)));
+        assertTrue(FileUtils.contentEquals(outputPaternalReferencePath.toFile(), new File(paternalReference)));
+        assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
+    }
 }
