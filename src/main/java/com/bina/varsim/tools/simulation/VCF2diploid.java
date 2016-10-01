@@ -697,6 +697,7 @@ public class VCF2diploid {
                     */
                     curr_rec.ref_pos = hf_idx.ref_idx - 1;
                     curr_rec.feature = "INV";
+                    //why direction is false (negative strand)?
                     curr_rec.dir = false;
                     curr_rec.len = ins.var_length();
                     curr_rec.var_id = var_id;

@@ -1,0 +1,19 @@
+##fileformat=VCFv4.1
+##reference=src/test/resources/InversionTest/oneInversionTest.fa
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Length of variant">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
+##ALT=<ID=DEL:ME:L1,Description="Deletion of L1 element">
+##ALT=<ID=DUP,Description="Duplication">
+##ALT=<ID=DUP:TANDEM,Description="Tandem Duplication">
+##ALT=<ID=INS,Description="Insertion of novel sequence">
+##ALT=<ID=INS:ME:ALU,Description="Insertion of ALU element">
+##ALT=<ID=INS:ME:L1,Description="Insertion of L1 element">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=CNV,Description="Copy number variable region">
+##ALT=<ID=ITX,Description="Intra-chromosomal translocation">
+##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
+1	3	.	T	<INV>	.	PASS	SVTYPE=INV;SVLEN=4	GT	0|1
