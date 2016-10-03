@@ -1,0 +1,6 @@
+5	1_paternal	1	1	1	+	SEQ	.
+3	1_paternal	5	1	6	+	DEL	.
+5	1_maternal	1	1	1	+	SEQ	.
+5	1_maternal	6	1	5	+	INS	.
+3	1_maternal	10	1	6	+	DEL	.
+
