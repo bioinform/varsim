@@ -192,13 +192,6 @@ public class VCF2diploid {
      *
      */
     public void makeDiploid() {
-        /*
-        why called chains?
-         */
-        StringBuilder paternal_chains = new StringBuilder();
-        StringBuilder maternal_chains = new StringBuilder();
-        int chain_id = 1;
-
         StringBuilder map_string = new StringBuilder();
 
         // This is the loop if chromosomes exist in separate files
@@ -307,21 +300,12 @@ public class VCF2diploid {
                     mat_ins_seq, output_paternal, output_maternal);
 
             if (output_paternal) {
-                paternal_chains.append(makeChains(ref_seq.getName(),
-                        paternalName(ref_seq.getName()), paternal_seq,
-                        pat_ins_seq, chain_id));
-
                 makePosMap(map_string, paternalName(ref_seq.getName()), ref_seq, paternal_seq, pat_ins_seq);
             }
 
             if (output_maternal) {
-                maternal_chains.append(makeChains(ref_seq.getName(),
-                        maternalName(ref_seq.getName()), maternal_seq,
-                        mat_ins_seq, chain_id));
-
                 makePosMap(map_string, maternalName(ref_seq.getName()), ref_seq, maternal_seq, mat_ins_seq);
             }
-            chain_id++;
 
             if (output_paternal) {
                 System.out.println("Applied " + n_var_pat + " variants "
@@ -331,28 +315,6 @@ public class VCF2diploid {
                 System.out.println("Applied " + n_var_mat + " variants "
                         + n_base_mat + " bases to " + "maternal genome.");
             }
-        }
-
-        try {
-            FileWriter fw = new FileWriter(new File(outDir, "paternal.chain"));
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(paternal_chains.toString());
-            bw.newLine();
-            bw.close();
-            fw.close();
-        } catch (IOException ex) {
-            log.error(ex.toString());
-        }
-
-        try {
-            FileWriter fw = new FileWriter(new File(outDir, "maternal.chain"));
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(maternal_chains.toString());
-            bw.newLine();
-            bw.close();
-            fw.close();
-        } catch (IOException ex) {
-            log.error(ex.toString());
         }
 
         try {
@@ -534,80 +496,6 @@ public class VCF2diploid {
         }
 
         return true;
-    }
-
-    /**
-     * TODO: remove this method as the chain file is not used after being generated
-     * chain file records positions and lengths of continuous blocks of sequences
-     * consisting of identical events (e.g. all insertion)
-     * @param ref_name
-     * @param der_name
-     * @param genome
-     * @param ins_seq
-     * @param id
-     * @return
-     */
-    private String makeChains(String ref_name, String der_name, byte[] genome,
-                              Hashtable<Integer, FlexSeq> ins_seq, int id) {
-        boolean[] ins_flag = new boolean[genome.length];
-        //TODO: use enhanced for loop and keySet
-        Enumeration<Integer> enm = ins_seq.keys();
-        while (enm.hasMoreElements()) {
-            Integer key = enm.nextElement();
-            ins_flag[key - 1] = true;
-        }
-        //length of reference genome/sequence
-        int ref_len = genome.length;
-        //length of perturbed genome/sequence
-        int der_len = 0;
-        //length of non-perturbed genome/sequence
-        int score = 0;
-        for (int p = 0; p < genome.length; p++) {
-            if (ins_flag[p])
-                der_len += ins_seq.get(p + 1).var_length();
-            if (genome[p] != DELETED_BASE) {
-                der_len++;
-                score++;
-            }
-        }
-
-        //TODO use StringBuilder to replace SringWriter+PrintWriter
-        StringWriter ret = new StringWriter();
-        PrintWriter wr = new PrintWriter(ret);
-        wr.println("chain " + score + " " + ref_name + " " + ref_len + " + 0 "
-                + ref_len + " " + der_name + " " + der_len + " + 0 " + der_len
-                + " " + id);
-        /*
-        dref: # of deleted reference bp
-        dder: # of inserted bp
-        size: # of non-perturbed bp
-        deref, dder, size will be reset every time
-        non-perturbed bps emerge after perturbed
-        bps
-         */
-        int size = 0, dref = 0, dder = 0;
-        boolean flag = false;
-        for (int p = 0; p < genome.length; p++) {
-            if (ins_flag[p]) {
-                dder += ins_seq.get(p + 1).var_length();
-                flag = true;
-            }
-            if (genome[p] == DELETED_BASE) {
-                dref++;
-                flag = true;
-            } else { // Normal base
-                if (flag) {
-                    wr.println(size + " " + dref + " " + dder);
-                    size = dref = dder = 0;
-                    flag = false;
-                }
-                size++;
-            }
-        }
-        wr.println(size);
-        wr.println();
-
-        return ret.toString();
     }
 
     /**
