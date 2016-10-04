@@ -204,13 +204,13 @@ public class VCF2diploid {
         StringBuilder map_string = new StringBuilder();
 
         // This is the loop if chromosomes exist in separate files
-        SimpleReference all_seqs = new SimpleReference(chrfiles);
+        SimpleReference allSequences = new SimpleReference(chrfiles);
 
         // This is the loop through each chromosome
-        for (ChrString chr : all_seqs.keySet()) {
-            Sequence ref_seq = all_seqs.getSequence(chr);
+        for (ChrString chr : allSequences.keySet()) {
+            Sequence referenceSequence = allSequences.getSequence(chr);
 
-            System.out.println("Working on " + ref_seq.getName() + "...");
+            System.out.println("Working on " + referenceSequence.getName() + "...");
 
             boolean output_paternal = true;
             boolean output_maternal = true;
@@ -241,12 +241,12 @@ public class VCF2diploid {
             // this is the list of variants for the chromosome of question
             final List<Variant> varList = variants.containsKey(chr) ? variants.get(chr) : Collections.EMPTY_LIST;
 
-            final List<Boolean> maternal_added_variants = new ArrayList<>();
-            final List<Boolean> paternal_added_variants = new ArrayList<>();
+            final List<Boolean> maternalIsVariantAdded = new ArrayList<>();
+            final List<Boolean> paternalIsVariantAdded = new ArrayList<>();
 
-            int len = ref_seq.length();
-            byte[] maternal_seq = new byte[len];
-            byte[] paternal_seq = new byte[len];
+            int len = referenceSequence.length();
+            byte[] maternalSequence = new byte[len];
+            byte[] paternalSequence = new byte[len];
             // byte[] ins_flag = new byte[len];
             // Flag specification:
             // b -- insertion in both haplotypes
@@ -257,14 +257,14 @@ public class VCF2diploid {
             // fill both maternal and paternal with the original reference
             // sequence
             for (int c = 1; c <= len; c++) {
-                maternal_seq[c - 1] = paternal_seq[c - 1] = ref_seq.byteAt(c);
+                maternalSequence[c - 1] = paternalSequence[c - 1] = referenceSequence.byteAt(c);
             }
 
-            Hashtable<Integer, FlexSeq> pat_ins_seq = new Hashtable<>(150);
-            Hashtable<Integer, FlexSeq> mat_ins_seq = new Hashtable<>(150);
+            Hashtable<Integer, FlexSeq> paternalInsertionSeq = new Hashtable<>(150);
+            Hashtable<Integer, FlexSeq> maternalInsertionSeq = new Hashtable<>(150);
 
-            int n_var_pat = 0, n_var_mat = 0;
-            int n_base_pat = 0, n_base_mat = 0;
+            int nPaternalVariant = 0, nMaternalVariant = 0;
+            int nPaternalVariantBase = 0, nMaternalVariantBase = 0;
             for (Variant var : varList) {
                 // iterate over the variants in the chromosome
                 if (!var.isPhased()) {
@@ -272,29 +272,29 @@ public class VCF2diploid {
                 }
 
                 if (var.paternal() > 0) {
-                    if (addVariant(paternal_seq, ref_seq, var, var.paternal(),
-                            pat_ins_seq)) {
-                        n_var_pat++;
-                        n_base_pat += var.variantBases();
-                        paternal_added_variants.add(true);
+                    if (addVariant(paternalSequence, referenceSequence, var, var.paternal(),
+                            paternalInsertionSeq)) {
+                        nPaternalVariant++;
+                        nPaternalVariantBase += var.variantBases();
+                        paternalIsVariantAdded.add(true);
                     } else {
-                        paternal_added_variants.add(false);
+                        paternalIsVariantAdded.add(false);
                     }
                 } else {
-                    paternal_added_variants.add(false);
+                    paternalIsVariantAdded.add(false);
                 }
 
                 if (var.maternal() > 0) {
-                    if (addVariant(maternal_seq, ref_seq, var, var.maternal(),
-                            mat_ins_seq)) {
-                        n_var_mat++;
-                        n_base_mat += var.variantBases();
-                        maternal_added_variants.add(true);
+                    if (addVariant(maternalSequence, referenceSequence, var, var.maternal(),
+                            maternalInsertionSeq)) {
+                        nMaternalVariant++;
+                        nMaternalVariantBase += var.variantBases();
+                        maternalIsVariantAdded.add(true);
                     } else {
-                        maternal_added_variants.add(false);
+                        maternalIsVariantAdded.add(false);
                     }
                 } else {
-                    maternal_added_variants.add(false);
+                    maternalIsVariantAdded.add(false);
                 }
 
             }
@@ -302,38 +302,39 @@ public class VCF2diploid {
             log.info("number of variants: " + varList.size());
 
             //VCF is written on a per-chromosome basis
-            writeVCF(ref_seq, varList, paternal_added_variants,
-                    maternal_added_variants, output_paternal, output_maternal);
+            writeVCF(referenceSequence, varList, paternalIsVariantAdded,
+                    maternalIsVariantAdded, output_paternal, output_maternal);
 
             if (output_paternal) {
-                String paternalSequenceName = ref_seq.getName() + "_" + DIPLOID_CHRS[1];
-                String paternalSequenceFileName = ref_seq.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
-                makePosMap(map_string, paternalSequenceName, ref_seq, paternal_seq, pat_ins_seq);
-                writeHaploid(paternal_seq, pat_ins_seq, paternalSequenceName, paternalSequenceFileName);
-                System.out.println("Applied " + n_var_pat + " variants "
-                        + n_base_pat + " bases to " + "paternal genome.");
+                String paternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[1];
+                String paternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
+                makePosMap(map_string, paternalSequenceName, referenceSequence, paternalSequence, paternalInsertionSeq);
+                writeHaploid(paternalSequence, paternalInsertionSeq, paternalSequenceName, paternalSequenceFileName);
+                System.out.println("Applied " + nPaternalVariant + " variants "
+                        + nPaternalVariantBase + " bases to " + "paternal genome.");
             }
 
             if (output_maternal) {
-                String maternalSequenceName = ref_seq.getName() + "_" + DIPLOID_CHRS[0];
-                String maternalSequenceFileName = ref_seq.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
-                makePosMap(map_string, maternalSequenceName, ref_seq, maternal_seq, pat_ins_seq);
-                writeHaploid(maternal_seq, mat_ins_seq, maternalSequenceName, maternalSequenceFileName);
-                System.out.println("Applied " + n_var_mat + " variants "
-                        + n_base_mat + " bases to " + "maternal genome.");
+                String maternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[0];
+                String maternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
+                makePosMap(map_string, maternalSequenceName, referenceSequence, maternalSequence, maternalInsertionSeq);
+                writeHaploid(maternalSequence, maternalInsertionSeq, maternalSequenceName, maternalSequenceFileName);
+                System.out.println("Applied " + nMaternalVariant + " variants "
+                        + nMaternalVariantBase + " bases to " + "maternal genome.");
             }
-
-        try {
-            FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(map_string.toString());
-            bw.newLine();
-            bw.close();
-            fw.close();
-            outputMap = new File(outDir, id + ".map");
-        } catch (IOException ex) {
-            log.error(ex.toString());
         }
+
+            try {
+                FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
+                BufferedWriter bw = new BufferedWriter(fw);
+                bw.write(map_string.toString());
+                bw.newLine();
+                bw.close();
+                fw.close();
+                outputMap = new File(outDir, id + ".map");
+            } catch (IOException ex) {
+                log.error(ex.toString());
+            }
     }
 
     /**
@@ -768,11 +769,9 @@ public class VCF2diploid {
      * @param ins_seq
      * @param sequenceName
      * @param sequenceFileName
-     * @param outputFlag
      */
     private void writeHaploid(final byte[] sequence, Hashtable<Integer, FlexSeq> ins_seq,
-                              final String sequenceName, final String sequenceFileName,
-                              final Boolean outputFlag) {
+                              final String sequenceName, final String sequenceFileName) {
         try {
             FileWriter fw = new FileWriter(new File(outDir, sequenceFileName));
             BufferedWriter bw = new BufferedWriter(fw);
