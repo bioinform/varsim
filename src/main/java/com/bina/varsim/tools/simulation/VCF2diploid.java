@@ -734,18 +734,12 @@ public class VCF2diploid {
 
             switch (curr_rec.feature) {
                 case "DEL":
-                    //TODO: refactor the if statements
-                    if (genome[idx] != DELETED_BASE) {
-                        same_block = false;
-                    } else if (ins_flag[idx]) {
+                    if (genome[idx] != DELETED_BASE || ins_flag[idx]) {
                         same_block = false;
                     }
                     break;
                 case "SEQ":
-                    //TODO: refactor the if statements
-                    if (genome[idx] == DELETED_BASE) {
-                        same_block = false;
-                    } else if (ins_flag[idx]) {
+                    if (genome[idx] == DELETED_BASE || ins_flag[idx]) {
                         same_block = false;
                     }
                     break;
