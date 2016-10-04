@@ -27,6 +27,23 @@ import java.util.*;
  */
 
 public class VCF2diploid {
+    static final String VCFHeader = "##fileformat=VCFv4.1\n" +
+                    "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                    "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
+                    "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                    "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
+                    "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
+                    "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
+                    "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
+                    "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
+                    "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
+                    "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
+                    "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
+                    "##ALT=<ID=INV,Description=\"Inversion\">\n" +
+                    "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
+                    "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
+                    "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
+
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
     private final static char DELETED_BASE = '~';
@@ -872,30 +889,15 @@ public class VCF2diploid {
                           final List<Boolean> maternal_added_variants,
                           final boolean output_paternal, final boolean output_maternal) {
         String file_name = ref_seq.getName() + "_" + id + ".vcf";
+        List<String> idList = new ArrayList<>();
+        idList.add(id);
         log.info("Writing out the true variants for " + ref_seq.getName());
         try {
             FileWriter fw = new FileWriter(new File(outDir, file_name));
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            bw.write("##fileformat=VCFv4.1\n" +
-                    "##reference=" + chrfiles.get(0) + "\n" +
-                    "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
-                    "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
-                    "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-                    "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
-                    "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
-                    "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
-                    "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
-                    "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
-                    "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
-                    "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
-                    "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
-                    "##ALT=<ID=INV,Description=\"Inversion\">\n" +
-                    "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
-                    "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
-                    "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n" +
-                    "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + id + "\n");
+            bw.write(generateVCFHeader(chrfiles.get(0), idList));
 
             int num_vars = varList.size();
             //it seems indexMap is not necessary here
@@ -1022,6 +1024,22 @@ public class VCF2diploid {
             ex.printStackTrace();
         }
 
+    }
+
+    /**
+     * generate VCF file header
+     * @param referenceFileName reference file name
+     * @param sampleNames list of sample names
+     * @return
+     */
+    private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
+        StringJoiner joiner = new StringJoiner("\t");
+        if (String id : sampleNames) {
+            joiner.add(id);
+        }
+        return VCFHeader + "##reference=" + referenceFileName + "\n" +
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
+                (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
     }
 
     /**
