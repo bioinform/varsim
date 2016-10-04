@@ -305,26 +305,23 @@ public class VCF2diploid {
             writeVCF(ref_seq, varList, paternal_added_variants,
                     maternal_added_variants, output_paternal, output_maternal);
 
-            writeDiploid(ref_seq, paternal_seq, maternal_seq, pat_ins_seq,
-                    mat_ins_seq, output_paternal, output_maternal);
-
             if (output_paternal) {
-                makePosMap(map_string, paternalName(ref_seq.getName()), ref_seq, paternal_seq, pat_ins_seq);
-            }
-
-            if (output_maternal) {
-                makePosMap(map_string, maternalName(ref_seq.getName()), ref_seq, maternal_seq, mat_ins_seq);
-            }
-
-            if (output_paternal) {
+                String paternalSequenceName = ref_seq.getName() + "_" + DIPLOID_CHRS[1];
+                String paternalSequenceFileName = ref_seq.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
+                makePosMap(map_string, paternalSequenceName, ref_seq, paternal_seq, pat_ins_seq);
+                writeHaploid(paternal_seq, pat_ins_seq, paternalSequenceName, paternalSequenceFileName);
                 System.out.println("Applied " + n_var_pat + " variants "
                         + n_base_pat + " bases to " + "paternal genome.");
             }
+
             if (output_maternal) {
+                String maternalSequenceName = ref_seq.getName() + "_" + DIPLOID_CHRS[0];
+                String maternalSequenceFileName = ref_seq.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
+                makePosMap(map_string, maternalSequenceName, ref_seq, maternal_seq, pat_ins_seq);
+                writeHaploid(maternal_seq, mat_ins_seq, maternalSequenceName, maternalSequenceFileName);
                 System.out.println("Applied " + n_var_mat + " variants "
                         + n_base_mat + " bases to " + "maternal genome.");
             }
-        }
 
         try {
             FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
@@ -756,60 +753,34 @@ public class VCF2diploid {
     }
 
     /**
-     * write perturbed maternal and paternal genomes into files
+     * write perturbed maternal or paternal genomes into files
      * flag array and sequences to be inserted for each haploid
      * genome are required.
      *
      * here, insertion has broader meaning as all variants are
      * considered combinations of insertion + deletion
-     * TODO: refactor to replace ref_seq with only its name
-     * @param ref_seq corresponding reference sequence
-     * @param paternal flag array for paternal genome
-     * @param maternal flag array for maternal genome
-     * @param pat_ins_seq inserted paternal sequences
-     * @param mat_ins_seq inserted maternal sequences
-     * @param output_paternal output perturbed paternal genome?
-     * @param output_maternal output perturbed maternal genome?
-     */
-    private void writeDiploid(Sequence ref_seq, byte[] paternal,
-                              byte[] maternal, Hashtable<Integer, FlexSeq> pat_ins_seq,
-                              Hashtable<Integer, FlexSeq> mat_ins_seq, boolean output_paternal,
-                              boolean output_maternal) {
-        writeMultiploid(Arrays.asList(maternal, paternal),
-                Arrays.asList(mat_ins_seq, pat_ins_seq),
-                Arrays.asList(maternalName(ref_seq.getName()), paternalName(ref_seq.getName())),
-                Arrays.asList(maternalName(ref_seq.getName() + "_" + id) + ".fa", paternalName(ref_seq.getName() + "_" + id) + ".fa"),
-                Arrays.asList(output_maternal, output_paternal));
-    }
-
-    /**
-     * since each haploid genome is independent of another
-     * generation of diploid genomes can be generalized to
-     * multiploid genomes
      *
-     * @param sequences list of flag arrays of perturbed haploid genomes
-     * @param insSequences list of inserted sequences of haploid genomes
-     * @param sequenceNames list of names of haploid genomes (original chromosome + haploid suffix)
-     * @param sequenceFileNames
-     * @param outputFlags list of toggles for output
+     * instead of calling writeDiploid and then writeMultiploid
+     * since we really only have two haplotypes, we can call
+     * writeHaploid twice. Got more haplotypes? Use a loop.
+     * This avoids creation of anonymous lists.
+     * @param sequence
+     * @param ins_seq
+     * @param sequenceName
+     * @param sequenceFileName
+     * @param outputFlag
      */
-    private void writeMultiploid(final List<byte[]> sequences,
-                                 final List<Hashtable<Integer, FlexSeq>> insSequences,
-                                 final List<String> sequenceNames, final List<String> sequenceFileNames,
-                                 final List<Boolean> outputFlags) {
-        final int ploidy = outputFlags.size();
-        for (int i = 0; i < ploidy; i++) {
-            if (outputFlags.get(i)) {
-                try {
-                    FileWriter fw = new FileWriter(new File(outDir, sequenceFileNames.get(i)));
-                    BufferedWriter bw = new BufferedWriter(fw);
-                    writeGenome(bw, sequenceNames.get(i), sequences.get(i), insSequences.get(i));
-                    bw.close();
-                    fw.close();
-                } catch (IOException ex) {
-                    log.error(ex.toString());
-                }
-            }
+    private void writeHaploid(final byte[] sequence, Hashtable<Integer, FlexSeq> ins_seq,
+                              final String sequenceName, final String sequenceFileName,
+                              final Boolean outputFlag) {
+        try {
+            FileWriter fw = new FileWriter(new File(outDir, sequenceFileName));
+            BufferedWriter bw = new BufferedWriter(fw);
+            writeGenome(bw, sequenceName, sequence, ins_seq);
+            bw.close();
+            fw.close();
+        } catch (IOException ex) {
+            log.error(ex.toString());
         }
     }
 
@@ -1048,26 +1019,6 @@ public class VCF2diploid {
         }
         return VCFHeader + "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
                 (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
-    }
-
-    /**
-     * append maternal genome suffix
-     * to chromosome ID
-     * @param name chromosome ID
-     * @return
-     */
-    private String maternalName(String name) {
-        return (name + "_" + DIPLOID_CHRS[0]);
-    }
-
-    /**
-     * append paternal genome suffix
-     * to chromosome ID
-     * @param name chromosome ID
-     * @return
-     */
-    private String paternalName(String name) {
-        return (name + "_" + DIPLOID_CHRS[1]);
     }
 
     //"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
