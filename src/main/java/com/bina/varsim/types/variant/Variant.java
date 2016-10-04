@@ -101,6 +101,9 @@ public class Variant implements Comparable<Variant>{
      * @return Chromosome variant is on
      */
     public ChrString getChr() {
+        if (_chr == null) {
+            throw new UnsupportedOperationException("ERROR: no legitimate chromosome name available!");
+        }
         return _chr;
     }
 

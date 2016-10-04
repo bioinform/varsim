@@ -27,22 +27,6 @@ import java.util.*;
  */
 
 public class VCF2diploid {
-    static final String VCFHeader = "##fileformat=VCFv4.1\n" +
-                    "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
-                    "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
-                    "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-                    "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
-                    "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
-                    "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
-                    "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
-                    "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
-                    "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
-                    "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
-                    "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
-                    "##ALT=<ID=INV,Description=\"Inversion\">\n" +
-                    "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
-                    "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
-                    "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
 
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
@@ -135,8 +119,19 @@ public class VCF2diploid {
             outDir.mkdirs();
         }
 
-        //TODO: separate reading VCFs from the rest of run() method
-        for (String _vcfFile : vcfFiles) {
+        parseVCFs(vcfFiles, variants, id, pass);
+        makeDiploid();
+    }
+
+    /**
+     * parse all VCFs for a specific sample with desired filter
+     * store them in variants by chromosome
+     * @param vcfs
+     * @param id sample ID
+     * @param pass true only retain PASS variants, false otherwise
+     */
+    public void parseVCFs(List<String> vcfs, Map<ChrString, List<Variant>> variants, String id, boolean pass) {
+        for (String _vcfFile : vcfs) {
             VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
             /*
             apparently, n_ev is for # of variants
@@ -163,19 +158,16 @@ public class VCF2diploid {
                 }
 
                 ChrString chr = var.getChr();
-                if (chr == null) {
-                    log.warn("Chr out of range, probably unplaced");
-                    continue;
+                if (!variants.containsKey(chr)) {
+                    variants.put(chr, new ArrayList<Variant>());
                 }
-                addVariant(chr, var);
+                variants.get(chr).add(var);
                 n_ev++;
                 var_nucs += var.variantBases();
             }
             System.out.println(_vcfFile + ": " + n_ev + " variants, "
                     + var_nucs + " variant bases");
         }
-
-        makeDiploid();
     }
 
     /**
@@ -1033,12 +1025,28 @@ public class VCF2diploid {
      * @return
      */
     private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
+        String VCFHeader = "##fileformat=VCFv4.1\n" +
+                "##reference=" + referenceFileName + "\n" +
+                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
+                "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
+                "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
+                "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
+                "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
+                "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
+                "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
+                "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
+                "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
+                "##ALT=<ID=INV,Description=\"Inversion\">\n" +
+                "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
+                "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
+                "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
         StringJoiner joiner = new StringJoiner("\t");
-        if (String id : sampleNames) {
+        for (String id : sampleNames) {
             joiner.add(id);
         }
-        return VCFHeader + "##reference=" + referenceFileName + "\n" +
-                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
+        return VCFHeader + "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
                 (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
     }
 
@@ -1097,7 +1105,6 @@ public class VCF2diploid {
     /**
      * class for storing host genome and
      * reference genome index
-     * TODO: capitalize first letter of class name
      */
     private class HostRefIdx {
         public int host_idx = 0;
