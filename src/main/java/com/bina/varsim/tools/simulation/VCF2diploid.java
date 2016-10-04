@@ -504,7 +504,7 @@ public class VCF2diploid {
      * @param curr_rec current record in map file
      * @param hf_idx host to reference genome index
      */
-    private void adjust_idx(map_rec curr_rec, host_ref_idx hf_idx) {
+    private void adjust_idx(MapRecord curr_rec, HostRefIdx hf_idx) {
         switch (curr_rec.feature) {
             case "SEQ":
                 hf_idx.host_idx += curr_rec.len;
@@ -543,9 +543,9 @@ public class VCF2diploid {
      * @param ins_seq
      * @return
      */
-    private map_rec new_curr_rec(StringBuilder sb, int idx, String chr_name, String ref_chr_name, host_ref_idx hf_idx,
-                                 byte[] genome, Hashtable<Integer, FlexSeq> ins_seq) {
-        map_rec curr_rec = new map_rec();
+    private MapRecord new_curr_rec(StringBuilder sb, int idx, String chr_name, String ref_chr_name, HostRefIdx hf_idx,
+                                   byte[] genome, Hashtable<Integer, FlexSeq> ins_seq) {
+        MapRecord curr_rec = new MapRecord();
         curr_rec.host_chr = chr_name;
         curr_rec.ref_chr = ref_chr_name;
 
@@ -607,7 +607,7 @@ public class VCF2diploid {
                         adjust_idx(curr_rec, hf_idx);
                         sb.append(curr_rec);
                         sb.append('\n');
-                        curr_rec = new map_rec();
+                        curr_rec = new MapRecord();
                         curr_rec.host_chr = chr_name;
                         curr_rec.ref_chr = ref_chr_name;
                         curr_rec.host_pos = hf_idx.host_idx;
@@ -626,7 +626,7 @@ public class VCF2diploid {
             sb.append(curr_rec);
             sb.append('\n');
 
-            curr_rec = new map_rec();
+            curr_rec = new MapRecord();
             curr_rec.host_chr = chr_name;
             curr_rec.ref_chr = ref_chr_name;
 
@@ -701,11 +701,11 @@ public class VCF2diploid {
         // iterate through both genomes
 
         // these are 1-indexed
-        host_ref_idx hf_idx = new host_ref_idx();
+        HostRefIdx hf_idx = new HostRefIdx();
         hf_idx.host_idx = 1;
         hf_idx.ref_idx = 1;
 
-        map_rec curr_rec = new_curr_rec(sb, 0, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
+        MapRecord curr_rec = new_curr_rec(sb, 0, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
 
         for (int idx = 1; idx < genome.length; idx++) {
             // if still in the same block increment the length
@@ -1044,27 +1044,10 @@ public class VCF2diploid {
         return (name + "_" + DIPLOID_CHRS[1]);
     }
 
-    /**
-     * not used anywhere in the package
-     * TODO: remove this method
-     * @param name
-     * @param index
-     * @param isDiploid
-     * @return
-     */
-    private String chrSuffixFromIndex(final String name, final int index, final boolean isDiploid) {
-        if (isDiploid) {
-            return name + "_" + DIPLOID_CHRS[index];
-        }
-        return name + "_" + index;
-    }
-
-
     //"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
     // this is more like a struct :)
-    // I think map_rec stands for records in MFF file (the map file)
-    //TODO: refactor map_rec to something more meaningful
-    class map_rec {
+    // I think MapRecord stands for records in MFF file (the map file)
+    class MapRecord {
         public int len = 0;
         public String host_chr = "";
         public int host_pos = 0;
@@ -1075,28 +1058,21 @@ public class VCF2diploid {
         public String var_id = ".";
 
         public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(len);
-            sb.append('\t');
-            sb.append(host_chr);
-            sb.append('\t');
-            sb.append(host_pos);
-            sb.append('\t');
-            sb.append(ref_chr);
-            sb.append('\t');
-            sb.append(ref_pos);
-            sb.append('\t');
+            StringJoiner joiner = new StringJoiner("\t");
+            joiner.add(Integer.toString(len));
+            joiner.add(host_chr);
+            joiner.add(Integer.toString(host_pos));
+            joiner.add(ref_chr);
+            joiner.add(Integer.toString(ref_pos));
             if (dir) {
-                sb.append('+');
+                joiner.add("+");
             } else {
-                sb.append('-');
+                joiner.add("-");
             }
-            sb.append('\t');
-            sb.append(feature);
-            sb.append('\t');
-            sb.append(var_id);
+            joiner.add(feature);
+            joiner.add(var_id);
 
-            return sb.toString();
+            return joiner.toString();
         }
     }
 
@@ -1105,7 +1081,7 @@ public class VCF2diploid {
      * reference genome index
      * TODO: capitalize first letter of class name
      */
-    private class host_ref_idx {
+    private class HostRefIdx {
         public int host_idx = 0;
         public int ref_idx = 0;
     }
