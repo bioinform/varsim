@@ -540,12 +540,11 @@ public class VCF2diploid {
      * @param ref_chr_name
      * @param hf_idx
      * @param genome
-     * @param ins_flag
      * @param ins_seq
      * @return
      */
     private map_rec new_curr_rec(StringBuilder sb, int idx, String chr_name, String ref_chr_name, host_ref_idx hf_idx,
-                                 byte[] genome, boolean[] ins_flag, Hashtable<Integer, FlexSeq> ins_seq) {
+                                 byte[] genome, Hashtable<Integer, FlexSeq> ins_seq) {
         map_rec curr_rec = new map_rec();
         curr_rec.host_chr = chr_name;
         curr_rec.ref_chr = ref_chr_name;
@@ -555,7 +554,7 @@ public class VCF2diploid {
         // if it is inserted, we copy the var_id to the deletion
         boolean inserted = false;
         String var_id = ".";
-        if (ins_flag[idx]) {
+        if (ins_seq.containsKey(idx + 1)) {
             inserted = true;
             // insertion at this location
             FlexSeq ins = ins_seq.get(idx + 1);
@@ -681,26 +680,6 @@ public class VCF2diploid {
     private void makePosMap(StringBuilder sb, String chr_name, Sequence ref_seq, byte[] genome,
                             Hashtable<Integer, FlexSeq> ins_seq) {
 
-        boolean[] ins_flag = new boolean[genome.length];
-        //TODO use enhanced for loop
-        Enumeration<Integer> enm = ins_seq.keys();
-        while (enm.hasMoreElements()) {
-            Integer key = enm.nextElement();
-            //TODO eliminate ins_flag
-            /*
-            ins_flag is used multiple times
-            to flag location of insertion
-            however,it's really unnecessary
-            as we have the hash ins_seq
-             */
-            ins_flag[key - 1] = true;
-        }
-
-
-        //TODO remove unused and meaningless code
-        //int NOT_IN_GENOME = 0;
-
-
         // host is the perturbed genome
         // ref is b37 or hg19
         // Len is length of the block
@@ -726,7 +705,7 @@ public class VCF2diploid {
         hf_idx.host_idx = 1;
         hf_idx.ref_idx = 1;
 
-        map_rec curr_rec = new_curr_rec(sb, 0, chr_name, ref_seq.getName(), hf_idx, genome, ins_flag, ins_seq);
+        map_rec curr_rec = new_curr_rec(sb, 0, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
 
         for (int idx = 1; idx < genome.length; idx++) {
             // if still in the same block increment the length
@@ -734,12 +713,12 @@ public class VCF2diploid {
 
             switch (curr_rec.feature) {
                 case "DEL":
-                    if (genome[idx] != DELETED_BASE || ins_flag[idx]) {
+                    if (genome[idx] != DELETED_BASE || ins_seq.containsKey(idx + 1)) {
                         same_block = false;
                     }
                     break;
                 case "SEQ":
-                    if (genome[idx] == DELETED_BASE || ins_flag[idx]) {
+                    if (genome[idx] == DELETED_BASE || ins_seq.containsKey(idx + 1)) {
                         same_block = false;
                     }
                     break;
@@ -756,7 +735,7 @@ public class VCF2diploid {
                 sb.append(curr_rec);
                 sb.append('\n');
 
-                curr_rec = new_curr_rec(sb, idx, chr_name, ref_seq.getName(), hf_idx, genome, ins_flag, ins_seq);
+                curr_rec = new_curr_rec(sb, idx, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
             }
 
         }
