@@ -345,6 +345,11 @@ public class Variant implements Comparable<Variant>{
             return VariantType.Reference;
         }
 
+        /*when variant type is explicitly specified in VCF,
+        alt allele will be set to the correct type,
+        we can be assured that correct variant type is
+        returned.
+         */
         FlexSeq.Type type = _alts[ind - 1].getType();
         switch (type) {
             case DUP:
@@ -364,6 +369,8 @@ public class Variant implements Comparable<Variant>{
         } else if (inslen == 1 && dellen == 1) {
             return VariantType.SNP;
         } else if (inslen == 0 && dellen > 0) {
+            return VariantType.Deletion;
+        } else if (dellen - inslen > 0 && new String(_ref).endsWith(_alts[ind - 1].toString())) {
             return VariantType.Deletion;
         } else if (inslen > 0 && dellen == 0) {
             return VariantType.Insertion;
@@ -550,6 +557,10 @@ public class Variant implements Comparable<Variant>{
     public StringBuilder alt_string() {
         StringBuilder sbStr = new StringBuilder();
         for (int i = 0; i < _alts.length; i++) {
+            //if (i > 0 && _alts[i].toString().equals(_alts[i - 1].toString())) {
+                /*Marghoob suggested that two identical symbolic alternative alleles are
+                allowed. so essentially we go back to original behavior of VarSim.
+                 */
             if (i > 0) {
                 sbStr.append(",");
             }
@@ -691,7 +702,7 @@ public class Variant implements Comparable<Variant>{
             VariantType t = getType(i + 1);
 
             if (t == VariantType.Deletion) {
-                len.append(-_del);  // negative for deletions
+                len.append(-_del + _alts[i].length()); // negative for deletions
             } else if (t == VariantType.Complex) {
                 int alt_len = _alts[i].length();
                 if (_del > alt_len) {
@@ -709,9 +720,9 @@ public class Variant implements Comparable<Variant>{
 
     public void calculateExtraBase(final Sequence refSeq) {
         for (final FlexSeq alt : _alts) {
-            if (alt.isSeq() && alt.length() == 0) {
+            if (alt.isSeq() && alt.length() == 0 && getPos() + _del < refSeq.length()) {
                 //why extrabase is only 1-bp long?
-                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _del));
+                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _del ));
             }
         }
     }

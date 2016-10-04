@@ -1,0 +1,6 @@
+9	1_paternal	1	1	1	+	SEQ	.
+3	1_maternal	1	1	1	+	SEQ	.
+4	1_maternal	4	1	3	-	INV	.
+4	1_maternal	7	1	4	+	DEL	.
+2	1_maternal	8	1	8	+	SEQ	.
+

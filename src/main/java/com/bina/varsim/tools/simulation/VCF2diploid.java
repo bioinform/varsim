@@ -405,14 +405,20 @@ public class VCF2diploid {
 
         boolean overlap = false;
 
-        if (pos > new_seq.length || pos + del > new_seq.length) {
+        /*
+        assuming 1-based index, (pos + del - 1 ) - pos + 1 = del
+        so pos + del - 1 (instead of pos + del) is the correct
+        index for end, and it should not exceed length of original
+        sequence.
+         */
+        if (pos > new_seq.length || pos + del - 1> new_seq.length) {
             log.warn("Variant out of chromosome bounds at "
                     + ref_seq.getName() + ":" + pos + ", (del,ins) of (" + del
                     + "," + Arrays.toString(ins) + "). Skipping.");
             return false;
         }
 
-        for (int p = pos; p <= pos + del; p++) {
+        for (int p = pos; p < pos + del; p++) {
             // if any location of this variant overlap a deleted base or a SNP, we skip it
             // DELETED_BASE is used as a flag to mark that this position has been processed/modified
             if (new_seq[p - 1] == DELETED_BASE
@@ -691,6 +697,7 @@ public class VCF2diploid {
                     */
                     curr_rec.ref_pos = hf_idx.ref_idx - 1;
                     curr_rec.feature = "INV";
+                    //why direction is false (negative strand)?
                     curr_rec.dir = false;
                     curr_rec.len = ins.var_length();
                     curr_rec.var_id = var_id;
@@ -774,7 +781,8 @@ public class VCF2diploid {
      * iterate over the original sequence, create map file records
      * for each block of sequence (each block consists of identical
      * events, e.g. insertion, or no-change), append records to
-     * sb
+     * stringBuilder. For details about map file format, look into
+     * the comments below.
      *
      * @param sb output string
      * @param chr_name name of haploid perturbed sequence
@@ -814,6 +822,12 @@ public class VCF2diploid {
         // INV is whether the block is inverted
         //bw.write("#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID");
         //bw.newLine();
+        /* in principle, if a record corresponds to a sequence not existent on host, then
+        we use the coordinate of host before that event; similarly, if a record corresponds
+        to a sequence not existent on reference (e.g. insertion, duplication), then we
+        use the coordinate of reference before that event. In other words, non-existent sequence
+        should always point to a locus upstream.
+         */
 
         // TODO deal with var_id
 
