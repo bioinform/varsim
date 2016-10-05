@@ -559,15 +559,10 @@ public class Variant implements Comparable<Variant>{
     public StringBuilder alt_string() {
         StringBuilder sbStr = new StringBuilder();
         for (int i = 0; i < _alts.length; i++) {
-            if (i > 0 && _alts[i].toString().equals(_alts[i - 1].toString())) {
-//               if two alternative alleles are the same (e.g. two symbolic alleles)
-//                I'm not sure two symbolic alleles are allowed, but otherwise,
-//                current code cannot handle a non-reference heterozygous duplication (i.e.
-//                 two different copy numbers for each haplotype.)
-//                 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  test
-//                 1       3       .       T       <DUP:TANDEM>    .       PASS    SVTYPE=DUP;SVLEN=4,4    GT:CN   1|2:2|3
-                continue;
-            }
+            //if (i > 0 && _alts[i].toString().equals(_alts[i - 1].toString())) {
+                /*Marghoob suggested that two identical symbolic alternative alleles are
+                allowed. so essentially we go back to original behavior of VarSim.
+                 */
             if (i > 0) {
                 sbStr.append(",");
             }

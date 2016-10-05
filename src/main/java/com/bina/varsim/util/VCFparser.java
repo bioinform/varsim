@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.IllegalFormatException;
 import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -336,7 +337,27 @@ public class VCFparser extends GzFileParser<Variant> {
         String ref_deleted = "";
         FlexSeq alts[];
 
-        if (ALT.equals("<INV>")) {
+        /*if symbolic alleles are present,
+        make sure # of alleles equal # of
+        SV lengths
+         */
+        /*!!!!!!!!!!
+        CAUTION: we assume symbolic alleles are not mixed
+        with non-symbolic alleles.
+         */
+        if (ALT.indexOf('<') != -1) {
+            String[] alts_str = ALT.split(",");
+            int[] inv_lens = getSVLen(INFO);
+            if (alts_str.length != inv_lens.length) {
+                throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.");
+            }
+            for (int i = 0; i < alts_str.length; i++) {
+                if (!alts_str[i].startsWith("<")) {
+                    throw new IllegalArgumentException("ERROR: symbolic alleles are mixed with non-symbolic alleles");
+                }
+            }
+        }
+        if (ALT.startsWith("<INV>")) {
             // inversion SV
 
             int inv_lens[] = getSVLen(INFO);
@@ -367,7 +388,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 log.error("skipping...");
                 return null;
             }
-        } else if (ALT.equals("<DUP>") || ALT.equals("<DUP:TANDEM>")) {
+        } else if (ALT.startsWith("<DUP>") || ALT.startsWith("<DUP:TANDEM>")) {
             // duplication or tandem duplication SV
             int dup_lens[] = getSVLen(INFO);
             int end_loc = getEndInfo(INFO); // may need to check inconsistency
@@ -418,7 +439,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 return null;
             }
 
-        } else if (ALT.equals("<INS>")) {
+        } else if (ALT.startsWith("<INS>")) {
             // insertion SV
 
             int ins_lens[] = getSVLen(INFO);
@@ -453,7 +474,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 log.error("skipping...");
                 return null;
             }
-        } else if (ALT.equals("<DEL>")) {
+        } else if (ALT.startsWith("<DEL>")) {
             // deletion SV
             // but... we don't have the reference... so we add some random sequence?
 
