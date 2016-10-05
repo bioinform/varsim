@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.IllegalFormatException;
 import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -18,6 +17,7 @@ import java.util.regex.Pattern;
 public class VCFparser extends GzFileParser<Variant> {
     private final static Logger log = Logger.getLogger(VCFparser.class.getName());
 
+    //TODO: rename to get rid of _ prefix
     private Random _rand = null;
 
     private int _id_ind = -1;
@@ -25,7 +25,7 @@ public class VCFparser extends GzFileParser<Variant> {
     private boolean _pass = false;
     private boolean chrom_exists = false;
 
-    private VCFparser() {
+    public VCFparser() {
         _id_ind = 10; // the first sample
     }
 
@@ -64,6 +64,7 @@ public class VCFparser extends GzFileParser<Variant> {
         this(fileName, id, pass, null);
     }
 
+    //TODO: remove unused constructor
     /**
      * Reads a VCF file line by line, if there are multiple individuals, takes the first one
      *
@@ -74,6 +75,7 @@ public class VCFparser extends GzFileParser<Variant> {
         this(fileName, null, pass, rand);
     }
 
+    //TODO: remove unused constructor
     /**
      * Reads a VCF file line by line, if there are multiple individuals, takes the first one
      *
@@ -158,7 +160,7 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param chr  chromosome we are dealing with, some are haploid, need to assign parent
      * @return true if the variant is phased
      */
-    boolean splitGeno(String geno, byte[] vals, ChrString chr) {
+    boolean isPhased(String geno, byte[] vals, ChrString chr) {
         boolean is_phased = false;
 
         geno = geno.trim();
@@ -222,6 +224,10 @@ public class VCFparser extends GzFileParser<Variant> {
     /**
      * takes a line from a VCF file, parse it,
      * return a Variant object
+     *
+     * right now the meta-info lines (beginning with ##) are
+     * not tied with data line parsing. This will be corrected
+     * in the future (perhaps with help of HTSJDK).
      * @param line
      * @return
      */
@@ -280,7 +286,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 FORMAT = toks.nextToken();
                 genotype_ind = getFormatKeyIndex(FORMAT, "GT");
                 copynum_ind = getFormatKeyIndex(FORMAT, "CN");
-            } else if (index == _id_ind) { // Phasing
+            } else if (index == _id_ind) { // phased or unphased genotype
                 sampleInfo = (toks.nextToken()).split(":");
                 if (genotype_ind >= 0) {
                     phase = sampleInfo[genotype_ind];
@@ -296,6 +302,7 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         // unknown chromosome
+        // TODO: throw an exception for unknown chromosome name
         if (chr == null) {
             log.warn("Bad chromosome name: " + line);
             return null;
@@ -305,9 +312,11 @@ public class VCFparser extends GzFileParser<Variant> {
             //log.warn("not pass line" + line);
             return null; // Filtered out
         }
-        // parse the phase
+        // parse the phased or unphased genotype
+        //TODO: rename variable names to remove underscores
         byte[] phase_val = new byte[2]; // paternal-maternal
-        boolean is_phased = splitGeno(phase, phase_val, chr);
+        //TODO: is_phased should be changed to is_genotype_phased
+        boolean is_phased = isPhased(phase, phase_val, chr);
 
 
         if (genotype_ind >= 0 && phase_val[0] == 0 && phase_val[1] == 0) {
@@ -320,13 +329,16 @@ public class VCFparser extends GzFileParser<Variant> {
         boolean is_cn_phased;
 
         if (copynum_ind >= 0) {
-            is_cn_phased = splitGeno(copy_num, copy_num_val, chr);
+            is_cn_phased = isPhased(copy_num, copy_num_val, chr);
             if (is_cn_phased != is_phased) {
                 // TODO maybe don't throw error, this is not standard format
                 // anyways
                 log.error("Inconsistent copy number:");
                 log.error(line);
                 return null;
+            }
+            if ((phase_val[0] == phase_val[1]) != (copy_num_val[0] == copy_num_val[1])) {
+                throw new IllegalArgumentException("ERROR: genotype does not agree with copy number.\n" + line);
             }
         }
 
@@ -339,7 +351,8 @@ public class VCFparser extends GzFileParser<Variant> {
 
         /*if symbolic alleles are present,
         make sure # of alleles equal # of
-        SV lengths
+        SV lengths. For non-symbolic alleles, SV lengths
+        are not really used or checked.
          */
         /*!!!!!!!!!!
         CAUTION: we assume symbolic alleles are not mixed
@@ -349,11 +362,11 @@ public class VCFparser extends GzFileParser<Variant> {
             String[] alts_str = ALT.split(",");
             int[] inv_lens = getSVLen(INFO);
             if (alts_str.length != inv_lens.length) {
-                throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.");
+                throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
             }
             for (int i = 0; i < alts_str.length; i++) {
                 if (!alts_str[i].startsWith("<")) {
-                    throw new IllegalArgumentException("ERROR: symbolic alleles are mixed with non-symbolic alleles");
+                    throw new IllegalArgumentException("ERROR: symbolic alleles are mixed with non-symbolic alleles.\n" + line);
                 }
             }
         }
@@ -542,6 +555,8 @@ public class VCFparser extends GzFileParser<Variant> {
              account for the removal.
             */
              // TODO: This needs to be updated to account for multiple matching reference bases
+            //e.g. ref=AT alt=ATC (VCFv4.1 spec requires only 1-bp before event, but it might
+            //not be the case all the time.
 
             if (REF.length() > 0) {
                 boolean same = true;
