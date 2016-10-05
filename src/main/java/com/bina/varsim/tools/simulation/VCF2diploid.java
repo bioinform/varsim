@@ -784,6 +784,15 @@ public class VCF2diploid {
 
     /**
      * generate VCF file header
+     *
+     * a little explanation about translocation-related meta-info lines:
+     * each locus involved in translocations is modeled independently as
+     * a cut-paste event with slight variations for different types of
+     * translocations. Basically, a region at locus A (the sink) will be
+     * cut (deleted), and a region at locus B (the source) will be placed
+     * at the sink. The placement may be: complete transfer; complete transfer
+     * with inversion; no transfer (one-way or unbalanced translocation).
+     *
      * @param referenceFileName reference file name
      * @param sampleNames list of sample names
      * @return
@@ -793,6 +802,12 @@ public class VCF2diploid {
                 "##reference=" + referenceFileName + "\n" +
                 "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
+                "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
+                "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+                "##INFO=<ID=CHR2,Number=A,Type=Integer,Description=\"Chromosome of source sequence\">\n" +
+                "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
+                " source sequence deleted (SELFISHNESS); source sequence accepted (CHIVALRY); reverse complement "
+                + "of source sequence accepted (SYMPATHY).\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
                 "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
@@ -805,6 +820,7 @@ public class VCF2diploid {
                 "##ALT=<ID=INV,Description=\"Inversion\">\n" +
                 "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
                 "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
+                "##ALT=<ID=TRA,Description=\"Translocation\">\n" +
                 "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
         StringJoiner joiner = new StringJoiner("\t");
         for (String id : sampleNames) {
