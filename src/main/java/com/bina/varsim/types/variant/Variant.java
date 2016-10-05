@@ -19,8 +19,7 @@ public class Variant implements Comparable<Variant>{
     public VariantOverallType original_type = null;
     // use a seed for reproducibility, should be an option or global
     private Random _rand = null;
-    //what does _del mean exactly? length of reference allele?
-    private int _pos = -1, _del = -1;
+    private int _pos = -1, _referenceAlleleLength = -1;
     private byte[] _ref;
     private ChrString _chr;
     private FlexSeq[] _alts;
@@ -39,13 +38,13 @@ public class Variant implements Comparable<Variant>{
         _rand = rand;
     }
 
-    public Variant(ChrString chr, int pos, int del, byte[] ref,
+    public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
-        this(chr, pos, del, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
     }
 
-    public Variant(ChrString chr, int pos, int del, byte[] ref,
+    public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted, Random rand) {
         this(rand);
@@ -55,7 +54,7 @@ public class Variant implements Comparable<Variant>{
 
         _chr = chr;
         _pos = pos;
-        _del = del;
+        _referenceAlleleLength = referenceAlleleLength;
 
         // TODO we should put the reference matching code here
         _ref = ref.clone();
@@ -79,7 +78,7 @@ public class Variant implements Comparable<Variant>{
         _var_id = var._var_id;
         _chr = var._chr;
         _pos = var._pos;
-        _del = var._del;
+        _referenceAlleleLength = var._referenceAlleleLength;
         _ref = var._ref.clone();
         _ref_deleted = var._ref_deleted;
         _alts = new FlexSeq[var._alts.length];
@@ -185,14 +184,14 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-     * return the length of the deletion.
+     * return the length of the getReferenceAlleleLength.
      * This is currently simply the length of the reference sequence that will
      * be replaced
      *
-     * @return the length of the deletion
+     * @return the length of the getReferenceAlleleLength
      */
-    public int deletion() {
-        return _del;
+    public int getReferenceAlleleLength() {
+        return _referenceAlleleLength;
     }
 
     /**
@@ -234,11 +233,11 @@ public class Variant implements Comparable<Variant>{
 
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
-    // and deletion
+    // and getReferenceAlleleLength
     public int maxLen(int ind) {
         if (ind <= 0 || ind > _alts.length)
             return 0;
-        return Math.max(_del, _alts[ind - 1].length());
+        return Math.max(_referenceAlleleLength, _alts[ind - 1].length());
     }
 
     public int maxLen() {
@@ -261,11 +260,11 @@ public class Variant implements Comparable<Variant>{
     gets the interval enclosing the variant on the reference genome
     */
     public SimpleInterval1D get_interval(int ind) {
-        if (ind == 0 || _del == 0) {
+        if (ind == 0 || _referenceAlleleLength == 0) {
             return new SimpleInterval1D(_pos, _pos);
         }
 
-        return new SimpleInterval1D(_pos, _pos + _del - 1);
+        return new SimpleInterval1D(_pos, _pos + _referenceAlleleLength - 1);
     }
 
     /*
@@ -330,9 +329,9 @@ public class Variant implements Comparable<Variant>{
 
     // TODO this is wrong, but it only effects the count of variant bases
     public int variantBases() {
-        int ret = _del;
+        int ret = _referenceAlleleLength;
         for (FlexSeq _alt : _alts) {
-            if (_del != _alt.length()) {
+            if (_referenceAlleleLength != _alt.length()) {
                 ret += _alt.length();
             }
         }
@@ -366,7 +365,7 @@ public class Variant implements Comparable<Variant>{
         }
 
         int inslen = insertion_len(ind);
-        int dellen = _del;
+        int dellen = _referenceAlleleLength;
         if (inslen == 0 && dellen == 0) {
             return VariantType.Reference;
         } else if (inslen == 1 && dellen == 1) {
@@ -649,7 +648,7 @@ public class Variant implements Comparable<Variant>{
 
         Variant variant = (Variant) o;
 
-        if (_del != variant._del) return false;
+        if (_referenceAlleleLength != variant._referenceAlleleLength) return false;
         if (_isPhased != variant._isPhased) return false;
         if (_maternal != variant._maternal) return false;
         if (_paternal != variant._paternal) return false;
@@ -676,7 +675,7 @@ public class Variant implements Comparable<Variant>{
         result = 31 * result + full_idx;
         result = 31 * result + (original_type != null ? original_type.hashCode() : 0);
         result = 31 * result + _pos;
-        result = 31 * result + _del;
+        result = 31 * result + _referenceAlleleLength;
         result = 31 * result + (_ref != null ? Arrays.hashCode(_ref) : 0);
         result = 31 * result + (_chr != null ? _chr.hashCode() : 0);
         result = 31 * result + (_alts != null ? Arrays.hashCode(_alts) : 0);
@@ -710,11 +709,11 @@ public class Variant implements Comparable<Variant>{
             VariantType t = getType(i + 1);
 
             if (t == VariantType.Deletion) {
-                len.append(-_del + _alts[i].length()); // negative for deletions
+                len.append(-_referenceAlleleLength + _alts[i].length()); // negative for deletions
             } else if (t == VariantType.Complex) {
                 int alt_len = _alts[i].length();
-                if (_del > alt_len) {
-                    len.append(-_del);
+                if (_referenceAlleleLength > alt_len) {
+                    len.append(-_referenceAlleleLength);
                 } else {
                     len.append(alt_len);
                 }
@@ -728,9 +727,9 @@ public class Variant implements Comparable<Variant>{
 
     public void calculateExtraBase(final Sequence refSeq) {
         for (final FlexSeq alt : _alts) {
-            if (alt.isSeq() && alt.length() == 0 && getPos() + _del < refSeq.length()) {
+            if (alt.isSeq() && alt.length() == 0 && getPos() + _referenceAlleleLength < refSeq.length()) {
                 //why extrabase is only 1-bp long?
-                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _del ));
+                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _referenceAlleleLength));
             }
         }
     }

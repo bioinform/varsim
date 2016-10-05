@@ -134,13 +134,13 @@ public class VCF2diploid {
         for (String _vcfFile : vcfs) {
             VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
             /*
-            apparently, n_ev is for # of variants
-            var_nucs is for # of nucleotides in variants
-            var_nucs is an approximate indicator for length of variants
+            apparently, nVariant is for # of variants
+            nVariantBase is for # of nucleotides in variants
+            nVariantBase is an approximate indicator for length of variants
             because it involves both reference allele and alternative
             alleles.
              */
-            int n_ev = 0, var_nucs = 0;
+            int nVariant = 0, nVariantBase = 0;
             while (parser.hasMoreInput()) {
                 Variant var = parser.parseLine();
                 if (var == null) {
@@ -162,28 +162,11 @@ public class VCF2diploid {
                     variants.put(chr, new ArrayList<Variant>());
                 }
                 variants.get(chr).add(var);
-                n_ev++;
-                var_nucs += var.variantBases();
+                nVariant++;
+                nVariantBase += var.variantBases();
             }
-            System.out.println(_vcfFile + ": " + n_ev + " variants, "
-                    + var_nucs + " variant bases");
-        }
-    }
-
-    /**
-     * add variant var on chromosome chr to variants
-     *
-     * @param chr chromosome where var is at
-     * @param var variant to be added
-     */
-    private void addVariant(ChrString chr, Variant var) {
-        List<Variant> temp = variants.get(chr);
-        if (temp == null) {
-            temp = new ArrayList<>();
-            temp.add(var);
-            variants.put(chr, temp);
-        } else {
-            temp.add(var);
+            System.out.println(_vcfFile + ": " + nVariant + " variants, "
+                    + nVariantBase + " variant bases");
         }
     }
 
@@ -245,8 +228,8 @@ public class VCF2diploid {
             final List<Boolean> paternalIsVariantAdded = new ArrayList<>();
 
             int len = referenceSequence.length();
-            byte[] maternalSequence = new byte[len];
-            byte[] paternalSequence = new byte[len];
+            byte[] maternalMaskedSequence = new byte[len];
+            byte[] paternalMaskedSequence = new byte[len];
             // byte[] ins_flag = new byte[len];
             // Flag specification:
             // b -- insertion in both haplotypes
@@ -257,7 +240,7 @@ public class VCF2diploid {
             // fill both maternal and paternal with the original reference
             // sequence
             for (int c = 1; c <= len; c++) {
-                maternalSequence[c - 1] = paternalSequence[c - 1] = referenceSequence.byteAt(c);
+                maternalMaskedSequence[c - 1] = paternalMaskedSequence[c - 1] = referenceSequence.byteAt(c);
             }
 
             Hashtable<Integer, FlexSeq> paternalInsertionSeq = new Hashtable<>(150);
@@ -272,7 +255,7 @@ public class VCF2diploid {
                 }
 
                 if (var.paternal() > 0) {
-                    if (addVariant(paternalSequence, referenceSequence, var, var.paternal(),
+                    if (addVariant(paternalMaskedSequence, referenceSequence, var, var.paternal(),
                             paternalInsertionSeq)) {
                         nPaternalVariant++;
                         nPaternalVariantBase += var.variantBases();
@@ -285,7 +268,7 @@ public class VCF2diploid {
                 }
 
                 if (var.maternal() > 0) {
-                    if (addVariant(maternalSequence, referenceSequence, var, var.maternal(),
+                    if (addVariant(maternalMaskedSequence, referenceSequence, var, var.maternal(),
                             maternalInsertionSeq)) {
                         nMaternalVariant++;
                         nMaternalVariantBase += var.variantBases();
@@ -308,8 +291,8 @@ public class VCF2diploid {
             if (output_paternal) {
                 String paternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[1];
                 String paternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
-                makePosMap(map_string, paternalSequenceName, referenceSequence, paternalSequence, paternalInsertionSeq);
-                writeHaploid(paternalSequence, paternalInsertionSeq, paternalSequenceName, paternalSequenceFileName);
+                makePosMap(map_string, paternalSequenceName, referenceSequence, paternalMaskedSequence, paternalInsertionSeq);
+                writeHaploid(paternalMaskedSequence, paternalInsertionSeq, paternalSequenceName, paternalSequenceFileName);
                 System.out.println("Applied " + nPaternalVariant + " variants "
                         + nPaternalVariantBase + " bases to " + "paternal genome.");
             }
@@ -317,8 +300,8 @@ public class VCF2diploid {
             if (output_maternal) {
                 String maternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[0];
                 String maternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
-                makePosMap(map_string, maternalSequenceName, referenceSequence, maternalSequence, maternalInsertionSeq);
-                writeHaploid(maternalSequence, maternalInsertionSeq, maternalSequenceName, maternalSequenceFileName);
+                makePosMap(map_string, maternalSequenceName, referenceSequence, maternalMaskedSequence, maternalInsertionSeq);
+                writeHaploid(maternalMaskedSequence, maternalInsertionSeq, maternalSequenceName, maternalSequenceFileName);
                 System.out.println("Applied " + nMaternalVariant + " variants "
                         + nMaternalVariantBase + " bases to " + "maternal genome.");
             }
@@ -339,9 +322,9 @@ public class VCF2diploid {
 
     /**
      * add variant onto the perturbed genome
-     * new_seq consists of base pairs (if no deletion occurs)
+     * maskedSequence consists of base pairs (if no deletion occurs)
      * and flags for deletions. for each insertion,
-     * position and inserted sequence will be put into ins_seq.
+     * position and inserted sequence will be put into InsertPosition2Sequence.
      * Note here, a SNP is modeled as 1-bp del+1-bp insertion,
      * MVN is modeled as multiple 1-bp del + multiple 1-bp
      * insertion. Inversion modeled as deletion + insertion of
@@ -351,61 +334,63 @@ public class VCF2diploid {
      * variants out of bound or overlap with previous variants
      * will be discarded.
      *
-     * @param new_seq -- sequence to be modified
-     * @param ref_seq -- reference sequence
-     * @param ins_seq --  that records insertion locations
+     * @param maskedSequence -- sequence to be modified, it's a masked version of original sequence in array data structure
+     * @param referenceSequence -- reference sequence
+     * @param InsertPosition2Sequence --  records insertion locations and sequences
      * @return true if the variant is incorporated, false otherwise
      */
-    private boolean addVariant(byte[] new_seq, Sequence ref_seq,
-                               Variant variant, int allele, Hashtable<Integer, FlexSeq> ins_seq) {
+    private boolean addVariant(byte[] maskedSequence, Sequence referenceSequence,
+                               Variant variant, int allele, Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
 
-        //pos     -- position of the variant
-        int pos = variant.getPos();
-        //del     -- length of reference sequence of the deletion
-        //for a SNP, del == 1, so instead of substitution, a SNP
-        //is modeled as one-bp del + one-bp insertion
-        int del = variant.deletion();
-        //                ins -- the insertion string
-        byte[] ins = variant.insertion(allele);
-        VariantType var_type = variant.getType(allele);
-
-        //System.err.println(variant);
-        //System.err.println(var_type);
+        //position     -- position of the variant
+        //start is 1-based
+        int position = variant.getPos();
+        //referenceAlleleLength     -- length of reference sequence of the getReferenceAlleleLength
+        //for a SNP, referenceAlleleLength == 1, so instead of substitution, a SNP
+        //is modeled as one-bp referenceAlleleLength + one-bp insertion
+        int referenceAlleleLength = variant.getReferenceAlleleLength();
+        //insertions -- the insertion string
+        byte[] insertions = variant.insertion(allele);
+        VariantType variantType = variant.getType(allele);
 
         boolean overlap = false;
 
         /*
-        assuming 1-based index, (pos + del - 1 ) - pos + 1 = del
-        so pos + del - 1 (instead of pos + del) is the correct
+        assuming 1-based index, (position + referenceAlleleLength - 1 ) - position + 1 = referenceAlleleLength
+        so position + referenceAlleleLength - 1 (instead of position + referenceAlleleLength) is the correct
         index for end, and it should not exceed length of original
         sequence.
          */
-        if (pos > new_seq.length || pos + del - 1> new_seq.length) {
+        if (position > maskedSequence.length || position + referenceAlleleLength - 1> maskedSequence.length) {
             log.warn("Variant out of chromosome bounds at "
-                    + ref_seq.getName() + ":" + pos + ", (del,ins) of (" + del
-                    + "," + Arrays.toString(ins) + "). Skipping.");
+                    + referenceSequence.getName() + ":" + position + ", (referenceAlleleLength,insertions) of (" + referenceAlleleLength
+                    + "," + Arrays.toString(insertions) + "). Skipping.");
             return false;
         }
 
-        for (int p = pos; p < pos + del; p++) {
+        /*
+        variants in the same haplotype should never overlap.
+        Otherwise, they should be merged at first place.
+         */
+        for (int p = position; p < position + referenceAlleleLength; p++) {
             // if any location of this variant overlap a deleted base or a SNP, we skip it
             // DELETED_BASE is used as a flag to mark that this position has been processed/modified
-            if (new_seq[p - 1] == DELETED_BASE
+            if (maskedSequence[p - 1] == DELETED_BASE
                     // insertions may not be next to SNPs or deletions, this is to avoid problem of DUP/INV
-                    //why p - 1 for new_seq? is it 1-based or 0-based?
-                    || new_seq[p - 1] != ref_seq.byteAt(p)) {
+                    //why p - 1 for maskedSequence? is it 1-based or 0-based?
+                    || maskedSequence[p - 1] != referenceSequence.byteAt(p)) {
                 overlap = true;
             }
         }
 
         if (overlap) {
             try {
-                if (ins != null) {
-                    log.warn("Variant overlap at " + ref_seq.getName() + ":"
-                            + pos + ", (del,ins) of (" + del + "," + new String(ins, "US-ASCII") + "). Skipping.");
+                if (insertions != null) {
+                    log.warn("Variant overlap at " + referenceSequence.getName() + ":"
+                            + position + ", (referenceAlleleLength,insertions) of (" + referenceAlleleLength + "," + new String(insertions, "US-ASCII") + "). Skipping.");
                 } else {
-                    log.warn("Variant overlap at " + ref_seq.getName() + ":"
-                            + pos + ", (del,ins) of (" + del + ",<imprecise>). Skipping.");
+                    log.warn("Variant overlap at " + referenceSequence.getName() + ":"
+                            + position + ", (referenceAlleleLength,insertions) of (" + referenceAlleleLength + ",<imprecise>). Skipping.");
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -413,37 +398,37 @@ public class VCF2diploid {
             return false;
         }
 
-        if (del == 1 && (ins != null && ins.length == 1)) { // SNP
+        if (referenceAlleleLength == 1 && (insertions != null && insertions.length == 1)) { // SNP
             // this is to maintain the reference repeat annotations
-            if (Character.isLowerCase((char) ref_seq.byteAt(pos))) {
-                new_seq[pos - 1] = (byte) Character.toLowerCase((char) ins[0]);
+            if (Character.isLowerCase((char) referenceSequence.byteAt(position))) {
+                maskedSequence[position - 1] = (byte) Character.toLowerCase((char) insertions[0]);
             } else {
-                new_seq[pos - 1] = (byte) Character.toUpperCase((char) ins[0]);
+                maskedSequence[position - 1] = (byte) Character.toUpperCase((char) insertions[0]);
             }
-        } else if (var_type == VariantType.MNP) {
+        } else if (variantType == VariantType.MNP) {
             // add this as a bunch of SNPs
             // TODO this may result in other variants getting added in between
-            for (int i = pos; i < pos + del; i++) {
+            for (int i = position; i < position + referenceAlleleLength; i++) {
                 // add each SNP
-                assert ins != null;
-                if (Character.isLowerCase((char) ref_seq.byteAt(i))) {
-                    new_seq[i - 1] = (byte) Character.toLowerCase((char) ins[i - pos]);
+                assert insertions != null;
+                if (Character.isLowerCase((char) referenceSequence.byteAt(i))) {
+                    maskedSequence[i - 1] = (byte) Character.toLowerCase((char) insertions[i - position]);
                 } else {
-                    new_seq[i - 1] = (byte) Character.toUpperCase((char) ins[i - pos]);
+                    maskedSequence[i - 1] = (byte) Character.toUpperCase((char) insertions[i - position]);
                 }
             }
 
         } else { // Indel, SV
             // check whether the insertion location has been inserted before
-            if (ins_seq.get(pos) != null) {
+            if (InsertPosition2Sequence.get(position) != null) {
                 log.warn("Multiple insertions at "
-                        + ref_seq.getName() + ":" + pos);
+                        + referenceSequence.getName() + ":" + position);
                 try {
-                    if (ins != null) {
-                        log.warn("Skipping variant with (del,ins) of (" + del
-                                + "," + new String(ins, "US-ASCII") + ").");
+                    if (insertions != null) {
+                        log.warn("Skipping variant with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
+                                + "," + new String(insertions, "US-ASCII") + ").");
                     } else {
-                        log.warn("Skipping variant with (del,ins) of (" + del
+                        log.warn("Skipping variant with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
                                 + ", <imprecise> ).");
                     }
                 } catch (UnsupportedEncodingException e) {
@@ -452,53 +437,51 @@ public class VCF2diploid {
                 return false;
             }
 
-            if (var_type == VariantType.Inversion) {
-                // Treat this as deletion then insertion of reverse complement
+            if (variantType == VariantType.Inversion) {
+                // Treat this as getReferenceAlleleLength then insertion of reverse complement
                 //System.err.println("Insert INV");
-                del = variant.insertion_len(allele);
-                ins = ref_seq.revComp(pos, pos + del);
+                referenceAlleleLength = variant.insertion_len(allele);
+                insertions = referenceSequence.revComp(position, position + referenceAlleleLength);
             }
 
-            if (var_type == VariantType.Tandem_Duplication) {
-                // treat this as deletion then insertion of several copies
+            if (variantType == VariantType.Tandem_Duplication) {
+                // treat this as getReferenceAlleleLength then insertion of several copies
                 // this prevents the original sequence to be altered and
                 // become less like a duplication
                 // TODO make length correct
                 // System.err.println("Insert DUP");
 
-                del = variant.insertion_len(allele);
+                referenceAlleleLength = variant.insertion_len(allele);
                 int single_ins_len = variant.insertion_len(allele);
-                byte[] orig_seq = ref_seq.subSeq(pos, pos + single_ins_len);
-                ins = new byte[single_ins_len * variant.getCN(allele)];
-                System.arraycopy(orig_seq, 0, ins, 0, orig_seq.length);
-                for (int i = 0; i < ins.length; i++) {
-                    ins[i] = orig_seq[i % (orig_seq.length)];
+                byte[] orig_seq = referenceSequence.subSeq(position, position + single_ins_len);
+                insertions = new byte[single_ins_len * variant.getCN(allele)];
+                System.arraycopy(orig_seq, 0, insertions, 0, orig_seq.length);
+                for (int i = 0; i < insertions.length; i++) {
+                    insertions[i] = orig_seq[i % (orig_seq.length)];
                 }
             }
 
             // set to deleted base, so that we don't change those in future
-            for (int p = pos; p < pos + del; p++) {
-                new_seq[p - 1] = DELETED_BASE;
+            for (int p = position; p < position + referenceAlleleLength; p++) {
+                maskedSequence[p - 1] = DELETED_BASE;
             }
 
             // matter
-            // TODO if ins is null we still need to add??
-            if (ins != null && ins.length > 0) {
+            // TODO if insertions is null we still need to add??
+            if (insertions != null && insertions.length > 0) {
                 // convert to flexseq
-                FlexSeq s = new FlexSeq(ins);
+                FlexSeq s = new FlexSeq(insertions);
                 s.setType(variant.getAlt(allele).getType());
                 s.setCopy_num(variant.getAlt(allele).getCopy_num());
                 s.setLength(variant.getAlt(allele).length());
                 s.setVar_id(variant.getVar_id());
 
-                //System.err.println("Real Insert: " + s.getType());
-
                 /*
-                so although we model SNP as del+ins, we do not record
+                so although we model SNP as deletion+insertions, we do not record
                 their insert locus. We only record insert loci of indel
                 and SVs.
                  */
-                ins_seq.put(new Integer(pos), s);
+                InsertPosition2Sequence.put(new Integer(position), s);
             }
         }
 
@@ -558,7 +541,7 @@ public class VCF2diploid {
 
         // compute what the first line is and store as object
 
-        // if it is inserted, we copy the var_id to the deletion
+        // if it is inserted, we copy the var_id to the getReferenceAlleleLength
         boolean inserted = false;
         String var_id = ".";
         if (ins_seq.containsKey(idx + 1)) {
@@ -759,7 +742,7 @@ public class VCF2diploid {
      * genome are required.
      *
      * here, insertion has broader meaning as all variants are
-     * considered combinations of insertion + deletion
+     * considered combinations of insertion + getReferenceAlleleLength
      *
      * instead of calling writeDiploid and then writeMultiploid
      * since we really only have two haplotypes, we can call

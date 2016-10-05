@@ -106,12 +106,12 @@ public class RandDGV2VCF extends randVCFgenerator {
             while (!var.setNovelPosition(new_pos, ref)) {
                 if (time_out > 100) {
                     log.warn("Error, cannot set novel position: " + (end_val - start_val + 1));
-                    log.warn(var.deletion());
+                    log.warn(var.getReferenceAlleleLength());
                     log.warn(var);
                     //System.exit(1);
                 }
 
-                log.info(time_out + " : " + new_pos + " : " + var.deletion());
+                log.info(time_out + " : " + new_pos + " : " + var.getReferenceAlleleLength());
 
                 new_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 time_out++;
