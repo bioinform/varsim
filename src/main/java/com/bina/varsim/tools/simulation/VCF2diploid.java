@@ -2,10 +2,7 @@ package com.bina.varsim.tools.simulation;
 
 //--- Java imports ---
 
-import com.bina.varsim.types.ChrString;
-import com.bina.varsim.types.FlexSeq;
-import com.bina.varsim.types.GenderType;
-import com.bina.varsim.types.Sequence;
+import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
@@ -27,10 +24,10 @@ import java.util.*;
  */
 
 public class VCF2diploid {
-
+    final int LineWidth = 50; // this is default for FASTA files
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
-    private final static char DELETED_BASE = '~';
+    public final static char DELETED_BASE = '~';
     private final static String[] DIPLOID_CHRS = {"maternal", "paternal"};
 
     private File outputMap;
@@ -167,6 +164,10 @@ public class VCF2diploid {
             }
             System.out.println(_vcfFile + ": " + nVariant + " variants, "
                     + nVariantBase + " variant bases");
+        }
+        //sort variants of each chromosome by coordinates
+        for (ChrString chr : variants.keySet()) {
+            Collections.sort(variants.get(chr));
         }
     }
 
@@ -488,171 +489,7 @@ public class VCF2diploid {
         return true;
     }
 
-    /**
-     * adjust indeces(positions) of host genome and reference genome
-     * based on variant type
-     * @param curr_rec current record in map file
-     * @param hf_idx host to reference genome index
-     */
-    private void adjust_idx(MapRecord curr_rec, HostRefIdx hf_idx) {
-        switch (curr_rec.feature) {
-            case "SEQ":
-                hf_idx.host_idx += curr_rec.len;
-                hf_idx.ref_idx += curr_rec.len;
-                break;
-            case "DEL":
-                hf_idx.ref_idx += curr_rec.len;
-                break;
-            case "INS":
-                hf_idx.host_idx += curr_rec.len;
-                break;
-            case "DUP_TANDEM":
-                hf_idx.host_idx += curr_rec.len;
-                break;
-            case "INV":
-                hf_idx.host_idx += curr_rec.len;
-                break;
-        }
-    }
 
-    /**
-     * create a new map file record based on the variant or sequence object stored at ins_seq[idx]
-     * from the perspective of good programming practice, it's better to iterate over all variants
-     * in ins_seq rather than using idx.
-     * after the record is created, advance host genome and reference indices so we know where next
-     * event occurs. For some variants, e.g. TANDEM_DUP, several records will be created on the fly
-     * and got appended to output string sb.
-     * TODO: separate creation of new map file records with appending to output string (for simplification)
-     *
-     * @param sb output string
-     * @param idx position of examination
-     * @param chr_name
-     * @param ref_chr_name
-     * @param hf_idx
-     * @param genome
-     * @param ins_seq
-     * @return
-     */
-    private MapRecord new_curr_rec(StringBuilder sb, int idx, String chr_name, String ref_chr_name, HostRefIdx hf_idx,
-                                   byte[] genome, Hashtable<Integer, FlexSeq> ins_seq) {
-        MapRecord curr_rec = new MapRecord();
-        curr_rec.host_chr = chr_name;
-        curr_rec.ref_chr = ref_chr_name;
-
-        // compute what the first line is and store as object
-
-        // if it is inserted, we copy the var_id to the getReferenceAlleleLength
-        boolean inserted = false;
-        String var_id = ".";
-        if (ins_seq.containsKey(idx + 1)) {
-            inserted = true;
-            // insertion at this location
-            FlexSeq ins = ins_seq.get(idx + 1);
-            var_id = ins.getVar_id();
-
-            //System.err.println("Check type: " + ins.getType());
-
-            // need to check what kind of insertion it is
-            switch (ins.getType()) {
-                case SEQ:
-                case INS:
-                    curr_rec.host_pos = hf_idx.host_idx;
-                    curr_rec.ref_pos = hf_idx.ref_idx - 1;
-                    curr_rec.feature = "INS";
-                    curr_rec.dir = true;
-                    curr_rec.len = ins.var_length();
-                    curr_rec.var_id = var_id;
-
-                    break;
-                case INV:
-                    // TODO: treat inversion like MNP
-                    curr_rec.host_pos = hf_idx.host_idx;
-                    /*position of inversion on reference genome is questionable
-                    inversion does not change length of reference, so is it
-                    still necessary to set its position on reference as 1bp
-                    before the event?
-                    */
-                    curr_rec.ref_pos = hf_idx.ref_idx - 1;
-                    curr_rec.feature = "INV";
-                    //why direction is false (negative strand)?
-                    curr_rec.dir = false;
-                    curr_rec.len = ins.var_length();
-                    curr_rec.var_id = var_id;
-
-                    break;
-                case DUP:
-                    // need to replicate several blocks
-                    int cn = ins.getCopy_num();
-
-                    // first build one
-                    curr_rec.host_pos = hf_idx.host_idx;
-                    curr_rec.ref_pos = hf_idx.ref_idx - 1;
-                    curr_rec.feature = "DUP_TANDEM";
-                    curr_rec.dir = true;
-                    curr_rec.len = ins.length();
-                    curr_rec.var_id = var_id;
-
-                    // iterate
-                    for (int i = 1; i < cn; i++) {
-                        adjust_idx(curr_rec, hf_idx);
-                        sb.append(curr_rec);
-                        sb.append('\n');
-                        curr_rec = new MapRecord();
-                        curr_rec.host_chr = chr_name;
-                        curr_rec.ref_chr = ref_chr_name;
-                        curr_rec.host_pos = hf_idx.host_idx;
-                        curr_rec.ref_pos = hf_idx.ref_idx - 1;
-                        curr_rec.feature = "DUP_TANDEM";
-                        curr_rec.dir = true;
-                        curr_rec.len = ins.length();
-                        curr_rec.var_id = var_id;
-                    }
-
-                    break;
-            }
-
-            // output it
-            adjust_idx(curr_rec, hf_idx);
-            sb.append(curr_rec);
-            sb.append('\n');
-
-            curr_rec = new MapRecord();
-            curr_rec.host_chr = chr_name;
-            curr_rec.ref_chr = ref_chr_name;
-
-        }
-
-        if (genome[idx] == DELETED_BASE) {
-            // deleted base
-            curr_rec.host_pos = hf_idx.host_idx - 1;
-            curr_rec.ref_pos = hf_idx.ref_idx;
-            curr_rec.feature = "DEL";
-            curr_rec.dir = true;
-            /*
-            although length is 1 here, this is just the beginning
-            of a block, length may increase later (after current
-            method returns).
-             */
-            curr_rec.len = 1;
-            if (inserted) {
-                curr_rec.var_id = var_id;
-            }
-        } else {
-            // regular sequence
-            curr_rec.host_pos = hf_idx.host_idx;
-            curr_rec.ref_pos = hf_idx.ref_idx;
-            curr_rec.feature = "SEQ";
-            curr_rec.dir = true;
-            /*
-            although length is 1 here, this is just the beginning
-            of a block, length may increase later (after current
-            method returns).
-             */
-            curr_rec.len = 1;
-        }
-
-        return curr_rec;
-    }
 
     /**
      * iterate over the original sequence, create map file records
@@ -686,22 +523,22 @@ public class VCF2diploid {
         should always point to a locus upstream.
          */
 
-        // TODO deal with var_id
+        // TODO deal with varId
 
         // iterate through both genomes
 
         // these are 1-indexed
-        HostRefIdx hf_idx = new HostRefIdx();
-        hf_idx.host_idx = 1;
-        hf_idx.ref_idx = 1;
+        HostRefIdx hostRefIdx = new HostRefIdx();
+        hostRefIdx.hostIdx = 1;
+        hostRefIdx.refIdx = 1;
 
-        MapRecord curr_rec = new_curr_rec(sb, 0, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
+        MapRecord currentMapRecord = MapRecord.generateNewMapRecord(sb, 0, chr_name, ref_seq.getName(), hostRefIdx, genome, ins_seq);
 
         for (int idx = 1; idx < genome.length; idx++) {
             // if still in the same block increment the length
             boolean same_block = true;
 
-            switch (curr_rec.feature) {
+            switch (currentMapRecord.feature) {
                 case "DEL":
                     if (genome[idx] != DELETED_BASE || ins_seq.containsKey(idx + 1)) {
                         same_block = false;
@@ -718,22 +555,20 @@ public class VCF2diploid {
             }
 
             if (same_block) {
-                curr_rec.len++;
+                currentMapRecord.len++;
             } else {
                 // otherwise output the block
-                adjust_idx(curr_rec, hf_idx);
-                sb.append(curr_rec);
+                hostRefIdx.adjust_idx(currentMapRecord);
+                sb.append(currentMapRecord);
                 sb.append('\n');
 
-                curr_rec = new_curr_rec(sb, idx, chr_name, ref_seq.getName(), hf_idx, genome, ins_seq);
+                currentMapRecord = MapRecord.generateNewMapRecord(sb, idx, chr_name, ref_seq.getName(), hostRefIdx, genome, ins_seq);
             }
-
         }
 
         // make sure the block is outputted?
-        sb.append(curr_rec);
+        sb.append(currentMapRecord);
         sb.append('\n');
-
     }
 
     /**
@@ -773,22 +608,11 @@ public class VCF2diploid {
      * @param bw
      * @param name
      * @param genome
-     * @param ins_seq
+     * @param insertPosition2Sequence
      * @throws IOException
      */
     private void writeGenome(BufferedWriter bw, String name, byte[] genome,
-                             Hashtable<Integer, FlexSeq> ins_seq) throws IOException {
-        //TODO: escalate this to instance variable
-        final int line_width = 50; // this is default for FASTA files
-
-        // look-up table for where on the chromosome there are insertions
-        boolean[] ins_flag = new boolean[genome.length];
-        //TODO: refactor the iteration to enhanced for loop using keySet
-        Enumeration<Integer> enm = ins_seq.keys();
-        while (enm.hasMoreElements()) {
-            Integer key = enm.nextElement();
-            ins_flag[key - 1] = true;
-        }
+                             Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
 
         // write header
         bw.write(">" + name);
@@ -796,9 +620,9 @@ public class VCF2diploid {
 
         StringBuilder line = new StringBuilder();
         for (int p = 0; p < genome.length; p++) {
-            if (ins_flag[p]) {
+            if (insertPosition2Sequence.containsKey(p + 1)) {
                 //so inserted sequences are indexed by 1-based coordinates
-                byte[] new_seq = ins_seq.get(p + 1).getSeq();
+                byte[] new_seq = insertPosition2Sequence.get(p + 1).getSeq();
                 if (new_seq != null && new_seq.length > 0) {
                     line.append(new String(new_seq));
                 }
@@ -806,23 +630,21 @@ public class VCF2diploid {
             if (genome[p] != DELETED_BASE) {
                 line.append((char) genome[p]);
             }
-            //TODO: refactor output writing with line wrapping into a method
-            while (line.length() >= line_width) {
-                bw.write(line.toString(), 0, line_width);
+            while (line.length() >= LineWidth) {
+                bw.write(line.toString(), 0, LineWidth);
                 bw.newLine();
-                line.delete(0, line_width);
+                line.delete(0, LineWidth);
             }
         }
         while (line.length() > 0) {
             int n = line.length();
-            if (line_width < n) {
-                n = line_width;
+            if (LineWidth < n) {
+                n = LineWidth;
             }
             bw.write(line.toString(), 0, n);
             bw.newLine();
             line.delete(0, n);
         }
-
     }
 
     /*
@@ -845,21 +667,13 @@ public class VCF2diploid {
             bw.write(generateVCFHeader(chrfiles.get(0), idList));
 
             int num_vars = varList.size();
-            //it seems indexMap is not necessary here
-            //TODO: remove indexMap
-            final Map<Variant, Integer> indexMap = new HashMap<>();
+
             for (int i = 0; i < num_vars; i++) {
-                indexMap.put(varList.get(i), i);
-            }
-            Collections.sort(varList);
-
-            for (int i_ = 0; i_ < num_vars; i_++) {
-                final int i = indexMap.get(varList.get(i_));
-
                 if (!output_maternal && output_paternal && !paternal_added_variants.get(i)) {
                     /*
                     output_maternal==false, output_paternal==true, parternal_added_variants[i] == false
-                    paternal was supposed to be output, however, variant was discarded
+                    paternal was supposed to be output, however, variant was discarded due to ,e.g.,
+                    overlapping with other variants.
                      */
                     continue;
                 } else if (output_maternal && !output_paternal && !maternal_added_variants.get(i)) {
@@ -870,9 +684,7 @@ public class VCF2diploid {
                 if (paternal_added_variants.get(i)
                         || maternal_added_variants.get(i)) {
 
-                    // System.err.println("write var: " + i);
-
-                    Variant curr_var = varList.get(i_);
+                    Variant curr_var = varList.get(i);
                     curr_var.calculateExtraBase(ref_seq);
 
                     // chromosome name
@@ -968,7 +780,6 @@ public class VCF2diploid {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
     /**
@@ -1002,46 +813,4 @@ public class VCF2diploid {
         return VCFHeader + "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
                 (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
     }
-
-    //"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
-    // this is more like a struct :)
-    // I think MapRecord stands for records in MFF file (the map file)
-    class MapRecord {
-        public int len = 0;
-        public String host_chr = "";
-        public int host_pos = 0;
-        public String ref_chr = "";
-        public int ref_pos = 0;
-        public boolean dir = true; // true is forward
-        public String feature = ".";
-        public String var_id = ".";
-
-        public String toString() {
-            StringJoiner joiner = new StringJoiner("\t");
-            joiner.add(Integer.toString(len));
-            joiner.add(host_chr);
-            joiner.add(Integer.toString(host_pos));
-            joiner.add(ref_chr);
-            joiner.add(Integer.toString(ref_pos));
-            if (dir) {
-                joiner.add("+");
-            } else {
-                joiner.add("-");
-            }
-            joiner.add(feature);
-            joiner.add(var_id);
-
-            return joiner.toString();
-        }
-    }
-
-    /**
-     * class for storing host genome and
-     * reference genome index
-     */
-    private class HostRefIdx {
-        public int host_idx = 0;
-        public int ref_idx = 0;
-    }
-
 }

@@ -536,7 +536,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     ref_deleted = String.valueOf(REF.charAt(0));
                     REF = REF.substring(1);
 
-                    //System.err.println(var_id + " before :" + ref_deleted);
+                    //System.err.println(varId + " before :" + ref_deleted);
 
                     for (int i = 0; i < n; i++) {
                         alts[i] = new FlexSeq(alts[i].substring(1));
