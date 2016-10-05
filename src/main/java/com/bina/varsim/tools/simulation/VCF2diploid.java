@@ -791,7 +791,7 @@ public class VCF2diploid {
     private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
         String VCFHeader = "##fileformat=VCFv4.1\n" +
                 "##reference=" + referenceFileName + "\n" +
-                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
