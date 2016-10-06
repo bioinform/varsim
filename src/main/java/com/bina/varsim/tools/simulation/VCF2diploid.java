@@ -804,7 +804,7 @@ public class VCF2diploid {
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                 "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
                 "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
-                "##INFO=<ID=CHR2,Number=A,Type=Integer,Description=\"Chromosome of source sequence\">\n" +
+                "##INFO=<ID=CHR2,Number=A,Type=String,Description=\"Chromosome of source sequence\">\n" +
                 "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
                 " source sequence deleted (SELFISHNESS); source sequence accepted (CHIVALRY); reverse complement "
                 + "of source sequence accepted (SYMPATHY).\">\n" +
