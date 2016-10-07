@@ -4,11 +4,14 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.VCFInfo;
 import com.bina.varsim.types.variant.Variant;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.rmi.UnexpectedException;
+import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -87,15 +90,7 @@ public class VCFparser extends GzFileParser<Variant> {
     }
 
     public static void main(String args[]) {
-        VCFparser runner = new VCFparser();
-        Variant v = runner.process_line("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("12\t29557989\t.\tACTTT\tACGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        System.err.println(v);
-        v = runner.process_line("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
-        System.err.println(v); // TODO this one fails for now
+        //unit tests have been moved to test folder
     }
 
     /**
@@ -231,7 +226,7 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param line
      * @return
      */
-    public Variant process_line(String line) {
+    public Variant process_line(String line) throws UnexpectedException {
 
         // try to determine the column we should read for the genotype
         StringTokenizer toks = new StringTokenizer(line);
@@ -264,7 +259,7 @@ public class VCFparser extends GzFileParser<Variant> {
         int pos = -1;
         ChrString chr = null;
         String REF = "", FILTER = "", ALT = "", var_id = "";
-        String phase = ".", copy_num = "0/0", INFO = "", FORMAT;
+        String phase = ".", copy_num = "0/0", infoString = "", FORMAT;
         String[] sampleInfo;
         while (toks.hasMoreTokens()) {
             index++;
@@ -281,7 +276,7 @@ public class VCFparser extends GzFileParser<Variant> {
             else if (index == 7) // FILTER field
                 FILTER = toks.nextToken();
             else if (index == 8) // INFO field
-                INFO = toks.nextToken();
+                infoString = toks.nextToken();
             else if (index == 9) { // Output format
                 FORMAT = toks.nextToken();
                 genotype_ind = getFormatKeyIndex(FORMAT, "GT");
@@ -348,6 +343,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
         String ref_deleted = "";
         FlexSeq alts[];
+        VCFInfo info = new VCFInfo(infoString);
 
         /*if symbolic alleles are present,
         make sure # of alleles equal # of
@@ -360,7 +356,7 @@ public class VCFparser extends GzFileParser<Variant> {
          */
         if (ALT.indexOf('<') != -1) {
             String[] alts_str = ALT.split(",");
-            int[] inv_lens = getSVLen(INFO);
+            int[] inv_lens = (int[]) info.getValue("SVLEN");
             if (alts_str.length != inv_lens.length) {
                 throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
             }
@@ -373,8 +369,8 @@ public class VCFparser extends GzFileParser<Variant> {
         if (ALT.startsWith("<INV>")) {
             // inversion SV
 
-            int inv_lens[] = getSVLen(INFO);
-            int end_loc = getEndInfo(INFO); // TODO may need to check
+            int[] end_loc = (int[]) info.getValue("END");
+            int[] inv_lens = (int[]) info.getValue("SVLEN");
 
             ref_deleted = REF;
             byte[] refs = new byte[0];
@@ -389,8 +385,9 @@ public class VCFparser extends GzFileParser<Variant> {
                 // TODO this assumes only one alt
                 return new Variant(chr, pos, Math.abs(inv_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
-            } else if (end_loc > 0) {
-                int inv_len = Math.max(Math.abs(end_loc - pos + 1), 1);
+                //TODO: this assumes only one alt, might not be true
+            } else if (end_loc[0] > 0) {
+                int inv_len = Math.max(Math.abs(end_loc[0] - pos + 1), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, inv_len);
                 return new Variant(chr, pos, inv_len, refs, alts,
@@ -403,8 +400,9 @@ public class VCFparser extends GzFileParser<Variant> {
             }
         } else if (ALT.startsWith("<DUP>") || ALT.startsWith("<DUP:TANDEM>")) {
             // duplication or tandem duplication SV
-            int dup_lens[] = getSVLen(INFO);
-            int end_loc = getEndInfo(INFO); // may need to check inconsistency
+            int[] dup_lens = (int[]) info.getValue("SVLEN");
+            // may need to check inconsistency
+            int[] end_loc = (int[]) info.getValue("END");
             // btw length and end location
 
             ref_deleted = REF;
@@ -437,8 +435,9 @@ public class VCFparser extends GzFileParser<Variant> {
 
                 return new Variant(chr, pos, Math.abs(dup_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
-            } else if (end_loc > 0) {
-                int dup_len = Math.max(Math.abs(end_loc - pos + 1), 1);
+                //TODO: this assumes only one alt, which might not be true
+            } else if (end_loc[0] > 0) {
+                int dup_len = Math.max(Math.abs(end_loc[0] - pos + 1), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, dup_len, Math.max(
                         copy_num_val[0], copy_num_val[1]));
@@ -455,8 +454,9 @@ public class VCFparser extends GzFileParser<Variant> {
         } else if (ALT.startsWith("<INS>")) {
             // insertion SV
 
-            int ins_lens[] = getSVLen(INFO);
-            int end_loc = getEndInfo(INFO); // TODO may need to check
+            int[] end_loc = (int[]) info.getValue("END");
+            // TODO may need to check
+            int[] ins_lens = (int[]) info.getValue("SVLEN");
 
             ref_deleted = REF;
             byte[] refs = new byte[0];
@@ -475,8 +475,8 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
                 return new Variant(chr, pos, 0, refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
-            } else if (end_loc > 0) {
-                int ins_len = Math.max(Math.abs(end_loc - pos), 1);
+            } else if (end_loc[0] > 0) {
+                int ins_len = Math.max(Math.abs(end_loc[0] - pos), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, ins_len);
                 return new Variant(chr, pos, 0, refs, alts,
@@ -491,8 +491,9 @@ public class VCFparser extends GzFileParser<Variant> {
             // deletion SV
             // but... we don't have the reference... so we add some random sequence?
 
-            int del_lens[] = getSVLen(INFO);
-            int end_loc = getEndInfo(INFO); // TODO may need to check
+            int[] end_loc = (int[]) info.getValue("END");
+            // TODO may need to check
+            int[] del_lens = (int[]) info.getValue("SVLEN");
 
             ref_deleted = REF;
             byte[] refs = new byte[0];
@@ -507,8 +508,8 @@ public class VCFparser extends GzFileParser<Variant> {
 
                 return new Variant(chr, pos, Math.abs(del_lens[0]), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
-            } else if (end_loc > 0) {
-                int del_len = end_loc - pos + 1;
+            } else if (end_loc[0] > 0) {
+                int del_len = end_loc[0] - pos + 1;
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DEL, 0);
                 return new Variant(chr, pos, del_len, refs, alts,
@@ -520,7 +521,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 return null;
             }
         } else if (ALT.indexOf('<') >= 0) {
-            // inprecise variant
+            // imprecise variant
             log.warn("Imprecise line: " + line);
             return null;
         } else {
@@ -638,6 +639,9 @@ public class VCFparser extends GzFileParser<Variant> {
     }
 
     public Variant parseLine() {
+        /*
+        TODO: line reading should be handled in a loop calling
+         */
         String line = _line;
         readLine();
 
@@ -646,7 +650,14 @@ public class VCFparser extends GzFileParser<Variant> {
             return null;
         }
 
-        return process_line(line);
+        try {
+            return process_line(line);
+        } catch (Exception e) {
+            //TODO: right now just be lazy, die on any error
+            log.error(e.getMessage());
+            System.exit(255);
+        }
+        return null;
     }
 
 }

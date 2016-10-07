@@ -33,12 +33,12 @@ public class VCFInfo {
     }
 
     public Object getValue(String id) {
-        return this.info2Value.get(id).getValue();
+        return this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue() : null;
     }
     private class VCFInfoElement {
-        private List<String> stringFields;
+        private String[] stringFields;
         //TODO: Integer should be changed to Long if varsim is used for large genome.
-        private List<Integer> numberFields;
+        private int[] numberFields;
         private Boolean flagValue;
         private String type;
 
@@ -53,13 +53,13 @@ public class VCFInfo {
             String[] valueArray = value.split(",");
             switch(this.type) {
                 case "Integer":
-                    numberFields = new ArrayList<Integer>();
+                    numberFields = new int[valueArray.length];
                     for (int i = 0; i < valueArray.length; i++) {
-                        numberFields.add(Integer.parseInt(valueArray[i]));
+                        numberFields[i] = Integer.parseInt(valueArray[i]);
                     }
                     break;
                 case "String":
-                    stringFields = Arrays.asList(valueArray);
+                    stringFields = valueArray;
                     break;
                 default:
                     throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
@@ -93,7 +93,8 @@ public class VCFInfo {
     }
 
     /**
-     * return hard-coded
+     * return hard-coded type for some INFO IDs (including some reserved IDs in VCF
+     * spec)
      * TODO: replace hard-coded infoID-type mapping with VCF header defined mapping
      *
      "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
@@ -108,7 +109,8 @@ public class VCFInfo {
      * @return
      */
     public static String getType(String infoID) {
-        if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2")) {
+        if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2") || infoID.equals("END")
+                || infoID.equals("DP")) {
             return "Integer";
         } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRASUBTYPE")) {
             return "String";
@@ -120,10 +122,10 @@ public class VCFInfo {
     public static void main(String[] args) {
         try {
             VCFInfo test = new VCFInfo("SVTYPE=TRA;TRASUBTYPE=CHIVALRY,SELFISHNESS;SVLEN=100,200;POS2=155000679,156000999;END2=155110000,155100999;CHR2=1,1");
-            List<String> svtypeList = (List<String>) test.getValue("SVTYPE");
-            System.out.println(svtypeList.get(0).equals("TRA"));
-            List<Integer> posList = (List<Integer>) test.getValue("POS2");
-            System.out.println(posList.get(0) == 155000679 && posList.get(1) == 156000999);
+            String[] svtypeList = (String[]) test.getValue("SVTYPE");
+            System.out.println(svtypeList[0].equals("TRA"));
+            int[] posList = (int[]) test.getValue("POS2");
+            System.out.println(posList[0] == 155000679 && posList[1] == 156000999);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
