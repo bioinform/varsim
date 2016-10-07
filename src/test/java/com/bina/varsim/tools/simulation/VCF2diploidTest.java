@@ -206,32 +206,4 @@ public class VCF2diploidTest {
         assertTrue(FileUtils.contentEquals(outputPaternalReferencePath.toFile(), new File(paternalReference)));
         assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
     }
-    @Test(expected = IllegalArgumentException.class)
-    public void SymbolicAlleleSVLenTest() throws IOException {
-        File wd = tmpFolder.newFolder("VCFParsingTest");
-        String reference = "src/test/resources/VCFParsingTest/SymbolicAlleleSVLenTest.fa";
-        String vcf = "src/test/resources/VCFParsingTest/SymbolicAlleleSVLenTest.vcf";
-
-        VCF2diploid runner = new VCF2diploid();
-        String[] args = new String[]{
-                "-chr", reference, "-outdir", wd.getCanonicalPath(),
-                "-seed", Integer.toString(this.seed), "-id", "test",
-                "-t", "MALE", "-vcf", vcf
-        };
-        runner.run(args);
-    }
-    @Test(expected = IllegalArgumentException.class)
-    public void SymbolicAlleleMixWithNonSymbolicAlleleTest() throws IOException {
-        File wd = tmpFolder.newFolder("VCFParsingTest");
-        String reference = "src/test/resources/VCFParsingTest/SymbolicAlleleSVLenTest.fa";
-        String vcf = "src/test/resources/VCFParsingTest/SymbolicAlleleMixWithNonSymbolicAlleleTest.vcf";
-
-        VCF2diploid runner = new VCF2diploid();
-        String[] args = new String[]{
-                "-chr", reference, "-outdir", wd.getCanonicalPath(),
-                "-seed", Integer.toString(this.seed), "-id", "test",
-                "-t", "MALE", "-vcf", vcf
-        };
-        runner.run(args);
-    }
 }
