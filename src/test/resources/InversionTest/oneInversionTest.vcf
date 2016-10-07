@@ -5,7 +5,7 @@
 ##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">
 ##INFO=<ID=END2,Number=A,Type=Integer,Description="1-based End position of source sequence">
 ##INFO=<ID=CHR2,Number=A,Type=String,Description="Chromosome of source sequence">
-##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description="Subtype of translocation event: source sequence deleted (SELFISHNESS); source sequence accepted (CHIVALRY); reverse complement of source sequence accepted (SYMPATHY).">
+##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description="Subtype of translocation event: source sequence deleted (REJECT); source sequence accepted (ACCEPT).">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##ALT=<ID=DEL,Description="Deletion">
 ##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
