@@ -256,7 +256,7 @@ public class VCF2diploid {
                 }
 
                 if (var.paternal() > 0) {
-                    if (addVariant(paternalMaskedSequence, referenceSequence, var, var.paternal(),
+                    if (addVariant(paternalMaskedSequence, referenceSequence, allSequences, var, var.paternal(),
                             paternalInsertionSeq)) {
                         nPaternalVariant++;
                         nPaternalVariantBase += var.variantBases();
@@ -269,7 +269,7 @@ public class VCF2diploid {
                 }
 
                 if (var.maternal() > 0) {
-                    if (addVariant(maternalMaskedSequence, referenceSequence, var, var.maternal(),
+                    if (addVariant(maternalMaskedSequence, referenceSequence, allSequences, var, var.maternal(),
                             maternalInsertionSeq)) {
                         nMaternalVariant++;
                         nMaternalVariantBase += var.variantBases();
@@ -340,7 +340,7 @@ public class VCF2diploid {
      * @param InsertPosition2Sequence --  records insertion locations and sequences
      * @return true if the variant is incorporated, false otherwise
      */
-    private boolean addVariant(byte[] maskedSequence, Sequence referenceSequence,
+    private boolean addVariant(byte[] maskedSequence, Sequence referenceSequence, SimpleReference allSequences,
                                Variant variant, int allele, Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
 
         //position     -- position of the variant
@@ -437,6 +437,16 @@ public class VCF2diploid {
                 }
                 return false;
             }
+            //TODO: wrap insertion generation in Variant class
+            //NOTE: only translocation with ACCEPT subtype is marked as Translocation
+            //translocation with REJECT subject is marked as Deletion
+            if (variantType == VariantType.Translocation) {
+                if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
+                    insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
+                } else {
+                    insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
+                }
+            }
 
             if (variantType == VariantType.Inversion) {
                 // Treat this as getReferenceAlleleLength then insertion of reverse complement
@@ -477,6 +487,12 @@ public class VCF2diploid {
                 s.setLength(variant.getAlt(allele).length());
                 s.setVar_id(variant.getVar_id());
 
+                if (s.getType().equals(FlexSeq.Type.TRANSLOCATION)) {
+                    s.setChr2(variant.getChr2(allele));
+                    s.setPos2(variant.getPos2(allele));
+                    s.setEnd2(variant.getEnd2(allele));
+                    s.setReferenceAlleleLength(variant.getReferenceAlleleLength());
+                }
                 /*
                 so although we model SNP as deletion+insertions, we do not record
                 their insert locus. We only record insert loci of indel

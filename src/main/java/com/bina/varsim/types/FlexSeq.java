@@ -15,6 +15,10 @@ public class FlexSeq {
     int _copy_num;
     byte[] _seq;
     String _var_id = "";
+    ChrString chr2;
+    int pos2;
+    int end2;
+    int referenceAlleleLength;
 
     /**
      * Empty FlexSeq, default to a SEQ type
@@ -255,8 +259,40 @@ public class FlexSeq {
      * Deletion = delelton (unknown reference )
      * DUP = duplication
      * Insertion = insertion (unknown sequence)
+     * TRANSLOCATION = translocation (unknown sequence, sequence is defined at variant level)
      */
     public enum Type {
-        SEQ, INV, DUP, INS, DEL
+        SEQ, INV, DUP, INS, DEL, TRANSLOCATION
+    }
+    public void setChr2(ChrString chr2) {
+        this.chr2 = chr2;
+    }
+    public void setPos2(int pos2) {
+        this.pos2 = pos2;
+    }
+
+    public ChrString getChr2() {
+        return chr2;
+    }
+
+    public int getPos2() {
+        return pos2;
+    }
+
+    public int getEnd2() {
+        return end2;
+    }
+
+    public void setEnd2(int end2) {
+        this.end2 = end2;
+    }
+
+    public void setReferenceAlleleLength(int referenceAlleleLength) {
+        this.referenceAlleleLength = referenceAlleleLength;
+    }
+
+    public int getReferenceAlleleLength() {
+
+        return referenceAlleleLength;
     }
 }

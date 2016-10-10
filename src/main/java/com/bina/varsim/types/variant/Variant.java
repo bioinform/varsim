@@ -32,6 +32,9 @@ public class Variant implements Comparable<Variant>{
     //so _ref_deleted.length() <= 1 is always true?
     private String _ref_deleted;
     private String extraBase = "";
+    private ChrString[] chr2;
+    private int[] pos2;
+    private int[] end2;
 
     public Variant(Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
@@ -41,12 +44,17 @@ public class Variant implements Comparable<Variant>{
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null, null, null, null);
     }
 
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted, Random rand) {
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, rand, null, null, null);
+    }
+    public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
+                   FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
+                   String ref_deleted, Random rand, ChrString[] chr2, int[] pos2, int[] end2) {
         this(rand);
 
         _filter = filter;
@@ -71,6 +79,10 @@ public class Variant implements Comparable<Variant>{
         _paternal = phase[0];
         _maternal = phase[1];
         _isPhased = isPhased;
+
+        this.chr2 = chr2;
+        this.pos2 = pos2;
+        this.end2 = end2;
     }
 
     public Variant(final Variant var) {
@@ -94,6 +106,10 @@ public class Variant implements Comparable<Variant>{
         _maternal = var._maternal;
         _isPhased = var._isPhased;
         _rand = var._rand;
+
+        this.chr2 = var.chr2;
+        this.pos2 = var.pos2;
+        this.end2 = var.end2;
     }
 
     /**
@@ -216,6 +232,24 @@ public class Variant implements Comparable<Variant>{
         if (ind <= 0 || ind > _alts.length)
             return null;
         return _alts[ind - 1].getSeq();
+    }
+
+    public ChrString getChr2(int ind) {
+        if (ind <= 0 || ind > _alts.length)
+            return new ChrString("");
+        return this.chr2[ind - 1];
+    }
+
+    public int getPos2(int ind) {
+        if (ind <= 0 || ind > _alts.length)
+            return -1;
+        return this.pos2[ind - 1];
+    }
+
+    public int getEnd2(int ind) {
+        if (ind <= 0 || ind > _alts.length)
+            return -1;
+        return this.end2[ind - 1];
     }
 
     /**
@@ -360,6 +394,8 @@ public class Variant implements Comparable<Variant>{
                 return VariantType.Insertion;
             case INV:
                 return VariantType.Inversion;
+            case TRANSLOCATION:
+                return VariantType.Translocation;
             default:
                 break;
         }
@@ -490,6 +526,12 @@ public class Variant implements Comparable<Variant>{
         return VariantOverallType.Complex;
     }
 
+    /**
+     * return alternative allele based on alternative allele index specified in GT field
+     * alternative allele index = 1,2,...
+     * @param ind
+     * @return
+     */
     public FlexSeq getAlt(int ind) {
         if (ind <= 0 || ind > _alts.length)
             return null;

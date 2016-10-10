@@ -37,6 +37,8 @@ public class HostRefIdx {
             case "INV":
                 this.hostIdx += currentMapRecord.len;
                 break;
+            case "TRANSLOCATION":
+                this.hostIdx += currentMapRecord.len;
         }
     }
 }

@@ -7,11 +7,14 @@ import static com.bina.varsim.tools.simulation.VCF2diploid.DELETED_BASE;
 
 /**
  * Created by guoy28 on 10/4/16.
+"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
+ this is more like a struct :)
+ I think MapRecord stands for records in MFF file (the map file)
+
+ TODO: MapRecord contains essentially same information as Variant, these two classes can be consolidated.
  */
-//"#Len\tHOST_chr\tHOST_pos\tREF_chr\tREF_pos\tDIRECTION\tFEATURE\tVAR_ID"
-// this is more like a struct :)
-// I think MapRecord stands for records in MFF file (the map file)
 public class MapRecord {
+    //len for length of alternative allele
     public int len = 0;
     public String hostChr = "";
     public int hostPos = 0;
@@ -70,6 +73,15 @@ public class MapRecord {
                     currentMapRecord.len = insertion.var_length();
                     currentMapRecord.varId = varId;
 
+                    break;
+                case TRANSLOCATION:
+                    currentMapRecord.hostPos = hostRefIdx.hostIdx;
+                    currentMapRecord.refPos = Math.min(insertion.getPos2(), insertion.getEnd2()) - 1;
+                    currentMapRecord.refChr = insertion.getChr2().toString();
+                    currentMapRecord.feature = "TRANSLOCATION";
+                    currentMapRecord.isForward = insertion.getPos2() <= insertion.getEnd2() ? true : false;
+                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.varId = varId;
                     break;
                 case INV:
                     // TODO: treat inversion like MNP

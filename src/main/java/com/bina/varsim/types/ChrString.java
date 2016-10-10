@@ -28,6 +28,22 @@ public class ChrString implements Comparable<ChrString>{
         return chr;
     }
 
+    /**
+     * convert string array to ChrString array
+     * @param s
+     * @return
+     */
+    public static ChrString[] string2ChrString(String[] s) {
+        if (s == null) {
+            return null;
+        }
+        ChrString[] chrStrings = new ChrString[s.length];
+        for (int i = 0; i < s.length; i++) {
+            chrStrings[i] = new ChrString(s[i]);
+        }
+        return chrStrings;
+    }
+
     public String getName() {
         return name;
     }

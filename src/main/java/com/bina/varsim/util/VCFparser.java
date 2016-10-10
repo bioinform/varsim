@@ -450,7 +450,6 @@ public class VCFparser extends GzFileParser<Variant> {
                 log.error("skipping...");
                 return null;
             }
-
         } else if (ALT.startsWith("<INS>")) {
             // insertion SV
 
@@ -516,6 +515,68 @@ public class VCFparser extends GzFileParser<Variant> {
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand);
             } else {
                 log.error("No length information for DEL:");
+                log.error(line);
+                log.error("skipping...");
+                return null;
+            }
+        } else if (ALT.startsWith("<TRA>")) {
+            //translocation SV
+
+            int[] end2 = (int[]) info.getValue("END2");
+            int[] pos2 = (int[]) info.getValue("POS2");
+            int[] svlen = (int[]) info.getValue("SVLEN");
+            String[] chr2 = (String[]) info.getValue("CHR2");
+            String[] subtype = (String[]) info.getValue("TRASUBTYPE");
+
+            ref_deleted = REF;
+            byte[] refs = new byte[0];
+            pos++; //1-based start
+
+            if (svlen.length > 0) {
+                //0 is for reference allele
+                alts = new FlexSeq[svlen.length];
+                //alternative allele is numbered 1,2,... per VCFSpec
+                for (int altAlleleIndex = 1; altAlleleIndex <= svlen.length; altAlleleIndex++) {
+                    int copy_val = 1;
+                    /*
+                    implicit assumption here: phase_val[0] == phase_val[1] => copy_num_val[0] == copy_num_val[1]
+                     */
+                    //check paternal
+                    if (altAlleleIndex == phase_val[0]) {
+                        copy_val = copy_num_val[0];
+                    }
+                    //check maternal
+                    if (altAlleleIndex == phase_val[1]) {
+                        copy_val = copy_num_val[1];
+                    }
+                    copy_val = Math.max(1, copy_val);
+                    int altAllelelength = Math.max(Math.abs(svlen[altAlleleIndex - 1]), 1);
+                    /*Not sure if INS is the most appropriate FlexSeq.Type
+                    use it unless it breaks things.
+                     */
+                    if (subtype[altAlleleIndex - 1].equals("ACCEPT")) {
+                        alts[altAlleleIndex - 1] = new FlexSeq(FlexSeq.Type.TRANSLOCATION, altAllelelength, copy_val);
+                    } else if (subtype[altAlleleIndex - 1].equals("REJECT")){
+                        alts[altAlleleIndex - 1] = new FlexSeq(FlexSeq.Type.DEL, 0);
+                    } else {
+                        throw new IllegalArgumentException("ERROR: only ACCEPT and REJECT allowed.\n" + line);
+                    }
+                }
+
+                //TODO: there could be multiple SVLEN values, but for now we only use one
+                //make sure all SVLEN values are equal if we only use the first one
+                //per VCFv4.1 spec, SVLEN should be length of alternative allele rather than
+                //reference allele
+                for (int i = 1; i < svlen.length; i++) {
+                    if (svlen[i] != svlen[0]) {
+                        throw new IllegalArgumentException("ERROR: SVLEN values not equal.\n" + line);
+                    }
+                }
+                return new Variant(chr, pos, Math.abs(svlen[0]), refs, alts,
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand, ChrString.string2ChrString(chr2), pos2, end2);
+                //TODO: this assumes only one alt, which might not be true
+            } else {
+                log.error("No length information for TRANSLOCATION:");
                 log.error(line);
                 log.error("skipping...");
                 return null;
