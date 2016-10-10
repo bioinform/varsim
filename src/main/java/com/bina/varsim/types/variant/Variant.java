@@ -18,19 +18,19 @@ public class Variant implements Comparable<Variant>{
     // this is the type before the variant was split into canonical ones
     public VariantOverallType original_type = null;
     // use a seed for reproducibility, should be an option or global
-    private Random _rand = null;
-    private int _pos = -1, _referenceAlleleLength = -1;
-    private byte[] _ref;
-    private ChrString _chr;
-    private FlexSeq[] _alts;
-    private byte _maternal = 0, _paternal = 0; // -1 for not avaliable
-    private boolean _isPhased = false; // Phasing
-    private String _filter;
-    private String _var_id;
+    private Random rand = null;
+    private int pos = -1, referenceAlleleLength = -1;
+    private byte[] ref;
+    private ChrString chr;
+    private FlexSeq[] alts;
+    private byte maternal = 0, paternal = 0; // -1 for not avaliable
+    private boolean isPhased = false; // Phasing
+    private String filter;
+    private String varId;
     // this is when the reference base is deleted
     // if it is the same as the first alt base
-    //so _ref_deleted.length() <= 1 is always true?
-    private String _ref_deleted;
+    //so refDeleted.length() <= 1 is always true?
+    private String refDeleted;
     private String extraBase = "";
     private ChrString[] chr2;
     private int[] pos2;
@@ -38,7 +38,7 @@ public class Variant implements Comparable<Variant>{
 
     public Variant(Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
-        _rand = rand;
+        this.rand = rand;
     }
 
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
@@ -57,76 +57,74 @@ public class Variant implements Comparable<Variant>{
                    String ref_deleted, Random rand, ChrString[] chr2, int[] pos2, int[] end2) {
         this(rand);
 
-        _filter = filter;
-        _var_id = var_id;
+        this.filter = filter;
+        varId = var_id;
 
-        _chr = chr;
-        _pos = pos;
-        _referenceAlleleLength = referenceAlleleLength;
+        this.chr = chr;
+        this.pos = pos;
+        this.referenceAlleleLength = referenceAlleleLength;
 
         // TODO we should put the reference matching code here
-        _ref = ref.clone();
-        _ref_deleted = ref_deleted;
-        _alts = new FlexSeq[alts.length];
+        this.ref = ref.clone();
+        refDeleted = ref_deleted;
+        this.alts = new FlexSeq[alts.length];
         for (int i = 0; i < alts.length; i++) {
             if (alts[i] != null) {
-                _alts[i] = new FlexSeq(alts[i]);
+                this.alts[i] = new FlexSeq(alts[i]);
             } else {
-                _alts[i] = null;
+                this.alts[i] = null;
             }
         }
-
-        _paternal = phase[0];
-        _maternal = phase[1];
-        _isPhased = isPhased;
 
         this.chr2 = chr2;
         this.pos2 = pos2;
         this.end2 = end2;
+        paternal = phase[0];
+        maternal = phase[1];
+        this.isPhased = isPhased;
     }
 
     public Variant(final Variant var) {
-        _filter = var._filter;
-        _var_id = var._var_id;
-        _chr = var._chr;
-        _pos = var._pos;
-        _referenceAlleleLength = var._referenceAlleleLength;
-        _ref = var._ref.clone();
-        _ref_deleted = var._ref_deleted;
-        _alts = new FlexSeq[var._alts.length];
-        for (int i = 0; i < var._alts.length; i++) {
-            if (var._alts[i] != null) {
-                _alts[i] = new FlexSeq(var._alts[i]);
+        filter = var.filter;
+        varId = var.varId;
+        chr = var.chr;
+        pos = var.pos;
+        referenceAlleleLength = var.referenceAlleleLength;
+        ref = var.ref.clone();
+        refDeleted = var.refDeleted;
+        alts = new FlexSeq[var.alts.length];
+        for (int i = 0; i < var.alts.length; i++) {
+            if (var.alts[i] != null) {
+                alts[i] = new FlexSeq(var.alts[i]);
             } else {
-                _alts[i] = null;
+                alts[i] = null;
             }
         }
-
-        _paternal = var._paternal;
-        _maternal = var._maternal;
-        _isPhased = var._isPhased;
-        _rand = var._rand;
 
         this.chr2 = var.chr2;
         this.pos2 = var.pos2;
         this.end2 = var.end2;
+        paternal = var.paternal;
+        maternal = var.maternal;
+        isPhased = var.isPhased;
+        rand = var.rand;
     }
 
     /**
      * @return Chromosome variant is on
      */
     public ChrString getChr() {
-        if (_chr == null) {
+        if (chr == null) {
             throw new UnsupportedOperationException("ERROR: no legitimate chromosome name available!");
         }
-        return _chr;
+        return chr;
     }
 
     /**
      * @return Start position of variant
      */
     public int getPos() {
-        return _pos;
+        return pos;
     }
 
     // return false if fails
@@ -142,10 +140,10 @@ public class Variant implements Comparable<Variant>{
     public boolean setNovelPosition(int pos, SimpleReference ref) {
 
         // replace ref
-        int len = _ref.length;
+        int len = this.ref.length;
 
         if (len > 0) {
-            byte[] temp_ref = ref.byteRange(_chr, pos, pos + len);
+            byte[] temp_ref = ref.byteRange(chr, pos, pos + len);
 
             for (byte b : temp_ref) {
                 if (b == 'N') {
@@ -155,7 +153,7 @@ public class Variant implements Comparable<Variant>{
                 }
             }
 
-            for (FlexSeq f : _alts) {
+            for (FlexSeq f : alts) {
                 if (f.getSeq() != null) {
                     // make sure there is no prefix the same
                     for (int i = 0; i < temp_ref.length; i++) {
@@ -172,22 +170,22 @@ public class Variant implements Comparable<Variant>{
                 }
             }
 
-            _ref = temp_ref;
+            this.ref = temp_ref;
         }
 
         // replace ref_deleted
-        len = _ref_deleted.length();
+        len = refDeleted.length();
         if (len > 0) {
             try {
-                byte[] deleted_temp = ref.byteRange(_chr, pos - len, pos);
-                _ref_deleted = new String(deleted_temp, "US-ASCII");
+                byte[] deleted_temp = ref.byteRange(chr, pos - len, pos);
+                refDeleted = new String(deleted_temp, "US-ASCII");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
 
         // do the replacing
-        _pos = pos;
+        this.pos = pos;
 
         return true;
     }
@@ -196,7 +194,7 @@ public class Variant implements Comparable<Variant>{
      * @param id variant id. usually the dbSNP id
      */
     public void setVarID(String id) {
-        _var_id = id;
+        varId = id;
     }
 
     /**
@@ -207,21 +205,21 @@ public class Variant implements Comparable<Variant>{
      * @return the length of the getReferenceAlleleLength
      */
     public int getReferenceAlleleLength() {
-        return _referenceAlleleLength;
+        return referenceAlleleLength;
     }
 
     /**
      * @return maternal allele index, 0 if reference
      */
     public int maternal() {
-        return _maternal;
+        return maternal;
     }
 
     /**
      * @return paternal allele index, 0 if reference
      */
     public int paternal() {
-        return _paternal;
+        return paternal;
     }
 
     /**
@@ -229,25 +227,25 @@ public class Variant implements Comparable<Variant>{
      * @return the insertion sequence as a string
      */
     public byte[] insertion(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return null;
-        return _alts[ind - 1].getSeq();
+        return alts[ind - 1].getSeq();
     }
 
     public ChrString getChr2(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return new ChrString("");
         return this.chr2[ind - 1];
     }
 
     public int getPos2(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return -1;
         return this.pos2[ind - 1];
     }
 
     public int getEnd2(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return -1;
         return this.end2[ind - 1];
     }
@@ -260,18 +258,18 @@ public class Variant implements Comparable<Variant>{
      * @return the length of that allele
      */
     public int insertion_len(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return 0;
-        return _alts[ind - 1].length();
+        return alts[ind - 1].length();
     }
 
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
     // and getReferenceAlleleLength
     public int maxLen(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return 0;
-        return Math.max(_referenceAlleleLength, _alts[ind - 1].length());
+        return Math.max(referenceAlleleLength, alts[ind - 1].length());
     }
 
     public int maxLen() {
@@ -294,11 +292,11 @@ public class Variant implements Comparable<Variant>{
     gets the interval enclosing the variant on the reference genome
     */
     public SimpleInterval1D get_interval(int ind) {
-        if (ind == 0 || _referenceAlleleLength == 0) {
-            return new SimpleInterval1D(_pos, _pos);
+        if (ind == 0 || referenceAlleleLength == 0) {
+            return new SimpleInterval1D(pos, pos);
         }
 
-        return new SimpleInterval1D(_pos, _pos + _referenceAlleleLength - 1);
+        return new SimpleInterval1D(pos, pos + referenceAlleleLength - 1);
     }
 
     /*
@@ -307,18 +305,18 @@ public class Variant implements Comparable<Variant>{
     public SimpleInterval1D get_var_interval(int ind) {
         try {
             if (ind == 0) {
-                return new SimpleInterval1D(_pos, _pos);
+                return new SimpleInterval1D(pos, pos);
             }
 
             // TODO hmm unsafe
             if (maxLen(ind) == Integer.MAX_VALUE) {
-                return new SimpleInterval1D(_pos, _pos);
+                return new SimpleInterval1D(pos, pos);
             } else {
-                return new SimpleInterval1D(_pos, _pos + maxLen(ind) - 1);
+                return new SimpleInterval1D(pos, pos + maxLen(ind) - 1);
             }
         } catch (RuntimeException e) {
             log.error("Bad variant interval: " + toString());
-            log.error("_pos: " + _pos);
+            log.error("pos: " + pos);
             log.error("ind: " + ind);
             log.error("maxLen(ind): " + maxLen(ind));
             e.printStackTrace();
@@ -355,17 +353,17 @@ public class Variant implements Comparable<Variant>{
 
     public void set_allele(int parent, byte allele) {
         if (parent == 0) {
-            _paternal = allele;
+            paternal = allele;
         } else if (parent == 1) {
-            _maternal = allele;
+            maternal = allele;
         }
     }
 
     // TODO this is wrong, but it only effects the count of variant bases
     public int variantBases() {
-        int ret = _referenceAlleleLength;
-        for (FlexSeq _alt : _alts) {
-            if (_referenceAlleleLength != _alt.length()) {
+        int ret = referenceAlleleLength;
+        for (FlexSeq _alt : alts) {
+            if (referenceAlleleLength != _alt.length()) {
                 ret += _alt.length();
             }
         }
@@ -386,7 +384,7 @@ public class Variant implements Comparable<Variant>{
         we can be assured that correct variant type is
         returned.
          */
-        FlexSeq.Type type = _alts[ind - 1].getType();
+        FlexSeq.Type type = alts[ind - 1].getType();
         switch (type) {
             case DUP:
                 return VariantType.Tandem_Duplication;
@@ -401,14 +399,14 @@ public class Variant implements Comparable<Variant>{
         }
 
         int inslen = insertion_len(ind);
-        int dellen = _referenceAlleleLength;
+        int dellen = referenceAlleleLength;
         if (inslen == 0 && dellen == 0) {
             return VariantType.Reference;
         } else if (inslen == 1 && dellen == 1) {
             return VariantType.SNP;
         } else if (inslen == 0 && dellen > 0) {
             return VariantType.Deletion;
-        } else if (dellen - inslen > 0 && new String(_ref).endsWith(_alts[ind - 1].toString())) {
+        } else if (dellen - inslen > 0 && new String(ref).endsWith(alts[ind - 1].toString())) {
             return VariantType.Deletion;
         } else if (inslen > 0 && dellen == 0) {
             return VariantType.Insertion;
@@ -533,41 +531,41 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public FlexSeq getAlt(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return null;
-        return _alts[ind - 1];
+        return alts[ind - 1];
     }
 
     public void setAlt(int ind, FlexSeq alt) {
-        if (ind <= 0 || ind > _alts.length) {
+        if (ind <= 0 || ind > alts.length) {
             return;
         }
-        _alts[ind - 1] = alt;
+        alts[ind - 1] = alt;
     }
 
     public String getFilter() {
-        return _filter;
+        return filter;
     }
 
     public boolean isPhased() {
-        return _isPhased;
+        return isPhased;
     }
 
     public boolean isRef() {
-        return _paternal == 0 && _maternal == 0;
+        return paternal == 0 && maternal == 0;
     }
 
     public String getVar_id() {
-        return _var_id;
+        return varId;
     }
 
     public byte[] getRef() {
-        return _ref;
+        return ref;
     }
 
     public String getOrig_Ref() {
         try {
-            return _ref_deleted + new String(_ref, "US-ASCII");
+            return refDeleted + new String(ref, "US-ASCII");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return "";
@@ -575,13 +573,13 @@ public class Variant implements Comparable<Variant>{
     }
 
     public String getRef_deleted() {
-        return _ref_deleted;
+        return refDeleted;
     }
 
     public int getCN(int ind) {
-        if (ind <= 0 || ind > _alts.length)
+        if (ind <= 0 || ind > alts.length)
             return 0;
-        return _alts[ind - 1].getCopy_num();
+        return alts[ind - 1].getCopy_num();
     }
 
     /**
@@ -589,7 +587,7 @@ public class Variant implements Comparable<Variant>{
      */
     public boolean hasCN() {
         boolean CN_positive = false;
-        for (FlexSeq _alt : _alts) {
+        for (FlexSeq _alt : alts) {
             if (_alt.getCopy_num() > 1) {
                 CN_positive = true;
             }
@@ -600,43 +598,43 @@ public class Variant implements Comparable<Variant>{
 
     public StringBuilder alt_string() {
         StringBuilder sbStr = new StringBuilder();
-        for (int i = 0; i < _alts.length; i++) {
-            //if (i > 0 && _alts[i].toString().equals(_alts[i - 1].toString())) {
+        for (int i = 0; i < alts.length; i++) {
+            //if (i > 0 && alts[i].toString().equals(alts[i - 1].toString())) {
                 /*Marghoob suggested that two identical symbolic alternative alleles are
                 allowed. so essentially we go back to original behavior of VarSim.
                  */
             if (i > 0) {
                 sbStr.append(",");
             }
-            if (_alts[i].isSeq()) {
-                sbStr.append(_ref_deleted).append(_alts[i].toString()).append(extraBase);
+            if (alts[i].isSeq()) {
+                sbStr.append(refDeleted).append(alts[i].toString()).append(extraBase);
             } else {
-                sbStr.append(_alts[i].toString());
+                sbStr.append(alts[i].toString());
             }
         }
         return sbStr;
     }
 
     public int get_num_alt() {
-        return _alts.length;
+        return alts.length;
     }
 
     /**
      * Randomly swap the haploype
      */
     public void randomizeHaplotype() {
-        if (_rand == null) {
+        if (rand == null) {
             log.error("Cannot randomize haplotype");
             log.error(toString());
             System.exit(1);
         }
 
-        if (_rand.nextDouble() > 0.5) {
+        if (rand.nextDouble() > 0.5) {
             return;
         }
-        byte tmp = _paternal;
-        _paternal = _maternal;
-        _maternal = tmp;
+        byte tmp = paternal;
+        paternal = maternal;
+        maternal = tmp;
     }
 
     /**
@@ -645,15 +643,15 @@ public class Variant implements Comparable<Variant>{
      * @param gender
      */
     public void randomizeGenotype(GenderType gender) {
-        if (_rand == null) {
+        if (rand == null) {
             log.error("Cannot randomize genotype");
             log.error(toString());
             System.exit(1);
         }
 
-        Genotypes g = new Genotypes(_chr, gender, _alts.length, _rand);
-        _paternal = g.geno[0];
-        _maternal = g.geno[1];
+        Genotypes g = new Genotypes(chr, gender, alts.length, rand);
+        paternal = g.geno[0];
+        maternal = g.geno[1];
     }
 
 
@@ -661,7 +659,7 @@ public class Variant implements Comparable<Variant>{
     Tests if all of the alternate alleles with sequence are ACTGN
      */
     public boolean isAltACTGN() {
-        for (FlexSeq a : _alts) {
+        for (FlexSeq a : alts) {
             if (a.isSeq()) {
                 if (!a.toString().matches("[ACTGN]*")) {
                     return false;
@@ -675,7 +673,7 @@ public class Variant implements Comparable<Variant>{
     Returns true if the variant is homozygous
      */
     public boolean isHom() {
-        return (_paternal == _maternal);
+        return (paternal == maternal);
     }
 
     @Override
@@ -685,21 +683,21 @@ public class Variant implements Comparable<Variant>{
 
         Variant variant = (Variant) o;
 
-        if (_referenceAlleleLength != variant._referenceAlleleLength) return false;
-        if (_isPhased != variant._isPhased) return false;
-        if (_maternal != variant._maternal) return false;
-        if (_paternal != variant._paternal) return false;
-        if (_pos != variant._pos) return false;
+        if (referenceAlleleLength != variant.referenceAlleleLength) return false;
+        if (isPhased != variant.isPhased) return false;
+        if (maternal != variant.maternal) return false;
+        if (paternal != variant.paternal) return false;
+        if (pos != variant.pos) return false;
         if (full_idx != variant.full_idx) return false;
         if (idx != variant.idx) return false;
-        if (!Arrays.equals(_alts, variant._alts)) return false;
-        if (_chr != null ? !_chr.equals(variant._chr) : variant._chr != null) return false;
-        if (_filter != null ? !_filter.equals(variant._filter) : variant._filter != null) return false;
-        if (_rand != null ? !_rand.equals(variant._rand) : variant._rand != null) return false;
-        if (!Arrays.equals(_ref, variant._ref)) return false;
-        if (_ref_deleted != null ? !_ref_deleted.equals(variant._ref_deleted) : variant._ref_deleted != null)
+        if (!Arrays.equals(alts, variant.alts)) return false;
+        if (chr != null ? !chr.equals(variant.chr) : variant.chr != null) return false;
+        if (filter != null ? !filter.equals(variant.filter) : variant.filter != null) return false;
+        if (rand != null ? !rand.equals(variant.rand) : variant.rand != null) return false;
+        if (!Arrays.equals(ref, variant.ref)) return false;
+        if (refDeleted != null ? !refDeleted.equals(variant.refDeleted) : variant.refDeleted != null)
             return false;
-        if (_var_id != null ? !_var_id.equals(variant._var_id) : variant._var_id != null) return false;
+        if (varId != null ? !varId.equals(variant.varId) : variant.varId != null) return false;
         if (original_type != variant.original_type) return false;
 
         return true;
@@ -707,27 +705,27 @@ public class Variant implements Comparable<Variant>{
 
     @Override
     public int hashCode() {
-        int result = _rand != null ? _rand.hashCode() : 0;
+        int result = rand != null ? rand.hashCode() : 0;
         result = 31 * result + idx;
         result = 31 * result + full_idx;
         result = 31 * result + (original_type != null ? original_type.hashCode() : 0);
-        result = 31 * result + _pos;
-        result = 31 * result + _referenceAlleleLength;
-        result = 31 * result + (_ref != null ? Arrays.hashCode(_ref) : 0);
-        result = 31 * result + (_chr != null ? _chr.hashCode() : 0);
-        result = 31 * result + (_alts != null ? Arrays.hashCode(_alts) : 0);
-        result = 31 * result + (int) _maternal;
-        result = 31 * result + (int) _paternal;
-        result = 31 * result + (_isPhased ? 1 : 0);
-        result = 31 * result + (_filter != null ? _filter.hashCode() : 0);
-        result = 31 * result + (_var_id != null ? _var_id.hashCode() : 0);
-        result = 31 * result + (_ref_deleted != null ? _ref_deleted.hashCode() : 0);
+        result = 31 * result + pos;
+        result = 31 * result + referenceAlleleLength;
+        result = 31 * result + (ref != null ? Arrays.hashCode(ref) : 0);
+        result = 31 * result + (chr != null ? chr.hashCode() : 0);
+        result = 31 * result + (alts != null ? Arrays.hashCode(alts) : 0);
+        result = 31 * result + (int) maternal;
+        result = 31 * result + (int) paternal;
+        result = 31 * result + (isPhased ? 1 : 0);
+        result = 31 * result + (filter != null ? filter.hashCode() : 0);
+        result = 31 * result + (varId != null ? varId.hashCode() : 0);
+        result = 31 * result + (refDeleted != null ? refDeleted.hashCode() : 0);
         return result;
     }
 
     @Override
     public int compareTo(Variant other) {
-        final int chrCmp = _chr.compareTo(other._chr);
+        final int chrCmp = chr.compareTo(other.chr);
         if (chrCmp != 0) {
             return chrCmp;
         }
@@ -738,7 +736,7 @@ public class Variant implements Comparable<Variant>{
     public String getLength() {
         StringBuilder len = new StringBuilder();
 
-        for (int i = 0; i < _alts.length; i++) {
+        for (int i = 0; i < alts.length; i++) {
             if (i > 0) {
                 len.append(',');
             }
@@ -746,16 +744,16 @@ public class Variant implements Comparable<Variant>{
             VariantType t = getType(i + 1);
 
             if (t == VariantType.Deletion) {
-                len.append(-_referenceAlleleLength + _alts[i].length()); // negative for deletions
+                len.append(-referenceAlleleLength + alts[i].length()); // negative for deletions
             } else if (t == VariantType.Complex) {
-                int alt_len = _alts[i].length();
-                if (_referenceAlleleLength > alt_len) {
-                    len.append(-_referenceAlleleLength);
+                int alt_len = alts[i].length();
+                if (referenceAlleleLength > alt_len) {
+                    len.append(-referenceAlleleLength);
                 } else {
                     len.append(alt_len);
                 }
             } else {
-                len.append(_alts[i].length());
+                len.append(alts[i].length());
             }
         }
 
@@ -763,10 +761,10 @@ public class Variant implements Comparable<Variant>{
     }
 
     public void calculateExtraBase(final Sequence refSeq) {
-        for (final FlexSeq alt : _alts) {
-            if (alt.isSeq() && alt.length() == 0 && getPos() + _referenceAlleleLength < refSeq.length()) {
+        for (final FlexSeq alt : alts) {
+            if (alt.isSeq() && alt.length() == 0 && getPos() + referenceAlleleLength < refSeq.length()) {
                 //why extrabase is only 1-bp long?
-                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + _referenceAlleleLength));
+                extraBase = String.valueOf((char) refSeq.byteAt(getPos() + referenceAlleleLength));
             }
         }
     }
@@ -778,13 +776,13 @@ public class Variant implements Comparable<Variant>{
     // TODO, this should be self contained and output a VCF record
     private void buildVCFstr(StringBuilder sbStr) {
         // chromosome name
-        sbStr.append(_chr.toString());
+        sbStr.append(chr.toString());
         sbStr.append("\t");
         // start position
-        sbStr.append(_pos - _ref_deleted.length());
+        sbStr.append(pos - refDeleted.length());
         sbStr.append('\t');
         // variant id
-        sbStr.append(_var_id);
+        sbStr.append(varId);
         sbStr.append("\t");
         // ref allele
         sbStr.append(getOrig_Ref());
@@ -795,7 +793,7 @@ public class Variant implements Comparable<Variant>{
         // variant quality
         sbStr.append(".\t");
         // pass label
-        sbStr.append(_filter);
+        sbStr.append(filter);
         sbStr.append("\t");
         // INFO
         if (getType() == VariantOverallType.Tandem_Duplication) {
@@ -863,18 +861,18 @@ public class Variant implements Comparable<Variant>{
     }
 
     public byte getgood_paternal() {
-        if (_paternal < 0) {
+        if (paternal < 0) {
             return 1;
         } else {
-            return _paternal;
+            return paternal;
         }
     }
 
     public byte getgood_maternal() {
-        if (_maternal < 0) {
+        if (maternal < 0) {
             return 1;
         } else {
-            return _maternal;
+            return maternal;
         }
     }
 
