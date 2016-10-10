@@ -7,6 +7,7 @@ import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.StringUtilities;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -726,6 +727,7 @@ public class VCF2diploid {
                     bw.write("\t");
                     // INFO
                     // TODO write len here
+                    //TODO: use StringJoiner to replace StringBuilder
                     StringBuilder sbStr = new StringBuilder();
                     if (curr_var.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
@@ -735,6 +737,26 @@ public class VCF2diploid {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());
+                    } else if (curr_var.getType() == VariantOverallType.Translocation) {
+                        sbStr.append("SVTYPE=TRA;");
+                        sbStr.append("SVLEN=");
+                        sbStr.append(curr_var.getLength());
+                        sbStr.append(";");
+                        sbStr.append("END=");
+                        sbStr.append(Integer.toString(curr_var.getEnd()));
+                        sbStr.append(";");
+                        sbStr.append("TRASUBTYPE=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtype(), ","));
+                        sbStr.append(";");
+                        //chr2,pos2,end2
+                        sbStr.append("CHR2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllChr2(), ","));
+                                sbStr.append(";");
+                        sbStr.append("POS2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllPos2(), ","));
+                        sbStr.append(";");
+                        sbStr.append("END2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllEnd2(), ","));
                     } else {
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());

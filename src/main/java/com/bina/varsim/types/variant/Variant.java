@@ -35,6 +35,8 @@ public class Variant implements Comparable<Variant>{
     private ChrString[] chr2;
     private int[] pos2;
     private int[] end2;
+    private int end;
+    private String[] translocationSubtype;
 
     public Variant(Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
@@ -44,17 +46,17 @@ public class Variant implements Comparable<Variant>{
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null, null, null, null);
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null, null, null, null, -1, null);
     }
 
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
                    String ref_deleted, Random rand) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, rand, null, null, null);
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, rand, null, null, null, -1, null);
     }
     public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
                    FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
-                   String ref_deleted, Random rand, ChrString[] chr2, int[] pos2, int[] end2) {
+                   String ref_deleted, Random rand, ChrString[] chr2, int[] pos2, int[] end2, int end, String[] translocationSubtype) {
         this(rand);
 
         this.filter = filter;
@@ -82,6 +84,8 @@ public class Variant implements Comparable<Variant>{
         paternal = phase[0];
         maternal = phase[1];
         this.isPhased = isPhased;
+        this.end = end;
+        this.translocationSubtype = translocationSubtype;
     }
 
     public Variant(final Variant var) {
@@ -248,6 +252,25 @@ public class Variant implements Comparable<Variant>{
         if (ind <= 0 || ind > alts.length)
             return -1;
         return this.end2[ind - 1];
+    }
+
+    public ChrString[] getAllChr2() {
+        return this.chr2;
+    }
+
+    public int[] getAllPos2() {
+        return this.pos2;
+    }
+
+    public int[] getAllEnd2() {
+        return this.end2;
+    }
+
+    public int getEnd() {
+        return this.end;
+    }
+    public String[] getAllTranslocationSubtype() {
+        return this.translocationSubtype;
     }
 
     /**
@@ -493,6 +516,19 @@ public class Variant implements Comparable<Variant>{
         if (is_ins) {
             return VariantOverallType.Insertion;
         }
+
+        // check TRANSLOCATION
+        boolean isTranslocation = true;
+        for (int a = 0; a < 2; a++) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Translocation) {
+                isTranslocation = false;
+                break;
+            }
+        }
+        if (isTranslocation) {
+            return VariantOverallType.Translocation;
+        }
+
 
         /* Treat these as complex for now
         // check INDEL

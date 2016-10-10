@@ -577,7 +577,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
                 //pos is incremented by 1, so it becomes 1-based start
                 return new Variant(chr, pos, Math.abs(end[0] - pos + 1), refs, alts,
-                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand, ChrString.string2ChrString(chr2), pos2, end2);
+                        phase_val, is_phased, var_id, FILTER, ref_deleted, _rand, ChrString.string2ChrString(chr2), pos2, end2, end[0], subtype);
                 //TODO: this assumes only one alt, which might not be true
             } else {
                 log.error("No length information for TRANSLOCATION:");
