@@ -5,13 +5,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.IllegalFormatException;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
@@ -208,16 +205,16 @@ public class VCF2diploidTest {
     }
     @Test
     public void balancedReciprocalTranslocationIntrachromosomalTest() throws IOException {
-        File wd = tmpFolder.newFolder("TranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomal_2_paternal.fa";
+        File wd = tmpFolder.newFolder("BalancedReciprocalTranslocationTest");
+        String reference = "src/test/resources/BalancedReciprocalTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal.vcf";
+        String expectedVCF1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal.expected.2.vcf";
+        String map = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal.map";
+        String maternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomal_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
@@ -243,16 +240,16 @@ public class VCF2diploidTest {
     }
     @Test
     public void balancedReciprocalTranslocationIntrachromosomalWithInversionTest() throws IOException {
-        File wd = tmpFolder.newFolder("TranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_2_paternal.fa";
+        File wd = tmpFolder.newFolder("BalancedReciprocalTranslocationTest");
+        String reference = "src/test/resources/BalancedReciprocalTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.vcf";
+        String expectedVCF1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.expected.2.vcf";
+        String map = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion.map";
+        String maternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationIntrachromosomalWithInversion_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
@@ -278,16 +275,16 @@ public class VCF2diploidTest {
     }
     @Test
     public void balancedReciprocalTranslocationInterchromosomalTest() throws IOException {
-        File wd = tmpFolder.newFolder("TranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomal_2_paternal.fa";
+        File wd = tmpFolder.newFolder("BalancedReciprocalTranslocationTest");
+        String reference = "src/test/resources/BalancedReciprocalTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal.vcf";
+        String expectedVCF1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal.expected.2.vcf";
+        String map = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal.map";
+        String maternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
@@ -313,16 +310,16 @@ public class VCF2diploidTest {
     }
     @Test
     public void balancedReciprocalTranslocationInterchromosomalWithInversionTest() throws IOException {
-        File wd = tmpFolder.newFolder("TranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_2_paternal.fa";
+        File wd = tmpFolder.newFolder("BalancedReciprocalTranslocationTest");
+        String reference = "src/test/resources/BalancedReciprocalTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.vcf";
+        String expectedVCF1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.expected.2.vcf";
+        String map = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion.map";
+        String maternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomalWithInversion_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
