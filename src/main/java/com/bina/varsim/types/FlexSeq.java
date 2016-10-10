@@ -222,6 +222,8 @@ public class FlexSeq {
                     return "<INV>";
                 case DEL:
                     return "<DEL>";
+                case TRANSLOCATION:
+                    return "<TRA>";
                 default:
                     break;
             }

@@ -522,8 +522,11 @@ public class VCFparser extends GzFileParser<Variant> {
         } else if (ALT.startsWith("<TRA>")) {
             //translocation SV
 
+            //1-based end for reference allele
+            int[] end = (int[]) info.getValue("END");
             int[] end2 = (int[]) info.getValue("END2");
             int[] pos2 = (int[]) info.getValue("POS2");
+            //SVLEN for alternative allele length
             int[] svlen = (int[]) info.getValue("SVLEN");
             String[] chr2 = (String[]) info.getValue("CHR2");
             String[] subtype = (String[]) info.getValue("TRASUBTYPE");
@@ -572,7 +575,8 @@ public class VCFparser extends GzFileParser<Variant> {
                         throw new IllegalArgumentException("ERROR: SVLEN values not equal.\n" + line);
                     }
                 }
-                return new Variant(chr, pos, Math.abs(svlen[0]), refs, alts,
+                //pos is incremented by 1, so it becomes 1-based start
+                return new Variant(chr, pos, Math.abs(end[0] - pos + 1), refs, alts,
                         phase_val, is_phased, var_id, FILTER, ref_deleted, _rand, ChrString.string2ChrString(chr2), pos2, end2);
                 //TODO: this assumes only one alt, which might not be true
             } else {

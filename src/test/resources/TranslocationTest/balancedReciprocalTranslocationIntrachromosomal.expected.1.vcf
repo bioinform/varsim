@@ -21,5 +21,5 @@
 ##ALT=<ID=TRA,Description="Translocation">
 ##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-1	1	.	A		.	PASS	SVLEN=3	GT	0|1
-1	8	.	G		.	PASS	SVLEN=3	GT	0|1
+1	1	.	A	<TRA>	.	PASS	SVLEN=3	GT	0|1
+1	8	.	G	<TRA>	.	PASS	SVLEN=3	GT	0|1

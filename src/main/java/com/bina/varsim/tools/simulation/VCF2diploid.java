@@ -816,6 +816,9 @@ public class VCF2diploid {
     private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
         String VCFHeader = "##fileformat=VCFv4.1\n" +
                 "##reference=" + referenceFileName + "\n" +
+                /*
+                SVLEN is for alternative allele in truth VCF
+                 */
                 "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                 /*if POS2<=END2, then another sequence is inserted at positive strand
