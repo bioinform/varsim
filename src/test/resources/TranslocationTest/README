@@ -1,4 +1,6 @@
 for translocations, there are many possibilities even for one type of event ref, right now we try to focus on the most frequent events. None of the following cases involve end of sequences or sex chromosomes. How to represent translocations in VCF?? According to VCF spec, break ends are used; we can also implement our own encoding method (probably involve two lines of VCF records). The former solution is better from long-term perspective, however, does not fit into current implementation of VCF2diploid. So we will the second method as a quick fix.
-4 balanced reciprocal translocation: interchromosomal or not + with inversion or not
-4 balanced non-reciprocal translocation: interchromosomal or not + with inversion or not
-4 unbalanced translocation: interchromosomal or not + with inversion or not
+# 4 balanced reciprocal translocation: interchromosomal or not + with inversion or not
+# 4 balanced non-reciprocal translocation: interchromosomal or not + with inversion or not
+# 4 unbalanced loss translocation: interchromosomal or not + with inversion or not
+# 4 unbalanced gain translocation: interchr or not with inversion or not
+# 1 balanced non-reciprocal translocation: interchromosomal but only between two homologous chromosomes. There could be more types of such translocations. We do not cover them for now.
