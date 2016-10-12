@@ -19,6 +19,40 @@ import static org.junit.Assert.fail;
  */
 public class VCF2diploidTest {
     private int seed = 11;
+    public void universalTestMethod(String directory) throws IOException {
+        File wd = tmpFolder.newFolder("tmp");
+        String reference = new File(directory, "reference.fa").toString();
+        String vcf = new File(directory, "input.vcf").toString();
+        String expectedVCF1 = new File(directory, "1.vcf").toString();
+        String expectedVCF2 = new File(directory, "2.vcf").toString();
+        String map = new File(directory, "expected.map").toString();
+        String maternalReference1 = new File(directory, "maternal.1.fa").toString();
+        String paternalReference1 = new File(directory, "paternal.1.fa").toString();
+        String maternalReference2 = new File(directory, "maternal.2.fa").toString();
+        String paternalReference2 = new File(directory, "paternal.2.fa").toString();
+
+        Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
+        Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
+        Path outputMaternalReference1Path = Paths.get(wd.getCanonicalPath(), "1_test_maternal.fa");
+        Path outputPaternalReference1Path = Paths.get(wd.getCanonicalPath(), "1_test_paternal.fa");
+        Path outputMaternalReference2Path = Paths.get(wd.getCanonicalPath(), "2_test_maternal.fa");
+        Path outputPaternalReference2Path = Paths.get(wd.getCanonicalPath(), "2_test_paternal.fa");
+
+        VCF2diploid runner = new VCF2diploid();
+        String[] args = new String[]{
+                "-chr", reference, "-outdir", wd.getCanonicalPath(),
+                "-seed", Integer.toString(this.seed), "-id", "test",
+                "-t", "MALE", "-vcf", vcf
+        };
+        runner.run(args);
+        assertTrue(FileUtils.contentEquals(outputVCF1Path.toFile(), new File(expectedVCF1)));
+        assertTrue(FileUtils.contentEquals(outputVCF2Path.toFile(), new File(expectedVCF2)));
+        assertTrue(FileUtils.contentEquals(outputMaternalReference1Path.toFile(), new File(maternalReference1)));
+        assertTrue(FileUtils.contentEquals(outputPaternalReference1Path.toFile(), new File(paternalReference1)));
+        assertTrue(FileUtils.contentEquals(outputMaternalReference2Path.toFile(), new File(maternalReference2)));
+        assertTrue(FileUtils.contentEquals(outputPaternalReference2Path.toFile(), new File(paternalReference2)));
+        assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
+    }
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
@@ -587,5 +621,18 @@ public class VCF2diploidTest {
         assertTrue(FileUtils.contentEquals(outputMaternalReference2Path.toFile(), new File(maternalReference2)));
         assertTrue(FileUtils.contentEquals(outputPaternalReference2Path.toFile(), new File(paternalReference2)));
         assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
+    }
+
+    /**
+     * unbalanced loss
+     * @throws IOException
+     */
+    @Test
+    public void unbalancedTranslocationInterchromosomalWithInversion() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedLossTranslocationWithInversionTest/UnbalancedLossInterchromosomalTranslocationWithInversion");
+    }
+    @Test
+    public void unbalancedTranslocationIntrachromosomalWithInversion() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedLossTranslocationWithInversionTest/UnbalancedLossIntrachromosomalTranslocationWithInversion");
     }
 }
