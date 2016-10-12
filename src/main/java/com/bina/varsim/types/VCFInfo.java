@@ -118,16 +118,4 @@ public class VCFInfo {
             throw new IllegalArgumentException("ERROR: unrecognized INFO ID (" + infoID + ").");
         }
     }
-
-    public static void main(String[] args) {
-        try {
-            VCFInfo test = new VCFInfo("SVTYPE=TRA;TRASUBTYPE=CHIVALRY,SELFISHNESS;SVLEN=100,200;POS2=155000679,156000999;END2=155110000,155100999;CHR2=1,1");
-            String[] svtypeList = (String[]) test.getValue("SVTYPE");
-            System.out.println(svtypeList[0].equals("TRA"));
-            int[] posList = (int[]) test.getValue("POS2");
-            System.out.println(posList[0] == 155000679 && posList[1] == 156000999);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
 }

@@ -13,7 +13,7 @@ public class VCFInfoTest {
     @Test
     public void VCFInfoParsingTest() {
         try {
-            VCFInfo test = new VCFInfo("SVTYPE=TRA;TRASUBTYPE=CHIVALRY,SELFISHNESS;SVLEN=100,200;POS2=155000679,156000999;END2=155110000,155100999;CHR2=1,1");
+            VCFInfo test = new VCFInfo("SVTYPE=TRA;END=156001999;TRASUBTYPE=ACCEPT,REJECT;SVLEN=100,200;POS2=155000679,156000999;END2=155110000,155100999;CHR2=1,1");
             String[] svtypeList = (String[]) test.getValue("SVTYPE");
             assertTrue(svtypeList[0].equals("TRA"));
             int[] posList = (int[]) test.getValue("POS2");

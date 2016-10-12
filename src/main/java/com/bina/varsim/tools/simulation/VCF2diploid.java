@@ -64,7 +64,7 @@ public class VCF2diploid {
      *
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         VCF2diploid runner = new VCF2diploid();
         runner.run(args);
     }
@@ -79,7 +79,7 @@ public class VCF2diploid {
      *
      * @param args
      */
-    public void run(String[] args) {
+    public void run(final String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
         String usage = "Create a diploid genome as associated files from a reference genome\n"
@@ -341,8 +341,8 @@ public class VCF2diploid {
      * @param InsertPosition2Sequence --  records insertion locations and sequences
      * @return true if the variant is incorporated, false otherwise
      */
-    private boolean addVariant(byte[] maskedSequence, Sequence referenceSequence, SimpleReference allSequences,
-                               Variant variant, int allele, Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
+    private boolean addVariant(final byte[] maskedSequence, final Sequence referenceSequence, final SimpleReference allSequences,
+                               final Variant variant, final int allele, final Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
 
         //position     -- position of the variant
         //start is 1-based
@@ -521,8 +521,8 @@ public class VCF2diploid {
      * @param genome flags for each position of the original sequence
      * @param ins_seq recording positions of all insertions (here insertions are broader than typical definition)
      */
-    private void makePosMap(StringBuilder sb, String chr_name, Sequence ref_seq, byte[] genome,
-                            Hashtable<Integer, FlexSeq> ins_seq) {
+    private void makePosMap(final StringBuilder sb, final String chr_name, final Sequence ref_seq, final byte[] genome,
+                            final Hashtable<Integer, FlexSeq> ins_seq) {
 
         // host is the perturbed genome
         // ref is b37 or hg19
@@ -628,8 +628,8 @@ public class VCF2diploid {
      * @param insertPosition2Sequence
      * @throws IOException
      */
-    private void writeGenome(BufferedWriter bw, String name, byte[] genome,
-                             Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
+    private void writeGenome(final BufferedWriter bw, final String name, final byte[] genome,
+                             final Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
 
         // write header
         bw.write(">" + name);
@@ -835,7 +835,7 @@ public class VCF2diploid {
      * @param sampleNames list of sample names
      * @return
      */
-    private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
+    private String generateVCFHeader(final String referenceFileName, final List<String> sampleNames) {
         String VCFHeader = "##fileformat=VCFv4.1\n" +
                 "##reference=" + referenceFileName + "\n" +
                 /*

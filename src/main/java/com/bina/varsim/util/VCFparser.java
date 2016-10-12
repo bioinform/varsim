@@ -85,11 +85,6 @@ public class VCFparser extends GzFileParser<Variant> {
         this(fileName, null, pass, null);
     }
 
-    public static void main(String args[]) {
-        //unit tests have been moved to test folder
-    }
-
-
     /**
      * finds where "GT" or similar is in the VCF string so that the genotype can be read
      *
@@ -97,7 +92,7 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param key    The key to be found "GT" or "CN" or other
      * @return the index of the key
      */
-    private int getFormatKeyIndex(String record, String key) {
+    private int getFormatKeyIndex(final String record, final String key) {
         StringTokenizer words = new StringTokenizer(record, ":");
         int ret = 0;
         while (words.hasMoreTokens()) {
