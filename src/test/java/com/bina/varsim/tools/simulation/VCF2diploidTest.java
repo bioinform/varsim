@@ -635,4 +635,20 @@ public class VCF2diploidTest {
     public void unbalancedTranslocationIntrachromosomalWithInversion() throws IOException {
         universalTestMethod("src/test/resources/TranslocationTest/UnbalancedLossTranslocationWithInversionTest/UnbalancedLossIntrachromosomalTranslocationWithInversion");
     }
+    @Test
+    public void unbalancedGainTranslocationInterchromosomal() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainInterchromosomalTranslocation");
+    }
+    @Test
+    public void unbalancedGainTranslocationIntrachromosomal() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainIntrachromosomalTranslocation");
+    }
+    @Test
+    public void unbalancedGainTranslocationInterchromosomalWithInversion() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainInterchromosomalTranslocationWithInversion");
+    }
+    @Test
+    public void unbalancedGainTranslocationIntrachromosomalWithInversion() throws IOException {
+        universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainIntrachromosomalTranslocationWithInversion");
+    }
 }

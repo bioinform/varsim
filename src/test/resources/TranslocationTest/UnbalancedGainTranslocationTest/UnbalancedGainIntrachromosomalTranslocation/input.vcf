@@ -1,0 +1,24 @@
+##fileformat=VCFv4.1
+##reference=src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainInterchromosomalTranslocation/reference.fa
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of variant">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">
+##INFO=<ID=END2,Number=A,Type=Integer,Description="1-based End position of source sequence">
+##INFO=<ID=CHR2,Number=A,Type=String,Description="Chromosome of source sequence">
+##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description="Subtype of translocation event: source sequence deleted (REJECT); source sequence accepted (ACCEPT).">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
+##ALT=<ID=DEL:ME:L1,Description="Deletion of L1 element">
+##ALT=<ID=DUP,Description="Duplication">
+##ALT=<ID=DUP:TANDEM,Description="Tandem Duplication">
+##ALT=<ID=INS,Description="Insertion of novel sequence">
+##ALT=<ID=INS:ME:ALU,Description="Insertion of ALU element">
+##ALT=<ID=INS:ME:L1,Description="Insertion of L1 element">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=CNV,Description="Copy number variable region">
+##ALT=<ID=ITX,Description="Intra-chromosomal translocation">
+##ALT=<ID=TRA,Description="Translocation">
+##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
+1	1	.	A	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=4;END=1;TRASUBTYPE=ACCEPT;CHR2=1;POS2=8;END2=11	GT	1|0
