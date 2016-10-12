@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.1
-##reference=src/test/resources/TranslocationTest/UnbalancedTranslocationTest/twelveTranslocationTest.fa
+##reference=src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/twelveTranslocationTest.fa
 ##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of variant">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">

@@ -521,15 +521,15 @@ public class VCF2diploidTest {
     @Test
     public void unbalancedTranslocationInterchromosomal() throws IOException {
         File wd = tmpFolder.newFolder("unbalancedTranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationInterchromosomal_2_paternal.fa";
+        String reference = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal.vcf";
+        String expectedVCF1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal.expected.2.vcf";
+        String map = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal.map";
+        String maternalReference1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
@@ -556,15 +556,15 @@ public class VCF2diploidTest {
     @Test
     public void unbalancedTranslocationIntrachromosomal() throws IOException {
         File wd = tmpFolder.newFolder("unbalancedTranslocationTest");
-        String reference = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/twelveTranslocationTest.fa";
-        String vcf = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal.vcf";
-        String expectedVCF1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal.expected.1.vcf";
-        String expectedVCF2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal.expected.2.vcf";
-        String map = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal.map";
-        String maternalReference1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal_1_maternal.fa";
-        String paternalReference1 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal_1_paternal.fa";
-        String maternalReference2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal_2_maternal.fa";
-        String paternalReference2 = "src/test/resources/TranslocationTest/UnbalancedTranslocationTest/unbalancedTranslocationIntrachromosomal_2_paternal.fa";
+        String reference = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/twelveTranslocationTest.fa";
+        String vcf = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal.vcf";
+        String expectedVCF1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal.expected.1.vcf";
+        String expectedVCF2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal.expected.2.vcf";
+        String map = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal.map";
+        String maternalReference1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal_1_maternal.fa";
+        String paternalReference1 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal_1_paternal.fa";
+        String maternalReference2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal_2_maternal.fa";
+        String paternalReference2 = "src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationIntrachromosomal_2_paternal.fa";
 
         Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
         Path outputVCF2Path = Paths.get(wd.getCanonicalPath(), "2_test.vcf");
