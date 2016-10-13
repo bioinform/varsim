@@ -1,7 +1,11 @@
 ##fileformat=VCFv4.1
 ##reference=src/test/resources/InversionTest/oneInversionTest.fa
-##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Length of variant">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of variant">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">
+##INFO=<ID=END2,Number=A,Type=Integer,Description="1-based End position of source sequence">
+##INFO=<ID=CHR2,Number=A,Type=String,Description="Chromosome of source sequence">
+##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description="Subtype of translocation event: source sequence deleted (REJECT); source sequence accepted (ACCEPT).">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##ALT=<ID=DEL,Description="Deletion">
 ##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
@@ -14,6 +18,7 @@
 ##ALT=<ID=INV,Description="Inversion">
 ##ALT=<ID=CNV,Description="Copy number variable region">
 ##ALT=<ID=ITX,Description="Intra-chromosomal translocation">
+##ALT=<ID=TRA,Description="Translocation">
 ##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
 1	3	.	T	<INV>	.	PASS	SVTYPE=INV;SVLEN=4	GT	0|1

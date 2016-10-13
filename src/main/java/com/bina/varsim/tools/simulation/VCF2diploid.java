@@ -7,6 +7,7 @@ import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.StringUtilities;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -63,7 +64,7 @@ public class VCF2diploid {
      *
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         VCF2diploid runner = new VCF2diploid();
         runner.run(args);
     }
@@ -78,7 +79,7 @@ public class VCF2diploid {
      *
      * @param args
      */
-    public void run(String[] args) {
+    public void run(final String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
 
         String usage = "Create a diploid genome as associated files from a reference genome\n"
@@ -256,7 +257,7 @@ public class VCF2diploid {
                 }
 
                 if (var.paternal() > 0) {
-                    if (addVariant(paternalMaskedSequence, referenceSequence, var, var.paternal(),
+                    if (addVariant(paternalMaskedSequence, referenceSequence, allSequences, var, var.paternal(),
                             paternalInsertionSeq)) {
                         nPaternalVariant++;
                         nPaternalVariantBase += var.variantBases();
@@ -269,7 +270,7 @@ public class VCF2diploid {
                 }
 
                 if (var.maternal() > 0) {
-                    if (addVariant(maternalMaskedSequence, referenceSequence, var, var.maternal(),
+                    if (addVariant(maternalMaskedSequence, referenceSequence, allSequences, var, var.maternal(),
                             maternalInsertionSeq)) {
                         nMaternalVariant++;
                         nMaternalVariantBase += var.variantBases();
@@ -340,8 +341,8 @@ public class VCF2diploid {
      * @param InsertPosition2Sequence --  records insertion locations and sequences
      * @return true if the variant is incorporated, false otherwise
      */
-    private boolean addVariant(byte[] maskedSequence, Sequence referenceSequence,
-                               Variant variant, int allele, Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
+    private boolean addVariant(final byte[] maskedSequence, final Sequence referenceSequence, final SimpleReference allSequences,
+                               final Variant variant, final int allele, final Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
 
         //position     -- position of the variant
         //start is 1-based
@@ -437,6 +438,16 @@ public class VCF2diploid {
                 }
                 return false;
             }
+            //TODO: wrap insertion generation in Variant class
+            //NOTE: only translocation with ACCEPT subtype is marked as Translocation
+            //translocation with REJECT subject is marked as Deletion
+            if (variantType == VariantType.Translocation) {
+                if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
+                    insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
+                } else {
+                    insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
+                }
+            }
 
             if (variantType == VariantType.Inversion) {
                 // Treat this as getReferenceAlleleLength then insertion of reverse complement
@@ -477,6 +488,12 @@ public class VCF2diploid {
                 s.setLength(variant.getAlt(allele).length());
                 s.setVar_id(variant.getVar_id());
 
+                if (s.getType().equals(FlexSeq.Type.TRA)) {
+                    s.setChr2(variant.getChr2(allele));
+                    s.setPos2(variant.getPos2(allele));
+                    s.setEnd2(variant.getEnd2(allele));
+                    s.setReferenceAlleleLength(variant.getReferenceAlleleLength());
+                }
                 /*
                 so although we model SNP as deletion+insertions, we do not record
                 their insert locus. We only record insert loci of indel
@@ -504,8 +521,8 @@ public class VCF2diploid {
      * @param genome flags for each position of the original sequence
      * @param ins_seq recording positions of all insertions (here insertions are broader than typical definition)
      */
-    private void makePosMap(StringBuilder sb, String chr_name, Sequence ref_seq, byte[] genome,
-                            Hashtable<Integer, FlexSeq> ins_seq) {
+    private void makePosMap(final StringBuilder sb, final String chr_name, final Sequence ref_seq, final byte[] genome,
+                            final Hashtable<Integer, FlexSeq> ins_seq) {
 
         // host is the perturbed genome
         // ref is b37 or hg19
@@ -611,8 +628,8 @@ public class VCF2diploid {
      * @param insertPosition2Sequence
      * @throws IOException
      */
-    private void writeGenome(BufferedWriter bw, String name, byte[] genome,
-                             Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
+    private void writeGenome(final BufferedWriter bw, final String name, final byte[] genome,
+                             final Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
 
         // write header
         bw.write(">" + name);
@@ -710,6 +727,7 @@ public class VCF2diploid {
                     bw.write("\t");
                     // INFO
                     // TODO write len here
+                    //TODO: use StringJoiner to replace StringBuilder
                     StringBuilder sbStr = new StringBuilder();
                     if (curr_var.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
@@ -719,6 +737,26 @@ public class VCF2diploid {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());
+                    } else if (curr_var.getType() == VariantOverallType.Translocation) {
+                        sbStr.append("SVTYPE=TRA;");
+                        sbStr.append("SVLEN=");
+                        sbStr.append(curr_var.getLength());
+                        sbStr.append(";");
+                        sbStr.append("END=");
+                        sbStr.append(Integer.toString(curr_var.getEnd()));
+                        sbStr.append(";");
+                        sbStr.append("TRASUBTYPE=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtype(), ","));
+                        sbStr.append(";");
+                        //chr2,pos2,end2
+                        sbStr.append("CHR2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllChr2(), ","));
+                                sbStr.append(";");
+                        sbStr.append("POS2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllPos2(), ","));
+                        sbStr.append(";");
+                        sbStr.append("END2=");
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllEnd2(), ","));
                     } else {
                         sbStr.append("SVLEN=");
                         sbStr.append(curr_var.getLength());
@@ -784,15 +822,35 @@ public class VCF2diploid {
 
     /**
      * generate VCF file header
+     *
+     * a little explanation about translocation-related meta-info lines:
+     * each locus involved in translocations is modeled independently as
+     * a cut-paste event with slight variations for different types of
+     * translocations. Basically, a region at locus A (the sink) will be
+     * cut (deleted), and a region at locus B (the source) will be placed
+     * at the sink. The placement may be: complete transfer; complete transfer
+     * with inversion; no transfer (one-way or unbalanced translocation).
+     *
      * @param referenceFileName reference file name
      * @param sampleNames list of sample names
      * @return
      */
-    private String generateVCFHeader(String referenceFileName, List<String> sampleNames) {
+    private String generateVCFHeader(final String referenceFileName, final List<String> sampleNames) {
         String VCFHeader = "##fileformat=VCFv4.1\n" +
                 "##reference=" + referenceFileName + "\n" +
-                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                /*
+                SVLEN is for alternative allele in truth VCF
+                 */
+                "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
+                /*if POS2<=END2, then another sequence is inserted at positive strand
+                if POS2>=END2, then reversed sequence is inserted at negative strand (insert with inversion)
+                 */
+                "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
+                "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+                "##INFO=<ID=CHR2,Number=A,Type=String,Description=\"Chromosome of source sequence\">\n" +
+                "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
+                " source sequence deleted (REJECT); source sequence accepted (ACCEPT).\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
                 "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
@@ -805,6 +863,7 @@ public class VCF2diploid {
                 "##ALT=<ID=INV,Description=\"Inversion\">\n" +
                 "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
                 "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
+                "##ALT=<ID=TRA,Description=\"Translocation\">\n" +
                 "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
         StringJoiner joiner = new StringJoiner("\t");
         for (String id : sampleNames) {

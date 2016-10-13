@@ -1,0 +1,17 @@
+8	1_paternal	1	1	1	+	SEQ	.
+4	1_paternal	9	2	6	+	TRA	.
+3	1_paternal	12	1	9	+	DEL	.
+1	1_paternal	13	1	12	+	SEQ	.
+8	1_maternal	1	1	1	+	SEQ	.
+4	1_maternal	9	2	6	+	TRA	.
+3	1_maternal	12	1	9	+	DEL	.
+1	1_maternal	13	1	12	+	SEQ	.
+6	2_paternal	1	2	1	+	SEQ	.
+3	2_paternal	7	1	8	+	TRA	.
+4	2_paternal	9	2	7	+	DEL	.
+7	2_paternal	10	2	11	+	SEQ	.
+6	2_maternal	1	2	1	+	SEQ	.
+3	2_maternal	7	1	8	+	TRA	.
+4	2_maternal	9	2	7	+	DEL	.
+7	2_maternal	10	2	11	+	SEQ	.
+

@@ -7,8 +7,8 @@ import java.util.zip.GZIPInputStream;
  * Created by johnmu on 8/21/14.
  */
 public abstract class GzFileParser<T> {
-    protected BufferedReader _br = null;
-    protected String _line = "";
+    protected BufferedReader bufferedReader = null;
+    protected String line = "";
 
     protected InputStream decompressStream(final String fileName) throws IOException {
         PushbackInputStream pb = new PushbackInputStream(new FileInputStream(fileName), 1024 * 1024); //we need a pushbackstream to look ahead
@@ -26,7 +26,7 @@ public abstract class GzFileParser<T> {
      * @return true if the file has more to read
      */
     public boolean hasMoreInput() {
-        return (_line != null);
+        return (line != null);
     }
 
 
@@ -37,20 +37,20 @@ public abstract class GzFileParser<T> {
 
 
     protected void readLine() {
-        _line = null;
+        line = null;
         try {
-            _line = _br.readLine();
+            line = bufferedReader.readLine();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        if (_line == null) {
+        if (line == null) {
             try {
-                _br.close();
+                bufferedReader.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-            _br = null;
+            bufferedReader = null;
         }
     }
 

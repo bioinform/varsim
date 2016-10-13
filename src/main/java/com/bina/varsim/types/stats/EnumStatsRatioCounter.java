@@ -22,10 +22,12 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
     private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {
+        //why TreeMap used rather than HashMap?
         data = new TreeMap<>();
         all_data = new StatsRatioRecord();
     }
 
+    //TODO: rename incTP to something easier to understand
     public void incTP(Value a, int len) {
         StatsRatioRecord count = data.get(a);
         if (count != null) {

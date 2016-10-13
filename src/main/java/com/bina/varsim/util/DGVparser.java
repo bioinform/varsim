@@ -35,7 +35,7 @@ public class DGVparser extends GzFileParser<Variant> {
         _rand = rand;
 
         try {
-            _br = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
+            bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
             readLine(); // skip the first line
             readLine();
         } catch (IOException ex) {
@@ -49,7 +49,7 @@ public class DGVparser extends GzFileParser<Variant> {
 
     // returns null if the line is not a variant
     public Variant parseLine() {
-        String line = _line;
+        String line = this.line;
         readLine();
 
         if (line == null || line.length() == 0) {

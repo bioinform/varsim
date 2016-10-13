@@ -32,21 +32,31 @@ public class Variant implements Comparable<Variant>{
     //so refDeleted.length() <= 1 is always true?
     private String refDeleted;
     private String extraBase = "";
+    private ChrString[] chr2;
+    private int[] pos2;
+    private int[] end2;
+    private int end;
+    private String[] translocationSubtype;
 
-    public Variant(Random rand) {
+    public Variant(final Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
         this.rand = rand;
     }
 
-    public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
-                   FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
-                   String ref_deleted) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null);
+    public Variant(final ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
+                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String var_id, final String filter,
+                   final String ref_deleted) {
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, null, null, null, null, -1, null);
     }
 
-    public Variant(ChrString chr, int pos, int referenceAlleleLength, byte[] ref,
-                   FlexSeq[] alts, byte[] phase, boolean isPhased, String var_id, String filter,
-                   String ref_deleted, Random rand) {
+    public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
+                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String var_id, final String filter,
+                   final String ref_deleted, Random rand) {
+        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, var_id, filter, ref_deleted, rand, null, null, null, -1, null);
+    }
+    public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
+                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String var_id, final String filter,
+                   final String ref_deleted, Random rand, final ChrString[] chr2, final int[] pos2, final int[] end2, final int end, final String[] translocationSubtype) {
         this(rand);
 
         this.filter = filter;
@@ -68,9 +78,14 @@ public class Variant implements Comparable<Variant>{
             }
         }
 
+        this.chr2 = chr2;
+        this.pos2 = pos2;
+        this.end2 = end2;
         paternal = phase[0];
         maternal = phase[1];
         this.isPhased = isPhased;
+        this.end = end;
+        this.translocationSubtype = translocationSubtype;
     }
 
     public Variant(final Variant var) {
@@ -90,6 +105,9 @@ public class Variant implements Comparable<Variant>{
             }
         }
 
+        this.chr2 = var.chr2;
+        this.pos2 = var.pos2;
+        this.end2 = var.end2;
         paternal = var.paternal;
         maternal = var.maternal;
         isPhased = var.isPhased;
@@ -123,7 +141,7 @@ public class Variant implements Comparable<Variant>{
      * @param ref reference sequence
      * @return return true if it was changed
      */
-    public boolean setNovelPosition(int pos, SimpleReference ref) {
+    public boolean setNovelPosition(final int pos, final SimpleReference ref) {
 
         // replace ref
         int len = this.ref.length;
@@ -179,7 +197,7 @@ public class Variant implements Comparable<Variant>{
     /**
      * @param id variant id. usually the dbSNP id
      */
-    public void setVarID(String id) {
+    public void setVarID(final String id) {
         varId = id;
     }
 
@@ -212,10 +230,47 @@ public class Variant implements Comparable<Variant>{
      * @param ind index of allele
      * @return the insertion sequence as a string
      */
-    public byte[] insertion(int ind) {
+    public byte[] insertion(final int ind) {
         if (ind <= 0 || ind > alts.length)
             return null;
         return alts[ind - 1].getSeq();
+    }
+
+    public ChrString getChr2(final int ind) {
+        if (ind <= 0 || ind > alts.length)
+            return new ChrString("");
+        return this.chr2[ind - 1];
+    }
+
+    public int getPos2(final int ind) {
+        if (ind <= 0 || ind > alts.length)
+            return -1;
+        return this.pos2[ind - 1];
+    }
+
+    public int getEnd2(final int ind) {
+        if (ind <= 0 || ind > alts.length)
+            return -1;
+        return this.end2[ind - 1];
+    }
+
+    public ChrString[] getAllChr2() {
+        return this.chr2;
+    }
+
+    public int[] getAllPos2() {
+        return this.pos2;
+    }
+
+    public int[] getAllEnd2() {
+        return this.end2;
+    }
+
+    public int getEnd() {
+        return this.end;
+    }
+    public String[] getAllTranslocationSubtype() {
+        return this.translocationSubtype;
     }
 
     /**
@@ -225,7 +280,7 @@ public class Variant implements Comparable<Variant>{
      * @param ind index of allele
      * @return the length of that allele
      */
-    public int insertion_len(int ind) {
+    public int insertion_len(final int ind) {
         if (ind <= 0 || ind > alts.length)
             return 0;
         return alts[ind - 1].length();
@@ -234,7 +289,7 @@ public class Variant implements Comparable<Variant>{
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
     // and getReferenceAlleleLength
-    public int maxLen(int ind) {
+    public int maxLen(final int ind) {
         if (ind <= 0 || ind > alts.length)
             return 0;
         return Math.max(referenceAlleleLength, alts[ind - 1].length());
@@ -259,7 +314,7 @@ public class Variant implements Comparable<Variant>{
     /*
     gets the interval enclosing the variant on the reference genome
     */
-    public SimpleInterval1D get_interval(int ind) {
+    public SimpleInterval1D get_interval(final int ind) {
         if (ind == 0 || referenceAlleleLength == 0) {
             return new SimpleInterval1D(pos, pos);
         }
@@ -270,7 +325,7 @@ public class Variant implements Comparable<Variant>{
     /*
     gets the interval for the variant, accounting for variant size
     */
-    public SimpleInterval1D get_var_interval(int ind) {
+    public SimpleInterval1D get_var_interval(final int ind) {
         try {
             if (ind == 0) {
                 return new SimpleInterval1D(pos, pos);
@@ -310,7 +365,7 @@ public class Variant implements Comparable<Variant>{
     * 1 = maternal
     * otherwise returns -1
      */
-    public int get_allele(int parent) {
+    public int get_allele(final int parent) {
         if (parent == 0) {
             return getgood_paternal();
         } else if (parent == 1) {
@@ -319,7 +374,7 @@ public class Variant implements Comparable<Variant>{
         return -1;
     }
 
-    public void set_allele(int parent, byte allele) {
+    public void set_allele(final int parent, final byte allele) {
         if (parent == 0) {
             paternal = allele;
         } else if (parent == 1) {
@@ -342,7 +397,7 @@ public class Variant implements Comparable<Variant>{
      * @param ind index of allele (starts at 1, 0 is reference)
      * @return type of allele at index ind
      */
-    public VariantType getType(int ind) {
+    public VariantType getType(final int ind) {
         if (ind == 0) {
             return VariantType.Reference;
         }
@@ -360,6 +415,8 @@ public class Variant implements Comparable<Variant>{
                 return VariantType.Insertion;
             case INV:
                 return VariantType.Inversion;
+            case TRA:
+                return VariantType.Translocation;
             default:
                 break;
         }
@@ -460,6 +517,19 @@ public class Variant implements Comparable<Variant>{
             return VariantOverallType.Insertion;
         }
 
+        // check TRA
+        boolean isTranslocation = true;
+        for (int a = 0; a < 2; a++) {
+            if (allele[a] > 0 && getType(allele[a]) != VariantType.Translocation) {
+                isTranslocation = false;
+                break;
+            }
+        }
+        if (isTranslocation) {
+            return VariantOverallType.Translocation;
+        }
+
+
         /* Treat these as complex for now
         // check INDEL
         boolean is_indel = true;
@@ -490,13 +560,19 @@ public class Variant implements Comparable<Variant>{
         return VariantOverallType.Complex;
     }
 
-    public FlexSeq getAlt(int ind) {
+    /**
+     * return alternative allele based on alternative allele index specified in GT field
+     * alternative allele index = 1,2,...
+     * @param ind
+     * @return
+     */
+    public FlexSeq getAlt(final int ind) {
         if (ind <= 0 || ind > alts.length)
             return null;
         return alts[ind - 1];
     }
 
-    public void setAlt(int ind, FlexSeq alt) {
+    public void setAlt(final int ind, FlexSeq alt) {
         if (ind <= 0 || ind > alts.length) {
             return;
         }
@@ -536,7 +612,7 @@ public class Variant implements Comparable<Variant>{
         return refDeleted;
     }
 
-    public int getCN(int ind) {
+    public int getCN(final int ind) {
         if (ind <= 0 || ind > alts.length)
             return 0;
         return alts[ind - 1].getCopy_num();
@@ -637,7 +713,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -684,7 +760,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     @Override
-    public int compareTo(Variant other) {
+    public int compareTo(final Variant other) {
         final int chrCmp = chr.compareTo(other.chr);
         if (chrCmp != 0) {
             return chrCmp;
@@ -734,7 +810,7 @@ public class Variant implements Comparable<Variant>{
      * @param sbStr will build a VCF record without genotype
      */
     // TODO, this should be self contained and output a VCF record
-    private void buildVCFstr(StringBuilder sbStr) {
+    private void buildVCFstr(final StringBuilder sbStr) {
         // chromosome name
         sbStr.append(chr.toString());
         sbStr.append("\t");
@@ -807,7 +883,7 @@ public class Variant implements Comparable<Variant>{
      * @param maternal specified maternal allele
      * @return the VCF record with prespecified genotype
      */
-    public String toString(int paternal, int maternal) {
+    public String toString(final int paternal, final int maternal) {
         StringBuilder sbStr = new StringBuilder();
 
         buildVCFstr(sbStr);

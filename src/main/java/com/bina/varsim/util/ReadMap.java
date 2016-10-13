@@ -20,11 +20,11 @@ public class ReadMap extends GzFileParser<ReadMapRecord>{
 
     public ReadMap(final File file) throws IOException {
         log.info("Loading read alignment map from " + file.getName());
-        _br = new BufferedReader(new InputStreamReader(decompressStream(file.getName())));
+        bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(file.getName())));
         while (hasMoreInput()) {
             readLine();
-            log.trace("Parsing line " + _line);
-            if (_line == null || _line.trim().isEmpty()) {
+            log.trace("Parsing line " + line);
+            if (line == null || line.trim().isEmpty()) {
                 break;
             }
             final ReadMapRecord record = parseLine();
@@ -34,7 +34,7 @@ public class ReadMap extends GzFileParser<ReadMapRecord>{
     }
 
     public ReadMapRecord parseLine() {
-        return hasMoreInput() ? new ReadMapRecord(_line.trim()) : null;
+        return hasMoreInput() ? new ReadMapRecord(line.trim()) : null;
     }
 
     public ReadMapRecord getReadMapRecord(final String readName) {
