@@ -13,7 +13,7 @@ public class StringUtilities {
      * @param a
      * @return
      */
-    public static String concatenateArray(int[] a, CharSequence delimiter) {
+    public static String concatenateArray(final int[] a, final CharSequence delimiter) {
         if (a == null) {
             return "";
         }
@@ -30,7 +30,7 @@ public class StringUtilities {
      * @param delimiter
      * @return
      */
-    public static String concatenateArray(String[] a, CharSequence delimiter) {
+    public static String concatenateArray(final String[] a, final CharSequence delimiter) {
         if (a == null) {
             return "";
         }
@@ -47,7 +47,7 @@ public class StringUtilities {
      * @param delimiter
      * @return
      */
-    public static String concatenateArray(ChrString[] a, CharSequence delimiter) {
+    public static String concatenateArray(final ChrString[] a, final CharSequence delimiter) {
         if (a == null) {
             return "";
         }

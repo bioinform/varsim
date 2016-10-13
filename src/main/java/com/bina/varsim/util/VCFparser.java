@@ -513,7 +513,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     use it unless it breaks things.
                      */
                     if (subtype[altAlleleIndex - 1].equals("ACCEPT")) {
-                        alts[altAlleleIndex - 1] = new FlexSeq(FlexSeq.Type.TRANSLOCATION, altAllelelength, currentCopyNumber);
+                        alts[altAlleleIndex - 1] = new FlexSeq(FlexSeq.Type.TRA, altAllelelength, currentCopyNumber);
                     } else if (subtype[altAlleleIndex - 1].equals("REJECT")){
                         alts[altAlleleIndex - 1] = new FlexSeq(FlexSeq.Type.DEL, 0);
                     } else {
@@ -535,7 +535,7 @@ public class VCFparser extends GzFileParser<Variant> {
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random, ChrString.string2ChrString(chr2), pos2, end2, end[0], subtype);
                 //TODO: this assumes only one alt, which might not be true
             } else {
-                log.error("No length information for TRANSLOCATION:");
+                log.error("No length information for TRA:");
                 log.error(line);
                 log.error("skipping...");
                 return null;

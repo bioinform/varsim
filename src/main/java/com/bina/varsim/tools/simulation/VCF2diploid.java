@@ -488,7 +488,7 @@ public class VCF2diploid {
                 s.setLength(variant.getAlt(allele).length());
                 s.setVar_id(variant.getVar_id());
 
-                if (s.getType().equals(FlexSeq.Type.TRANSLOCATION)) {
+                if (s.getType().equals(FlexSeq.Type.TRA)) {
                     s.setChr2(variant.getChr2(allele));
                     s.setPos2(variant.getPos2(allele));
                     s.setEnd2(variant.getEnd2(allele));

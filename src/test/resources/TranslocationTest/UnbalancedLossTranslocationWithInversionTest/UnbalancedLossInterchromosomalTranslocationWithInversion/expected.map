@@ -1,9 +1,9 @@
 1	1_paternal	1	1	1	+	SEQ	.
-3	1_paternal	2	2	2	-	TRANSLOCATION	.
+3	1_paternal	2	2	2	-	TRA	.
 4	1_paternal	4	1	2	+	DEL	.
 7	1_paternal	5	1	6	+	SEQ	.
 1	1_maternal	1	1	1	+	SEQ	.
-3	1_maternal	2	2	2	-	TRANSLOCATION	.
+3	1_maternal	2	2	2	-	TRA	.
 4	1_maternal	4	1	2	+	DEL	.
 7	1_maternal	5	1	6	+	SEQ	.
 2	2_paternal	1	2	1	+	SEQ	.

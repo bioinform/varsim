@@ -11,14 +11,14 @@ import java.util.concurrent.Exchanger;
  * TODO: constructors of this class should honor specifications outlined in VCF header
  */
 public class VCFInfo {
-    private Map<String, VCFInfoElement> info2Value;
+    final private Map<String, VCFInfoElement> info2Value;
 
     /**
      * parse INFO field string
      * store each key value pair in a map
      * @param infoString
      */
-    public VCFInfo(String infoString) throws UnexpectedException {
+    public VCFInfo(final String infoString) throws UnexpectedException {
         this.info2Value = new HashMap<String, VCFInfoElement>();
         String[] infos = infoString.split(";");
         for (int i = 0; i < infos.length; i++) {
@@ -32,7 +32,7 @@ public class VCFInfo {
         }
     }
 
-    public Object getValue(String id) {
+    public Object getValue(final String id) {
         return this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue() : null;
     }
     private class VCFInfoElement {
@@ -48,7 +48,7 @@ public class VCFInfo {
          * @param id
          * @param value
          */
-        public VCFInfoElement(String id, String value) throws UnexpectedException {
+        public VCFInfoElement(final String id, String value) throws UnexpectedException {
             this.type = getType(id);
             String[] valueArray = value.split(",");
             switch(this.type) {
@@ -108,7 +108,7 @@ public class VCFInfo {
      * @param infoID
      * @return
      */
-    public static String getType(String infoID) {
+    public static String getType(final String infoID) {
         if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2") || infoID.equals("END")
                 || infoID.equals("DP")) {
             return "Integer";

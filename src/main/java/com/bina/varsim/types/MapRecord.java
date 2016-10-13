@@ -74,11 +74,11 @@ public class MapRecord {
                     currentMapRecord.varId = varId;
 
                     break;
-                case TRANSLOCATION:
+                case TRA:
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
                     currentMapRecord.refPos = Math.min(insertion.getPos2(), insertion.getEnd2()) - 1;
                     currentMapRecord.refChr = insertion.getChr2().toString();
-                    currentMapRecord.feature = "TRANSLOCATION";
+                    currentMapRecord.feature = "TRA";
                     currentMapRecord.isForward = insertion.getPos2() <= insertion.getEnd2() ? true : false;
                     currentMapRecord.len = insertion.var_length();
                     currentMapRecord.varId = varId;

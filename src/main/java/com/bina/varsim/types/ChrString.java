@@ -8,7 +8,7 @@ package com.bina.varsim.types;
 public class ChrString implements Comparable<ChrString>{
     final String name;
 
-    public ChrString(String name) {
+    public ChrString(final String name) {
         this.name = stripChr(name);
     }
 
@@ -18,12 +18,12 @@ public class ChrString implements Comparable<ChrString>{
      * @param chr Chromosome name as a string
      * @return chromosome name as a string in b37 format
      */
-    public static String stripChr(String chr) {
+    public static String stripChr(final String chr) {
         if (chr.length() > 3 && chr.substring(0, 3).equalsIgnoreCase("chr")) {
             return chr.substring(3);
         }
         if (chr.equals("M")) {
-            chr = "MT";
+            return "MT";
         }
         return chr;
     }
@@ -33,7 +33,7 @@ public class ChrString implements Comparable<ChrString>{
      * @param s
      * @return
      */
-    public static ChrString[] string2ChrString(String[] s) {
+    public static ChrString[] string2ChrString(final String[] s) {
         if (s == null) {
             return null;
         }
@@ -72,7 +72,7 @@ public class ChrString implements Comparable<ChrString>{
      * @param gender Gender of individual
      * @return True if the chromosome is haploid given the sex
      */
-    public boolean isHaploid(GenderType gender) {
+    public boolean isHaploid(final GenderType gender) {
         if (isMT()) {
             return true;
         } else if (gender == GenderType.MALE) {
@@ -82,7 +82,7 @@ public class ChrString implements Comparable<ChrString>{
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -98,7 +98,7 @@ public class ChrString implements Comparable<ChrString>{
     }
 
     @Override
-    public int compareTo(ChrString other) {
+    public int compareTo(final ChrString other) {
         return name.compareTo(other.getName());
     }
 }

@@ -39,7 +39,7 @@ public enum VariantOverallType implements INonReference{
                 return Inversion;
             case "TD_DUP":
                 return Tandem_Duplication;
-            case "TRANSLOCATION":
+            case "TRA":
                 return Translocation;
             case "CLPX":
                 return Complex;
