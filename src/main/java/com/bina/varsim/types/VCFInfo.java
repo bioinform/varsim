@@ -115,7 +115,8 @@ public class VCFInfo {
         } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRASUBTYPE")) {
             return "String";
         } else {
-            throw new IllegalArgumentException("ERROR: unrecognized INFO ID (" + infoID + ").");
+            //unrecognized INFO ID, retrun String for now
+            return "String";
         }
     }
 }
