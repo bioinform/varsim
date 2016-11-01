@@ -94,12 +94,12 @@ public class VCF2diploid {
         try {
             cmd_parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar vcf2diploid.jar [options...]");
+            log.error(VERSION);
+            log.error(e.getMessage());
+            log.error("java -jar vcf2diploid.jar [options...]");
             // print the list of available options
             cmd_parser.printUsage(System.err);
-            System.err.println(usage);
+            log.error(usage);
             return;
         }
 
@@ -130,7 +130,7 @@ public class VCF2diploid {
      */
     public void parseVCFs(List<String> vcfs, Map<ChrString, List<Variant>> variants, String id, boolean pass) {
         for (String _vcfFile : vcfs) {
-            VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
+            final VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
             /*
             apparently, nVariant is for # of variants
             nVariantBase is for # of nucleotides in variants
@@ -163,8 +163,7 @@ public class VCF2diploid {
                 nVariant++;
                 nVariantBase += var.variantBases();
             }
-            System.out.println(_vcfFile + ": " + nVariant + " variants, "
-                    + nVariantBase + " variant bases");
+            log.info(_vcfFile + ": " + nVariant + " variants, " + nVariantBase + " variant bases");
         }
         //sort variants of each chromosome by coordinates
         for (ChrString chr : variants.keySet()) {
@@ -195,7 +194,7 @@ public class VCF2diploid {
         for (ChrString chr : allSequences.keySet()) {
             Sequence referenceSequence = allSequences.getSequence(chr);
 
-            System.out.println("Working on " + referenceSequence.getName() + "...");
+            log.info("Working on " + referenceSequence.getName() + "...");
 
             boolean output_paternal = true;
             boolean output_maternal = true;
@@ -295,7 +294,7 @@ public class VCF2diploid {
                 String paternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
                 makePosMap(map_string, paternalSequenceName, referenceSequence, paternalMaskedSequence, paternalInsertionSeq);
                 writeHaploid(paternalMaskedSequence, paternalInsertionSeq, paternalSequenceName, paternalSequenceFileName);
-                System.out.println("Applied " + nPaternalVariant + " variants "
+                log.info("Applied " + nPaternalVariant + " variants "
                         + nPaternalVariantBase + " bases to " + "paternal genome.");
             }
 
@@ -304,7 +303,7 @@ public class VCF2diploid {
                 String maternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
                 makePosMap(map_string, maternalSequenceName, referenceSequence, maternalMaskedSequence, maternalInsertionSeq);
                 writeHaploid(maternalMaskedSequence, maternalInsertionSeq, maternalSequenceName, maternalSequenceFileName);
-                System.out.println("Applied " + nMaternalVariant + " variants "
+                log.info("Applied " + nMaternalVariant + " variants "
                         + nMaternalVariantBase + " bases to " + "maternal genome.");
             }
         }
@@ -654,10 +653,7 @@ public class VCF2diploid {
             }
         }
         while (line.length() > 0) {
-            int n = line.length();
-            if (LineWidth < n) {
-                n = LineWidth;
-            }
+            int n = Math.min(line.length(), LineWidth);
             bw.write(line.toString(), 0, n);
             bw.newLine();
             line.delete(0, n);
