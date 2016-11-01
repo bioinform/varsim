@@ -21,9 +21,13 @@ import java.util.Random;
 public class DGVparser extends GzFileParser<Variant> {
     private final static Logger log = Logger.getLogger(DGVparser.class.getName());
 
-    Random _rand = null;
+    public final static String DGV_HEADER_START = "#";
 
-    private SimpleReference _reference;
+    public final static String DGV_COLUMN_SEPARATOR = "\t";
+
+    Random rand = null;
+
+    private SimpleReference reference;
 
     /**
      * This does not read the file, it just initialises the reading
@@ -32,7 +36,7 @@ public class DGVparser extends GzFileParser<Variant> {
      * @param reference Reference genome
      */
     public DGVparser(String fileName, SimpleReference reference, Random rand) {
-        _rand = rand;
+        this.rand = rand;
 
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
@@ -43,7 +47,50 @@ public class DGVparser extends GzFileParser<Variant> {
             log.error(ex.toString());
         }
 
-        _reference = reference;
+        this.reference = reference;
+    }
+
+    /**
+     *
+     * @param dgvVariantType DGV Variant type
+     * @param dgvVariantSubtype DGV Variant subtype
+     * @return VariantType. Return value is null if cannot map to the right VariantType
+     */
+    public VariantType getVariantType(final String dgvVariantType, final String dgvVariantSubtype) {
+        switch (dgvVariantType) {
+            case "CNV":
+                switch (dgvVariantSubtype) {
+                    case "Gain":
+                        return VariantType.Tandem_Duplication;
+                    case "Loss":
+                        return VariantType.Deletion;
+                    case "CNV":
+                        return VariantType.Tandem_Duplication;
+                    case "Duplication":
+                        return VariantType.Tandem_Duplication;
+                    case "Insertion":
+                        return VariantType.Insertion;
+                    case "Deletion":
+                        return VariantType.Deletion;
+                    default:
+                        return null;
+                }
+            case "OTHER":
+                switch (dgvVariantSubtype) {
+                    case "Tandem Duplication":
+                        return VariantType.Tandem_Duplication;
+                    case "Inversion":
+                        return VariantType.Inversion;
+                    default:
+                        return null;
+                }
+            default:
+                return null;
+        }
+    }
+
+    public boolean isHeaderLine(final String line) {
+        return line.startsWith(DGV_HEADER_START);
     }
 
 
@@ -56,11 +103,10 @@ public class DGVparser extends GzFileParser<Variant> {
             return null;
         }
 
-        if (line.charAt(0) == '#') {
-            return null;
+        if (isHeaderLine(line)) {
         }
 
-        String[] ll = line.split("\t");
+        String[] ll = line.split(DGV_COLUMN_SEPARATOR);
 
         /*
          format
@@ -75,68 +121,20 @@ public class DGVparser extends GzFileParser<Variant> {
          17 18 19
          cohortdescription genes samples
         */
+        final String var_id = ll[0];
+        final ChrString chr = new ChrString(ll[1]);
+        final int start_loc = Integer.parseInt(ll[2]);
+        final int end_loc = Integer.parseInt(ll[3]);
 
         // determine variant type
-        VariantType type;
-        String varianttype = ll[4];
-        String variantsubtype = ll[5];
-
-        switch (varianttype) {
-            case "CNV":
-                switch (variantsubtype) {
-                    case "Gain":
-                        type = VariantType.Tandem_Duplication;
-                        break;
-                    case "Loss":
-                        type = VariantType.Deletion;
-                        break;
-                    case "CNV":
-                        type = VariantType.Tandem_Duplication;
-                        break;
-                    case "Duplication":
-                        type = VariantType.Tandem_Duplication;
-                        break;
-                    case "Insertion":
-                        type = VariantType.Insertion;
-                        break;
-                    case "Deletion":
-                        type = VariantType.Deletion;
-                        break;
-                    default:
-                        return null;
-                }
-                break;
-            case "OTHER":
-                switch (variantsubtype) {
-                    case "Tandem Duplication":
-                        type = VariantType.Tandem_Duplication;
-                        break;
-                    case "Inversion":
-                        type = VariantType.Inversion;
-                        break;
-                    default:
-                        return null;
-                }
-                break;
-            default:
-                return null;
-        }
+        final VariantType type = getVariantType(ll[4], ll[5]);
 
         // TODO right now we treat all gains as tandem duplications
-        int observedgains = 0;
-        if (ll[15].length() > 0) {
-            observedgains = Integer.parseInt(ll[15]);
-        }
+        int observedgains = (ll[15].length() > 0) ? Integer.parseInt(ll[15]) : 0;
 
         // TODO right now we treat any number of losses as a complete loss (ie.
         // deletion)
         // int observedlosses = Integer.parseInt(ll[16]);
-
-        String var_id = ll[0];
-        ChrString chr = new ChrString(ll[1]);
-
-        int start_loc = Integer.parseInt(ll[2]);
-        int end_loc = Integer.parseInt(ll[3]);
 
         String REF;
         FlexSeq[] alts = new FlexSeq[1];
@@ -145,7 +143,7 @@ public class DGVparser extends GzFileParser<Variant> {
             case Deletion:
                 // reference sequence is the deletion
                 // reference sequence always includes an extra character...
-                byte[] temp = _reference.byteRange(chr, start_loc, end_loc);
+                byte[] temp = reference.byteRange(chr, start_loc, end_loc);
                 if (temp != null) {
                     REF = new String(temp);
                 } else {
@@ -162,9 +160,7 @@ public class DGVparser extends GzFileParser<Variant> {
                 break;
             case Tandem_Duplication:
                 REF = "";
-                if (observedgains < 2) {
-                    observedgains = 2;
-                }
+                observedgains = Math.max(2, observedgains);
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, end_loc - start_loc + 1,
                         observedgains);
                 break;
@@ -197,8 +193,8 @@ public class DGVparser extends GzFileParser<Variant> {
 
         byte[] phase = {1, 1};
         return new Variant(chr, start_loc, refs.length, refs,
-                alts, phase, false, var_id, "PASS", String.valueOf((char) _reference
-                .byteAt(chr, start_loc - 1)), _rand);
+                alts, phase, false, var_id, "PASS", String.valueOf((char) reference
+                .byteAt(chr, start_loc - 1)), rand);
     }
 
 }
