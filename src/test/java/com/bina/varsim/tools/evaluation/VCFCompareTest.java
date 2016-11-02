@@ -91,4 +91,31 @@ public class VCFCompareTest {
   public void differentPaddingTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/differentPaddingTest");
   }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * a variant in truth VCF will be split and compared against 2 variants in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest1() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest1");
+  }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * a variant in truth VCF will be split and compared against 1 variant in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest2() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest2");
+  }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * 2 variants in truth VCF will be compared against 1 variant in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest3() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest3");
+  }
 }
