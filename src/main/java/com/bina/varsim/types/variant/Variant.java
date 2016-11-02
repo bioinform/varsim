@@ -8,10 +8,7 @@ import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
@@ -233,27 +230,19 @@ public class Variant implements Comparable<Variant>{
      * @return the insertion sequence as a string
      */
     public byte[] insertion(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return null;
-        return alts[ind - 1].getSeq();
+        return (ind <= 0 || ind > alts.length) ? null : alts[ind - 1].getSeq();
     }
 
     public ChrString getChr2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return new ChrString("");
-        return this.chr2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? new ChrString("") : this.chr2[ind - 1];
     }
 
     public int getPos2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return -1;
-        return this.pos2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? -1 : this.pos2[ind - 1];
     }
 
     public int getEnd2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return -1;
-        return this.end2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? -1 : this.end2[ind - 1];
     }
 
     public ChrString[] getAllChr2() {
@@ -283,34 +272,23 @@ public class Variant implements Comparable<Variant>{
      * @return the length of that allele
      */
     public int insertion_len(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        return alts[ind - 1].length();
+        return (ind <= 0 || ind > alts.length) ? 0 : alts[ind - 1].length();
     }
 
     // if it is a simple indel, it is just the length
     // if it is a complex variant, this is the maximum length of the insertion
     // and getReferenceAlleleLength
     public int maxLen(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        return Math.max(referenceAlleleLength, alts[ind - 1].length());
+        return (ind <= 0 || ind > alts.length) ? 0 : Math.max(referenceAlleleLength, alts[ind - 1].length());
     }
 
     public int maxLen() {
-        int len = 0;
-        for (int i = 0; i < 2; i++) {
-            len = Math.max(maxLen(get_allele(i)), len);
-        }
-        return len;
+        return Math.max(maxLen(get_allele(0)), maxLen(get_allele(1)));
     }
 
     // this is the minimum length of the variants
     public int minLen() {
-        int len = maxLen(get_allele(0));
-        len = Math.min(maxLen(get_allele(1)), len);
-
-        return len;
+        return Math.min(maxLen(get_allele(0)), maxLen(get_allele(1)));
     }
 
     /*
@@ -476,7 +454,7 @@ public class Variant implements Comparable<Variant>{
             }
         }
 
-        // otherwise it is complex
+        // otherwise it is complex since multiple kinds of variants occur at the same location
         return VariantOverallType.Complex;
     }
 
@@ -487,16 +465,13 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public FlexSeq getAlt(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return null;
-        return alts[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? null : alts[ind - 1];
     }
 
     public void setAlt(final int ind, FlexSeq alt) {
-        if (ind <= 0 || ind > alts.length) {
-            return;
+        if (ind > 0 && ind <= alts.length) {
+            alts[ind - 1] = alt;
         }
-        alts[ind - 1] = alt;
     }
 
     public String getFilter() {
@@ -533,9 +508,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public int getCN(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        return alts[ind - 1].getCopy_num();
+        return (ind <= 0 || ind > alts.length) ? 0 : alts[ind - 1].getCopy_num();
     }
 
     /**
@@ -817,19 +790,11 @@ public class Variant implements Comparable<Variant>{
     }
 
     public byte getgood_paternal() {
-        if (paternal < 0) {
-            return 1;
-        } else {
-            return paternal;
-        }
+        return (paternal < 0) ? 1 : paternal;
     }
 
     public byte getgood_maternal() {
-        if (maternal < 0) {
-            return 1;
-        } else {
-            return maternal;
-        }
+        return (maternal < 0) ? 1: maternal;
     }
 
     public String getExtraBase() {
