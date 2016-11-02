@@ -9,7 +9,9 @@ import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Random;
+import java.util.Set;
 
 public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
@@ -439,122 +441,40 @@ public class Variant implements Comparable<Variant>{
         return VariantType.Complex;
     }
 
+
     /**
-     * @return overall type of the variant considering both alleles
+     * @return overall type of the variant considering all alleles
      */
     public VariantOverallType getType() {
-        int[] allele = {get_allele(0), get_allele(1)};
+        final Set<VariantType> variantTypes = EnumSet.of(getType(get_allele(0)), getType(get_allele(1)));
 
-        // check Reference
-        boolean is_ref = true;
-        for (int a = 0; a < 2; a++) {
-            if (getType(allele[a]) != VariantType.Reference) {
-                is_ref = false;
-                break;
-            }
-        }
-        if (is_ref) {
+        if (variantTypes.size() == 1 && variantTypes.contains(VariantType.Reference)) {
             return VariantOverallType.Reference;
         }
 
-        // check SNP
-        boolean is_snp = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.SNP) {
-                is_snp = false;
-                break;
+        // The overall type depends on the kinds of non-reference alleles. If they are not the same, then return complex
+        variantTypes.remove(VariantType.Reference);
+
+        if (variantTypes.size() == 1) {
+            if (variantTypes.contains(VariantType.SNP)) {
+                return VariantOverallType.SNP;
+            }
+            if (variantTypes.contains(VariantType.Inversion)) {
+                return VariantOverallType.Inversion;
+            }
+            if (variantTypes.contains(VariantType.Tandem_Duplication)) {
+                return VariantOverallType.Tandem_Duplication;
+            }
+            if (variantTypes.contains(VariantType.Deletion)) {
+                return VariantOverallType.Deletion;
+            }
+            if (variantTypes.contains(VariantType.Insertion)) {
+                return VariantOverallType.Insertion;
+            }
+            if (variantTypes.contains(VariantType.Translocation)) {
+                return VariantOverallType.Translocation;
             }
         }
-        if (is_snp) {
-            return VariantOverallType.SNP;
-        }
-
-        // check INV
-        boolean is_inv = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Inversion) {
-                is_inv = false;
-                break;
-            }
-        }
-        if (is_inv) {
-            return VariantOverallType.Inversion;
-        }
-
-        // check DUP
-        boolean is_dup = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Tandem_Duplication) {
-                is_dup = false;
-                break;
-            }
-        }
-        if (is_dup) {
-            return VariantOverallType.Tandem_Duplication;
-        }
-
-        // check Deletion
-        boolean is_del = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Deletion) {
-                is_del = false;
-                break;
-            }
-        }
-        if (is_del) {
-            return VariantOverallType.Deletion;
-        }
-
-        // check DUP
-        boolean is_ins = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Insertion) {
-                is_ins = false;
-                break;
-            }
-        }
-        if (is_ins) {
-            return VariantOverallType.Insertion;
-        }
-
-        // check TRA
-        boolean isTranslocation = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Translocation) {
-                isTranslocation = false;
-                break;
-            }
-        }
-        if (isTranslocation) {
-            return VariantOverallType.Translocation;
-        }
-
-
-        /* Treat these as complex for now
-        // check INDEL
-        boolean is_indel = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && !(getType(get_allele(a)) == Type.Deletion || getType(get_allele(a)) == Type.Insertion)) {
-                is_indel = false;
-                break;
-            }
-        }
-        if (is_indel) {
-            return VariantOverallType.INDEL;
-        }
-
-        // check MNP
-        boolean is_mnp = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(get_allele(a)) != Type.MNP) {
-                is_mnp = false;
-                break;
-            }
-        }
-        if (is_mnp) {
-            return VariantOverallType.MNP;
-        }
-        */
 
         // otherwise it is complex
         return VariantOverallType.Complex;
