@@ -24,6 +24,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
     public EnumStatsRatioCounter() {
         //why TreeMap used rather than HashMap?
         data = new TreeMap<>();
+        //instantiate bins(1:1,2:2,...), some objects for stats
         all_data = new StatsRatioRecord();
     }
 
