@@ -37,6 +37,7 @@ import java.util.*;
  */
 
 // TODO this class does not yet compare the contents of the larger variants
+    //TODO refactor variable naming
 public class VCFcompare {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
@@ -189,8 +190,18 @@ public class VCFcompare {
         }
     }
 
+    /**
+     * VarSim will convert regular variants into normalized variants, i.e. insertion,deletion
+     * plus SNPs. It will try placing insertions and deletions at both beginning and end of
+     * a variant and pick the placement with fewest # of mismatches (normalized variants).
+     *
+     * @param var
+     * @return
+     */
     private List<Variant> convert_var_to_var_list(Variant var) {
+        //not adding indels to the end
         List<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
+        //try adding indels to the end
         List<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
         if (var_list_end.size() < var_list.size()) {
             var_list = var_list_end;
@@ -209,18 +220,23 @@ public class VCFcompare {
         if (var.getType() == VariantOverallType.SNP) {
             no_split = true;
         }
+        //both alleles are reference alleles
         if (var.getgood_paternal() == 0 && var.getgood_maternal() == 0) {
             no_split = true;
         }
+        //paternal allele is not reference or sequence
         if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).getType() != FlexSeq.Type.SEQ) {
             no_split = true;
         }
+        //maternal allele is not reference or sequence
         if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).getType() != FlexSeq.Type.SEQ) {
             no_split = true;
         }
+        //paternal allele is not reference and has zero-length allele and reference sequence
         if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).length() == 0 && var.getRef().length == 0) {
             no_split = true;
         }
+        //maternal allele is not reference and has zero-length allele and reference sequence
         if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).length() == 0 && var.getRef().length == 0) {
             no_split = true;
         }
@@ -231,15 +247,18 @@ public class VCFcompare {
         }
 
 
+        //split long variants into small ones for unambiguous comparison
         if (var.getType(var.getgood_paternal()) != VariantType.Reference
                 && var.getType(var.getgood_maternal()) != VariantType.Reference) {
 
+            //TODO: replace get_allele(0,1) with getgoodpaternal(double-check) or getgoodmaternal
             int[] allele = {var.get_allele(0), var.get_allele(1)};
             byte[][] alt = {var.getAlt(allele[0]).getSeq(), var.getAlt(allele[1]).getSeq()};
             byte[] ref = var.getRef();
             int curr_pos = var.getPos();
 
             // modify positions based on if ref matches alt
+            //TODO: package this into a method
             int[] match_len = {0, 0};
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < Math.min(ref.length, alt[i].length); j++) {
@@ -252,23 +271,38 @@ public class VCFcompare {
             }
             int min_match_len = Math.min(match_len[0], match_len[1]);
 
+            /*
+            reference   ******|------
+            paternal    ******|--
+            maternal    ******|------
+
+            we will right-shift the variant to remove redundancy with the reference
+            */
             if (min_match_len > 0) {
+                //remove redundancy in reference
                 ref = Arrays.copyOfRange(ref, min_match_len, ref.length);
+                //remove redundancy in alternative alleles
                 for (int i = 0; i < 2; i++) {
                     alt[i] = Arrays.copyOfRange(alt[i], min_match_len, alt[i].length);
                 }
                 curr_pos += min_match_len;
             }
 
+            //length difference between reference and allele
             int[] diff = {alt[0].length - ref.length, alt[1].length - ref.length};
 
             add_indels(var_list, diff, ref, alt, var, curr_pos, end);
 
+          /*
+          iterate over reference bp, note here the reference has been adjusted to
+          remove redudancy.
+           */
             for (int i = 0; i < ref.length; i++, curr_pos++) {
 
                 int[] idx = new int[2];
                 if (end) {
                     for (int j = 0; j < 2; j++) {
+                      //recall: diff[j] = alt[j].length - ref.length
                         if (i < ref.length + diff[j]) {
                             idx[j] = i;
                         } else {
@@ -329,8 +363,10 @@ public class VCFcompare {
             var.set_allele(1, (byte) 0); // set to reference
 
         } else {
+            //at least one of paternal and maternal alleles is not reference
             for (int a = 0; a < 2; a++) {
                 int allele = var.get_allele(a);
+                //only process Complex, MNP and SNP variants
                 if (var.getType(allele) == VariantType.Complex
                         || var.getType(allele) == VariantType.MNP
                         || var.getType(allele) == VariantType.SNP) {
@@ -461,6 +497,7 @@ public class VCFcompare {
         }
 
         Set<String> chrAcceptor = null;
+        //TODO: make chrAcceptor a class
         if (includeChrStr != null) {
             chrAcceptor = new HashSet<>(Arrays.asList(includeChrStr.split(",")));
             log.info("Only accepting chromosomes: " + Arrays.toString(chrAcceptor.toArray()));
@@ -563,6 +600,7 @@ public class VCFcompare {
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
 
+            //TODO: remove constructor here (because another copy will be created inside convert_var_to_var_list
             List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
             int total_len = 0;
@@ -680,6 +718,7 @@ public class VCFcompare {
                 VariantOverallType curr_var_type = var.getType();
 
                 // if called as complex variant convert to indel+snps
+                //TODO: remove constructor here (because another copy will be created inside convert_var_to_var_list
                 List<Variant> var_list = convert_var_to_var_list(new Variant(var));
 
                 double total_len = 0;
