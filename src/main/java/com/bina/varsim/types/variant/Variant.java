@@ -43,6 +43,124 @@ public class Variant implements Comparable<Variant>{
         this.rand = rand;
     }
 
+    /*
+    use Builder pattern to make code more readable and maintainable.
+     */
+    public static class Builder {
+        private Random rand = null;
+        private int pos = -1, referenceAlleleLength = -1;
+        private byte[] ref;
+        private ChrString chr;
+        private FlexSeq[] alts;
+        private byte maternal = 0, paternal = 0; // -1 for not avaliable
+        private boolean isPhased = false; // Phasing
+        private String filter;
+        private String varId;
+        // this n the reference base is deleted
+        // if ite same as the first alt base
+        //so refd.length() <= 1 is always true?
+        private String refDeleted;
+        private String extraBase = "";
+        private ChrString[] chr2;
+        private int[] pos2;
+        private int[] end2;
+        private int end;
+        private String[] translocationSubtype;
+
+        public Builder() {}
+        public Builder chr(final ChrString chr) {
+            this.chr = chr;
+            return this;
+        }
+        public Builder pos(final int pos) {
+            this.pos = pos;
+            return this;
+        }
+        public Builder referenceAlleleLength(final int referenceAlleleLength) {
+            this.referenceAlleleLength = referenceAlleleLength;
+            return this;
+        }
+        public Builder ref(final byte[] ref) {
+            this.ref = ref.clone();
+            return this;
+        }
+        public Builder alts(final FlexSeq[] alts) {
+            this.alts = new FlexSeq[alts.length];
+            for (int i = 0; i < alts.length; i++) {
+                if (alts[i] != null) {
+                    this.alts[i] = new FlexSeq(alts[i]);
+                } else {
+                    this.alts[i] = null;
+                }
+            }
+            return this;
+        }
+        public Builder phase(final byte[] phase) {
+            this.paternal = phase[0];
+            this.maternal = phase[1];
+            return this;
+        }
+        public Builder isPhased(final boolean isPhased) {
+            this.isPhased = isPhased;
+            return this;
+        }
+        public Builder varId(final String varId) {
+            this.varId = varId;
+            return this;
+        }
+        public Builder filter(final String filter) {
+            this.filter = filter;
+            return this;
+        }
+        public Builder refDeleted(final String refDeleted) {
+            this.refDeleted = refDeleted;
+            return this;
+        }
+        public Builder randomNumberGenerator(final Random rand) {
+            this.rand = rand;
+            return this;
+        }
+        public Builder chr2(final ChrString[] chr2) {
+            this.chr2 = chr2;
+            return this;
+        }
+        public Builder pos2(final int[] pos2) {
+            this.pos2 = pos2;
+            return this;
+        }
+        public Builder end2(final int[] end2) {
+            this.end2 = end2;
+            return this;
+        }
+        public Builder translocationSubtype(String[] translocationSubtype) {
+            this.translocationSubtype = translocationSubtype;
+            return this;
+        }
+        public Variant build() {
+            return new Variant(this);
+        }
+    }
+    private Variant(Builder builder) {
+        this.rand = builder.rand;
+        this.varId = builder.varId;
+        this.filter = builder.filter;
+        this.chr = builder.chr;
+        this.pos = builder.pos;
+        this.referenceAlleleLength = builder.referenceAlleleLength;
+
+        this.ref = builder.ref;
+        this.refDeleted = builder.refDeleted;
+        this.alts = builder.alts;
+        this.chr2 = builder.chr2;
+        this.pos2 = builder.pos2;
+        this.end2 = builder.end2;
+        this.paternal = builder.paternal;
+        this.maternal = builder.maternal;
+        this.isPhased = builder.isPhased;
+        this.end = builder.end;
+        this.translocationSubtype = builder.translocationSubtype;
+    }
+
     public Variant(final ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
                    final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String var_id, final String filter,
                    final String ref_deleted) {
