@@ -2,6 +2,7 @@ package com.bina.varsim.tools.evaluation;
 
 import com.bina.varsim.tools.simulation.VCF2diploid;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -22,6 +23,9 @@ public class VCFCompareTest {
   public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   public void universalTestMethod(String directory) throws IOException {
+    universalTestMethod(directory, new String[0]);
+  }
+  public void universalTestMethod(String directory, String[] additionalArgs) throws IOException {
     File wd = tmpFolder.newFolder("tmp");
     String truthVcf = new File(directory, "truth.vcf").toString();
     String vcfForCompare = new File(directory, "compare.vcf").toString();
@@ -43,15 +47,75 @@ public class VCFCompareTest {
             "-prefix", Paths.get(wd.getCanonicalPath(),"test").toString(),
             vcfForCompare
     };
-    VCFcompare.main(args);
+    VCFcompare.main(ArrayUtils.addAll(args, additionalArgs));
     assertTrue(FileUtils.contentEquals(outputFalseNegative.toFile(), new File(expectedFalseNegative)));
     assertTrue(FileUtils.contentEquals(outputFalsePositive.toFile(), new File(expectedFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputTruePositive.toFile(), new File(expectedTruePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownFalsePositive.toFile(), new File(expectedUnknownFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownTruePositive.toFile(), new File(expectedUnknownTruePositive)));
   }
+
+  /**
+   * comapre two identical VCFs
+   * @throws IOException
+   */
   @Test
   public void firstSimpleTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/identicalTest");
+  }
+
+  /**
+   * test 2 variants with same mutations but different genotypes
+   * -match_geno off
+   * @throws IOException
+   */
+  @Test
+  public void genotypeTest1() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/genotypeTest1");
+  }
+  /**
+   * test 2 variants with same mutations but different genotypes
+   * -match_geno on
+   * @throws IOException
+   */
+  @Test
+  public void genotypeTest2() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/genotypeTest2", new String[]{"-match_geno"});
+  }
+
+  /**
+   * comparing two VCFs with two same variants but different reference padding at the beginning
+   * @throws IOException
+   */
+  @Test
+  public void differentPaddingTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/differentPaddingTest");
+  }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * a variant in truth VCF will be split and compared against 2 variants in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest1() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest1");
+  }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * a variant in truth VCF will be split and compared against 1 variant in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest2() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest2");
+  }
+  /**
+   * compare two VCFs with two same left-normalized variants (more work than removing padding is required)
+   * 2 variants in truth VCF will be compared against 1 variant in compare.vcf
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest3() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest3");
   }
 }

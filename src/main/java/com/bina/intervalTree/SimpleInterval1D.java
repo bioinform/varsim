@@ -194,23 +194,54 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         long rightLim;
         long leftLim;
 
+        // adjust right limit by wiggle. wiggle is allowance of shift for current interval
         // right limit
         if (getRight() < that.getRight()) {
+          /*
+          if 2nd interval's end is to the right of 1st interval's end
+          shift 1st interval to the right to maximize overlap
+
+          |-->------|--> right shift
+              |-----------|
+           */
             rightLim = Math.min(that.getRight(), getRight() + wiggle);
         } else {
+          /*
+          if 2nd interval's end is to the left of 1st interval's end
+          shift 1st interval to the left to maximize overlap
+
+                    <--|------<--| left shift
+              |-----------|
+           */
             rightLim = Math.max(that.getRight(), getRight() - wiggle);
         }
         leftLim = rightLim - length() + 1l;
 
+        //TODO: make overlap calculation a private method
         long overlap = Math.min(rightLim, that.getRight())
                 - Math.max(leftLim, that.getLeft()) + 1l;
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
         // left limit
+        //TODO: can we only calculate overlap for left shift and right shift without respect to left/right limit?
         if (getLeft() < that.getLeft()) {
+          /*
+          if 2nd interval's start is to the right of 1st interval's start
+          shift 1st interval to the right to maximize overlap
+
+          |-->------|--> right shift
+              |-----------|
+           */
             leftLim = Math.min(that.getLeft(), getLeft() + wiggle);
         } else {
+          /*
+          if 2nd interval's start is to the left of 1st interval's end
+          shift 1st interval to the left to maximize overlap
+
+                    <--|------<--| left shift
+              |-----------|
+           */
             leftLim = Math.max(that.getLeft(), getLeft() - wiggle);
         }
         rightLim = leftLim + length() - 1l;
@@ -220,6 +251,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
 
         maxOverlap = Math.max(maxOverlap, overlap);
 
+        //overlap must occupy over a fraction of both intervals
         if (maxOverlap >= Math.max(len_this, len_that)) {
             return true;
         }
