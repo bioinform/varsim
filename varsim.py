@@ -85,7 +85,9 @@ def monitor_processes(processes):
     return []
 
 
-def concatenate_files(files, merged, header_str="", simple_cat=True):
+def concatenate_files(files, merged, header_str="", simple_cat=True, remove_original=False):
+    logger = logging.getLogger(concatenate_files.__name__)
+    logger.info("Concatenating " + " ".join(files) " as " + merged)
     with open(merged, "w") as merged_fd:
         for index, f in enumerate(files):
             with open(f) as fd:
@@ -95,8 +97,9 @@ def concatenate_files(files, merged, header_str="", simple_cat=True):
                     for line in fd:
                         if line.strip() and (not index or not header_str or not line.startswith(header_str))
                             merged_fd.write(line)
-
-
+            if remove_original:
+                logger.info("Removing " + f)
+                os.remove(f)
 
 
 def check_executable(fpath):
@@ -352,7 +355,7 @@ if __name__ == "__main__":
         contigs = get_contigs_list(args.reference.name)
         contig_fastas = map(lambda (x, y): os.path.join(args.out_dir, "%s_%s_%s.fa" % (x, args.id, y)), itertools.product(contigs, ["maternal", "paternal"]))
         fastas_to_cat = filter(os.path.isfile, contig_fastas)
-        concatenate_files(fastas_to_cat, merged_reference)
+        concatenate_files(fastas_to_cat, merged_reference, remove_original=True)
 
         if os.path.getsize(merged_reference) == 0:
             logger.error("Merged FASTA is empty. Something bad happened. Exiting")
@@ -360,10 +363,10 @@ if __name__ == "__main__":
 
         # contatenate the vcfs
         vcfs_to_cat = filter(os.path.isfile, map(lambda x: os.path.join(args.out_dir, "%s_%s.vcf" % (x, args.id)), contigs))
-        concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False)
+        concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
 
         # Merge the chain files
-        concatenate_files(map(lambda x: os.path.join(args.out_dir, "%s.chain" % x), ["maternal", "paternal"]), merged_chain)
+        concatenate_files(map(lambda x: os.path.join(args.out_dir, "%s.chain" % x), ["maternal", "paternal"]), merged_chain, remove_original=True)
 
         monitor_processes(run_vcfstats([merged_truth_vcf], args.out_dir, args.log_dir))
 
