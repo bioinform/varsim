@@ -841,17 +841,22 @@ public class VCF2diploid {
                 /*
                 SVLEN is for alternative allele in truth VCF
                  */
-                "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
+                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                 /*if POS2<=END2, then another sequence is inserted at positive strand
                 if POS2>=END2, then reversed sequence is inserted at negative strand (insert with inversion)
                  */
                 "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
                 "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+                "##INFO=<ID=END,Number=1,Type=Integer,Description=\"1-based End position of sink sequence\">\n" +
                 "##INFO=<ID=CHR2,Number=A,Type=String,Description=\"Chromosome of source sequence\">\n" +
                 "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
                 " source sequence deleted (REJECT); source sequence accepted (ACCEPT).\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                /*CN is defined as Integer in VCF4.1,4.3, making it impossible to specify multiple CN values
+                here we changed it to String to allow such behavior.
+                 */
+                "##FORMAT=<ID=CN,Number=1,Type=String,Description=\"Copy number genotype. Different copy numbers do not imply same genotypes.\">\n" +
                 "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
                 "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
                 "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
