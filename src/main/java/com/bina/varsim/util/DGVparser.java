@@ -89,11 +89,15 @@ public class DGVparser extends GzFileParser<Variant> {
         }
     }
 
+    /**
+     *
+     * @param line
+     * @return True if the line is a header-line, false otherwise
+     */
     public boolean isHeaderLine(final String line) {
         return line.startsWith(DGV_HEADER_START);
     }
-
-
+    
     // returns null if the line is not a variant
     public Variant parseLine() {
         String line = this.line;
@@ -104,6 +108,7 @@ public class DGVparser extends GzFileParser<Variant> {
         }
 
         if (isHeaderLine(line)) {
+            return null;
         }
 
         String[] ll = line.split(DGV_COLUMN_SEPARATOR);
