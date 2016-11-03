@@ -408,10 +408,10 @@ public class VCF2diploid {
             }
         } else if (variantType == VariantType.MNP) {
             // add this as a bunch of SNPs
+            assert insertions != null;
             // TODO this may result in other variants getting added in between
             for (int i = position; i < position + referenceAlleleLength; i++) {
                 // add each SNP
-                assert insertions != null;
                 if (Character.isLowerCase((char) referenceSequence.byteAt(i))) {
                     maskedSequence[i - 1] = (byte) Character.toLowerCase((char) insertions[i - position]);
                 } else {
@@ -466,16 +466,13 @@ public class VCF2diploid {
                 int single_ins_len = variant.insertion_len(allele);
                 byte[] orig_seq = referenceSequence.subSeq(position, position + single_ins_len);
                 insertions = new byte[single_ins_len * variant.getCN(allele)];
-                System.arraycopy(orig_seq, 0, insertions, 0, orig_seq.length);
-                for (int i = 0; i < insertions.length; i++) {
-                    insertions[i] = orig_seq[i % (orig_seq.length)];
+                for (int i = 0; i < variant.getCN(allele); i++) {
+                    System.arraycopy(orig_seq, 0, insertions, i * single_ins_len, single_ins_len);
                 }
             }
 
             // set to deleted base, so that we don't change those in future
-            for (int p = position; p < position + referenceAlleleLength; p++) {
-                maskedSequence[p - 1] = DELETED_BASE;
-            }
+            Arrays.fill(maskedSequence, position - 1, position + referenceAlleleLength - 1, (byte) DELETED_BASE);
 
             // matter
             // TODO if insertions is null we still need to add??
