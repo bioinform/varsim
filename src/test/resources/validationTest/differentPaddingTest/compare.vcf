@@ -3,6 +3,7 @@
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Length of variant">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype. Different copy numbers do not imply same genotypes.">
 ##ALT=<ID=DEL,Description="Deletion">
 ##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
 ##ALT=<ID=DEL:ME:L1,Description="Deletion of L1 element">
