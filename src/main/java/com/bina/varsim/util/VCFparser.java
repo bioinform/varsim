@@ -338,15 +338,25 @@ public class VCFparser extends GzFileParser<Variant> {
                     alts[i] = new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength);
                 }
                 // TODO this assumes only one alt
-                return new Variant(chr, pos, Math.abs(svlen[0]), refs, alts,
+                /*return new Variant(chr, pos, Math.abs(svlen[0]), refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
                 //TODO: this assumes only one alt, might not be true
             } else if (end[0] > 0) {
                 int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos + 1), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength);
-                return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
+                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else {
                 log.error("No length information for INV:");
                 log.error(line);
@@ -388,8 +398,13 @@ public class VCFparser extends GzFileParser<Variant> {
                     alts[i] = new FlexSeq(FlexSeq.Type.DUP, alternativeAlleleLength, currentCopyNumber);
             }
 
-                return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
+                /*return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlens[0])).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
                 //TODO: this assumes only one alt, which might not be true
             } else if (ends[0] > 0) {
                 int alternativeAlleleLength = Math.max(Math.abs(ends[0] - pos + 1), 1);
@@ -397,8 +412,13 @@ public class VCFparser extends GzFileParser<Variant> {
                 alts[0] = new FlexSeq(FlexSeq.Type.DUP, alternativeAlleleLength, Math.max(
                         copyNumberArray[0], copyNumberArray[1]));
 
-                return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
+                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else {
                 log.error("No length information for DUP:");
                 log.error(line);
@@ -427,14 +447,24 @@ public class VCFparser extends GzFileParser<Variant> {
                     }
                     alts[i] = new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength);
                 }
-                return new Variant(chr, pos, 0, refs, alts,
+                /*return new Variant(chr, pos, 0, refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else if (ends[0] > 0) {
                 int alternativeAlleleLength = Math.max(Math.abs(ends[0] - pos), 1);
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength);
-                return new Variant(chr, pos, 0, refs, alts,
+                /*return new Variant(chr, pos, 0, refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else {
                 log.error("No length information for INS:");
                 log.error(line);
@@ -460,14 +490,24 @@ public class VCFparser extends GzFileParser<Variant> {
                     alts[i] = new FlexSeq(FlexSeq.Type.DEL, 0);
                 }
 
-                return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
+                /*return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlens[0])).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else if (ends[0] > 0) {
                 int alternativeAlleleLength = ends[0] - pos + 1;
                 alts = new FlexSeq[1];
                 alts[0] = new FlexSeq(FlexSeq.Type.DEL, 0);
-                return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
+                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).build();
             } else {
                 log.error("No length information for DEL:");
                 log.error(line);
@@ -531,8 +571,14 @@ public class VCFparser extends GzFileParser<Variant> {
                     }
                 }
                 //pos is incremented by 1, so it becomes 1-based start
-                return new Variant(chr, pos, Math.abs(end[0] - pos + 1), refs, alts,
+                /*return new Variant(chr, pos, Math.abs(end[0] - pos + 1), refs, alts,
                         genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random, ChrString.string2ChrString(chr2), pos2, end2, end[0], subtype);
+                        */
+                return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(end[0] - pos + 1)).
+                        ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                        varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                        randomNumberGenerator(random).chr2(ChrString.string2ChrString(chr2)).
+                        pos2(pos2).end2(end2).end(end[0]).translocationSubtype(subtype).build();
                 //TODO: this assumes only one alt, which might not be true
             } else {
                 log.error("No length information for TRA:");
@@ -653,8 +699,13 @@ public class VCFparser extends GzFileParser<Variant> {
             }
 
 
-            return new Variant(chr, pos, refs.length, refs, alts,
+            /*return new Variant(chr, pos, refs.length, refs, alts,
                     genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
+                    */
+            return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(refs.length).
+                    ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                    varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                    randomNumberGenerator(random).build();
         }
     }
 

@@ -128,6 +128,10 @@ public class Variant implements Comparable<Variant>{
             this.pos2 = pos2;
             return this;
         }
+        public Builder end(final int end) {
+            this.end = end;
+            return this;
+        }
         public Builder end2(final int[] end2) {
             this.end2 = end2;
             return this;
