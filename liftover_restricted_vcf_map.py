@@ -15,12 +15,17 @@ def lift_vcfs(vcfs, out_vcf, reference):
     return
 
   contigs = []
-  fasta_handle = pysam.FastaFile(reference)
-  contigs = [(contig, fasta_handle.get_reference_length(contig)) for contig in fasta_handle.references]
+
+  if reference:
+    fasta_handle = pysam.FastaFile(reference)
+    contigs = [(contig, fasta_handle.get_reference_length(contig)) for contig in fasta_handle.references]
+    fasta_handle.close()
 
   vcf_template_reader = vcf.Reader(open(vcfs[0], "r"))
-  vcf_template_reader.metadata["reference"] = reference
-  vcf_template_reader.contigs = OrderedDict([(contig_name, vcf.parser._Contig(contig_name, contig_length)) for (contig_name, contig_length) in contigs])
+
+  if reference:
+    vcf_template_reader.metadata["reference"] = reference
+    vcf_template_reader.contigs = OrderedDict([(contig_name, vcf.parser._Contig(contig_name, contig_length)) for (contig_name, contig_length) in contigs])
   vcf_writer = vcf.Writer(open(out_vcf, "w"), vcf_template_reader)
   for index, vcf_ in enumerate(vcfs):
     with open(vcf_) as vcf_fd:
@@ -44,7 +49,7 @@ def lift_vcfs(vcfs, out_vcf, reference):
         except ValueError:
           logger.error("Failed to process INFO %s" % str(record.INFO))
 
-        new_record = vcf.model._Record(original_chrom, record.POS + original_start, record.ID, record.REF, [record.ALT,], record.QUAL, record.FILTER, info, record.FORMAT, record._sample_indexes, record.samples)
+        new_record = vcf.model._Record(original_chrom, record.POS + original_start, record.ID, record.REF, record.ALT, record.QUAL, record.FILTER, info, record.FORMAT, record._sample_indexes, record.samples)
         vcf_writer.write_record(new_record)
   vcf_writer.close()
 
@@ -79,7 +84,7 @@ def main():
   parser = argparse.ArgumentParser(description="Lift over truth VCF and MAP files to a proper reference in case of a reference derived by restricting to BED regions", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("--vcfs", nargs="+", help="VCFs to liftover", default=[])
   parser.add_argument("--maps", nargs="+", help="MAPs to liftover", default=[])
-  parser.add_argument("--reference", help="Original reference", required=True)
+  parser.add_argument("--reference", help="Original reference", default=None)
   parser.add_argument("--out_dir", help="Output directory", default=".")
 
   args = parser.parse_args()
