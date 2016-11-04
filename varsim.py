@@ -12,6 +12,7 @@ import itertools
 import glob
 from distutils.version import LooseVersion
 from multiprocessing import Process
+from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 
 VERSION = "0.6"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -186,6 +187,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force output bases to be only ACTGN")
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
+    main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
 
     pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
@@ -329,7 +331,7 @@ if __name__ == "__main__":
 
     merged_reference = os.path.join(args.out_dir, "%s.fa" % (args.id))
     merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))
-    merged_chain = os.path.join(args.out_dir, "merged.chain")
+    merged_map = os.path.join(args.out_dir, "%s.map" % (args.id))
 
     processes = run_vcfstats(args.vcfs, args.out_dir, args.log_dir)
 
@@ -365,15 +367,15 @@ if __name__ == "__main__":
         vcfs_to_cat = filter(os.path.isfile, map(lambda x: os.path.join(args.out_dir, "%s_%s.vcf" % (x, args.id)), contigs))
         concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
 
-        # Merge the chain files
-        concatenate_files(map(lambda x: os.path.join(args.out_dir, "%s.chain" % x), ["maternal", "paternal"]), merged_chain, remove_original=True)
-
         monitor_processes(run_vcfstats([merged_truth_vcf], args.out_dir, args.log_dir))
+
+        if args.lift_ref:
+            lifted_dir = os.path.join(args.out_dir, "lifted")
+            merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
+            merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
 
     if processes:
         processes = monitor_processes(processes)
-
-    merged_map = os.path.join(args.out_dir, "%s.map" % (args.id))
 
     # Now generate the reads using art/pbsim/dwgsim
     tmp_files = []
