@@ -544,18 +544,18 @@ public class VCFcompare {
         }
 
         BedFile intersector = null;
-        boolean bed_exists = false;
+        boolean bedExists = false;
         // check if the file exists
         try {
             File f = new File(bedFilename);
             if (f.exists()) {
-                bed_exists = true;
+                bedExists = true;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (bed_exists) {
+        if (bedExists) {
             log.info("Using " + bedFilename + " to intersect");
             intersector = new BedFile(bedFilename);
         } else {
@@ -584,11 +584,11 @@ public class VCFcompare {
          */
         class outputClass {
             CompareParams params;
-            EnumStatsRatioCounter<VariantOverallType> num_true_correct;
+            EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect;
 
-            outputClass(CompareParams params, EnumStatsRatioCounter<VariantOverallType> num_true_correct) {
+            outputClass(CompareParams params, EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
                 this.params = params;
-                this.num_true_correct = num_true_correct;
+                this.numberOfTrueCorrect = numberOfTrueCorrect;
             }
 
             outputClass() {
@@ -602,12 +602,12 @@ public class VCFcompare {
                 this.params = params;
             }
 
-            public EnumStatsRatioCounter<VariantOverallType> getNum_true_correct() {
-                return num_true_correct;
+            public EnumStatsRatioCounter<VariantOverallType> getNumberOfTrueCorrect() {
+                return numberOfTrueCorrect;
             }
 
-            public void setNum_true_correct(EnumStatsRatioCounter<VariantOverallType> num_true_correct) {
-                this.num_true_correct = num_true_correct;
+            public void setNumberOfTrueCorrect(EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
+                this.numberOfTrueCorrect = numberOfTrueCorrect;
             }
         }
 
@@ -615,14 +615,14 @@ public class VCFcompare {
         outputClass outputBlob = new outputClass();
 
         outputBlob.setParams(new CompareParams());
-        outputBlob.getParams().setBed_filename(bedFilename);
+        outputBlob.getParams().setBedFilename(bedFilename);
         // TODO: make it output the full list if variants in JSON
-        outputBlob.getParams().setNew_vcf_filename(newVcfFilename.get(0));
-        outputBlob.getParams().setOverlap_percent(overlapRatio);
-        outputBlob.getParams().setTrue_vcf_filename(trueVcfFilename);
+        outputBlob.getParams().setNewVcfFilename(newVcfFilename.get(0));
+        outputBlob.getParams().setOverlapPercent(overlapRatio);
+        outputBlob.getParams().setTrueVcfFilename(trueVcfFilename);
         outputBlob.getParams().setWiggle(wiggle);
 
-        VCFparser true_parser = new VCFparser(trueVcfFilename, null, false);
+        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
         chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree = new chrSearchTree<>(true);
@@ -632,33 +632,33 @@ public class VCFcompare {
         // this is for the original variants
         // it stores the total length of the original variant in bases
         // Still check for validation of canonical full variants
-        ArrayList<Integer> full_validated_total = new ArrayList<>();
-        ArrayList<Variant> true_var_list = new ArrayList<>();
+        ArrayList<Integer> validatedTotalLength = new ArrayList<>();
+        ArrayList<Variant> trueCanonicalVariants = new ArrayList<>();
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
-        outputBlob.setNum_true_correct(new EnumStatsRatioCounter<VariantOverallType>());
+        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>());
 
         // For called variants, break down into canonical ones and count based on that
         // if any called variant overlaps a complex variant or MNP, count it as "complex"
         // otherwise, simple count them in their canonical forms
 
         // store true variants as canonical ones, but remember original form
-        while (true_parser.hasMoreInput()) {
-            Variant var = true_parser.parseLine();
-            if (var == null) {
+        while (trueVcfParser.hasMoreInput()) {
+            Variant trueVariant = trueVcfParser.parseLine();
+            if (trueVariant == null) {
                 log.info("skip line");
                 continue;
             }
 
-            Genotypes geno = var.getGenotypes();
+            Genotypes geno = trueVariant.getGenotypes();
 
             if (!geno.isNonRef()) {
                 continue;
             }
 
-            ChrString chr = var.getChr();
-            VariantOverallType orig_type = var.getType();
+            ChrString chr = trueVariant.getChr();
+            VariantOverallType trueVariantOriginalType = trueVariant.getType();
 
             if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
                 continue;
@@ -669,47 +669,47 @@ public class VCFcompare {
             // to make sure they really overlap
 
             //TODO: remove constructor here (because another copy will be created inside canonicalizeVariant
-            List<Variant> var_list = canonicalizeVariant(new Variant(var));
+            List<Variant> canonicalVariantList = canonicalizeVariant(new Variant(trueVariant));
 
-            int total_len = 0;
-            double max_len = 0;
+            int totalLength = 0;
+            double maxLength = 0;
 
             // add to interval tree
-            for (Variant curr_var : var_list) {
+            for (Variant currentVariant : canonicalVariantList) {
 
-                int curr_len = curr_var.maxLen();
-                max_len = Math.max(max_len, curr_len);
+                int currentLength = currentVariant.maxLen();
+                maxLength = Math.max(maxLength, currentLength);
 
-                total_len += curr_len;
-                SimpleInterval1D curr_var_reg = null;
+                totalLength += currentLength;
+                SimpleInterval1D currentVariantInterval = null;
                 try {
-                    curr_var_reg = curr_var.getGenotypeUnionVariantInterval();
+                    currentVariantInterval = currentVariant.getGenotypeUnionVariantInterval();
                 } catch (Exception e) {
                     e.printStackTrace();
-                    log.error("Original variant: " + var);
-                    log.error("Bad variant: " + curr_var);
+                    log.error("Original variant: " + trueVariant);
+                    log.error("Bad variant: " + currentVariant);
                     System.exit(1);
                 }
-                curr_var.splitVariantIndex = numAdded;
-                curr_var.wholeVariantIndex = numRead;
-                curr_var.originalType = orig_type;
+                currentVariant.splitVariantIndex = numAdded;
+                currentVariant.wholeVariantIndex = numRead;
+                currentVariant.originalType = trueVariantOriginalType;
 
-                trueVariantIntervalTree.put(chr, new ValueInterval1D<>(curr_var_reg, curr_var));
+                trueVariantIntervalTree.put(chr, new ValueInterval1D<>(currentVariantInterval, currentVariant));
                 numAdded++;
             }
 
-            if (total_len >= Constant.SVLEN && max_len / total_len >= overlapRatio && var_list.size() > 1) {
+            if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio && canonicalVariantList.size() > 1) {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
-                for (Variant curr_var : var_list) {
-                    int curr_len = curr_var.maxLen();
-                    full_validated_total.add(curr_len);
-                    true_var_list.add(curr_var);
+                for (Variant currentVariant : canonicalVariantList) {
+                    int currentLength = currentVariant.maxLen();
+                    validatedTotalLength.add(currentLength);
+                    trueCanonicalVariants.add(currentVariant);
                     numRead++;
                 }
             } else {
-                full_validated_total.add(total_len);
-                true_var_list.add(var);
+                validatedTotalLength.add(totalLength);
+                trueCanonicalVariants.add(trueVariant);
                 numRead++;
             }
         }
@@ -821,7 +821,7 @@ public class VCFcompare {
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
-                                outputBlob.getNum_true_correct().incFP(currentVariant.getType(), variant.maxLen());
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
                                 fpWriter.println(variant);
                             } else {
@@ -853,7 +853,7 @@ public class VCFcompare {
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
-                                outputBlob.getNum_true_correct().incFP(currentVariant.getType(), currentVariant.maxLen());
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + currentVariant);
@@ -869,7 +869,7 @@ public class VCFcompare {
                 if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
                     if (!skipFP) {
                         // this is a false positive!
-                        outputBlob.getNum_true_correct().incFP(currentVariantType, variant.maxLen());
+                        outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
                         validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
                             log.warn("SNP with bad length: " + variant);
@@ -887,8 +887,8 @@ public class VCFcompare {
         log.info("Num new variants read: " + numberOfNewVariants);
 
         // read through again and compute for the true variants
-        int num_read2 = 0;
-        for (Variant var : true_var_list) {
+        int numRead2 = 0;
+        for (Variant var : trueCanonicalVariants) {
 
             ChrString chr = var.getChr();
 
@@ -896,46 +896,46 @@ public class VCFcompare {
                 continue;
             }
 
-            SimpleInterval1D curr_var_reg = var.getGenotypeUnionAlternativeInterval();
+            SimpleInterval1D currentVariantInterval = var.getGenotypeUnionAlternativeInterval();
 
-            if (intersector == null || excludeTprFromBedFiltering || intersector.containsEndpoints(chr, curr_var_reg, bedEither)) {
-                int total_len = full_validated_total.get(num_read2);
-                int validated_len = fullValidatedCount[num_read2];
+            if (intersector == null || excludeTprFromBedFiltering || intersector.containsEndpoints(chr, currentVariantInterval, bedEither)) {
+                int totalLength = validatedTotalLength.get(numRead2);
+                int validatedLength = fullValidatedCount[numRead2];
 
-                if (validated_len >= (overlapRatio * total_len)) {
+                if (validatedLength >= (overlapRatio * totalLength)) {
                     // validated
-                    outputBlob.getNum_true_correct().incTP(var.getType(), var.maxLen());
+                    outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
                     tpWriter.println(var);
                 } else {
                     fnWriter.println(var);
                 }
 
-                outputBlob.getNum_true_correct().incT(var.getType(), var.maxLen());
+                outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
                 validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
             } else {
                 unknownTpWriter.println(var);
             }
-            num_read2++;
+            numRead2++;
         }
 
-        if (numRead != num_read2) {
-            log.error("Number of variants read are inconsistent: " + numRead + "," + num_read2);
+        if (numRead != numRead2) {
+            log.error("Number of variants read are inconsistent: " + numRead + "," + numRead2);
         }
 
         // Compute and update the true negatives here so that we have specificity values
         if (referenceGenome != null) {
             final VariantOverallType variantOverallTypes[] = {VariantOverallType.SNP, VariantOverallType.Insertion, VariantOverallType.Deletion};
             for (final VariantOverallType variantOverallType : variantOverallTypes) {
-                if (outputBlob.getNum_true_correct().getData().containsKey(variantOverallType)) {
-                    outputBlob.getNum_true_correct().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases());
+                if (outputBlob.getNumberOfTrueCorrect().getData().containsKey(variantOverallType)) {
+                    outputBlob.getNumberOfTrueCorrect().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases());
                 }
             }
         }
 
 
         // output the stats
-        System.err.println(outputBlob.getNum_true_correct());
+        System.err.println(outputBlob.getNumberOfTrueCorrect());
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
@@ -983,46 +983,46 @@ public class VCFcompare {
     }
 
     class CompareParams {
-        String true_vcf_filename;
-        String new_vcf_filename;
-        Double overlap_ratio;
+        String trueVcfFilename;
+        String newVcfFilename;
+        Double overlapRatio;
         int wiggle;
-        String bed_filename;
+        String bedFilename;
 
         public CompareParams() {
         }
 
-        public CompareParams(String true_vcf_filename, String new_vcf_filename, Double overlap_ratio, int wiggle, String bed_filename) {
-            this.true_vcf_filename = true_vcf_filename;
-            this.new_vcf_filename = new_vcf_filename;
-            this.overlap_ratio = overlap_ratio;
+        public CompareParams(String trueVcfFilename, String newVcfFilename, Double overlapRatio, int wiggle, String bedFilename) {
+            this.trueVcfFilename = trueVcfFilename;
+            this.newVcfFilename = newVcfFilename;
+            this.overlapRatio = overlapRatio;
             this.wiggle = wiggle;
-            this.bed_filename = bed_filename;
+            this.bedFilename = bedFilename;
         }
 
 
-        public String getTrue_vcf_filename() {
-            return true_vcf_filename;
+        public String getTrueVcfFilename() {
+            return trueVcfFilename;
         }
 
-        public void setTrue_vcf_filename(String true_vcf_filename) {
-            this.true_vcf_filename = true_vcf_filename;
+        public void setTrueVcfFilename(String trueVcfFilename) {
+            this.trueVcfFilename = trueVcfFilename;
         }
 
-        public String getNew_vcf_filename() {
-            return new_vcf_filename;
+        public String getNewVcfFilename() {
+            return newVcfFilename;
         }
 
-        public void setNew_vcf_filename(String new_vcf_filename) {
-            this.new_vcf_filename = new_vcf_filename;
+        public void setNewVcfFilename(String newVcfFilename) {
+            this.newVcfFilename = newVcfFilename;
         }
 
-        public Double getOverlap_percent() {
-            return overlap_ratio;
+        public Double getOverlapPercent() {
+            return overlapRatio;
         }
 
-        public void setOverlap_percent(Double overlap_ratio) {
-            this.overlap_ratio = overlap_ratio;
+        public void setOverlapPercent(Double overlapRatio) {
+            this.overlapRatio = overlapRatio;
         }
 
         public int getWiggle() {
@@ -1033,12 +1033,12 @@ public class VCFcompare {
             this.wiggle = wiggle;
         }
 
-        public String getBed_filename() {
-            return bed_filename;
+        public String getBedFilename() {
+            return bedFilename;
         }
 
-        public void setBed_filename(String bed_filename) {
-            this.bed_filename = bed_filename;
+        public void setBedFilename(String bedFilename) {
+            this.bedFilename = bedFilename;
         }
     }
 
@@ -1085,7 +1085,7 @@ public class VCFcompare {
         @Override
         public String toString() {
             return "DualIdx{" +
-                    "splitVariantIndex=" + splitVariantIndex +
+                   "splitVariantIndex=" + splitVariantIndex +
                     ", wholeVariantIndex=" + wholeVariantIndex +
                     '}';
         }
@@ -1101,8 +1101,8 @@ public class VCFcompare {
 
         // Results to store
         // this stores the indexes of the true variants matched
-        ArrayList<DualIdx> homozygousMatches = new ArrayList<>();
-        ArrayList<ArrayList<DualIdx>> heterozygousMatches = new ArrayList<>(2); // matches either parent
+        List<DualIdx> homozygousMatches = new ArrayList<>();
+        List<List<DualIdx>> heterozygousMatches = new ArrayList<>(2); // matches either parent
 
         public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
             this.trueVariantIntervalTree = trueVariantIntervalTree;
@@ -1131,7 +1131,7 @@ public class VCFcompare {
          * @return
          */
         public DualIdx isHetMatch() {
-            ArrayList<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
+            List<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
             temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
             //if there is a match in intersection, return the first one from the intersection
             if (temp.size() > 0) {
