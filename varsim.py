@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import argparse
 import os
@@ -88,7 +88,7 @@ def monitor_processes(processes):
 
 def concatenate_files(files, merged, header_str="", simple_cat=True, remove_original=False):
     logger = logging.getLogger(concatenate_files.__name__)
-    logger.info("Concatenating " + " ".join(files) " as " + merged)
+    logger.info("Concatenating " + " ".join(files) + " as " + merged)
     with open(merged, "w") as merged_fd:
         for index, f in enumerate(files):
             with open(f) as fd:
@@ -96,7 +96,7 @@ def concatenate_files(files, merged, header_str="", simple_cat=True, remove_orig
                     shutil.copyfileobj(fd, merged_fd)
                 else:
                     for line in fd:
-                        if line.strip() and (not index or not header_str or not line.startswith(header_str))
+                        if line.strip() and (not index or not header_str or not line.startswith(header_str)):
                             merged_fd.write(line)
             if remove_original:
                 logger.info("Removing " + f)
@@ -371,6 +371,8 @@ if __name__ == "__main__":
 
         if args.lift_ref:
             lifted_dir = os.path.join(args.out_dir, "lifted")
+            if not os.path.isdir(lifted_dir):
+                os.makedirs(lifted_dir)
             merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
             merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
 
