@@ -54,6 +54,7 @@ def lift_vcfs(vcfs, out_vcf, reference):
   vcf_writer.close()
 
   logger.info("Finished liftover of VCF to original reference")
+  return out_vcf
 
 
 def lift_maps(maps, out_map):
@@ -74,6 +75,8 @@ def lift_maps(maps, out_map):
           ref_fields = fields[3].split("_")
           offset = int(ref_fields[1])
           out_fd.write("\t".join(fields[:3] + [ref_fields[0], str(int(fields[4]) + offset)] + fields[5:]) + "\n")
+
+  return out_map
 
 
 def main():
