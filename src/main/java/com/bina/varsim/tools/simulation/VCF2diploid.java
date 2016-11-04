@@ -452,7 +452,7 @@ public class VCF2diploid {
             if (variantType == VariantType.Inversion) {
                 // Treat this as getReferenceAlleleLength then insertion of reverse complement
                 //System.err.println("Insert INV");
-                referenceAlleleLength = variant.insertion_len(allele);
+                referenceAlleleLength = variant.insertionLength(allele);
                 insertions = referenceSequence.revComp(position, position + referenceAlleleLength);
             }
 
@@ -463,8 +463,8 @@ public class VCF2diploid {
                 // TODO make length correct
                 // System.err.println("Insert DUP");
 
-                referenceAlleleLength = variant.insertion_len(allele);
-                int single_ins_len = variant.insertion_len(allele);
+                referenceAlleleLength = variant.insertionLength(allele);
+                int single_ins_len = variant.insertionLength(allele);
                 byte[] orig_seq = referenceSequence.subSeq(position, position + single_ins_len);
                 insertions = new byte[single_ins_len * variant.getCN(allele)];
                 System.arraycopy(orig_seq, 0, insertions, 0, orig_seq.length);
@@ -484,9 +484,9 @@ public class VCF2diploid {
                 // convert to flexseq
                 FlexSeq s = new FlexSeq(insertions);
                 s.setType(variant.getAlt(allele).getType());
-                s.setCopy_num(variant.getAlt(allele).getCopy_num());
+                s.setCopyNumber(variant.getAlt(allele).getCopyNumber());
                 s.setLength(variant.getAlt(allele).length());
-                s.setVar_id(variant.getVar_id());
+                s.setVariantId(variant.getVariantId());
 
                 if (s.getType().equals(FlexSeq.Type.TRA)) {
                     s.setChr2(variant.getChr2(allele));
@@ -639,7 +639,7 @@ public class VCF2diploid {
         for (int p = 0; p < genome.length; p++) {
             if (insertPosition2Sequence.containsKey(p + 1)) {
                 //so inserted sequences are indexed by 1-based coordinates
-                byte[] new_seq = insertPosition2Sequence.get(p + 1).getSeq();
+                byte[] new_seq = insertPosition2Sequence.get(p + 1).getSequence();
                 if (new_seq != null && new_seq.length > 0) {
                     line.append(new String(new_seq));
                 }
@@ -712,13 +712,13 @@ public class VCF2diploid {
                             - curr_var.getRef_deleted().length()));
                     bw.write("\t");
                     // variant id
-                    bw.write(curr_var.getVar_id());
+                    bw.write(curr_var.getVariantId());
                     bw.write("\t");
                     // ref allele
-                    bw.write(curr_var.getOrig_Ref() + curr_var.getExtraBase());
+                    bw.write(curr_var.getReferenceString() + curr_var.getExtraBase());
                     bw.write("\t");
                     // alt alleles
-                    bw.write(curr_var.alt_string().toString());
+                    bw.write(curr_var.alternativeAlleleString());
                     bw.write("\t");
                     // variant quality
                     bw.write(".\t");

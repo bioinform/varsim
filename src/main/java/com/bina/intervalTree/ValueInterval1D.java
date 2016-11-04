@@ -23,7 +23,7 @@ public class ValueInterval1D<Value> extends SimpleInterval1D {
         this.data = data;
     }
 
-    public Value get() {
+    public Value getContent() {
         return data;
     }
 

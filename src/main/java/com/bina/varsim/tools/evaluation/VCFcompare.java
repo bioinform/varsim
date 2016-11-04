@@ -98,92 +98,103 @@ public class VCFcompare {
         new VCFcompare().run(args);
     }
 
-    // end = true will add the indel to the end, other wise it will add to start
-    private void add_indels(List<Variant> var_list, int[] diff, byte[] ref, byte[][] alt,
-                            Variant var, int curr_pos, boolean end) {
+    /**
+     * canonicalize to indels
+     * @param canonicalVariantList where results are saved
+     * @param alleleLengthDifference
+     * @param reference
+     * @param alternativeAlleles
+     * @param variant
+     * @param currentPosition
+     * @param end should we append indels to the end?
+      */
+    private void canonicalizeToIndels(List<Variant> canonicalVariantList, int[] alleleLengthDifference, byte[] reference, byte[][] alternativeAlleles,
+                                      Variant variant, int currentPosition, boolean end) {
         // add insertions or deletions for complex variants
-        if (diff[0] == diff[1] && diff[0] != 0) {
+        if (alleleLengthDifference[0] == alleleLengthDifference[1] && alleleLengthDifference[0] != 0) {
             // homozygous
-            if (diff[0] > 0) {
+            if (alleleLengthDifference[0] > 0) {
                 // insertion
-                if (Arrays.equals(alt[0], alt[1])) {
+                if (Arrays.equals(alternativeAlleles[0], alternativeAlleles[1])) {
                     byte[] phase = {1, 1};
 
                     if (end) {
-                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     }
                 } else {
                     byte[] phase = {0, 0};
                     if (end) {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
-                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[0], 0, diff[0]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                         phase[0] = 0;
                         phase[1] = 1;
-                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[1], 0, diff[1]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     }
                 }
-            } else if (diff[0] < 0) {
+            } else if (alleleLengthDifference[0] < 0) {
+                //here both alternative alleles are shorter than the reference allele
                 // deletion
                 byte[] phase = {1, 1};
+                //VarSim will try adding indels both to left end and to right end
                 if (end) {
-                    var_list.add(new Variant(var.getChr(), curr_pos + alt[0].length, -diff[0],
-                            Arrays.copyOfRange(ref, alt[0].length, alt[0].length - diff[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, var.getVar_id(), ".", ""));
+                    canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[0].length, -alleleLengthDifference[0],
+                            Arrays.copyOfRange(reference, alternativeAlleles[0].length, alternativeAlleles[0].length - alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
+                            phase, true, variant.getVariantId(), ".", ""));
                 } else {
-                    var_list.add(new Variant(var.getChr(), curr_pos, -diff[0],
-                            Arrays.copyOfRange(ref, 0, -diff[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, var.getVar_id(), ".", ""));
+                    canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[0],
+                            Arrays.copyOfRange(reference, 0, -alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
+                            phase, true, variant.getVariantId(), ".", ""));
                 }
             }
         } else {
-            for (int a = 0; a < alt.length; a++) {
-                if (diff[a] > 0) {
+            for (int a = 0; a < alternativeAlleles.length; a++) {
+                if (alleleLengthDifference[a] > 0) {
                     // insertion
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt[a], 0, diff[a]))},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
+                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
+                                phase, true, variant.getVariantId(), ".", ""));
                     }
-                } else if (diff[a] < 0) {
+                } else if (alleleLengthDifference[a] < 0) {
                     // deletion
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        var_list.add(new Variant(var.getChr(), curr_pos + alt[a].length, -diff[a],
-                                Arrays.copyOfRange(ref, alt[a].length, alt[a].length - diff[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[a].length, -alleleLengthDifference[a],
+                                Arrays.copyOfRange(reference, alternativeAlleles[a].length, alternativeAlleles[a].length - alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
+                                phase, true, variant.getVariantId(), ".", ""));
                     } else {
-                        var_list.add(new Variant(var.getChr(), curr_pos, -diff[a],
-                                Arrays.copyOfRange(ref, 0, -diff[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, var.getVar_id(), ".", ""));
+                        canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[a],
+                                Arrays.copyOfRange(reference, 0, -alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
+                                phase, true, variant.getVariantId(), ".", ""));
                     }
                 }
             }
@@ -191,6 +202,7 @@ public class VCFcompare {
     }
 
     /**
+     * wrapper for variant canonicalization (conversion to indels + SNPs)
      * VarSim will convert regular variants into normalized variants, i.e. insertion,deletion
      * plus SNPs. It will try placing insertions and deletions at both beginning and end of
      * a variant and pick the placement with fewest # of mismatches (normalized variants).
@@ -198,78 +210,78 @@ public class VCFcompare {
      * @param var
      * @return
      */
-    private List<Variant> convert_var_to_var_list(Variant var) {
+    private List<Variant> canonicalizeVariant(Variant var) {
+      /*
+      why do we need to create a copy of variant?
+      because we will set it to reference allele
+      after canonicalization.
+       */
         //not adding indels to the end
-        List<Variant> var_list = convert_var_to_var_list(new Variant(var), false);
+        List<Variant> variantList = canonicalizeVariant(new Variant(var), false);
         //try adding indels to the end
-        List<Variant> var_list_end = convert_var_to_var_list(new Variant(var), true);
-        if (var_list_end.size() < var_list.size()) {
-            var_list = var_list_end;
+        List<Variant> variantListEnd = canonicalizeVariant(new Variant(var), true);
+        if (variantListEnd.size() < variantList.size()) {
+            variantList = variantListEnd;
         }
-        return var_list;
+        return variantList;
     }
 
+    /**
+     * actual implementation for canonicalization
+     * @param variant
+     * @param end
+     * @return
+     */
     //if end = true, we add indels to the end
-    private List<Variant> convert_var_to_var_list(Variant var, boolean end) {
-        List<Variant> var_list = new ArrayList<>();
+    private List<Variant> canonicalizeVariant(Variant variant, boolean end) {
+        List<Variant> variantList = new ArrayList<>();
 
         //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
 
-        boolean no_split = false;
-        if (var.getType() == VariantOverallType.SNP) {
-            no_split = true;
+        boolean noSplit = false;
+        if (variant.getType() == VariantOverallType.SNP) {
+            noSplit = true;
         }
         //both alleles are reference alleles
-        if (var.getgood_paternal() == 0 && var.getgood_maternal() == 0) {
-            no_split = true;
+        if (variant.getGoodPaternal() == 0 && variant.getGoodMaternal() == 0) {
+            noSplit = true;
         }
         //paternal allele is not reference or sequence
-        if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).getType() != FlexSeq.Type.SEQ) {
-            no_split = true;
+        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).getType() != FlexSeq.Type.SEQ) {
+            noSplit = true;
         }
         //maternal allele is not reference or sequence
-        if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).getType() != FlexSeq.Type.SEQ) {
-            no_split = true;
+        if (variant.getGoodMaternal() > 0 && variant.getAlt(variant.getGoodMaternal()).getType() != FlexSeq.Type.SEQ) {
+            noSplit = true;
         }
         //paternal allele is not reference and has zero-length allele and reference sequence
-        if (var.getgood_paternal() > 0 && var.getAlt(var.getgood_paternal()).length() == 0 && var.getRef().length == 0) {
-            no_split = true;
+        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).length() == 0 && variant.getReference().length == 0) {
+            noSplit = true;
         }
         //maternal allele is not reference and has zero-length allele and reference sequence
-        if (var.getgood_maternal() > 0 && var.getAlt(var.getgood_maternal()).length() == 0 && var.getRef().length == 0) {
-            no_split = true;
+        if (variant.getGoodMaternal() > 0 && variant.getAlt(variant.getGoodMaternal()).length() == 0 && variant.getReference().length == 0) {
+            noSplit = true;
         }
 
-        if (no_split) {
-            var_list.add(var);
-            return var_list;
+        if (noSplit) {
+            variantList.add(variant);
+            return variantList;
         }
 
 
         //split long variants into small ones for unambiguous comparison
-        if (var.getType(var.getgood_paternal()) != VariantType.Reference
-                && var.getType(var.getgood_maternal()) != VariantType.Reference) {
+        if (variant.getType(variant.getGoodPaternal()) != VariantType.Reference
+                && variant.getType(variant.getGoodMaternal()) != VariantType.Reference) {
 
-            //TODO: replace get_allele(0,1) with getgoodpaternal(double-check) or getgoodmaternal
-            int[] allele = {var.get_allele(0), var.get_allele(1)};
-            byte[][] alt = {var.getAlt(allele[0]).getSeq(), var.getAlt(allele[1]).getSeq()};
-            byte[] ref = var.getRef();
-            int curr_pos = var.getPos();
+            //0 for reference, 1 for 1st alt allele, 2 for 2nd alt allele
+            int[] alleleNumber = {variant.getAllele(0), variant.getAllele(1)};
+            byte[][] alternativeAlleleSequence = {variant.getAlt(alleleNumber[0]).getSequence(), variant.getAlt(alleleNumber[1]).getSequence()};
+            byte[] referenceAlleleSequence = variant.getReference();
+            int currentPosition = variant.getPos();
 
             // modify positions based on if ref matches alt
-            //TODO: package this into a method
-            int[] match_len = {0, 0};
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < Math.min(ref.length, alt[i].length); j++) {
-                    if (alt[i][j] == ref[j]) {
-                        match_len[i]++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            int min_match_len = Math.min(match_len[0], match_len[1]);
+            int minMatchLength = variant.getMinMatchLength();
 
             /*
             reference   ******|------
@@ -278,168 +290,224 @@ public class VCFcompare {
 
             we will right-shift the variant to remove redundancy with the reference
             */
-            if (min_match_len > 0) {
+            if (minMatchLength > 0) {
                 //remove redundancy in reference
-                ref = Arrays.copyOfRange(ref, min_match_len, ref.length);
+                referenceAlleleSequence = Arrays.copyOfRange(referenceAlleleSequence, minMatchLength, referenceAlleleSequence.length);
                 //remove redundancy in alternative alleles
                 for (int i = 0; i < 2; i++) {
-                    alt[i] = Arrays.copyOfRange(alt[i], min_match_len, alt[i].length);
+                    alternativeAlleleSequence[i] = Arrays.copyOfRange(alternativeAlleleSequence[i], minMatchLength, alternativeAlleleSequence[i].length);
                 }
-                curr_pos += min_match_len;
+                currentPosition += minMatchLength;
             }
 
             //length difference between reference and allele
-            int[] diff = {alt[0].length - ref.length, alt[1].length - ref.length};
+            int[] alleleLengthDifference = {alternativeAlleleSequence[0].length - referenceAlleleSequence.length,
+                                            alternativeAlleleSequence[1].length - referenceAlleleSequence.length};
 
-            add_indels(var_list, diff, ref, alt, var, curr_pos, end);
+            /*
+            convert the variant into insertion/deletion + SNPs
+             */
+            canonicalizeToIndels(variantList, alleleLengthDifference, referenceAlleleSequence, alternativeAlleleSequence, variant, currentPosition, end);
 
           /*
           iterate over reference bp, note here the reference has been adjusted to
-          remove redudancy.
+          remove redudancy. Create SNPs (for canonicalization) wherever there are
+          mismatches.
            */
-            for (int i = 0; i < ref.length; i++, curr_pos++) {
+            for (int relativePosition = 0; relativePosition < referenceAlleleSequence.length; relativePosition++, currentPosition++) {
 
-                int[] idx = new int[2];
+                //relative position on alleles (adjusted for insertions/deletions)
+                int[] alleleSpecificRelativePosition = new int[2];
                 if (end) {
+                    //TODO: there are many places a for loop over 0,1 is used to iterate over all genotypes, maybe it's better to use an immutable data structure
                     for (int j = 0; j < 2; j++) {
                       //recall: diff[j] = alt[j].length - ref.length
-                        if (i < ref.length + diff[j]) {
-                            idx[j] = i;
+                        if (relativePosition < referenceAlleleSequence.length + alleleLengthDifference[j]) {
+                            alleleSpecificRelativePosition[j] = relativePosition;
                         } else {
-                            idx[j] = -1; // we are into deleted bases
+                            alleleSpecificRelativePosition[j] = -1; // we are into deleted bases
                         }
                     }
                 } else {
                     for (int j = 0; j < 2; j++) {
-                        idx[j] = i + diff[j];
+                        //this one dictates that canonicalized variants will be located on the right end of reference allele
+                        alleleSpecificRelativePosition[j] = relativePosition + alleleLengthDifference[j];
                     }
                 }
 
-                if (idx[0] < 0 && idx[1] < 0) {
+                if (alleleSpecificRelativePosition[0] < 0 && alleleSpecificRelativePosition[1] < 0) {
                     // both deleted
-                } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] != ref[i]) {
-                    // one deleted, hence the other is homozygous
+                    /*
+                    AGG
+                    --G
+                    --G
+                    ^    the scenario this if statement deals with
+                     */
+                } else if (alleleSpecificRelativePosition[0] >= 0 && alleleSpecificRelativePosition[1] < 0 &&
+                           alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] != referenceAlleleSequence[relativePosition]) {
+                    /* one deleted, hence the other is homozygous
+                    e.g. ref: AGG, alts: C,CT
+                    if we visualize the alignment, it looks like
+                    AGG
+                    -CT
+                    --C
+                     ^  the scenario this if statement deals with
+                    */
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                            new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
-                } else if (idx[0] < 0 && idx[1] >= 0 && alt[1][idx[1]] != ref[i]) {
+                    variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), ".", ""));
+                } else if (alleleSpecificRelativePosition[0] < 0 && alleleSpecificRelativePosition[1] >= 0 &&
+                        alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // one deleted, hence the other is homozygous
+                    //same as above but two alleles switch
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                            new FlexSeq[]{new FlexSeq(alt[1][idx[1]])}, phase, true, var.getVar_id(), ".", ""));
-                } else if (idx[0] >= 0 && idx[1] < 0 && alt[0][idx[0]] == ref[i]) {
+                    variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])}, phase, true, variant.getVariantId(), ".", ""));
+                } else if (alleleSpecificRelativePosition[0] >= 0 && alleleSpecificRelativePosition[1] < 0 &&
+                           alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] == referenceAlleleSequence[relativePosition]) {
                     // ref call with del
-                } else if (idx[0] < 0 && idx[1] >= 0 && alt[1][idx[1]] == ref[i]) {
+                  /*
+                    AGG
+                    -GT
+                    --C
+                     ^  the scenario this if statement deals with
+                    */
+                } else if (alleleSpecificRelativePosition[0] < 0 && alleleSpecificRelativePosition[1] >= 0 &&
+                        alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] == referenceAlleleSequence[relativePosition]) {
                     // ref call with del
-                } else if (alt[0][idx[0]] == ref[i] && alt[1][idx[1]] == ref[i]) {
+                  //same as above but switch alleles
+                } else if (alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] == referenceAlleleSequence[relativePosition] &&
+                        alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] == referenceAlleleSequence[relativePosition]) {
                     // ref call
-                } else if (alt[0][idx[0]] == alt[1][idx[1]]) {
-                    // homozygous
+                  /*
+                    AGG
+                    -GG
+                    --G
+                      ^  the scenario this if statement deals with
+                    */
+                } else if (alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] == alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]]) {
+                    // homozygous non-reference alleles
+                  /*
+                    AGG
+                    -GC
+                    --C
+                      ^  the scenario this if statement deals with
+                    */
                     byte[] phase = {1, 1};
-                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                            new FlexSeq[]{new FlexSeq(alt[0][idx[0]])}, phase, true, var.getVar_id(), ".", ""));
-
-                } else if (alt[0][idx[0]] != ref[i] && alt[1][idx[1]] != ref[i]) {
+                    variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), ".", ""));
+                } else if (alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] != referenceAlleleSequence[relativePosition] &&
+                        alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // het but both alt
+                  /*
+                    AGG
+                    -GC
+                    --T
+                      ^  the scenario this if statement deals with
+                    */
                     byte[] phase = {1, 2};
-                    var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                            new FlexSeq[]{new FlexSeq(alt[0][idx[0]]), new FlexSeq(alt[1][idx[1]])},
-                            phase, true, var.getVar_id(), ".", ""));
+                    variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]), new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])},
+                            phase, true, variant.getVariantId(), ".", ""));
                 } else {
                     // het with one ref
+                  /*
+                    AGG
+                    -GG
+                    --T
+                      ^  the scenario this if statement deals with
+                    */
                     for (int a = 0; a < 2; a++) {
-                        if (alt[a][idx[a]] != ref[i]) {
+                        if (alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]] != referenceAlleleSequence[relativePosition]) {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
-                            var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                                    new FlexSeq[]{new FlexSeq(alt[a][idx[a]])}, phase, true, var.getVar_id(), ".", ""));
+                            variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
+                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]])}, phase, true, variant.getVariantId(), ".", ""));
                         }
                     }
                 }
 
             }
-
-            var.set_allele(0, (byte) 0); // set to reference
-            var.set_allele(1, (byte) 0); // set to reference
-
+            variant.setAllele(0, (byte) 0); // set to reference
+            variant.setAllele(1, (byte) 0); // set to reference
         } else {
             //at least one of paternal and maternal alleles is not reference
-            for (int a = 0; a < 2; a++) {
-                int allele = var.get_allele(a);
+            for (int alleleIndex = 0; alleleIndex < 2; alleleIndex++) {
+                int allele = variant.getAllele(alleleIndex);
                 //only process Complex, MNP and SNP variants
-                if (var.getType(allele) == VariantType.Complex
-                        || var.getType(allele) == VariantType.MNP
-                        || var.getType(allele) == VariantType.SNP) {
-                    byte[] alt = var.getAlt(allele).getSeq();
-                    byte[] ref = var.getRef();
-                    int curr_pos = var.getPos();
-                    int diff = alt.length - ref.length;
+                if (variant.getType(allele) == VariantType.Complex
+                        || variant.getType(allele) == VariantType.MNP
+                        || variant.getType(allele) == VariantType.SNP) {
+                    byte[] alternativeAlleleSequence = variant.getAlt(allele).getSequence();
+                    byte[] referenceSequence = variant.getReference();
+                    int currentPosition = variant.getPos();
+                    int alleleLengthDifference = alternativeAlleleSequence.length - referenceSequence.length;
 
                     // add insertions or deletions for complex variants
 
-                    if (diff > 0) {
+                    if (alleleLengthDifference > 0) {
                         // insertion
                         byte[] phase = {0, 0};
-                        phase[a] = 1;
+                        phase[alleleIndex] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr(), curr_pos + ref.length, 0, new byte[0],
-                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
-                                    phase, true, var.getVar_id(), ".", ""));
+                            variantList.add(new Variant(variant.getChr(), currentPosition + referenceSequence.length, 0, new byte[0],
+                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference))},
+                                    phase, true, variant.getVariantId(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr(), curr_pos, 0, new byte[0],
-                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alt, 0, diff))},
-                                    phase, true, var.getVar_id(), ".", ""));
+                            variantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
+                                    new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference))},
+                                    phase, true, variant.getVariantId(), ".", ""));
                         }
-                    } else if (diff < 0) {
+                    } else if (alleleLengthDifference < 0) {
                         // deletion
                         byte[] phase = {0, 0};
-                        phase[a] = 1;
+                        phase[alleleIndex] = 1;
                         if (end) {
-                            var_list.add(new Variant(var.getChr(), curr_pos + alt.length, -diff,
-                                    Arrays.copyOfRange(ref, alt.length, alt.length - diff),
+                            variantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleleSequence.length, -alleleLengthDifference,
+                                    Arrays.copyOfRange(referenceSequence, alternativeAlleleSequence.length, alternativeAlleleSequence.length - alleleLengthDifference),
                                     new FlexSeq[]{new FlexSeq()},
-                                    phase, true, var.getVar_id(), ".", ""));
+                                    phase, true, variant.getVariantId(), ".", ""));
                         } else {
-                            var_list.add(new Variant(var.getChr(), curr_pos, -diff,
-                                    Arrays.copyOfRange(ref, 0, -diff),
+                            variantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference,
+                                    Arrays.copyOfRange(referenceSequence, 0, -alleleLengthDifference),
                                     new FlexSeq[]{new FlexSeq()},
-                                    phase, true, var.getVar_id(), ".", ""));
+                                    phase, true, variant.getVariantId(), ".", ""));
                         }
                     }
 
-                    for (int i = 0; i < ref.length; i++) {
+                    for (int i = 0; i < referenceSequence.length; i++) {
                         int idx;
                         if (end) {
-                            if (i < ref.length + diff) {
+                            if (i < referenceSequence.length + alleleLengthDifference) {
                                 idx = i;
                             } else {
                                 idx = -1; // we are in a deleted region
                             }
                         } else {
-                            idx = i + diff;
+                            idx = i + alleleLengthDifference;
                         }
 
-                        if (idx >= 0 && alt[idx] != ref[i]) {
+                        if (idx >= 0 && alternativeAlleleSequence[idx] != referenceSequence[i]) {
                             byte[] phase = {0, 0};
-                            phase[a] = 1;
+                            phase[alleleIndex] = 1;
 
-                            var_list.add(new Variant(var.getChr(), curr_pos, 1, new byte[]{ref[i]},
-                                    new FlexSeq[]{new FlexSeq(alt[idx])}, phase, true, var.getVar_id(), ".", ""));
+                            variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceSequence[i]},
+                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[idx])}, phase, true, variant.getVariantId(), ".", ""));
                         }
 
-                        curr_pos++;
+                        currentPosition++;
                     }
 
-                    var.set_allele(a, (byte) 0); // set to reference
+                    variant.setAllele(alleleIndex, (byte) 0); // set to reference
                 }
             }
         }
 
-        if (!var.isRef()) {
-            var_list.add(var);
+        if (!variant.isRef()) {
+            variantList.add(variant);
         }
 
-        return var_list;
+        return variantList;
     }
 
     /**
@@ -557,9 +625,9 @@ public class VCFcompare {
         VCFparser true_parser = new VCFparser(trueVcfFilename, null, false);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
-        chrSearchTree<ValueInterval1D<Variant>> true_store = new chrSearchTree<>(true);
-        int num_read = 0;
-        int num_added = 0;
+        chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree = new chrSearchTree<>(true);
+        int numRead = 0;
+        int numAdded = 0;
 
         // this is for the original variants
         // it stores the total length of the original variant in bases
@@ -583,7 +651,7 @@ public class VCFcompare {
                 continue;
             }
 
-            Genotypes geno = var.getGeno();
+            Genotypes geno = var.getGenotypes();
 
             if (!geno.isNonRef()) {
                 continue;
@@ -600,8 +668,8 @@ public class VCFcompare {
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
 
-            //TODO: remove constructor here (because another copy will be created inside convert_var_to_var_list
-            List<Variant> var_list = convert_var_to_var_list(new Variant(var));
+            //TODO: remove constructor here (because another copy will be created inside canonicalizeVariant
+            List<Variant> var_list = canonicalizeVariant(new Variant(var));
 
             int total_len = 0;
             double max_len = 0;
@@ -615,19 +683,19 @@ public class VCFcompare {
                 total_len += curr_len;
                 SimpleInterval1D curr_var_reg = null;
                 try {
-                    curr_var_reg = curr_var.get_geno_var_interval();
+                    curr_var_reg = curr_var.getGenotypeUnionVariantInterval();
                 } catch (Exception e) {
                     e.printStackTrace();
                     log.error("Original variant: " + var);
                     log.error("Bad variant: " + curr_var);
                     System.exit(1);
                 }
-                curr_var.idx = num_added;
-                curr_var.full_idx = num_read;
-                curr_var.original_type = orig_type;
+                curr_var.splitVariantIndex = numAdded;
+                curr_var.wholeVariantIndex = numRead;
+                curr_var.originalType = orig_type;
 
-                true_store.put(chr, new ValueInterval1D<>(curr_var_reg, curr_var));
-                num_added++;
+                trueVariantIntervalTree.put(chr, new ValueInterval1D<>(curr_var_reg, curr_var));
+                numAdded++;
             }
 
             if (total_len >= Constant.SVLEN && max_len / total_len >= overlapRatio && var_list.size() > 1) {
@@ -637,42 +705,42 @@ public class VCFcompare {
                     int curr_len = curr_var.maxLen();
                     full_validated_total.add(curr_len);
                     true_var_list.add(curr_var);
-                    num_read++;
+                    numRead++;
                 }
             } else {
                 full_validated_total.add(total_len);
                 true_var_list.add(var);
-                num_read++;
+                numRead++;
             }
         }
 
-        log.info("Num read:  " + num_read);
-        log.info("Num added: " + num_added);
-        log.info("Num nodes: " + true_store.size());
-        log.info("Max depth: " + true_store.maxDepth());
+        log.info("Num read:  " + numRead);
+        log.info("Num added: " + numAdded);
+        log.info("Num nodes: " + trueVariantIntervalTree.size());
+        log.info("Max depth: " + trueVariantIntervalTree.maxDepth());
 
         // this is for the split variants
         // set to true if the canonical original variant was validated true
-        BitSet validated_true = new BitSet(num_added);
+        BitSet validatedTrue = new BitSet(numAdded);
 
         // this is for the original variants
         // count of the number of bases validated for the original variant
-        int[] full_validated_count = new int[num_read];
+        int[] fullValidatedCount = new int[numRead];
 
         // generate the output files
-        PrintWriter TP_writer = null;
-        PrintWriter unknown_TP_writer = null;
-        PrintWriter FP_writer = null;
-        PrintWriter unknown_FP_writer = null;
-        PrintWriter FN_writer = null;
-        PrintWriter JSON_writer = null;
+        PrintWriter tpWriter = null;
+        PrintWriter unknownTpWriter = null;
+        PrintWriter fpWriter = null;
+        PrintWriter unknownFpWriter = null;
+        PrintWriter fnWriter = null;
+        PrintWriter jsonWriter = null;
         try {
-            TP_writer = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
-            unknown_TP_writer = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
-            FP_writer = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
-            unknown_FP_writer = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
-            FN_writer = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
-            JSON_writer = new PrintWriter(outPrefix + "_report.json", "UTF-8");
+            tpWriter = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
+            unknownTpWriter = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
+            fpWriter = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
+            unknownFpWriter = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
+            fnWriter = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
+            jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -683,135 +751,140 @@ public class VCFcompare {
         // However, do don't add to true positives, those that computed later
 
         log.info("Load New VCF");
-        int num_new_vars = 0;
+        int numberOfNewVariants = 0;
         // iterate over new VCF and collect stats
 
-        for (String curr_vcf_file : newVcfFilename) {
-            VCFparser new_parser = new VCFparser(curr_vcf_file, sampleName, excludeFiltered);
+        for (String currentVcfFile : newVcfFilename) {
+            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
 
-            while (new_parser.hasMoreInput()) {
-                Variant var = new_parser.parseLine();
+            while (newParser.hasMoreInput()) {
+                Variant variant = newParser.parseLine();
 
-                if (var == null) {
+                //TODO: wrap variant comparison into a method for easier reading
+                if (variant == null) {
                     // System.err.println("Bad variant or not a variant line");
                     continue;
                 }
 
                 Genotypes geno;
 
-                ChrString chr = var.getChr();
+                ChrString chr = variant.getChr();
 
                 if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
                     continue;
                 }
 
-                SimpleInterval1D var_reg = var.get_geno_interval();
+                SimpleInterval1D variantInterval = variant.getGenotypeUnionAlternativeInterval();
 
                 boolean skipFP = false;
                 if (intersector != null) {
-                    if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(chr, var_reg, bedEither)) {
+                    if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(chr, variantInterval, bedEither)) {
                         skipFP = true;
                     }
                 }
 
                 // the overall type of the called variant
-                VariantOverallType curr_var_type = var.getType();
+                VariantOverallType currentVariantType = variant.getType();
 
                 // if called as complex variant convert to indel+snps
-                //TODO: remove constructor here (because another copy will be created inside convert_var_to_var_list
-                List<Variant> var_list = convert_var_to_var_list(new Variant(var));
+                List<Variant> canonicalVariantList = canonicalizeVariant(variant);
 
-                double total_len = 0;
-                double validated_len = 0;
-                double max_len = 0;
+                double totalLength = 0;
+                double validatedLength = 0;
+                double maxLength = 0;
 
-                for (Variant curr_var : var_list) {
-                    total_len += curr_var.maxLen();
-                    max_len = Math.max(max_len, curr_var.maxLen());
+                for (Variant currentVariant : canonicalVariantList) {
+                    totalLength += currentVariant.maxLen();
+                    maxLength = Math.max(maxLength, currentVariant.maxLen());
                 }
 
                 // split up variants that are basically one big variant and one small one
-                boolean compute_as_split = false;
-                if (total_len >= Constant.SVLEN && max_len / total_len >= overlapRatio && var_list.size() > 1) {
-                    compute_as_split = true;
+                boolean computeAsSplit = false;
+                if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio &&
+                    canonicalVariantList.size() > 1) {
+                    computeAsSplit = true;
                 }
 
-                for (Variant curr_var : var_list) {
+                for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
-                    geno = curr_var.getGeno();
-                    result_comparator comp = new result_comparator(true_store, overlapRatio, wiggle, ignoreInsertionLength);
+                    geno = currentVariant.getGenotypes();
+                    //note here ResultComparator is created for each canonical variant
+                    ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
 
-                    if (curr_var.isHom()) {
-                        int max_true_len = comp.compare_variant(curr_var, geno.geno[0], validated_true);
-
-                        final dual_idx idx = matchGenotype ? comp.isHomMatch() : comp.isMatch();
-
-                        if (idx.idx >= 0) {
+                    if (currentVariant.isHom()) {
+                        int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
+                        if (dualIdx.splitVariantIndex >= 0) {
                             // validated
-                            validated_true.set(idx.idx);
-                            full_validated_count[idx.full_idx] += max_true_len;// this 'should' be overlap len
-                            validated_len += curr_var.maxLen();
-                        } else if (compute_as_split) {
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
                             if (!skipFP) {
-                                outputBlob.getNum_true_correct().incFP(curr_var.getType(), var.maxLen());
-                                validator.inc(StatsNamespace.FP, curr_var.getType(), var.maxLen());
-                                FP_writer.println(var);
+                                outputBlob.getNum_true_correct().incFP(currentVariant.getType(), variant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
+                                fpWriter.println(variant);
                             } else {
-                                unknown_FP_writer.println(var);
+                                unknownFpWriter.println(variant);
                             }
                         }
 
                     } else {
                         // het
                         //boolean matched = false;
-                        int max_true_len = 0;
+                        int maxTrueLen = 0;
+                        /*
+                        for heterozygous variants, all genotypes will be checked
+                        inside compareVariant, all genotypes of overlapping true variants will be checked, too
+                        so overall all possible combinations of genotype matching will be checked
+                        */
                         for (int i = 0; i < 2; i++) {
                             byte allele = geno.geno[i];
                             if (allele > 0) {
-                                max_true_len = Math.max(comp.compare_variant(curr_var, allele, validated_true), max_true_len);
+                                maxTrueLen = Math.max(resultComparator.compareVariant(currentVariant, allele, validatedTrue), maxTrueLen);
                             }
                         }
 
-                        final dual_idx idx = matchGenotype ? comp.isHetMatch() : comp.isMatch();
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
 
-                        if (idx.idx >= 0) {
-                            validated_true.set(idx.idx);
-                            full_validated_count[idx.full_idx] += curr_var.maxLen(); // this 'should' be overlap len
-                            validated_len += curr_var.maxLen();
-                        } else if (compute_as_split) {
+                        if (dualIdx.splitVariantIndex >= 0) {
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
                             if (!skipFP) {
-                                outputBlob.getNum_true_correct().incFP(curr_var.getType(), curr_var.maxLen());
-                                validator.inc(StatsNamespace.FP, curr_var.getType(), curr_var.maxLen());
-                                if (curr_var.getType() == VariantOverallType.SNP && curr_var.maxLen() > 1) {
-                                    log.warn("SNP with bad length: " + curr_var);
+                                outputBlob.getNum_true_correct().incFP(currentVariant.getType(), currentVariant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
+                                if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
+                                    log.warn("SNP with bad length: " + currentVariant);
                                 }
-                                FP_writer.println(var);
+                                fpWriter.println(variant);
                             } else {
-                                unknown_FP_writer.println(var);
+                                unknownFpWriter.println(variant);
                             }
                         }
                     }
                 }
 
-                if (!compute_as_split && validated_len < (total_len * overlapRatio)) {
+                if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
                     if (!skipFP) {
                         // this is a false positive!
-                        outputBlob.getNum_true_correct().incFP(curr_var_type, var.maxLen());
-                        validator.inc(StatsNamespace.FP, curr_var_type, var.maxLen());
-                        if (curr_var_type == VariantOverallType.SNP && var.maxLen() > 1) {
-                            log.warn("SNP with bad length: " + var);
+                        outputBlob.getNum_true_correct().incFP(currentVariantType, variant.maxLen());
+                        validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
+                        if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
+                            log.warn("SNP with bad length: " + variant);
                         }
-                        FP_writer.println(var);
+                        fpWriter.println(variant);
                     } else {
-                        unknown_FP_writer.println(var);
+                        unknownFpWriter.println(variant);
                     }
                 }
 
-                num_new_vars++;
+                numberOfNewVariants++;
             }
         }
 
-        log.info("Num new variants read: " + num_new_vars);
+        log.info("Num new variants read: " + numberOfNewVariants);
 
         // read through again and compute for the true variants
         int num_read2 = 0;
@@ -823,31 +896,31 @@ public class VCFcompare {
                 continue;
             }
 
-            SimpleInterval1D curr_var_reg = var.get_geno_interval();
+            SimpleInterval1D curr_var_reg = var.getGenotypeUnionAlternativeInterval();
 
             if (intersector == null || excludeTprFromBedFiltering || intersector.containsEndpoints(chr, curr_var_reg, bedEither)) {
                 int total_len = full_validated_total.get(num_read2);
-                int validated_len = full_validated_count[num_read2];
+                int validated_len = fullValidatedCount[num_read2];
 
                 if (validated_len >= (overlapRatio * total_len)) {
                     // validated
                     outputBlob.getNum_true_correct().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
-                    TP_writer.println(var);
+                    tpWriter.println(var);
                 } else {
-                    FN_writer.println(var);
+                    fnWriter.println(var);
                 }
 
                 outputBlob.getNum_true_correct().incT(var.getType(), var.maxLen());
                 validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
             } else {
-                unknown_TP_writer.println(var);
+                unknownTpWriter.println(var);
             }
             num_read2++;
         }
 
-        if (num_read != num_read2) {
-            log.error("Number of variants read are inconsistent: " + num_read + "," + num_read2);
+        if (numRead != num_read2) {
+            log.error("Number of variants read are inconsistent: " + numRead + "," + num_read2);
         }
 
         // Compute and update the true negatives here so that we have specificity values
@@ -870,7 +943,7 @@ public class VCFcompare {
         String jsonStr = "";
         try {
             jsonStr = mapper.writeValueAsString(outputBlob);
-            JSON_writer.print(jsonStr);
+            jsonWriter.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -885,12 +958,12 @@ public class VCFcompare {
         }
 
         try {
-            TP_writer.close();
-            unknown_TP_writer.close();
-            FP_writer.close();
-            unknown_FP_writer.close();
-            FN_writer.close();
-            JSON_writer.close();
+            tpWriter.close();
+            unknownTpWriter.close();
+            fpWriter.close();
+            unknownFpWriter.close();
+            fnWriter.close();
+            jsonWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -969,18 +1042,26 @@ public class VCFcompare {
         }
     }
 
-    class dual_idx {
-        public int idx;
-        public int full_idx;
+    class DualIdx {
+        public int splitVariantIndex;
+        public int wholeVariantIndex;
 
-        dual_idx(int idx, int full_idx) {
-            this.idx = idx;
-            this.full_idx = full_idx;
+        /**
+         * constructor for this class given known splitVariantIndex and wholeVariantIndex
+         * @param splitVariantIndex
+         * @param wholeVariantIndex
+         */
+        DualIdx(int splitVariantIndex, int wholeVariantIndex) {
+            this.splitVariantIndex = splitVariantIndex;
+            this.wholeVariantIndex = wholeVariantIndex;
         }
 
-        dual_idx() {
-            idx = -1;
-            full_idx = -1;
+        /**
+         * initialize to -1 which means no valid variant available
+         */
+        DualIdx() {
+            splitVariantIndex = -1;
+            wholeVariantIndex = -1;
         }
 
         public boolean equals(Object obj) {
@@ -988,86 +1069,107 @@ public class VCFcompare {
                 return false;
             if (obj == this)
                 return true;
-            if (!(obj instanceof dual_idx))
+            if (!(obj instanceof DualIdx))
                 return false;
 
             // use EqualsBuilder?
-            dual_idx temp = (dual_idx) obj;
-            if (idx != temp.idx) {
+            DualIdx temp = (DualIdx) obj;
+            if (splitVariantIndex != temp.splitVariantIndex) {
                 return false;
             }
 
-            return full_idx == temp.full_idx;
+            return wholeVariantIndex == temp.wholeVariantIndex;
 
         }
 
         @Override
         public String toString() {
-            return "dual_idx{" +
-                    "idx=" + idx +
-                    ", full_idx=" + full_idx +
+            return "DualIdx{" +
+                    "splitVariantIndex=" + splitVariantIndex +
+                    ", wholeVariantIndex=" + wholeVariantIndex +
                     '}';
         }
     }
 
-    class result_comparator {
+    class ResultComparator {
 
-        chrSearchTree<ValueInterval1D<Variant>> _true_store; // true variants
-        double _overlap_ratio;
-        boolean _overlap_complex;
-        int _wiggle;
-        boolean _ignore_ins_len;
+        chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree; // true variants
+        double overlapRatio;
+        boolean overlapComplex;
+        int wiggle;
+        boolean ignoreInsertionLength;
 
         // Results to store
         // this stores the indexes of the true variants matched
-        ArrayList<dual_idx> matches_hom = new ArrayList<>();
-        ArrayList<ArrayList<dual_idx>> matches_het = new ArrayList<>(2); // matches either parent
+        ArrayList<DualIdx> homozygousMatches = new ArrayList<>();
+        ArrayList<ArrayList<DualIdx>> heterozygousMatches = new ArrayList<>(2); // matches either parent
 
-        public result_comparator(chrSearchTree<ValueInterval1D<Variant>> true_store, double overlap_ratio, int wiggle) {
-            this(true_store, overlap_ratio, wiggle, false);
+        public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
+            this.trueVariantIntervalTree = trueVariantIntervalTree;
+            this.overlapRatio = overlapRatio;
+            this.wiggle = wiggle;
+
+            heterozygousMatches.add(new ArrayList<DualIdx>());
+            heterozygousMatches.add(new ArrayList<DualIdx>());
+            overlapComplex = false;
+            ignoreInsertionLength = ignoreInsLen;
         }
 
-        public result_comparator(chrSearchTree<ValueInterval1D<Variant>> true_store, double overlap_ratio, int wiggle, boolean ignore_ins_len) {
-            _true_store = true_store;
-            _overlap_ratio = overlap_ratio;
-            _wiggle = wiggle;
-
-            matches_het.add(new ArrayList<dual_idx>());
-            matches_het.add(new ArrayList<dual_idx>());
-            _overlap_complex = false;
-            _ignore_ins_len = ignore_ins_len;
-        }
-
-        public dual_idx isHomMatch() {
-            if (matches_hom.size() > 0) {
-                return matches_hom.get(0);
+        /**
+         * return homozygous match (empty if no match)
+         * @return
+         */
+        public DualIdx isHomMatch() {
+            if (homozygousMatches.size() > 0) {
+                return homozygousMatches.get(0);
             }
-            return new dual_idx();
+            return new DualIdx();
         }
 
-        public dual_idx isHetMatch() {
-            ArrayList<dual_idx> temp = new ArrayList<>(matches_het.get(0));
-            temp.retainAll(matches_het.get(1));
+        /**
+         * return heterozygous match (empty if no match)
+         * @return
+         */
+        public DualIdx isHetMatch() {
+            ArrayList<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
+            temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
+            //if there is a match in intersection, return the first one from the intersection
             if (temp.size() > 0) {
                 return temp.get(0);
-            } else if (matches_het.get(0).size() > 0 || matches_het.get(1).size() > 0) {
+              /*
+              if no match in intersection, return the first one from the larger list (the genotype
+              containing more heterozygous matches).
+              since ResultComparator is created for each variant, heterzygousMatches will only
+              store matches for one variant against some true variants. Therefore, I think
+              one of the lists in heterozygousMatches will always be zero if there is no intersection
+              between them. And in such cases, we just return whatever we have in matches.
 
-                if (matches_het.get(0).size() > matches_het.get(1).size()) {
-                    return matches_het.get(0).get(0);
+              an example, compare these two lines:
+              1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
+              1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
+
+               */
+            } else if (heterozygousMatches.get(0).size() > 0 || heterozygousMatches.get(1).size() > 0) {
+                if (heterozygousMatches.get(0).size() > heterozygousMatches.get(1).size()) {
+                    return heterozygousMatches.get(0).get(0);
                 } else {
-                    return matches_het.get(1).get(0);
+                    return heterozygousMatches.get(1).get(0);
                 }
             }
-            return new dual_idx();
+            return new DualIdx();
         }
 
-        public dual_idx isMatch() {
-            dual_idx idx = isHomMatch();
-            if (idx.idx >= 0) {
+        /**
+         * determine if there is a match regardless of genotype
+         * @return
+         */
+        public DualIdx isMatch() {
+            DualIdx idx = isHomMatch();
+            if (idx.splitVariantIndex >= 0) {
                 return idx;
             }
             idx = isHetMatch();
-            if (idx.idx >= 0) {
+            if (idx.splitVariantIndex >= 0) {
                 return idx;
             }
             return idx;
@@ -1078,163 +1180,162 @@ public class VCFcompare {
          * - don't match variants in the bitset
          * - if match set the bitset
          *
-         * @param var       variant we want to compare
-         * @param geno      allele of the variant to compare
+         * @param variant       variant we want to compare
+         * @param genotype      allele of the variant to compare
          * @param validated BitSet that records the true variants that have already been validated
          * @return The maximum length of all true variants
          */
-        public int compare_variant(Variant var, int geno, BitSet validated) {
-            double overlap_ratio = _overlap_ratio;
+        public int compareVariant(Variant variant, int genotype, BitSet validated) {
+            double overlapRatio = this.overlapRatio;
             // consider type to change overlap percent
-            VariantType type = var.getType(geno);
-            ChrString chr = var.getChr();
-            SimpleInterval1D orig_inter;
-            if (type == VariantType.Insertion && _ignore_ins_len) {
-                orig_inter = new SimpleInterval1D(var.getPos(), var.getPos());
+            VariantType type = variant.getType(genotype);
+            ChrString chr = variant.getChr();
+            SimpleInterval1D intervalForCompare;
+            if (type == VariantType.Insertion && ignoreInsertionLength) {
+                intervalForCompare = new SimpleInterval1D(variant.getPos(), variant.getPos());
             } else {
-                orig_inter = var.get_var_interval(geno);
+                intervalForCompare = variant.getVariantInterval(genotype);
             }
 
-
-            int max_true_var_len = 0;
+            int maxTrueVarianLength = 0;
 
             // sometimes MNPs are called as SNPs?
             if (type == VariantType.SNP) {
                 // handle SNPs differently
                 // require SNP content to match
-                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr, orig_inter);
+                Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompare);
 
-                byte val = var.getAlt(geno).getSeq()[0];
+                byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSequence()[0];
 
-                int num_matches = 0;
-                if (out != null) {
-                    for (ValueInterval1D<Variant> true_var_interval : out) {
-                        Variant true_var = true_var_interval.get();
-                        boolean has_snp = false;
-                        int idx = true_var.idx;
-                        int full_idx = true_var.full_idx;
+                int numberOfSnpMatches = 0;
+                if (overlaps != null) {
+                    for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                        Variant trueVariant = trueVariantInterval.getContent();
+                        boolean hasSnp = false;
+                        int splitVariantIndex = trueVariant.splitVariantIndex;
+                        int wholeVariantIndex = trueVariant.wholeVariantIndex;
 
-                        if (true_var.original_type == VariantOverallType.Complex) {
+                        if (trueVariant.originalType == VariantOverallType.Complex) {
                             //System.err.println("Overlap complex SNP!");
-                            _overlap_complex = true;
+                            overlapComplex = true;
                         }
 
-                        if (validated.get(idx)) {
+                        if (validated.get(splitVariantIndex)) {
                             // skip ones already validated
                             continue;
                         }
 
                         // check genotype
-                        if (true_var.isHom()) {
+                        if (trueVariant.isHom()) {
                             // position is correct, check genotype
-                            if (true_var.getType(true_var.getgood_paternal()) == VariantType.SNP
-                                    && var.getPos() == true_var.getPos()) {
-                                if (val == true_var.getAlt(true_var.getgood_paternal()).getSeq()[0]) {
-                                    matches_hom.add(new dual_idx(idx, full_idx));
+                            if (trueVariant.getType(trueVariant.getGoodPaternal()) == VariantType.SNP
+                                    && variant.getPos() == trueVariant.getPos()) {
+                                if (alternativeAlleleFirstBase == trueVariant.getAlt(trueVariant.getGoodPaternal()).getSequence()[0]) {
+                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 }
-                                has_snp = true;
+                                hasSnp = true;
                             }
                         } else {
                             for (int parent = 0; parent < 2; parent++) {
-                                int allele = true_var.get_allele(parent);
+                                int allele = trueVariant.getAllele(parent);
+                                //true variant is heterozygous, so only one allele has non-reference sequence
                                 if (allele > 0) {
-                                    if (true_var.getType(allele) == VariantType.SNP
-                                            && var.getPos() == true_var.getPos()) {
-                                        if (val == true_var.getAlt(allele).getSeq()[0]) {
-                                            matches_het.get(parent).add(new dual_idx(idx, full_idx));
+                                    if (trueVariant.getType(allele) == VariantType.SNP
+                                            && variant.getPos() == trueVariant.getPos()) {
+                                        if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
+                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                         }
-                                        has_snp = true;
+                                        hasSnp = true;
                                     }
                                 }
                             }
                         }
 
-                        if (has_snp) {
-                            num_matches++;
-                            max_true_var_len = 1;
+                        if (hasSnp) {
+                            numberOfSnpMatches++;
+                            maxTrueVarianLength = 1;
                         }
                     }
 
-                    if (num_matches > 1) {
-                        log.info("Something strange, multiple SNP matches in true set: " + num_matches);
+                    if (numberOfSnpMatches > 1) {
+                        log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
                     }
                 }
-
-
             } else {
-                // the rest
-                SimpleInterval1D wiggle_inter = new SimpleInterval1D(orig_inter.left - _wiggle, orig_inter.right + _wiggle);
-                Iterable<ValueInterval1D<Variant>> out = _true_store.getOverlaps(chr, wiggle_inter);
+                // Non-SNPs
+                SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
+                Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
 
 
-                if (out == null) {
+                if (overlaps == null) {
                     // nothing found
-                    return max_true_var_len;
+                    return maxTrueVarianLength;
                 }
 
-                for (ValueInterval1D<Variant> true_var_interval : out) {
-                    Variant true_var = true_var_interval.get();
-                    int idx = true_var.idx;
-                    int full_idx = true_var.full_idx;
+                for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                    Variant trueVariant = trueVariantInterval.getContent();
+                    int splitVariantIndex = trueVariant.splitVariantIndex;
+                    int wholeVariantIndex = trueVariant.wholeVariantIndex;
 
-                    if (true_var.original_type == VariantOverallType.Complex) {
-                        _overlap_complex = true;
+                    if (trueVariant.originalType == VariantOverallType.Complex) {
+                        overlapComplex = true;
                     }
 
-                    if (validated.get(idx)) {
+                    if (validated.get(splitVariantIndex)) {
                         // skip ones already validated
-                        //System.err.println("Skip..." + idx);
+                        //System.err.println("Skip..." + splitVariantIndex);
                         continue;
                     }
 
+                    //all genotypes in the overlapping true variant will be checked
                     for (int parent = 0; parent < 2; parent++) {
-                        if (true_var.isHom() && parent == 1) {
+                        if (trueVariant.isHom() && parent == 1) {
                             break;
                         }
 
-                        int allele = true_var.get_allele(parent);
+                        int allele = trueVariant.getAllele(parent);
 
                         if (allele == 0) {
                             // reference allele
                             continue;
                         }
 
-                        if (type != true_var.getType(allele)) {
+                        if (type != trueVariant.getType(allele)) {
                             // need type to be the same
                             continue;
                         }
 
                         boolean matched = false;
 
-                        if (type == VariantType.Insertion && _ignore_ins_len) {
+                        if (type == VariantType.Insertion && ignoreInsertionLength) {
                             // this is the case where we want to ignore insertion lengths when comparing
                             // just do a check of the start position
 
-                            if (Math.abs(true_var.getPos() - var.getPos()) <= _wiggle) {
+                            if (Math.abs(trueVariant.getPos() - variant.getPos()) <= wiggle) {
                                 // Matches!
-                                if (true_var.isHom()) {
-                                    matches_hom.add(new dual_idx(idx, full_idx));
+                                if (trueVariant.isHom()) {
+                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 } else {
-                                    matches_het.get(parent).add(new dual_idx(idx, full_idx));
+                                    heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 }
                                 matched = true;
                             }
                         } else {
                             // this is the normal case
                             // check if the variant interval matches
-                            if (orig_inter.intersects(true_var.get_var_interval(allele), overlap_ratio, _wiggle)) {
+                            if (intervalForCompare.intersects(trueVariant.getVariantInterval(allele), overlapRatio, wiggle)) {
                                 // it matches an allele!
                                 // now check alternate allele length
-                                int alt_len = var.getAlt(geno).length(); // TODO ignore copy number for now
-                                int true_alt_len = true_var.getAlt(allele).length();
-                                double ratio = (alt_len > 0) ? (true_alt_len / (double) alt_len) : 1.0;
-                                double min_ratio = Math.min(ratio, 1 / ratio);
-                                if (min_ratio >= overlap_ratio || Math.abs(alt_len - true_alt_len) < _wiggle) {
+                                int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
+                                int trueAlternativeAllele = trueVariant.getAlt(allele).length();
+                                double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
+                                double minRatio = Math.min(ratio, 1 / ratio);
+                                if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
                                     // yay, it is a match!
-                                    if (true_var.isHom()) {
-                                        matches_hom.add(new dual_idx(idx, full_idx));
+                                    if (trueVariant.isHom()) {
+                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                     } else {
-                                        matches_het.get(parent).add(new dual_idx(idx, full_idx));
+                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                     }
                                     matched = true;
                                 }
@@ -1242,9 +1343,9 @@ public class VCFcompare {
                         }
 
                         if (matched) {
-                            int len = true_var.maxLen(allele);
-                            if (len > max_true_var_len) {
-                                max_true_var_len = len;
+                            int len = trueVariant.maxLen(allele);
+                            if (len > maxTrueVarianLength) {
+                                maxTrueVarianLength = len;
                             }
                         }
                     }
@@ -1252,7 +1353,7 @@ public class VCFcompare {
 
             }
 
-            return max_true_var_len;
+            return maxTrueVarianLength;
         }
     }
 
