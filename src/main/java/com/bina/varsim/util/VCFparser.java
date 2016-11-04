@@ -15,7 +15,7 @@ import java.util.Random;
 import java.util.StringTokenizer;
 
 public class VCFparser extends GzFileParser<Variant> {
-    public static final String DOT = "."; //default value for many columns
+    public static final String DEFAULT_FILTER = "."; //default value for many columns
     private final static Logger log = Logger.getLogger(VCFparser.class.getName());
 
     private Random random = null;
@@ -261,7 +261,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return null;
         }
 
-        if (isPassFilterRequired && !(FILTER.contains("PASS") || FILTER.equals("."))) {
+        if (isPassFilterRequired && !(FILTER.contains("PASS") || FILTER.equals(DEFAULT_FILTER))) {
             //log.warn("not pass line" + line);
             return null; // Filtered out
         }
