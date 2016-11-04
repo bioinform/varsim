@@ -121,11 +121,11 @@ public class VCFcompare {
                     if (end) {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     } else {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     }
                 } else {
                     byte[] phase = {0, 0};
@@ -134,23 +134,23 @@ public class VCFcompare {
                         phase[1] = 0;
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         phase[0] = 0;
                         phase[1] = 1;
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         phase[0] = 0;
                         phase[1] = 1;
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     }
                 }
             } else if (alleleLengthDifference[0] < 0) {
@@ -161,11 +161,11 @@ public class VCFcompare {
                 if (end) {
                     canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[0].length, -alleleLengthDifference[0],
                             Arrays.copyOfRange(reference, alternativeAlleles[0].length, alternativeAlleles[0].length - alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, variant.getVariantId(), ".", ""));
+                            phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 } else {
                     canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[0],
                             Arrays.copyOfRange(reference, 0, -alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, variant.getVariantId(), ".", ""));
+                            phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 }
             }
         } else {
@@ -177,11 +177,11 @@ public class VCFcompare {
                     if (end) {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     } else {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
                                 new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     }
                 } else if (alleleLengthDifference[a] < 0) {
                     // deletion
@@ -190,11 +190,11 @@ public class VCFcompare {
                     if (end) {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[a].length, -alleleLengthDifference[a],
                                 Arrays.copyOfRange(reference, alternativeAlleles[a].length, alternativeAlleles[a].length - alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     } else {
                         canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[a],
                                 Arrays.copyOfRange(reference, 0, -alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, variant.getVariantId(), ".", ""));
+                                phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                     }
                 }
             }
@@ -355,14 +355,14 @@ public class VCFcompare {
                     */
                     byte[] phase = {1, 1};
                     variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), ".", ""));
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 } else if (alleleSpecificRelativePosition[0] < 0 && alleleSpecificRelativePosition[1] >= 0 &&
                         alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // one deleted, hence the other is homozygous
                     //same as above but two alleles switch
                     byte[] phase = {1, 1};
                     variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])}, phase, true, variant.getVariantId(), ".", ""));
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])}, phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 } else if (alleleSpecificRelativePosition[0] >= 0 && alleleSpecificRelativePosition[1] < 0 &&
                            alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] == referenceAlleleSequence[relativePosition]) {
                     // ref call with del
@@ -395,7 +395,7 @@ public class VCFcompare {
                     */
                     byte[] phase = {1, 1};
                     variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), ".", ""));
+                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]])}, phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 } else if (alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] != referenceAlleleSequence[relativePosition] &&
                         alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // het but both alt
@@ -408,7 +408,7 @@ public class VCFcompare {
                     byte[] phase = {1, 2};
                     variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
                             new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]), new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])},
-                            phase, true, variant.getVariantId(), ".", ""));
+                            phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                 } else {
                     // het with one ref
                   /*
@@ -422,7 +422,7 @@ public class VCFcompare {
                             byte[] phase = {0, 0};
                             phase[a] = 1;
                             variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]])}, phase, true, variant.getVariantId(), ".", ""));
+                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]])}, phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         }
                     }
                 }
@@ -452,11 +452,11 @@ public class VCFcompare {
                         if (end) {
                             variantList.add(new Variant(variant.getChr(), currentPosition + referenceSequence.length, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference))},
-                                    phase, true, variant.getVariantId(), ".", ""));
+                                    phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         } else {
                             variantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
                                     new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference))},
-                                    phase, true, variant.getVariantId(), ".", ""));
+                                    phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         }
                     } else if (alleleLengthDifference < 0) {
                         // deletion
@@ -466,12 +466,12 @@ public class VCFcompare {
                             variantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleleSequence.length, -alleleLengthDifference,
                                     Arrays.copyOfRange(referenceSequence, alternativeAlleleSequence.length, alternativeAlleleSequence.length - alleleLengthDifference),
                                     new FlexSeq[]{new FlexSeq()},
-                                    phase, true, variant.getVariantId(), ".", ""));
+                                    phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         } else {
                             variantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference,
                                     Arrays.copyOfRange(referenceSequence, 0, -alleleLengthDifference),
                                     new FlexSeq[]{new FlexSeq()},
-                                    phase, true, variant.getVariantId(), ".", ""));
+                                    phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         }
                     }
 
@@ -492,7 +492,7 @@ public class VCFcompare {
                             phase[alleleIndex] = 1;
 
                             variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceSequence[i]},
-                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[idx])}, phase, true, variant.getVariantId(), ".", ""));
+                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[idx])}, phase, true, variant.getVariantId(), VCFparser.DOT, ""));
                         }
 
                         currentPosition++;

@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.StringTokenizer;
 
 public class VCFparser extends GzFileParser<Variant> {
+    public static final String DOT = "."; //default value for many columns
     private final static Logger log = Logger.getLogger(VCFparser.class.getName());
 
     private Random random = null;
