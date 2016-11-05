@@ -124,7 +124,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             var.setVarID("Novel_" + num_novel_added);
         }
 
-        output_vcf_record(bw, var, geno.geno[0], geno.geno[1]);
+        outputVcfRecord(bw, var, geno.geno[0], geno.geno[1]);
 
     }
 
@@ -193,7 +193,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
             // select genotypes here
             ChrString chr = var.getChr();
-            int num_alt = var.get_num_alt();
+            int num_alt = var.getNumberOfAlternativeAlleles();
 
             Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
             selected_geno.add(geno);

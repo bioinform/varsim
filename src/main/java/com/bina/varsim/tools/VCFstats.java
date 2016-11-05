@@ -71,7 +71,7 @@ public class VCFstats {
             if (var == null) {
                 continue;
             }
-            if (var.getgood_maternal() == 0 && var.getgood_paternal() == 0) {
+            if (var.getGoodMaternal() == 0 && var.getGoodPaternal() == 0) {
                 continue;
             }
             data.add(var, bed_file);

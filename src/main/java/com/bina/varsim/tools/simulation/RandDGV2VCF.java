@@ -123,10 +123,10 @@ public class RandDGV2VCF extends randVCFgenerator {
 
         // this is ok if both the same genotype
         // the second call will return
-        fill_in_seq(var, insert_seq, geno.geno[0]);
-        fill_in_seq(var, insert_seq, geno.geno[1]);
+        fillInSeq(var, insert_seq, geno.geno[0]);
+        fillInSeq(var, insert_seq, geno.geno[1]);
 
-        output_vcf_record(bw, var, geno.geno[0], geno.geno[1]);
+        outputVcfRecord(bw, var, geno.geno[0], geno.geno[1]);
     }
 
 
@@ -207,9 +207,9 @@ public class RandDGV2VCF extends randVCFgenerator {
 
             // select genotypes here
             ChrString chr = var.getChr();
-            int num_alt = var.get_num_alt();
+            int numberOfAlternativeAlleles = var.getNumberOfAlternativeAlleles();
 
-            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
+            Genotypes geno = new Genotypes(chr, gender, numberOfAlternativeAlleles, _rand, prop_het);
             selected_geno.add(geno);
             total_lines++;
 

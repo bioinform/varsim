@@ -26,24 +26,24 @@ public class Parent_record {
     }
 
     public void add(Variant var, BedFile bed_file) {
-        int paternal_allele = var.getgood_paternal();
-        int maternal_allele = var.getgood_maternal();
+        int paternal_allele = var.getGoodPaternal();
+        int maternal_allele = var.getGoodMaternal();
 
         boolean added = false;
         if (bed_file == null
-                || bed_file.contains(var.getChr(), var.get_interval(paternal_allele))) {
+                || bed_file.contains(var.getChr(), var.getAlternativeAlleleInterval(paternal_allele))) {
             data[PATERNAL].add(var.getType(paternal_allele), var.maxLen(paternal_allele));
             added = true;
         }
 
         if (bed_file == null
-                || bed_file.contains(var.getChr(), var.get_interval(maternal_allele))) {
+                || bed_file.contains(var.getChr(), var.getAlternativeAlleleInterval(maternal_allele))) {
             data[MATERNAL].add(var.getType(maternal_allele), var.maxLen(maternal_allele));
             added = true;
         }
 
         if (bed_file == null
-                || bed_file.contains(var.getChr(), var.get_geno_interval())) {
+                || bed_file.contains(var.getChr(), var.getGenotypeUnionAlternativeInterval())) {
             overall_data.add(var.getType(), var.maxLen());
             added = true;
         }

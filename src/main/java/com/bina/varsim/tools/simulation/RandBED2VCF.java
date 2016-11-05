@@ -80,19 +80,19 @@ public class RandBED2VCF extends randVCFgenerator {
 
 
     // outputs VCF record with random phase
-    void rand_output_vcf_record(BufferedWriter bw, Variant var) throws IOException {
+    void randOutputVcfRecord(BufferedWriter bw, Variant var) throws IOException {
 
         // this is ok if both the same genotype
         // the second call will return
-        fill_in_seq(var, insert_seq, var.getGeno().geno[0]);
-        fill_in_seq(var, insert_seq, var.getGeno().geno[1]);
+        fillInSeq(var, insert_seq, var.getGenotypes().geno[0]);
+        fillInSeq(var, insert_seq, var.getGenotypes().geno[1]);
 
-        output_vcf_record(bw, var);
+        outputVcfRecord(bw, var);
 
     }
 
     // remember BED is 0-based
-    Variant parse_bed_line(String line, VariantType type) {
+    Variant parseBedLine(String line, VariantType type) {
         line = line.trim();
         String[] ll = line.split("\t");
         if (ll.length < 4) return new Variant(_rand);
@@ -170,7 +170,7 @@ public class RandBED2VCF extends randVCFgenerator {
 
         String line;
         while ((line = bed_reader.readLine()) != null) {
-            Variant var = parse_bed_line(line, type);
+            Variant var = parseBedLine(line, type);
             if (var == null) {
                 log.error("Bad variant or not a variant line: " + line);
                 continue;
@@ -179,7 +179,7 @@ public class RandBED2VCF extends randVCFgenerator {
             // write out variant
             try {
                 if (!var.isRef()) {
-                    rand_output_vcf_record(out, var);
+                    randOutputVcfRecord(out, var);
                 } else {
                     //log.error("Reference variant: " + line);
                 }

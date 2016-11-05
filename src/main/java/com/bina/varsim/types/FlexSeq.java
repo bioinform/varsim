@@ -174,11 +174,11 @@ public class FlexSeq {
         return result;
     }
 
-    public int getCopy_num() {
+    public int getCopyNumber() {
         return copyNumber;
     }
 
-    public void setCopy_num(int cn) {
+    public void setCopyNumber(int cn) {
         copyNumber = cn;
     }
 
@@ -190,19 +190,19 @@ public class FlexSeq {
         type = t;
     }
 
-    public String getVar_id() {
+    public String getVariantId() {
         return variantId;
     }
 
-    public void setVar_id(final String var_id) {
-        variantId = var_id;
+    public void setVariantId(final String variantId) {
+        this.variantId = variantId;
     }
 
     public void setLength(int l) {
         length = l;
     }
 
-    public byte[] getSeq() {
+    public byte[] getSequence() {
         return sequence;
     }
 
