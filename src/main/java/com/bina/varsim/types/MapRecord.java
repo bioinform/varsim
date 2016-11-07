@@ -26,9 +26,9 @@ public class MapRecord {
 
     private MapRecord() {}
     /**
-     * create a new map file record based on the variant or sequence object stored at insertPosition2Sequence[idx]
+     * create a new map file record based on the variant or sequence object stored at insertPosition2Sequence[splitVariantIndex]
      * from the perspective of good programming practice, it's better to iterate over all variants
-     * in insertPosition2Sequence rather than using idx.
+     * in insertPosition2Sequence rather than using splitVariantIndex.
      * after the record is created, advance host genome and reference indices so we know where next
      * event occurs. For some variants, e.g. TANDEM_DUP, several records will be created on the fly
      * and got appended to output string sb.
@@ -58,7 +58,7 @@ public class MapRecord {
             inserted = true;
             // insertion at currentMapRecord location
             FlexSeq insertion = insertPosition2Sequence.get(idx + 1);
-            varId = insertion.getVar_id();
+            varId = insertion.getVariantId();
 
             //System.err.println("Check type: " + ins.getType());
 
@@ -101,7 +101,7 @@ public class MapRecord {
                     break;
                 case DUP:
                     // need to replicate several blocks
-                    int cn = insertion.getCopy_num();
+                    int cn = insertion.getCopyNumber();
 
                     // first build one
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;

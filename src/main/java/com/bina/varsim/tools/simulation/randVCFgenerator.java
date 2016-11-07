@@ -81,7 +81,7 @@ abstract public class randVCFgenerator {
      * @param insert_seq Sequence on known insertions all concatented together
      * @param geno       allele to be filled in
      */
-    public void fill_in_seq(Variant var, byte[] insert_seq, int geno) {
+    public void fillInSeq(Variant var, byte[] insert_seq, int geno) {
         FlexSeq alt = var.getAlt(geno);
         if (alt != null) {
             if (alt.getType() == FlexSeq.Type.INS) {
@@ -119,12 +119,12 @@ abstract public class randVCFgenerator {
      * @param geno1 Second allele
      * @throws IOException
      */
-    public void output_vcf_record(BufferedWriter bw, Variant var, int geno0, int geno1)
+    public void outputVcfRecord(BufferedWriter bw, Variant var, int geno0, int geno1)
             throws IOException {
 
         // ignore ACTGN
-        String ref = var.getOrig_Ref().toUpperCase();
-        String alt = var.alt_string().toString().toUpperCase();
+        String ref = var.getReferenceString().toUpperCase();
+        String alt = var.alternativeAlleleString().toUpperCase();
 
         if (!ref.matches("[ACTGN]*") || (!var.isAltACTGN())) {
             return; // don't output if it is not ACTGN
@@ -137,7 +137,7 @@ abstract public class randVCFgenerator {
         bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length()));
         bw.write("\t");
         // variant id
-        bw.write(var.getVar_id());
+        bw.write(var.getVariantId());
         bw.write("\t");
         // ref allele
         bw.write(ref);
@@ -194,9 +194,9 @@ abstract public class randVCFgenerator {
      * @param var The variant to output
      * @throws IOException
      */
-    public void output_vcf_record(BufferedWriter bw, Variant var)
+    public void outputVcfRecord(BufferedWriter bw, Variant var)
             throws IOException {
-        output_vcf_record(bw, var, var.getGeno().geno[0], var.getGeno().geno[1]);
+        outputVcfRecord(bw, var, var.getGenotypes().geno[0], var.getGenotypes().geno[1]);
     }
 
 

@@ -46,7 +46,7 @@ public class VCFparserTest {
         */
         assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tSVLEN=-1\tGT\t1|1"));
         assertTrue(v.isPhased());
-        assertTrue(v.getRef().length == 1); //[C]
+        assertTrue(v.getReference().length == 1); //[C]
         assertTrue(v.getAlt(1).length() == 0); //""
     }
     @Test
@@ -54,7 +54,7 @@ public class VCFparserTest {
         Variant v = parser.processLine("12\t29557990\t.\tCTTT\tCGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
         assertTrue(v.toString().equals("12\t29557990\t.\tC\tCGT\t.\tPASS\tSVLEN=2\tGT\t1|1"));
         assertTrue(v.isPhased());
-        assertTrue(v.getRef().length == 0); //[]
+        assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 2); //"GT"
     }
     @Test
@@ -62,7 +62,7 @@ public class VCFparserTest {
         Variant v = parser.processLine("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
         assertTrue(v.toString().equals("12\t29557989\t.\tA\tAAAA\t.\tPASS\tSVLEN=3\tGT\t1|1"));
         assertTrue(v.isPhased());
-        assertTrue(v.getRef().length == 0); //[]
+        assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 3); //"GT"
     }
     @Test(expected=IllegalArgumentException.class)
