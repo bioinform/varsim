@@ -288,9 +288,6 @@ public class VCFparser extends GzFileParser<Variant> {
                 log.error(line);
                 return null;
             }
-            if ((genotypeArray[0] == genotypeArray[1]) != (copyNumberArray[0] == copyNumberArray[1])) {
-                throw new IllegalArgumentException("ERROR: genotype does not agree with copy number.\n" + line);
-            }
         }
 
         // Upper casing
