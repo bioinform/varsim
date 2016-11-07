@@ -451,7 +451,7 @@ public class VCF2diploid {
             if (variantType == VariantType.Inversion) {
                 // Treat this as getReferenceAlleleLength then insertion of reverse complement
                 //System.err.println("Insert INV");
-                referenceAlleleLength = variant.insertionLength(allele);
+                referenceAlleleLength = variant.getInsertionLength(allele);
                 insertions = referenceSequence.revComp(position, position + referenceAlleleLength);
             }
 
@@ -462,8 +462,8 @@ public class VCF2diploid {
                 // TODO make length correct
                 // System.err.println("Insert DUP");
 
-                referenceAlleleLength = variant.insertionLength(allele);
-                int single_ins_len = variant.insertionLength(allele);
+                referenceAlleleLength = variant.getInsertionLength(allele);
+                int single_ins_len = variant.getInsertionLength(allele);
                 byte[] orig_seq = referenceSequence.subSeq(position, position + single_ins_len);
                 insertions = new byte[single_ins_len * variant.getCN(allele)];
                 for (int i = 0; i < variant.getCN(allele); i++) {
