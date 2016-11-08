@@ -85,20 +85,20 @@ public class VCF2diploid {
         String usage = "Create a diploid genome as associated files from a reference genome\n"
                 + "and some VCF files. \n";
 
-        CmdLineParser cmd_parser = new CmdLineParser(this);
+        CmdLineParser cmdParser = new CmdLineParser(this);
 
         // if you have a wider console, you could increase the value;
         // here 80 is also the default
-        cmd_parser.setUsageWidth(80);
+        cmdParser.setUsageWidth(80);
 
         try {
-            cmd_parser.parseArgument(args);
+            cmdParser.parseArgument(args);
         } catch (CmdLineException e) {
             log.error(VERSION);
             log.error(e.getMessage());
             log.error("java -jar vcf2diploid.jar [options...]");
             // print the list of available options
-            cmd_parser.printUsage(System.err);
+            cmdParser.printUsage(System.err);
             log.error(usage);
             return;
         }
@@ -185,7 +185,7 @@ public class VCF2diploid {
      *
      */
     public void makeDiploid() {
-        StringBuilder map_string = new StringBuilder();
+        StringBuilder mapString = new StringBuilder();
 
         // This is the loop if chromosomes exist in separate files
         SimpleReference allSequences = new SimpleReference(chrfiles);
@@ -196,28 +196,28 @@ public class VCF2diploid {
 
             log.info("Working on " + referenceSequence.getName() + "...");
 
-            boolean output_paternal = true;
-            boolean output_maternal = true;
+            boolean outputPaternal = true;
+            boolean outputMaternal = true;
 
             if (gender == GenderType.FEMALE) {
                 if (chr.isY()) {
-                    output_paternal = false;
-                    output_maternal = false;
+                    outputPaternal = false;
+                    outputMaternal = false;
                 }
             } else if (gender == GenderType.MALE) {
                 // only male and female
                 if (chr.isX()) {
-                    output_paternal = false;
+                    outputPaternal = false;
                 }
                 if (chr.isY()) {
-                    output_maternal = false;
+                    outputMaternal = false;
                 }
             }
             if (chr.isMT()) {
-                output_paternal = false;
+                outputPaternal = false;
             }
 
-            if (!output_paternal && !output_maternal) {
+            if (!outputPaternal && !outputMaternal) {
                 // skip chromosome
                 continue;
             }
@@ -287,21 +287,21 @@ public class VCF2diploid {
 
             //VCF is written on a per-chromosome basis
             writeVCF(referenceSequence, varList, paternalIsVariantAdded,
-                    maternalIsVariantAdded, output_paternal, output_maternal);
+                    maternalIsVariantAdded, outputPaternal, outputMaternal);
 
-            if (output_paternal) {
+            if (outputPaternal) {
                 String paternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[1];
                 String paternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[1] + ".fa";
-                makePosMap(map_string, paternalSequenceName, referenceSequence, paternalMaskedSequence, paternalInsertionSeq);
+                makePosMap(mapString, paternalSequenceName, referenceSequence, paternalMaskedSequence, paternalInsertionSeq);
                 writeHaploid(paternalMaskedSequence, paternalInsertionSeq, paternalSequenceName, paternalSequenceFileName);
                 log.info("Applied " + nPaternalVariant + " variants "
                         + nPaternalVariantBase + " bases to " + "paternal genome.");
             }
 
-            if (output_maternal) {
+            if (outputMaternal) {
                 String maternalSequenceName = referenceSequence.getName() + "_" + DIPLOID_CHRS[0];
                 String maternalSequenceFileName = referenceSequence.getName() + "_" + id + "_" + DIPLOID_CHRS[0] + ".fa";
-                makePosMap(map_string, maternalSequenceName, referenceSequence, maternalMaskedSequence, maternalInsertionSeq);
+                makePosMap(mapString, maternalSequenceName, referenceSequence, maternalMaskedSequence, maternalInsertionSeq);
                 writeHaploid(maternalMaskedSequence, maternalInsertionSeq, maternalSequenceName, maternalSequenceFileName);
                 log.info("Applied " + nMaternalVariant + " variants "
                         + nMaternalVariantBase + " bases to " + "maternal genome.");
@@ -311,7 +311,7 @@ public class VCF2diploid {
             try {
                 FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
                 BufferedWriter bw = new BufferedWriter(fw);
-                bw.write(map_string.toString());
+                bw.write(mapString.toString());
                 bw.newLine();
                 bw.close();
                 fw.close();
@@ -325,7 +325,7 @@ public class VCF2diploid {
      * add variant onto the perturbed genome
      * maskedSequence consists of base pairs (if no deletion occurs)
      * and flags for deletions. for each insertion,
-     * position and inserted sequence will be put into InsertPosition2Sequence.
+     * position and inserted sequence will be put into insertPosition2Sequence.
      * Note here, a SNP is modeled as 1-bp del+1-bp insertion,
      * MVN is modeled as multiple 1-bp del + multiple 1-bp
      * insertion. Inversion modeled as deletion + insertion of
@@ -337,11 +337,11 @@ public class VCF2diploid {
      *
      * @param maskedSequence -- sequence to be modified, it's a masked version of original sequence in array data structure
      * @param referenceSequence -- reference sequence
-     * @param InsertPosition2Sequence --  records insertion locations and sequences
+     * @param insertPosition2Sequence --  records insertion locations and sequences
      * @return true if the variant is incorporated, false otherwise
      */
     private boolean addVariant(final byte[] maskedSequence, final Sequence referenceSequence, final SimpleReference allSequences,
-                               final Variant variant, final int allele, final Hashtable<Integer, FlexSeq> InsertPosition2Sequence) {
+                               final Variant variant, final int allele, final Hashtable<Integer, FlexSeq> insertPosition2Sequence) {
 
         //position     -- position of the variant
         //start is 1-based
@@ -421,7 +421,7 @@ public class VCF2diploid {
 
         } else { // Indel, SV
             // check whether the insertion location has been inserted before
-            if (InsertPosition2Sequence.get(position) != null) {
+            if (insertPosition2Sequence.get(position) != null) {
                 log.warn("Multiple insertions at "
                         + referenceSequence.getName() + ":" + position);
                 try {
@@ -463,11 +463,11 @@ public class VCF2diploid {
                 // System.err.println("Insert DUP");
 
                 referenceAlleleLength = variant.getInsertionLength(allele);
-                int single_ins_len = variant.getInsertionLength(allele);
-                byte[] orig_seq = referenceSequence.subSeq(position, position + single_ins_len);
-                insertions = new byte[single_ins_len * variant.getCN(allele)];
+                int singleInsLen = variant.getInsertionLength(allele);
+                byte[] orig_seq = referenceSequence.subSeq(position, position + singleInsLen);
+                insertions = new byte[singleInsLen * variant.getCN(allele)];
                 for (int i = 0; i < variant.getCN(allele); i++) {
-                    System.arraycopy(orig_seq, 0, insertions, i * single_ins_len, single_ins_len);
+                    System.arraycopy(orig_seq, 0, insertions, i * singleInsLen, singleInsLen);
                 }
             }
 
@@ -495,7 +495,7 @@ public class VCF2diploid {
                 their insert locus. We only record insert loci of indel
                 and SVs.
                  */
-                InsertPosition2Sequence.put(new Integer(position), s);
+                insertPosition2Sequence.put(new Integer(position), s);
             }
         }
 
@@ -512,13 +512,13 @@ public class VCF2diploid {
      * the comments below.
      *
      * @param sb output string
-     * @param chr_name name of haploid perturbed sequence
-     * @param ref_seq name of original sequence
+     * @param chrName name of haploid perturbed sequence
+     * @param refSeq name of original sequence
      * @param genome flags for each position of the original sequence
-     * @param ins_seq recording positions of all insertions (here insertions are broader than typical definition)
+     * @param insSeq recording positions of all insertions (here insertions are broader than typical definition)
      */
-    private void makePosMap(final StringBuilder sb, final String chr_name, final Sequence ref_seq, final byte[] genome,
-                            final Hashtable<Integer, FlexSeq> ins_seq) {
+    private void makePosMap(final StringBuilder sb, final String chrName, final Sequence refSeq, final byte[] genome,
+                            final Hashtable<Integer, FlexSeq> insSeq) {
 
         // host is the perturbed genome
         // ref is b37 or hg19
@@ -545,7 +545,7 @@ public class VCF2diploid {
         hostRefIdx.hostIdx = 1;
         hostRefIdx.refIdx = 1;
 
-        MapRecord currentMapRecord = MapRecord.generateNewMapRecord(sb, 0, chr_name, ref_seq.getName(), hostRefIdx, genome, ins_seq);
+        MapRecord currentMapRecord = MapRecord.generateNewMapRecord(sb, 0, chrName, refSeq.getName(), hostRefIdx, genome, insSeq);
 
         for (int idx = 1; idx < genome.length; idx++) {
             // if still in the same block increment the length
@@ -553,12 +553,12 @@ public class VCF2diploid {
 
             switch (currentMapRecord.feature) {
                 case "DEL":
-                    if (genome[idx] != DELETED_BASE || ins_seq.containsKey(idx + 1)) {
+                    if (genome[idx] != DELETED_BASE || insSeq.containsKey(idx + 1)) {
                         same_block = false;
                     }
                     break;
                 case "SEQ":
-                    if (genome[idx] == DELETED_BASE || ins_seq.containsKey(idx + 1)) {
+                    if (genome[idx] == DELETED_BASE || insSeq.containsKey(idx + 1)) {
                         same_block = false;
                     }
                     break;
@@ -575,7 +575,7 @@ public class VCF2diploid {
                 sb.append(currentMapRecord);
                 sb.append('\n');
 
-                currentMapRecord = MapRecord.generateNewMapRecord(sb, idx, chr_name, ref_seq.getName(), hostRefIdx, genome, ins_seq);
+                currentMapRecord = MapRecord.generateNewMapRecord(sb, idx, chrName, refSeq.getName(), hostRefIdx, genome, insSeq);
             }
         }
 
@@ -597,16 +597,16 @@ public class VCF2diploid {
      * writeHaploid twice. Got more haplotypes? Use a loop.
      * This avoids creation of anonymous lists.
      * @param sequence
-     * @param ins_seq
+     * @param insSeq
      * @param sequenceName
      * @param sequenceFileName
      */
-    private void writeHaploid(final byte[] sequence, Hashtable<Integer, FlexSeq> ins_seq,
+    private void writeHaploid(final byte[] sequence, Hashtable<Integer, FlexSeq> insSeq,
                               final String sequenceName, final String sequenceFileName) {
         try {
             FileWriter fw = new FileWriter(new File(outDir, sequenceFileName));
             BufferedWriter bw = new BufferedWriter(fw);
-            writeGenome(bw, sequenceName, sequence, ins_seq);
+            writeGenome(bw, sequenceName, sequence, insSeq);
             bw.close();
             fw.close();
         } catch (IOException ex) {
@@ -661,14 +661,14 @@ public class VCF2diploid {
      * Writes out the vcf record for all variants that have added_variants =
      * true
      */
-    private void writeVCF(final Sequence ref_seq, final List<Variant> varList,
-                          final List<Boolean> paternal_added_variants,
-                          final List<Boolean> maternal_added_variants,
-                          final boolean output_paternal, final boolean output_maternal) {
-        String file_name = ref_seq.getName() + "_" + id + ".vcf";
+    private void writeVCF(final Sequence refSeq, final List<Variant> varList,
+                          final List<Boolean> paternalAddedVariants,
+                          final List<Boolean> maternalAddedVariants,
+                          final boolean outputPaternal, final boolean outputMaternal) {
+        String file_name = refSeq.getName() + "_" + id + ".vcf";
         List<String> idList = new ArrayList<>();
         idList.add(id);
-        log.info("Writing out the true variants for " + ref_seq.getName());
+        log.info("Writing out the true variants for " + refSeq.getName());
         try {
             FileWriter fw = new FileWriter(new File(outDir, file_name));
             BufferedWriter bw = new BufferedWriter(fw);
@@ -679,85 +679,85 @@ public class VCF2diploid {
             int num_vars = varList.size();
 
             for (int i = 0; i < num_vars; i++) {
-                if (!output_maternal && output_paternal && !paternal_added_variants.get(i)) {
+                if (!outputMaternal && outputPaternal && !paternalAddedVariants.get(i)) {
                     /*
-                    output_maternal==false, output_paternal==true, parternal_added_variants[i] == false
+                    outputMaternal==false, outputPaternal==true, parternal_added_variants[i] == false
                     paternal was supposed to be output, however, variant was discarded due to ,e.g.,
                     overlapping with other variants.
                      */
                     continue;
-                } else if (output_maternal && !output_paternal && !maternal_added_variants.get(i)) {
+                } else if (outputMaternal && !outputPaternal && !maternalAddedVariants.get(i)) {
                     //similar to above, but maternal and paternal are switched
                     continue;
                 }
 
-                if (paternal_added_variants.get(i)
-                        || maternal_added_variants.get(i)) {
+                if (paternalAddedVariants.get(i)
+                        || maternalAddedVariants.get(i)) {
 
-                    Variant curr_var = varList.get(i);
-                    curr_var.calculateExtraBase(ref_seq);
+                    Variant currVar = varList.get(i);
+                    currVar.calculateExtraBase(refSeq);
 
                     // chromosome name
-                    bw.write(curr_var.getChr().toString());
+                    bw.write(currVar.getChr().toString());
                     bw.write("\t");
                     // start position
-                    bw.write(String.valueOf(curr_var.getPos()
-                            - curr_var.getRef_deleted().length()));
+                    bw.write(String.valueOf(currVar.getPos()
+                            - currVar.getRef_deleted().length()));
                     bw.write("\t");
                     // variant id
-                    bw.write(curr_var.getVariantId());
+                    bw.write(currVar.getVariantId());
                     bw.write("\t");
                     // ref allele
-                    bw.write(curr_var.getReferenceString() + curr_var.getExtraBase());
+                    bw.write(currVar.getReferenceString() + currVar.getExtraBase());
                     bw.write("\t");
                     // alt alleles
-                    bw.write(curr_var.alternativeAlleleString());
+                    bw.write(currVar.alternativeAlleleString());
                     bw.write("\t");
                     // variant quality
                     bw.write(".\t");
                     // pass label
-                    bw.write(curr_var.getFilter());
+                    bw.write(currVar.getFilter());
                     bw.write("\t");
                     // INFO
                     // TODO write len here
                     //TODO: use StringJoiner to replace StringBuilder
                     StringBuilder sbStr = new StringBuilder();
-                    if (curr_var.getType() == VariantOverallType.Tandem_Duplication) {
+                    if (currVar.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(curr_var.getLength());
-                    } else if (curr_var.getType() == VariantOverallType.Inversion) {
+                        sbStr.append(currVar.getLength());
+                    } else if (currVar.getType() == VariantOverallType.Inversion) {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(curr_var.getLength());
-                    } else if (curr_var.getType() == VariantOverallType.Translocation) {
+                        sbStr.append(currVar.getLength());
+                    } else if (currVar.getType() == VariantOverallType.Translocation) {
                         sbStr.append("SVTYPE=TRA;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(curr_var.getLength());
+                        sbStr.append(currVar.getLength());
                         sbStr.append(";");
                         sbStr.append("END=");
-                        sbStr.append(Integer.toString(curr_var.getEnd()));
+                        sbStr.append(Integer.toString(currVar.getEnd()));
                         sbStr.append(";");
                         sbStr.append("TRASUBTYPE=");
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtype(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtype(), ","));
                         sbStr.append(";");
                         //chr2,pos2,end2
                         sbStr.append("CHR2=");
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllChr2(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllChr2(), ","));
                                 sbStr.append(";");
                         sbStr.append("POS2=");
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllPos2(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllPos2(), ","));
                         sbStr.append(";");
                         sbStr.append("END2=");
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllEnd2(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllEnd2(), ","));
                     } else {
                         sbStr.append("SVLEN=");
-                        sbStr.append(curr_var.getLength());
+                        sbStr.append(currVar.getLength());
                     }
                     bw.write(sbStr.toString());
                     bw.write("\t");
                     // label (GT)
-                    boolean hasCN = curr_var.hasCN();
+                    boolean hasCN = currVar.hasCN();
                     if (hasCN) {
                         bw.write("GT:CN\t");
                     } else {
@@ -765,12 +765,12 @@ public class VCF2diploid {
                     }
                     // the genotype
                     // for this one we need to work out which one is added
-                    boolean output_both = output_paternal && output_maternal;
+                    boolean output_both = outputPaternal && outputMaternal;
 
                     sbStr = new StringBuilder();
-                    if (output_paternal) {
-                        if (paternal_added_variants.get(i)) {
-                            sbStr.append(String.valueOf(curr_var.paternal()));
+                    if (outputPaternal) {
+                        if (paternalAddedVariants.get(i)) {
+                            sbStr.append(String.valueOf(currVar.paternal()));
                         } else {
                             sbStr.append("0");
                         }
@@ -778,9 +778,9 @@ public class VCF2diploid {
                     if (output_both) {
                         sbStr.append("|");
                     }
-                    if (output_maternal) {
-                        if (maternal_added_variants.get(i)) {
-                            sbStr.append(String.valueOf(curr_var.maternal()));
+                    if (outputMaternal) {
+                        if (maternalAddedVariants.get(i)) {
+                            sbStr.append(String.valueOf(currVar.maternal()));
                         } else {
                             sbStr.append("0");
                         }
@@ -788,15 +788,15 @@ public class VCF2diploid {
 
                     if (hasCN) {
                         sbStr.append(":");
-                        if (output_paternal) {
-                            sbStr.append(String.valueOf(curr_var.getCN(curr_var
+                        if (outputPaternal) {
+                            sbStr.append(String.valueOf(currVar.getCN(currVar
                                     .paternal())));
                         }
                         if (output_both) {
                             sbStr.append("|");
                         }
-                        if (output_maternal) {
-                            sbStr.append(String.valueOf(curr_var.getCN(curr_var
+                        if (outputMaternal) {
+                            sbStr.append(String.valueOf(currVar.getCN(currVar
                                     .maternal())));
                         }
                     }
