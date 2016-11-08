@@ -129,8 +129,8 @@ public class VCF2diploid {
      * @param pass true only retain PASS variants, false otherwise
      */
     public void parseVCFs(List<String> vcfs, Map<ChrString, List<Variant>> variants, String id, boolean pass) {
-        for (String _vcfFile : vcfs) {
-            final VCFparser parser = new VCFparser(_vcfFile, id, pass, rand);
+        for (String vcfFile : vcfs) {
+            final VCFparser parser = new VCFparser(vcfFile, id, pass, rand);
             /*
             apparently, nVariant is for # of variants
             nVariantBase is for # of nucleotides in variants
@@ -163,7 +163,7 @@ public class VCF2diploid {
                 nVariant++;
                 nVariantBase += var.variantBases();
             }
-            log.info(_vcfFile + ": " + nVariant + " variants, " + nVariantBase + " variant bases");
+            log.info(vcfFile + ": " + nVariant + " variants, " + nVariantBase + " variant bases");
         }
         //sort variants of each chromosome by coordinates
         for (ChrString chr : variants.keySet()) {
@@ -308,17 +308,17 @@ public class VCF2diploid {
             }
         }
 
-            try {
-                FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
-                BufferedWriter bw = new BufferedWriter(fw);
-                bw.write(mapString.toString());
-                bw.newLine();
-                bw.close();
-                fw.close();
-                outputMap = new File(outDir, id + ".map");
-            } catch (IOException ex) {
-                log.error(ex.toString());
-            }
+        try {
+            FileWriter fw = new FileWriter(new File(outDir, id + ".map"));
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(mapString.toString());
+            bw.newLine();
+            bw.close();
+            fw.close();
+            outputMap = new File(outDir, id + ".map");
+        } catch (IOException ex) {
+            log.error(ex.toString());
+        }
     }
 
     /**
@@ -464,10 +464,10 @@ public class VCF2diploid {
 
                 referenceAlleleLength = variant.getInsertionLength(allele);
                 int singleInsLen = variant.getInsertionLength(allele);
-                byte[] orig_seq = referenceSequence.subSeq(position, position + singleInsLen);
+                final byte[] origSeq = referenceSequence.subSeq(position, position + singleInsLen);
                 insertions = new byte[singleInsLen * variant.getCN(allele)];
                 for (int i = 0; i < variant.getCN(allele); i++) {
-                    System.arraycopy(orig_seq, 0, insertions, i * singleInsLen, singleInsLen);
+                    System.arraycopy(origSeq, 0, insertions, i * singleInsLen, singleInsLen);
                 }
             }
 
@@ -484,7 +484,7 @@ public class VCF2diploid {
                 s.setLength(variant.getAlt(allele).length());
                 s.setVariantId(variant.getVariantId());
 
-                if (s.getType().equals(FlexSeq.Type.TRA)) {
+                if (s.getType() == FlexSeq.Type.TRA) {
                     s.setChr2(variant.getChr2(allele));
                     s.setPos2(variant.getPos2(allele));
                     s.setEnd2(variant.getEnd2(allele));
