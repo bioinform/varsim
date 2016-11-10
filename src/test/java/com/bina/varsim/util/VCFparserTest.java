@@ -3,6 +3,7 @@ package com.bina.varsim.util;
 import com.bina.varsim.types.variant.Variant;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.rmi.UnexpectedException;
@@ -65,7 +66,7 @@ public class VCFparserTest {
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 3); //"GT"
     }
-    @Test(expected=IllegalArgumentException.class)
+    @Ignore("GT,CN matching restriction has been removed") @Test(expected=IllegalArgumentException.class)
     public void tandemDuplicationParsingTest() throws UnexpectedException {
         //genotype does not agree with copy number
         Variant v = parser.processLine("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
