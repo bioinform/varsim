@@ -1,6 +1,7 @@
 package com.bina.varsim.types.stats;
 
 import com.bina.varsim.types.variant.INonReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,9 @@ import java.util.TreeMap;
  */
 public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
 
+    @JsonProperty(value = "data")
     private TreeMap<Value, StatsRatioRecord> data;
+    @JsonProperty(value = "all_data")
     private StatsRatioRecord all_data; // this records regardless of type
 
     public EnumStatsRatioCounter() {

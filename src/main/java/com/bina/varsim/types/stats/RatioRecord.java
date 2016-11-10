@@ -1,17 +1,26 @@
 package com.bina.varsim.types.stats;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Stores everything required to compute precision and recall
  */
 public class RatioRecord {
+    @JsonProperty(value = "_TP")
     private int _TP = 0; // True Positive
+    @JsonProperty(value = "_FP")
     private int _FP = 0; // False Positive
+    @JsonProperty(value = "_TN")
     private int _TN = 0; // True Positive
+    @JsonProperty(value = "_FN")
     private int _FN = 0; // False Positive
+    @JsonProperty(value = "_T")
     private int _T = 0; // True = True Positive + False Negative
 
     // these are inclusive
+    @JsonProperty(value = "lower")
     private int lower = -1; // -1 means negative infinity or unknown
+    @JsonProperty(value = "upper")
     private int upper = -1; // -1 means positive infinity or unknown
 
     public RatioRecord() {
@@ -59,24 +68,28 @@ public class RatioRecord {
     }
 
     // recall
+    @JsonProperty(value = "tpr")
     public double getTPR() {
         return _TP / ((double) _T);
     }
-
+    @JsonProperty(value = "fdr")
     public double getFDR() {
         return _FP / ((double) _TP + _FP);
     }
 
     // precision
+    @JsonProperty(value = "ppv")
     public double getPPV() {
         return _TP / ((double) _TP + _FP);
     }
 
     // specificiy
+    @JsonProperty(value = "spc")
     public double getSPC() {
         return _TN / ((double) _TN + _FP);
     }
 
+    @JsonProperty(value = "empty")
     public boolean isEmpty() {
         return _TP == 0 && _FP == 0 && _T == 0;
     }
@@ -137,6 +150,7 @@ public class RatioRecord {
         this.upper = upper;
     }
 
+    @JsonProperty(value = "f1")
     public double getF1() {
         double precision = 1 - getFDR();
         double recall = getTPR();

@@ -1,16 +1,21 @@
 package com.bina.varsim.types.stats;
 
 import com.bina.varsim.constants.Constant;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * This is for recording values in bins of various sizes, the bins are hard coded for now
  */
 public class StatsRatioRecord {
     private RatioRecord[] bin_counts; // the last bin is for anything larger, this is the number correct
+    @JsonProperty(value = "sum_count")
     private RatioRecord sum_count;
+    @JsonProperty(value = "svSumCount")
     private RatioRecord svSumCount;
+    @JsonProperty(value = "sum_per_base_count")
     private RatioRecord sum_per_base_count;
 
+    @JsonProperty(value = "bin_breaks")
     private int[] bin_breaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
 
