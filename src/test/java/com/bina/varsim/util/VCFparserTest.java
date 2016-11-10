@@ -66,11 +66,6 @@ public class VCFparserTest {
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 3); //"GT"
     }
-    @Ignore("GT,CN matching restriction has been removed") @Test(expected=IllegalArgumentException.class)
-    public void tandemDuplicationParsingTest() throws UnexpectedException {
-        //genotype does not agree with copy number
-        Variant v = parser.processLine("15\t85825565\tnssv534459\tT\t<DUP:TANDEM>\t.\tPASS\tSVTYPE=DUP;SVLEN=284016\tGT:CN\t0|1:2|2");
-    }
     @Test(expected = IllegalArgumentException.class)
     public void SymbolicAlleleSVLenTest() throws UnexpectedException {
         parser.processLine("1	3	.	T	<DUP:TANDEM>	.	PASS	SVTYPE=DUP;SVLEN=4,4	GT:CN	1|2:2|3");
