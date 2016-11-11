@@ -7,83 +7,84 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * This is for recording values in bins of various sizes, the bins are hard coded for now
  */
 public class StatsRatioRecord {
-    private RatioRecord[] bin_counts; // the last bin is for anything larger, this is the number correct
+    @JsonProperty(value = "bin_counts")
+    private RatioRecord[] binCounts; // the last bin is for anything larger, this is the number correct
     @JsonProperty(value = "sum_count")
-    private RatioRecord sum_count;
+    private RatioRecord sumCount;
     @JsonProperty(value = "svSumCount")
     private RatioRecord svSumCount;
     @JsonProperty(value = "sum_per_base_count")
-    private RatioRecord sum_per_base_count;
+    private RatioRecord sumPerBaseCount;
 
     @JsonProperty(value = "bin_breaks")
-    private int[] bin_breaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
+    private int[] binBreaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
 
     StatsRatioRecord() {
-        bin_counts = new RatioRecord[bin_breaks.length + 1];
+        binCounts = new RatioRecord[binBreaks.length + 1];
 
-        if (bin_breaks.length > 0) {
-            bin_counts[0] = new RatioRecord(1, bin_breaks[0]);
+        if (binBreaks.length > 0) {
+            binCounts[0] = new RatioRecord(1, binBreaks[0]);
         } else {
-            bin_counts[0] = new RatioRecord(1, -1);
+            binCounts[0] = new RatioRecord(1, -1);
         }
 
-        for (int i = 1; i < bin_counts.length; i++) {
-            if (i < bin_breaks.length) {
-                bin_counts[i] = new RatioRecord(bin_breaks[i - 1] + 1, bin_breaks[i]);
+        for (int i = 1; i < binCounts.length; i++) {
+            if (i < binBreaks.length) {
+                binCounts[i] = new RatioRecord(binBreaks[i - 1] + 1, binBreaks[i]);
             } else {
-                bin_counts[i] = new RatioRecord(bin_breaks[i - 1] + 1, -1);
+                binCounts[i] = new RatioRecord(binBreaks[i - 1] + 1, -1);
             }
         }
 
-        sum_count = new RatioRecord();
+        sumCount = new RatioRecord();
         svSumCount = new RatioRecord();
-        sum_per_base_count = new RatioRecord();
+        sumPerBaseCount = new RatioRecord();
     }
 
     public void addTP(int val) {
-        sum_per_base_count.incTP(val);
-        sum_count.incTP();
+        sumPerBaseCount.incTP(val);
+        sumCount.incTP();
         if (val >= Constant.SVLEN) {
             svSumCount.incTP();
         }
-        for (int i = 0; i < bin_breaks.length; i++) {
-            if (val <= bin_breaks[i]) {
-                bin_counts[i].incTP();
+        for (int i = 0; i < binBreaks.length; i++) {
+            if (val <= binBreaks[i]) {
+                binCounts[i].incTP();
                 return;
             }
         }
-        bin_counts[bin_breaks.length].incTP();
+        binCounts[binBreaks.length].incTP();
     }
 
     public void addFP(int val) {
-        sum_per_base_count.incFP(val);
-        sum_count.incFP();
+        sumPerBaseCount.incFP(val);
+        sumCount.incFP();
         if (val >= Constant.SVLEN) {
             svSumCount.incFP();
         }
-        for (int i = 0; i < bin_breaks.length; i++) {
-            if (val <= bin_breaks[i]) {
-                bin_counts[i].incFP();
+        for (int i = 0; i < binBreaks.length; i++) {
+            if (val <= binBreaks[i]) {
+                binCounts[i].incFP();
                 return;
             }
         }
-        bin_counts[bin_breaks.length].incFP();
+        binCounts[binBreaks.length].incFP();
     }
 
     public void addT(int val, int referenceBases) {
-        sum_per_base_count.incT(referenceBases);
-        sum_count.incT();
+        sumPerBaseCount.incT(referenceBases);
+        sumCount.incT();
         if (val >= Constant.SVLEN) {
             svSumCount.incT();
         }
-        for (int i = 0; i < bin_breaks.length; i++) {
-            if (val <= bin_breaks[i]) {
-                bin_counts[i].incT();
+        for (int i = 0; i < binBreaks.length; i++) {
+            if (val <= binBreaks[i]) {
+                binCounts[i].incT();
                 return;
             }
         }
-        bin_counts[bin_breaks.length].incT();
+        binCounts[binBreaks.length].incT();
     }
 
     /**
@@ -91,40 +92,40 @@ public class StatsRatioRecord {
      * @param numNonNReferenceBases
      */
     public void computeTN(int numNonNReferenceBases){
-        int conditionNegative = numNonNReferenceBases - sum_per_base_count.get_T();
-        sum_per_base_count.set_TN(conditionNegative - sum_per_base_count.get_FP());
+        int conditionNegative = numNonNReferenceBases - sumPerBaseCount.getT();
+        sumPerBaseCount.setTN(conditionNegative - sumPerBaseCount.getFP());
     }
 
-    public RatioRecord[] getBin_counts() {
-        return bin_counts;
+    public RatioRecord[] getBinCounts() {
+        return binCounts;
     }
 
-    public void setBin_counts(RatioRecord[] bin_counts) {
-        this.bin_counts = bin_counts;
+    public void setBinCounts(RatioRecord[] binCounts) {
+        this.binCounts = binCounts;
     }
 
-    public RatioRecord getSum_count() {
-        return sum_count;
+    public RatioRecord getSumCount() {
+        return sumCount;
     }
 
-    public void setSum_count(RatioRecord sum_count) {
-        this.sum_count = sum_count;
+    public void setSumCount(RatioRecord sumCount) {
+        this.sumCount = sumCount;
     }
 
-    public int[] getBin_breaks() {
-        return bin_breaks;
+    public int[] getBinBreaks() {
+        return binBreaks;
     }
 
-    public RatioRecord getSum_per_base_count() {
-        return sum_per_base_count;
+    public RatioRecord getSumPerBaseCount() {
+        return sumPerBaseCount;
     }
 
-    public void setSum_per_base_count(RatioRecord sum_per_base_count) {
-        this.sum_per_base_count = sum_per_base_count;
+    public void setSumPerBaseCount(RatioRecord sumPerBaseCount) {
+        this.sumPerBaseCount = sumPerBaseCount;
     }
 
     public String toString() {
-        return toString(bin_breaks[bin_breaks.length - 1] + 1);
+        return toString(binBreaks[binBreaks.length - 1] + 1);
     }
 
     public String toString(int max_len) {
@@ -134,14 +135,14 @@ public class StatsRatioRecord {
         sb.append("TPR,FDR,TP,FP,T,F1:\n");
         sb.append("ALL");
         sb.append(':');
-        sb.append(sum_count);
+        sb.append(sumCount);
         sb.append('\n');
         sb.append("[>=" + Constant.SVLEN + "]");
         sb.append(':');
         sb.append(svSumCount);
         sb.append('\n');
 
-        for (RatioRecord bin_count : bin_counts) {
+        for (RatioRecord bin_count : binCounts) {
 
             if (bin_count.getLower() > max_len) {
                 break;
