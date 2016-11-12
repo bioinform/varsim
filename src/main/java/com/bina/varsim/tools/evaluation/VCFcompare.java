@@ -14,6 +14,7 @@ import com.bina.varsim.util.ConstraintValidator;
 import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import com.bina.varsim.util.chrSearchTree;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
@@ -584,6 +585,7 @@ public class VCFcompare {
          */
         class outputClass {
             CompareParams params;
+            @JsonProperty(value = "num_true_correct")
             EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect;
 
             outputClass(CompareParams params, EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
@@ -983,10 +985,14 @@ public class VCFcompare {
     }
 
     class CompareParams {
+        @JsonProperty(value = "true_vcf_filename")
         String trueVcfFilename;
+        @JsonProperty(value = "new_vcf_filename")
         String newVcfFilename;
+        @JsonProperty(value = "overlap_percent")
         Double overlapRatio;
         int wiggle;
+        @JsonProperty(value = "bed_filename")
         String bedFilename;
 
         public CompareParams() {

@@ -1,8 +1,8 @@
 package com.bina.varsim.types.stats;
 
 import com.bina.varsim.types.variant.INonReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -18,14 +18,16 @@ import java.util.TreeMap;
  */
 public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
 
+    @JsonProperty(value = "data")
     private TreeMap<Value, StatsRatioRecord> data;
-    private StatsRatioRecord all_data; // this records regardless of type
+    @JsonProperty(value = "all_data")
+    private StatsRatioRecord allData; // this records regardless of type
 
     public EnumStatsRatioCounter() {
         //why TreeMap used rather than HashMap?
         data = new TreeMap<>();
         //instantiate bins(1:1,2:2,...), some objects for stats
-        all_data = new StatsRatioRecord();
+        allData = new StatsRatioRecord();
     }
 
     //TODO: rename incTP to something easier to understand
@@ -39,7 +41,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
             data.put(a, contents);
         }
 
-        all_data.addTP(len);
+        allData.addTP(len);
     }
 
     public void incFP(Value a, int len) {
@@ -52,7 +54,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
             data.put(a, contents);
         }
 
-        all_data.addFP(len);
+        allData.addFP(len);
     }
 
     public void incT(Value a, int len) {
@@ -65,7 +67,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
             data.put(a, contents);
         }
 
-        all_data.addT(len, a.isNonReference() ? 0 : len);
+        allData.addT(len, a.isNonReference() ? 0 : len);
     }
 
     public TreeMap<Value, StatsRatioRecord> getData() {
@@ -76,18 +78,18 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
         this.data = data;
     }
 
-    public StatsRatioRecord getAll_data() {
-        return all_data;
+    public StatsRatioRecord getAllData() {
+        return allData;
     }
 
-    public void setAll_data(StatsRatioRecord all_data) {
-        this.all_data = all_data;
+    public void setAllData(StatsRatioRecord allData) {
+        this.allData = allData;
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
         // Output for everything first
-        sb.append(all_data.toString());
+        sb.append(allData.toString());
 
         sb.append("---------\n");
 
