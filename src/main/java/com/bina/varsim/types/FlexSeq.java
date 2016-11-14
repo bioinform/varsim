@@ -151,15 +151,15 @@ public class FlexSeq {
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FlexSeq)) return false;
 
         FlexSeq flexSeq = (FlexSeq) o;
 
         if (copyNumber != flexSeq.copyNumber) return false;
         if (length != flexSeq.length) return false;
-        if (!Arrays.equals(sequence, flexSeq.sequence)) return false;
         if (type != flexSeq.type) return false;
         if (variantId != null ? !variantId.equals(flexSeq.variantId) : flexSeq.variantId != null) return false;
+        if (!Arrays.equals(sequence, flexSeq.sequence)) return false;
 
         return true;
     }
@@ -237,23 +237,6 @@ public class FlexSeq {
         return "";
     }
 
-    public boolean equals(final FlexSeq seq) {
-        if (type != seq.type) {
-            return false;
-        }
-        if (length != seq.length) {
-            return false;
-        }
-        if (copyNumber != seq.copyNumber) {
-            return false;
-        }
-
-        if (!Arrays.equals(sequence, seq.sequence)) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * SEQ means the byte sequence is given

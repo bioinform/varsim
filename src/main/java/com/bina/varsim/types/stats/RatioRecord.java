@@ -181,7 +181,7 @@ public class RatioRecord {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof RatioRecord)) return false;
 
         RatioRecord that = (RatioRecord) o;
 

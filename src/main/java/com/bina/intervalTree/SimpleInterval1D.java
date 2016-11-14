@@ -307,7 +307,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof SimpleInterval1D)) return false;
 
         SimpleInterval1D that = (SimpleInterval1D) o;
 
