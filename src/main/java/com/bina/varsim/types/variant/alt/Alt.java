@@ -24,10 +24,11 @@ public class Alt {
   public Alt(String alt) {
     if (alt.startsWith("<")) {
       this.symbolicAllele = SymbolicAllele.symbolicAlleleFactory(alt);
-    } else if (alt.indexOf(":") >= 0) {
+    } else if (alt.indexOf("[") >= 0) {
       this.breakend = Breakend.breakendFactory(alt);
+    } else {
+      this.seq = new FlexSeq(alt.getBytes());
     }
-
   }
 
   public SymbolicAllele getSymbolicAllele() {
@@ -71,6 +72,14 @@ public class Alt {
     private static Pattern r = Pattern.compile("<([^<:>]+):?([^<:>]*)>");
     private SVType major;
     private SVType.SVSubtype minor;
+
+    public SVType getMajor() {
+      return major;
+    }
+
+    public SVType.SVSubtype getMinor() {
+      return minor;
+    }
 
     @Override
     public String toString() {

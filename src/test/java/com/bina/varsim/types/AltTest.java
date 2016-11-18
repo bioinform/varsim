@@ -26,4 +26,10 @@ public class AltTest {
     assertTrue(Alt.SymbolicAllele.symbolicAlleleFactory("<DUP:TANDEM").toString().equals("<DUP:TANDEM>"));
     new Alt.SymbolicAllele("TX");
   }
+  @Test
+  public void altTest() {
+    assertTrue(new Alt("<DUP:TANDEM>").getSymbolicAllele().toString().equals("<DUP:TANDEM>"));
+    assertTrue(new Alt("ANTCCC[X:123[").getBreakend().toString().equals("ANTCCC[X:123["));
+    assertTrue(new Alt("ATCCGD").getSeq().toString().equals("ATCCGD"));
+  }
 }
