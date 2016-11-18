@@ -122,6 +122,16 @@ public class Alt {
     private final long pos;
     private final boolean left; //ATGC[[, left=true, [[ATGC, left = false
     private final boolean forward; //[1:99[ forward = true, ]1:99] forward = false
+    private Breakend mate; //the other breakend of the novel adjacency
+
+    public Breakend getMate() {
+      return mate;
+    }
+
+    public void setMate(Breakend mate) {
+      this.mate = mate;
+    }
+
     public Breakend(byte[] seq, ChrString chr, long pos, boolean left, boolean forward) {
       this.seq = seq;
       this.chr = chr;
@@ -148,6 +158,22 @@ public class Alt {
       } else {
         return  forward? ("[" + chr + ":" + pos + "["):("]" + chr + ":" + pos + "]") + new String(seq);
       }
+    }
+
+    @Override
+    public int hashCode() {
+      return this.toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof Breakend)) {
+        return false;
+      }
+      Breakend that = (Breakend) o;
+      if (!this.toString().equals(that.toString())) return false;
+      return true;
     }
 
     public byte[] getSeq() {
