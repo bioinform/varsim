@@ -3,7 +3,6 @@ package com.bina.varsim.types.variant.alt;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
 
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +14,21 @@ public class Alt {
   private SymbolicAllele symbolicAllele;
   private Breakend breakend;
   private FlexSeq seq;
-  public Alt() {}
+
+  /**
+   * there are 3 possible ways to construct an ALT
+   * 1) breakend
+   * 2) symbolic allele
+   * 3) alt sequence
+   */
+  public Alt(String alt) {
+    if (alt.startsWith("<")) {
+      this.symbolicAllele = SymbolicAllele.symbolicAlleleFactory(alt);
+    } else if (alt.indexOf(":") >= 0) {
+      this.breakend = Breakend.breakendFactory(alt);
+    }
+
+  }
 
   public SymbolicAllele getSymbolicAllele() {
     return symbolicAllele;
@@ -55,6 +68,7 @@ public class Alt {
     /**
      * looks like <DUP:TANDEM>
      */
+    private static Pattern r = Pattern.compile("<([^<:>]+):?([^<:>]*)>");
     private SVType major;
     private SVType.SVSubtype minor;
 
@@ -76,8 +90,7 @@ public class Alt {
      * parse <X:Y>
      * @param alt
      */
-    public static SymbolicAllele SymbolicAlleleFactory(String alt) {
-      Pattern r = Pattern.compile("<([^<:>]+):?([^<:>]*)>");
+    public static SymbolicAllele symbolicAlleleFactory(String alt) {
       Matcher m = r.matcher(alt);
       if (m.find()) {
         if( m.group(2).length() > 0) {
@@ -93,17 +106,30 @@ public class Alt {
     /**
      * looks like ATGC[1:99[
      */
-    private byte[] seq;
-    private ChrString chr;
-    private long pos;
-    private boolean left; //ATGC[[, left=true, [[ATGC, left = false
-    private boolean forward; //[1:99[ forward = true, ]1:99] forward = false
+    private static Pattern r = Pattern.compile("(\\w+)([\\[\\]])([^:]+):(\\d+)([\\[\\]])|([\\[\\]])([^:]+):(\\d+)([\\[\\]])(\\w+)");
+                                                //1     2       3       4     5           6         7       8        9     10
+    private final byte[] seq;
+    private final ChrString chr;
+    private final long pos;
+    private final boolean left; //ATGC[[, left=true, [[ATGC, left = false
+    private final boolean forward; //[1:99[ forward = true, ]1:99] forward = false
     public Breakend(byte[] seq, ChrString chr, long pos, boolean left, boolean forward) {
       this.seq = seq;
       this.chr = chr;
       this.pos = pos;
       this.left = left;
       this.forward = forward;
+    }
+    public static Breakend breakendFactory(String alt) {
+      Matcher m = r.matcher(alt);
+      if (m.find()) {
+        if (m.group(1) != null) {
+          return new Breakend(m.group(1).getBytes(), new ChrString(m.group(3)), Long.parseLong(m.group(4)), true, m.group(2).indexOf("[") >= 0 );
+        } else {
+          return new Breakend(m.group(10).getBytes(), new ChrString(m.group(7)), Long.parseLong(m.group(8)), false, m.group(6).indexOf("[") >= 0 );
+        }
+      }
+      return null; //failed to parse as a symbolic allele
     }
 
     @Override
