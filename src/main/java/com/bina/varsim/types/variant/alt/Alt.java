@@ -114,5 +114,25 @@ public class Alt {
         return  forward? ("[" + chr + ":" + pos + "["):("]" + chr + ":" + pos + "]") + new String(seq);
       }
     }
+
+    public byte[] getSeq() {
+      return seq;
+    }
+
+    public ChrString getChr() {
+      return chr;
+    }
+
+    public long getPos() {
+      return pos;
+    }
+
+    public boolean isLeft() {
+      return left;
+    }
+
+    public boolean isForward() {
+      return forward;
+    }
   }
 }
