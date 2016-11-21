@@ -482,17 +482,24 @@ public class VCF2diploid {
             // TODO if insertions is null we still need to add??
             if (insertions != null && insertions.length > 0) {
                 // convert to flexseq
-                FlexSeq s = new FlexSeq(insertions);
-                s.setType(variant.getAlt(allele).getSeq().getType());
-                s.setCopyNumber(variant.getAlt(allele).getSeq().getCopyNumber());
-                s.setLength(variant.getAlt(allele).getSeq().length());
-                s.setVariantId(variant.getVariantId());
+                FlexSeq s = null;
 
-                if (s.getType().equals(FlexSeq.Type.TRA)) {
-                    s.setChr2(variant.getChr2(allele));
-                    s.setPos2(variant.getPos2(allele));
-                    s.setEnd2(variant.getEnd2(allele));
-                    s.setReferenceAlleleLength(variant.getReferenceAlleleLength());
+                if (variant.getAlt(allele).getSeq().getType().equals(FlexSeq.Type.TRA)) {
+                    s = new FlexSeq.Builder().sequence(insertions).
+                            type(variant.getAlt(allele).getSeq().getType()).
+                            copyNumber(variant.getAlt(allele).getSeq().getCopyNumber()).
+                            length(variant.getAlt(allele).getSeq().length()).
+                            variantId(variant.getVariantId()).
+                            chr2(variant.getChr2(allele)).
+                            pos2(variant.getPos2(allele)).
+                            end2(variant.getEnd2(allele)).
+                            referenceAlleleLength(variant.getReferenceAlleleLength()).build();
+                } else {
+                    s = new FlexSeq.Builder().sequence(insertions).
+                            type(variant.getAlt(allele).getSeq().getType()).
+                            copyNumber(variant.getAlt(allele).getSeq().getCopyNumber()).
+                            length(variant.getAlt(allele).getSeq().length()).
+                            variantId(variant.getVariantId()).build();
                 }
                 /*
                 so although we model SNP as deletion+insertions, we do not record
@@ -870,7 +877,7 @@ public class VCF2diploid {
                 "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
                 "##ALT=<ID=TRA,Description=\"Translocation\">\n" +
                 "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
-        StringJoiner joiner = new StringJoiner("\t");
+        StringUtilities.StringJoiner joiner = new StringUtilities.StringJoiner("\t");
         for (String id : sampleNames) {
             joiner.add(id);
         }
