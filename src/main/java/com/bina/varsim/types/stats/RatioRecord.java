@@ -22,6 +22,7 @@ public class RatioRecord {
     private int lower = -1; // -1 means negative infinity or unknown
     @JsonProperty(value = "upper")
     private int upper = -1; // -1 means positive infinity or unknown
+    private volatile int hashCode;
 
     public RatioRecord() {
     }
@@ -198,13 +199,17 @@ public class RatioRecord {
 
     @Override
     public int hashCode() {
-        int result = TP;
+        int result = hashCode;
+        if (result != 0) return result;
+        result = 17;
+        result = 31 * result + TP;
         result = 31 * result + FP;
         result = 31 * result + TN;
         result = 31 * result + FN;
         result = 31 * result + T;
         result = 31 * result + lower;
         result = 31 * result + upper;
+        hashCode = result;
         return result;
     }
 }

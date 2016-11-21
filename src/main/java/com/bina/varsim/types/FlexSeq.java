@@ -7,11 +7,13 @@ import java.util.Arrays;
 
 /**
  * This can represent a byte[] or a more flexible sequence such as insertion with unknown contents, dup, inv, etc...
+ * immutable class
  *
  * @author johnmu
  */
 
 public final class FlexSeq {
+    //TODO make all fields final if possible
     Type type;
     int length;
     int copyNumber = 1;
@@ -21,6 +23,7 @@ public final class FlexSeq {
     int pos2;
     int end2;
     int referenceAlleleLength;
+    volatile int hashCode;
 
     /*
     use Builder pattern to make code more readable and maintainable.
@@ -230,11 +233,18 @@ public final class FlexSeq {
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
+        int result = hashCode;
+        if (result != 0) return result;
+       /*initial hash code cannot be zero, otherwise, we cannot
+       tell the difference from hashCode if the first fields
+       are zero.
+        */
+        result = type != null ? type.hashCode() : 17;
         result = 31 * result + length;
         result = 31 * result + copyNumber;
         result = 31 * result + (sequence != null ? Arrays.hashCode(sequence) : 0);
         result = 31 * result + (variantId != null ? variantId.hashCode() : 0);
+        hashCode = result;
         return result;
     }
 

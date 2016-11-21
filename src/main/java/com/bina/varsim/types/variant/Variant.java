@@ -38,6 +38,7 @@ public class Variant implements Comparable<Variant>{
     private int[] end2;
     private int end;
     private String[] translocationSubtype;
+    private volatile int hashCode; //caching hashcode
 
     public Variant(final Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
@@ -904,7 +905,13 @@ public class Variant implements Comparable<Variant>{
 
     @Override
     public int hashCode() {
-        int result = rand != null ? rand.hashCode() : 0;
+        int result = hashCode;
+        if (result != 0) return result;
+       /*initial hash code cannot be zero, otherwise, we cannot
+       tell the difference from hashCode if the first fields
+       are zero.
+        */
+        result = rand != null ? rand.hashCode() : 17;
         result = 31 * result + splitVariantIndex;
         result = 31 * result + wholeVariantIndex;
         result = 31 * result + (originalType != null ? originalType.hashCode() : 0);
@@ -919,6 +926,7 @@ public class Variant implements Comparable<Variant>{
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
         result = 31 * result + (varId != null ? varId.hashCode() : 0);
         result = 31 * result + (refDeleted != null ? refDeleted.hashCode() : 0);
+        hashCode = result;
         return result;
     }
 
