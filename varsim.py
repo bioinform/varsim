@@ -10,6 +10,9 @@ import time
 import signal
 import itertools
 import glob
+import tempfile
+import string
+import re
 from distutils.version import LooseVersion
 from multiprocessing import Process
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
@@ -21,6 +24,51 @@ DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
+def convertCN(filenames, operation):
+    """
+    convert '2/1'-like copy number to a single number(e.g. 2)
+    0 will be considered same as 1
+    by default the max number will be kept
+    the change is in place
+    """
+    if operation != "two2one" and operation != "one2two":
+        raise ValueError("Only two2one or one2two allowed")
+    two2one = operation == "two2one"
+    for name in filenames:
+        file = open(name, "r")
+        output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
+        for l in file:
+            l = string.rstrip(l)
+            fields = string.split(l, "\t")
+            if string.find(l,"#") == 0 or string.find(fields[8],"CN") < 0:
+                output.write(l)
+            else:
+                info = string.split(fields[8], ':')
+                cnIndex = info.index('CN')
+                gtIndex = info.index('GT')
+                #change CN field in all samples
+                for sampleIndex in range(9,len(fields)):
+                    sampleInfo = string.split(fields[sampleIndex], ':')
+                    if two2one:
+                        cn = re.compile('[/|]').split(sampleInfo[cnIndex])
+                        sampleInfo[cnIndex] = str(max(cn))
+                    elif len(re.compile('[/|]').split(sampleInfo[cnIndex])) == 1:
+                        #only split when there is only one number
+                        gt = re.compile('[/|]').split(sampleInfo[gtIndex])
+                        cn = sampleInfo[cnIndex]
+                        for i in range(len(gt)):
+                            gt[i] = '1' if gt[i] == '0' else cn
+                        if string.find(sampleInfo[gtIndex], '/') >= 0:
+                            sampleInfo[cnIndex] = '/'.join(gt)
+                        else:
+                            sampleInfo[cnIndex] = '|'.join(gt)
+                    fields[sampleIndex] = ":".join(sampleInfo)
+                output.write("\t".join(fields) + "\n")
+        file.close()
+        output.close()
+        shutil.copyfile(output.name, name)
+        os.remove(output.name)
+    return
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
@@ -373,7 +421,11 @@ if __name__ == "__main__":
             lifted_dir = os.path.join(args.out_dir, "lifted")
             if not os.path.isdir(lifted_dir):
                 os.makedirs(lifted_dir)
+            #quick fix for issue of CN
+            convertCN([merged_truth_vcf], "two2one")
             merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
+            #quick fix for issue of CN
+            convertCN([merged_truth_vcf], "one2two")
             merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
 
     if processes:
