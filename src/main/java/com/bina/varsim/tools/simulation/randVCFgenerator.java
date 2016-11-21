@@ -4,6 +4,7 @@ import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.Sample_params;
 import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.alt.Alt;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -82,11 +83,11 @@ abstract public class randVCFgenerator {
      * @param geno       allele to be filled in
      */
     public void fillInSeq(Variant var, byte[] insert_seq, int geno) {
-        FlexSeq alt = var.getAlt(geno);
+        Alt alt = var.getAlt(geno);
         if (alt != null) {
-            if (alt.getType() == FlexSeq.Type.INS) {
+            if (alt.getSeq().getType() == FlexSeq.Type.INS) {
                 // if insertion sequence is not given, we fill it in
-                int len = alt.length();
+                int len = alt.getSeq().length();
                 byte new_seq[] = new byte[len];
                 if (len > insert_seq.length) {
                     // need to randomly duplicate insertion sequence
@@ -102,7 +103,7 @@ abstract public class randVCFgenerator {
                     int rand_start = _rand.nextInt(insert_seq.length - len);
                     System.arraycopy(insert_seq, rand_start, new_seq, 0, len);
                 }
-                alt = new FlexSeq(new_seq);
+                alt = new Alt(new FlexSeq(new_seq));
             }
 
             var.setAlt(geno, alt);

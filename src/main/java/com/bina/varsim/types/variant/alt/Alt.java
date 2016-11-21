@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
  * Created by guoy28 on 11/18/16.
  * class for ALT field in VCF format
  */
-public class Alt {
+public final class Alt {
+  //TODO convert this class to immutable
   private SymbolicAllele symbolicAllele;
   private Breakend breakend;
   private FlexSeq seq;
@@ -21,14 +22,33 @@ public class Alt {
    * 2) symbolic allele
    * 3) alt sequence
    */
-  public Alt(String alt) {
+  public static Alt altFactory(String alt) {
     if (alt.startsWith("<")) {
-      this.symbolicAllele = SymbolicAllele.symbolicAlleleFactory(alt);
+      return new Alt(SymbolicAllele.symbolicAlleleFactory(alt));
     } else if (alt.indexOf("[") >= 0) {
-      this.breakend = Breakend.breakendFactory(alt);
+      return new Alt(Breakend.breakendFactory(alt));
     } else {
-      this.seq = new FlexSeq(alt.getBytes());
+      return new Alt(new FlexSeq(alt.getBytes()));
     }
+  }
+
+  public Alt() {}
+  public Alt(SymbolicAllele s) {
+    this.symbolicAllele = s;
+  }
+  public Alt(FlexSeq s) {
+    this.seq = s;
+  }
+  public Alt(Breakend b) {
+    this.breakend = b;
+  }
+
+  public Alt copy() {
+    Alt a = new Alt();
+    a.setBreakend(this.getBreakend()); //immutable
+    a.setSeq(new FlexSeq(this.getSeq())); //mutable
+    a.setSymbolicAllele(this.getSymbolicAllele()); //immutable
+    return a;
   }
 
   public SymbolicAllele getSymbolicAllele() {
@@ -57,6 +77,7 @@ public class Alt {
 
   public enum SVType {
     DEL, INS, DUP, INV, CNV,
+    TRA, //temporarily added for debugging
     BND; //breakend
     public enum SVSubtype {
       TANDEM, //consecutive events
@@ -65,13 +86,18 @@ public class Alt {
       IPS; //interspersed
     }
   }
-  public static class SymbolicAllele{
+
+  /**
+   * immutable class for symbolic allele
+   */
+  public static final class SymbolicAllele{
+    //TODO consider caching common symoblic alleles (e.g. <DEL>)
     /**
      * looks like <DUP:TANDEM>
      */
     private static Pattern r = Pattern.compile("<([^<:>]+):?([^<:>]*)>");
-    private SVType major;
-    private SVType.SVSubtype minor;
+    private final SVType major;
+    private final SVType.SVSubtype minor;
 
     public SVType getMajor() {
       return major;
@@ -111,7 +137,11 @@ public class Alt {
       return null; //failed to parse as a symbolic allele
     }
   }
-  public static class Breakend{
+
+  /**
+   * immutable class for breakend
+   */
+  public static final class Breakend{
     /**
      * looks like ATGC[1:99[
      */
@@ -122,15 +152,6 @@ public class Alt {
     private final long pos;
     private final boolean left; //ATGC[[, left=true, [[ATGC, left = false
     private final boolean forward; //[1:99[ forward = true, ]1:99] forward = false
-    private Breakend mate; //the other breakend of the novel adjacency
-
-    public Breakend getMate() {
-      return mate;
-    }
-
-    public void setMate(Breakend mate) {
-      this.mate = mate;
-    }
 
     public Breakend(byte[] seq, ChrString chr, long pos, boolean left, boolean forward) {
       this.seq = seq;
@@ -176,9 +197,15 @@ public class Alt {
       return true;
     }
 
-    public byte[] getSeq() {
-      return seq;
-    }
+    /**
+     * return a clone copy of underlying sequence
+     * the class is immutable so any change to
+     * the sequence (array) is irrelevant, has no
+     * effect on the object
+     *
+     * @return
+     */
+    public byte[] getSeq() { return seq.clone(); }
 
     public ChrString getChr() {
       return chr;

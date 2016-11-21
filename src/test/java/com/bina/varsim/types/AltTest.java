@@ -28,8 +28,8 @@ public class AltTest {
   }
   @Test
   public void altTest() {
-    assertTrue(new Alt("<DUP:TANDEM>").getSymbolicAllele().toString().equals("<DUP:TANDEM>"));
-    assertTrue(new Alt("ANTCCC[X:123[").getBreakend().toString().equals("ANTCCC[X:123["));
-    assertTrue(new Alt("ATCCGD").getSeq().toString().equals("ATCCGD"));
+    assertTrue(Alt.altFactory("<DUP:TANDEM>").getSymbolicAllele().toString().equals("<DUP:TANDEM>"));
+    assertTrue(Alt.altFactory("ANTCCC[X:123[").getBreakend().toString().equals("ANTCCC[X:123["));
+    assertTrue(Alt.altFactory("ATCCGD").getSeq().toString().equals("ATCCGD"));
   }
 }

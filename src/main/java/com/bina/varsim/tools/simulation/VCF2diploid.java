@@ -483,9 +483,9 @@ public class VCF2diploid {
             if (insertions != null && insertions.length > 0) {
                 // convert to flexseq
                 FlexSeq s = new FlexSeq(insertions);
-                s.setType(variant.getAlt(allele).getType());
-                s.setCopyNumber(variant.getAlt(allele).getCopyNumber());
-                s.setLength(variant.getAlt(allele).length());
+                s.setType(variant.getAlt(allele).getSeq().getType());
+                s.setCopyNumber(variant.getAlt(allele).getSeq().getCopyNumber());
+                s.setLength(variant.getAlt(allele).getSeq().length());
                 s.setVariantId(variant.getVariantId());
 
                 if (s.getType().equals(FlexSeq.Type.TRA)) {
