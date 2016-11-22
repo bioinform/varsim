@@ -11,7 +11,6 @@ import signal
 import itertools
 import glob
 import tempfile
-import string
 import re
 from distutils.version import LooseVersion
 from multiprocessing import Process
@@ -34,37 +33,37 @@ def convertCN(filenames, operation):
     if operation != "two2one" and operation != "one2two":
         raise ValueError("Only two2one or one2two allowed")
     two2one = operation == "two2one"
+    delimiter = re.compile('[/|]')
     for name in filenames:
-        file = open(name, "r")
-        output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
-        for l in file:
-            l = string.rstrip(l)
-            fields = string.split(l, "\t")
-            if string.find(l,"#") == 0 or string.find(fields[8],"CN") < 0:
-                output.write(l + "\n")
-            else:
-                info = string.split(fields[8], ':')
-                cnIndex = info.index('CN')
-                gtIndex = info.index('GT')
-                #change CN field in all samples
-                for sampleIndex in range(9,len(fields)):
-                    sampleInfo = string.split(fields[sampleIndex], ':')
-                    if two2one:
-                        cn = re.compile('[/|]').split(sampleInfo[cnIndex])
-                        sampleInfo[cnIndex] = str(max(cn))
-                    elif len(re.compile('[/|]').split(sampleInfo[cnIndex])) == 1:
-                        #only split when there is only one number
-                        gt = re.compile('[/|]').split(sampleInfo[gtIndex])
-                        cn = sampleInfo[cnIndex]
-                        for i in range(len(gt)):
-                            gt[i] = '1' if gt[i] == '0' else cn
-                        if string.find(sampleInfo[gtIndex], '/') >= 0:
-                            sampleInfo[cnIndex] = '/'.join(gt)
-                        else:
-                            sampleInfo[cnIndex] = '|'.join(gt)
-                    fields[sampleIndex] = ":".join(sampleInfo)
-                output.write("\t".join(fields) + "\n")
-        file.close()
+	with open(name, 'r') as file_fd:
+            output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
+            for l in file_fd:
+		l = l.rstrip()
+                fields = l.split("\t")
+		if l.startswith("#") or 'CN' not in fields[8]:
+                    output.write(l + "\n")
+                else:
+                    info = fields[8].split(':')
+                    cnIndex = info.index('CN')
+                    gtIndex = info.index('GT')
+                    #change CN field in all samples
+                    for sampleIndex in range(9,len(fields)):
+                        sampleInfo = fields[sampleIndex].split(':')
+                        if two2one:
+                            cn = delimiter.split(sampleInfo[cnIndex])
+                            sampleInfo[cnIndex] = str(max(cn))
+                        elif len(delimiter.split(sampleInfo[cnIndex])) == 1:
+                            #only split when there is only one number
+                            gt = delimiter.split(sampleInfo[gtIndex])
+                            cn = sampleInfo[cnIndex]
+                            for i in range(len(gt)):
+                                gt[i] = '1' if gt[i] == '0' else cn
+                            if sampleInfo[gtIndex].find('/') >= 0:
+                                sampleInfo[cnIndex] = '/'.join(gt)
+                            else:
+                                sampleInfo[cnIndex] = '|'.join(gt)
+                        fields[sampleIndex] = ":".join(sampleInfo)
+                    output.write("\t".join(fields) + "\n")
         output.close()
         shutil.copyfile(output.name, name)
         os.remove(output.name)
