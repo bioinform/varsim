@@ -41,7 +41,7 @@ def convertCN(filenames, operation):
             l = string.rstrip(l)
             fields = string.split(l, "\t")
             if string.find(l,"#") == 0 or string.find(fields[8],"CN") < 0:
-                output.write(l)
+                output.write(l + "\n")
             else:
                 info = string.split(fields[8], ':')
                 cnIndex = info.index('CN')
