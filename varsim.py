@@ -35,12 +35,17 @@ def convertCN(filenames, operation):
     two2one = operation == "two2one"
     delimiter = re.compile('[/|]')
     for name in filenames:
-	with open(name, 'r') as file_fd:
+        with open(name, 'r') as file_fd:
             output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
             for l in file_fd:
-		l = l.rstrip()
+                l = l.rstrip()
                 fields = l.split("\t")
-		if l.startswith("#") or 'CN' not in fields[8]:
+                if l.startswith("#") or 'CN' not in fields[8]:
+                    if l.startswith('##FORMAT=<ID=CN'):
+                        if two2one:
+                            l = l.replace("Type=String","Type=Integer")
+                        else:
+                            l = l.replace("Type=Integer", "Type=String")
                     output.write(l + "\n")
                 else:
                     info = fields[8].split(':')
@@ -64,9 +69,9 @@ def convertCN(filenames, operation):
                                 sampleInfo[cnIndex] = '|'.join(gt)
                         fields[sampleIndex] = ":".join(sampleInfo)
                     output.write("\t".join(fields) + "\n")
-        output.close()
-        shutil.copyfile(output.name, name)
-        os.remove(output.name)
+            output.close()
+            shutil.copyfile(output.name, name)
+            os.remove(output.name)
     return
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
