@@ -442,11 +442,16 @@ public class VCF2diploid {
             //NOTE: only translocation with ACCEPT subtype is marked as Translocation
             //translocation with REJECT subject is marked as Deletion
             if (variantType == VariantType.Translocation) {
-                if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
-                    insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
-                } else {
-                    insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
-                }
+              if (Variant.TranslocationSubtype.ACCEPT.equals(variant.getTranslocationSubtype(allele))) {
+                  if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
+                  } else {
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
+                  }
+              } else {
+                  //REJECT, essentially deletion
+                  insertions = null;
+              }
             }
 
             if (variantType == VariantType.Inversion) {
@@ -484,11 +489,11 @@ public class VCF2diploid {
                 // convert to flexseq
                 FlexSeq s = null;
 
-                if (variant.getAlt(allele).getSeq().getType().equals(FlexSeq.Type.TRA)) {
+                if (FlexSeq.Type.TRA.equals(variant.getAlt(allele).getSeqType())) {
                     s = new FlexSeq.Builder().sequence(insertions).
-                            type(variant.getAlt(allele).getSeq().getType()).
-                            copyNumber(variant.getAlt(allele).getSeq().getCopyNumber()).
-                            length(variant.getAlt(allele).getSeq().length()).
+                            type(variant.getAlt(allele).getSeqType()).
+                            copyNumber(variant.getAlt(allele).getCopyNumber()).
+                            length(variant.getAlt(allele).length()).
                             variantId(variant.getVariantId()).
                             chr2(variant.getChr2(allele)).
                             pos2(variant.getPos2(allele)).
@@ -496,9 +501,9 @@ public class VCF2diploid {
                             referenceAlleleLength(variant.getReferenceAlleleLength()).build();
                 } else {
                     s = new FlexSeq.Builder().sequence(insertions).
-                            type(variant.getAlt(allele).getSeq().getType()).
-                            copyNumber(variant.getAlt(allele).getSeq().getCopyNumber()).
-                            length(variant.getAlt(allele).getSeq().length()).
+                            type(variant.getAlt(allele).getSeqType()).
+                            copyNumber(variant.getAlt(allele).getCopyNumber()).
+                            length(variant.getAlt(allele).length()).
                             variantId(variant.getVariantId()).build();
                 }
                 /*
@@ -716,7 +721,7 @@ public class VCF2diploid {
                     bw.write("\t");
                     // start position
                     bw.write(String.valueOf(curr_var.getPos()
-                            - curr_var.getRef_deleted().length()));
+                            - curr_var.getRef_deleted().length));
                     bw.write("\t");
                     // variant id
                     bw.write(curr_var.getVariantId());
@@ -753,7 +758,7 @@ public class VCF2diploid {
                         sbStr.append(Integer.toString(curr_var.getEnd()));
                         sbStr.append(";");
                         sbStr.append("TRASUBTYPE=");
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtype(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtypeString(), ","));
                         sbStr.append(";");
                         //chr2,pos2,end2
                         sbStr.append("CHR2=");
