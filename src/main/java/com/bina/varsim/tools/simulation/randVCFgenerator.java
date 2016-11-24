@@ -85,9 +85,9 @@ abstract public class randVCFgenerator {
     public void fillInSeq(Variant var, byte[] insert_seq, int geno) {
         Alt alt = var.getAlt(geno);
         if (alt != null) {
-            if (alt.getSeq().getType() == FlexSeq.Type.INS) {
+            if (FlexSeq.Type.INS.equals(alt.getSeqType())) {
                 // if insertion sequence is not given, we fill it in
-                int len = alt.getSeq().length();
+                int len = alt.length();
                 byte new_seq[] = new byte[len];
                 if (len > insert_seq.length) {
                     // need to randomly duplicate insertion sequence
@@ -135,7 +135,7 @@ abstract public class randVCFgenerator {
         bw.write(var.getChr().toString());
         bw.write("\t");
         // start position
-        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length()));
+        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length));
         bw.write("\t");
         // variant id
         bw.write(var.getVariantId());
