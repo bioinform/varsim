@@ -16,7 +16,7 @@ public class AltTest {
     assertTrue(test.toString().equals("A[1:123["));
     assertTrue(Alt.Breakend.breakendFactory("A[1:1[").toString().equals("A[1:1["));
     assertFalse(Alt.Breakend.breakendFactory("]1:1]A").toString().equals("A[1:1["));
-    assertTrue(Alt.Breakend.breakendFactory("]1:19999999999]A").toString().equals("]1:19999999999]A"));
+    assertTrue(Alt.Breakend.breakendFactory("]1:1999999]A").toString().equals("]1:1999999]A"));
   }
   @Test (expected = Exception.class)
   public void symbolicAlleleTest() {
