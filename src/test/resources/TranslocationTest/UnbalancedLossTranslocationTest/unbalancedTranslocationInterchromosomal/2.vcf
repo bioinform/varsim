@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.1
-##reference=src/test/resources/TranslocationTest/BalancedNonReciprocalTranslocationTest/twelveTranslocationTest.fa
+##reference=src/test/resources/TranslocationTest/UnbalancedLossTranslocationTest/unbalancedTranslocationInterchromosomal/reference.fa
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Length of variant">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">
@@ -23,3 +23,4 @@
 ##ALT=<ID=TRA,Description="Translocation">
 ##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
+2	2	.	T	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=-3;END=5;TRASUBTYPE=REJECT;CHR2=1;POS2=2;END2=5	GT	1|1
