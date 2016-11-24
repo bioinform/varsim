@@ -739,7 +739,6 @@ public class VCF2diploid {
                     bw.write("\t");
                     // INFO
                     // TODO write len here
-                    //TODO: use StringJoiner to replace StringBuilder
                     StringBuilder sbStr = new StringBuilder();
                     if (curr_var.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
@@ -882,7 +881,7 @@ public class VCF2diploid {
                 "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
                 "##ALT=<ID=TRA,Description=\"Translocation\">\n" +
                 "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
-        StringUtilities.StringJoiner joiner = new StringUtilities.StringJoiner("\t");
+        StringJoiner joiner = new StringJoiner("\t");
         for (String id : sampleNames) {
             joiner.add(id);
         }

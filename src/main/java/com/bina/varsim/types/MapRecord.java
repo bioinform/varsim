@@ -174,7 +174,7 @@ public class MapRecord {
     }
 
     public String toString() {
-        StringUtilities.StringJoiner joiner = new StringUtilities.StringJoiner("\t");
+        StringJoiner joiner = new StringJoiner("\t");
         joiner.add(Integer.toString(len));
         joiner.add(hostChr);
         joiner.add(Integer.toString(hostPos));
