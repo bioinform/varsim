@@ -6,7 +6,6 @@ package com.bina.varsim.util;
  * @author johnmu
  */
 
-import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.Sequence;
 import htsjdk.samtools.reference.FastaSequenceFile;

@@ -9,8 +9,7 @@ import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
 public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
@@ -379,27 +378,19 @@ public class Variant implements Comparable<Variant>{
      * @return the insertion sequence as a string
      */
     public byte[] insertion(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return null;
-        return alts[ind - 1].getSequence();
+        return (ind <= 0 || ind > alts.length) ? null : alts[ind - 1].getSequence();
     }
 
     public ChrString getChr2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return new ChrString("");
-        return this.chr2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? new ChrString("") : this.chr2[ind - 1];
     }
 
     public int getPos2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return -1;
-        return this.pos2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? -1 : this.pos2[ind - 1];
     }
 
     public int getEnd2(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return -1;
-        return this.end2[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? -1 : this.end2[ind - 1];
     }
 
     public ChrString[] getAllChr2() {
@@ -442,11 +433,8 @@ public class Variant implements Comparable<Variant>{
      * @param ind index of allele
      * @return the length of that allele
      */
-    public int insertionLength(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        //TODO: to maintain original behavior, we replace FlexSeq obj with alts[ind-1].getSeq(), should be done in a better way
-        return alts[ind - 1].length();
+    public int getInsertionLength(final int ind) {
+        return (ind <= 0 || ind > alts.length) ? 0 : alts[ind - 1].length();
     }
 
     /** if it is a simple indel, it is just the length
@@ -456,9 +444,7 @@ public class Variant implements Comparable<Variant>{
      @param ind index of allele
      */
     public int maxLen(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        return Math.max(referenceAlleleLength, alts[ind - 1].length());
+        return (ind <= 0 || ind > alts.length) ? 0 : Math.max(referenceAlleleLength, alts[ind - 1].length());
     }
 
     /**
@@ -467,19 +453,12 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public int maxLen() {
-        int len = 0;
-        for (int i = 0; i < 2; i++) {
-            len = Math.max(maxLen(getAllele(i)), len);
-        }
-        return len;
+        return Math.max(maxLen(getAllele(0)), maxLen(getAllele(1)));
     }
 
     // this is the minimum length of the variants
     public int minLen() {
-        int len = maxLen(getAllele(0));
-        len = Math.min(maxLen(getAllele(1)), len);
-
-        return len;
+        return Math.min(maxLen(getAllele(0)), maxLen(getAllele(1)));
     }
 
     /*
@@ -639,7 +618,7 @@ public class Variant implements Comparable<Variant>{
                 break;
         }
 
-        int insertionLength = insertionLength(ind);
+        int insertionLength = getInsertionLength(ind);
         int deletionLength = referenceAlleleLength;
         if (insertionLength == 0 && deletionLength == 0) {
             return VariantType.Reference;
@@ -658,96 +637,40 @@ public class Variant implements Comparable<Variant>{
         return VariantType.Complex;
     }
 
+
     /**
-     * @return overall type of the variant considering both alleles
+     * @return overall type of the variant considering all alleles
      */
     public VariantOverallType getType() {
-        int[] allele = {getAllele(0), getAllele(1)};
+        final Set<VariantType> variantTypes = EnumSet.of(getType(getAllele(0)), getType(getAllele(1)));
 
-        // check Reference
-        boolean is_ref = true;
-        for (int a = 0; a < 2; a++) {
-            if (getType(allele[a]) != VariantType.Reference) {
-                is_ref = false;
-                break;
-            }
-        }
-        if (is_ref) {
+        if (variantTypes.size() == 1 && variantTypes.contains(VariantType.Reference)) {
             return VariantOverallType.Reference;
         }
 
-        // check SNP
-        boolean is_snp = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.SNP) {
-                is_snp = false;
-                break;
+        // The overall type depends on the kinds of non-reference alleles. If they are not the same, then return complex
+        variantTypes.remove(VariantType.Reference);
+
+        if (variantTypes.size() == 1) {
+            if (variantTypes.contains(VariantType.SNP)) {
+                return VariantOverallType.SNP;
+            }
+            if (variantTypes.contains(VariantType.Inversion)) {
+                return VariantOverallType.Inversion;
+            }
+            if (variantTypes.contains(VariantType.Tandem_Duplication)) {
+                return VariantOverallType.Tandem_Duplication;
+            }
+            if (variantTypes.contains(VariantType.Deletion)) {
+                return VariantOverallType.Deletion;
+            }
+            if (variantTypes.contains(VariantType.Insertion)) {
+                return VariantOverallType.Insertion;
+            }
+            if (variantTypes.contains(VariantType.Translocation)) {
+                return VariantOverallType.Translocation;
             }
         }
-        if (is_snp) {
-            return VariantOverallType.SNP;
-        }
-
-        // check INV
-        boolean is_inv = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Inversion) {
-                is_inv = false;
-                break;
-            }
-        }
-        if (is_inv) {
-            return VariantOverallType.Inversion;
-        }
-
-        // check DUP
-        boolean is_dup = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Tandem_Duplication) {
-                is_dup = false;
-                break;
-            }
-        }
-        if (is_dup) {
-            return VariantOverallType.Tandem_Duplication;
-        }
-
-        // check Deletion
-        boolean is_del = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Deletion) {
-                is_del = false;
-                break;
-            }
-        }
-        if (is_del) {
-            return VariantOverallType.Deletion;
-        }
-
-        // check DUP
-        boolean is_ins = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Insertion) {
-                is_ins = false;
-                break;
-            }
-        }
-        if (is_ins) {
-            return VariantOverallType.Insertion;
-        }
-
-        // check TRA
-        boolean isTranslocation = true;
-        for (int a = 0; a < 2; a++) {
-            if (allele[a] > 0 && getType(allele[a]) != VariantType.Translocation) {
-                isTranslocation = false;
-                break;
-            }
-        }
-        if (isTranslocation) {
-            return VariantOverallType.Translocation;
-        }
-
 
         /* Treat these as complex for now
         // check INDEL
@@ -769,13 +692,9 @@ public class Variant implements Comparable<Variant>{
                 is_mnp = false;
                 break;
             }
-        }
-        if (is_mnp) {
-            return VariantOverallType.MNP;
-        }
-        */
+        }*/
 
-        // otherwise it is complex
+        // otherwise it is complex since multiple kinds of variants occur at the same location
         return VariantOverallType.Complex;
     }
 
@@ -786,16 +705,12 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public Alt getAlt(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return null;
-        return alts[ind - 1];
+        return (ind <= 0 || ind > alts.length) ? null : alts[ind - 1];
     }
 
     public void setAlt(final int ind, Alt alt) {
-        if (ind <= 0 || ind > alts.length) {
-            return;
-        }
-        alts[ind - 1] = alt;
+        if (ind > 0 && ind <= alts.length)
+            alts[ind - 1] = alt;
     }
 
     public String getFilter() {
@@ -832,9 +747,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public int getCN(final int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return 0;
-        return alts[ind - 1].getCopyNumber();
+        return (ind <= 0 || ind > alts.length) ? 0 : alts[ind - 1].getCopyNumber();
     }
 
     /**
@@ -1146,19 +1059,12 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public byte getGoodPaternal() {
-        if (paternal < 0) {
-            return 1;
-        } else {
-            return paternal;
-        }
+        return (paternal < 0) ? 1 : paternal;
+
     }
 
     public byte getGoodMaternal() {
-        if (maternal < 0) {
-            return 1;
-        } else {
-            return maternal;
-        }
+        return (maternal < 0) ? 1: maternal;
     }
 
     public String getExtraBase() {
