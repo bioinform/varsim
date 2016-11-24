@@ -118,4 +118,21 @@ public class VCFCompareTest {
   public void canonicalizationTest3() throws IOException {
     universalTestMethod("src/test/resources/validationTest/canonicalizationTest3");
   }
+  /**
+   * compare two VCFs with two same balanced, nonreciprocal intrachromosomal translocations
+   * (cut-and-paste). Validation will be done by evaluating breakend.
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationOnIdenticalBalancedNonreciprocalTranslocation() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/breakendEvaluationOnIdenticalBalancedNonreciprocalTranslocation");
+  }
+  /**
+   * compare two VCFs with one insertion and one deletion
+   * @throws IOException
+   */
+  @Test
+  public void insertionVsInsertionTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/insertionVsInsertionTest", new String[]{"-wig", "20", "-over", "0.2"});
+  }
 }
