@@ -173,7 +173,7 @@ public final class FlexSeq {
      * @param i index in sequence
      * @return
      */
-    public byte charAt(final int i) {
+    public byte byteAt(final int i) {
         if (sequence != null) {
             return sequence[i];
         } else {
@@ -208,7 +208,7 @@ public final class FlexSeq {
     /**
      * @return length of the sequence accounting for copy numbers
      */
-    public int var_length() {
+    public int varLength() {
         if (type == Type.DUP) {
             return length * copyNumber;
         }
