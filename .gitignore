@@ -3,5 +3,6 @@
 target/**
 *.jar
 *~
+*.pyc
 
 /target/
