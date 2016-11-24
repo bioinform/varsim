@@ -186,10 +186,10 @@ public class DGVparser extends GzFileParser<Variant> {
 
         // Check
 
-        if (REF.length() == 1 && alts[0].getSeq().length() == 1) {
+        if (REF.length() == 1 && alts[0].length() == 1) {
             // SNP
             return null; // TODO ?
-        } else if (REF.length() == 0 && alts[0].getSeq().length() == 0) {
+        } else if (REF.length() == 0 && alts[0].length() == 0) {
             log.error("Skipping invalid record:");
             log.error(" " + line);
             return null;
