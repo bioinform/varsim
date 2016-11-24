@@ -9,12 +9,17 @@ import java.util.regex.Pattern;
 /**
  * Created by guoy28 on 11/18/16.
  * class for ALT field in VCF format
+ * this is like a forwarding/decorator
+ * class for 3 types of alt alleles
+ * (flexseq, symbolic, breakend)
  */
 public final class Alt {
   //TODO convert this class to immutable
   private SymbolicAllele symbolicAllele;
   private Breakend breakend;
   private FlexSeq seq;
+  private int breakendCount;
+  private int symbolicAlleleCount;
 
   /**
    * there are 3 possible ways to construct an ALT
@@ -46,9 +51,68 @@ public final class Alt {
   public Alt copy() {
     Alt a = new Alt();
     a.setBreakend(this.getBreakend()); //immutable
-    a.setSeq(new FlexSeq(this.getSeq())); //mutable
+    if (this.seq != null)
+      a.setSeq(new FlexSeq(this.getSeq())); //mutable
     a.setSymbolicAllele(this.getSymbolicAllele()); //immutable
     return a;
+  }
+
+  /**
+   * return seq length whenever available
+   * if not, return length of symbolic allele
+   * other return 0
+   * @return
+   */
+  public int length() {
+    return seq == null ? 0 : seq.length();
+  }
+  public boolean isSeq() {
+    return seq == null ? false : seq.isSeq();
+  }
+  public byte[] substring(int start, int end) {
+    return seq == null ? null : seq.substring(start, end);
+  }
+  public byte[] substring(int start) {
+    return seq == null ? null : seq.substring(start);
+  }
+  public byte byteAt(int i) {
+    return seq == null ? 0 : seq.byteAt(i);
+  }
+  public FlexSeq.Type getSeqType() {
+    return seq == null ? null : seq.getType();
+  }
+
+  /**
+   * by default, return copy number 1
+   * otherwise return based on
+   * FlexSeq, Symbolic, breakend
+   * priority order
+   *
+   * @return
+   */
+  public int getCopyNumber() {
+    if (seq != null)
+      return seq.getCopyNumber();
+    if (symbolicAllele != null)
+      return symbolicAlleleCount;
+    if (breakend != null)
+      return breakendCount;
+    return 1;
+  }
+  public int getBreakendCount() {
+    return breakendCount;
+  }
+
+  public void setBreakendCount(int breakendCount) {
+    this.breakendCount = breakendCount;
+  }
+
+  public int getSymbolicAlleleCount() {
+    return symbolicAlleleCount;
+  }
+
+  public void setSymbolicAlleleCount(int symbolicAlleleCount) {
+    this.symbolicAlleleCount = symbolicAlleleCount;
   }
 
   public SymbolicAllele getSymbolicAllele() {
@@ -73,6 +137,9 @@ public final class Alt {
 
   public void setSeq(FlexSeq seq) {
     this.seq = seq;
+  }
+  public byte[] getSequence() {
+    return seq == null ? null : seq.getSequence();
   }
 
   public enum SVType {
@@ -149,11 +216,11 @@ public final class Alt {
                                                 //1     2       3       4     5           6         7       8        9     10
     private final byte[] seq;
     private final ChrString chr;
-    private final long pos;
+    private final int pos;
     private final boolean left; //ATGC[[, left=true, [[ATGC, left = false
     private final boolean forward; //[1:99[ forward = true, ]1:99] forward = false
 
-    public Breakend(byte[] seq, ChrString chr, long pos, boolean left, boolean forward) {
+    public Breakend(byte[] seq, ChrString chr, int pos, boolean left, boolean forward) {
       this.seq = seq;
       this.chr = chr;
       this.pos = pos;
@@ -164,9 +231,9 @@ public final class Alt {
       Matcher m = r.matcher(alt);
       if (m.find()) {
         if (m.group(1) != null) {
-          return new Breakend(m.group(1).getBytes(), new ChrString(m.group(3)), Long.parseLong(m.group(4)), true, m.group(2).indexOf("[") >= 0 );
+          return new Breakend(m.group(1).getBytes(), new ChrString(m.group(3)), Integer.parseInt(m.group(4)), true, m.group(2).indexOf("[") >= 0 );
         } else {
-          return new Breakend(m.group(10).getBytes(), new ChrString(m.group(7)), Long.parseLong(m.group(8)), false, m.group(6).indexOf("[") >= 0 );
+          return new Breakend(m.group(10).getBytes(), new ChrString(m.group(7)), Integer.parseInt(m.group(8)), false, m.group(6).indexOf("[") >= 0 );
         }
       }
       return null; //failed to parse as a symbolic allele
@@ -211,7 +278,7 @@ public final class Alt {
       return chr;
     }
 
-    public long getPos() {
+    public int getPos() {
       return pos;
     }
 
