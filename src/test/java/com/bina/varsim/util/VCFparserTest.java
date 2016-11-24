@@ -48,7 +48,7 @@ public class VCFparserTest {
         assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tSVLEN=-1\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 1); //[C]
-        assertTrue(v.getAlt(1).getSeq().length() == 0); //""
+        assertTrue(v.getAlt(1).length() == 0); //""
     }
     @Test
     public void insertionParsingTest() throws UnexpectedException {
@@ -56,7 +56,7 @@ public class VCFparserTest {
         assertTrue(v.toString().equals("12\t29557990\t.\tC\tCGT\t.\tPASS\tSVLEN=2\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
-        assertTrue(v.getAlt(1).getSeq().length() == 2); //"GT"
+        assertTrue(v.getAlt(1).length() == 2); //"GT"
     }
     @Test
     public void homopolymerInsertionParsingTest() throws UnexpectedException {
@@ -64,7 +64,7 @@ public class VCFparserTest {
         assertTrue(v.toString().equals("12\t29557989\t.\tA\tAAAA\t.\tPASS\tSVLEN=3\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
-        assertTrue(v.getAlt(1).getSeq().length() == 3); //"GT"
+        assertTrue(v.getAlt(1).length() == 3); //"GT"
     }
     @Test(expected = IllegalArgumentException.class)
     public void SymbolicAlleleSVLenTest() throws UnexpectedException {
