@@ -438,12 +438,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
               if (svlens.length > 0) {
                   for (int i = 0; i < svlens.length; i++) {
-                      int alternativeAlleleLength;
-                      if (svlens[i] == 0) {
-                          alternativeAlleleLength = Integer.MAX_VALUE;
-                      } else {
-                          alternativeAlleleLength = Math.max(Math.abs(svlens[i]), 1);
-                      }
+                      int alternativeAlleleLength = svlens[i] == 0 ? Integer.MAX_VALUE : Math.max(Math.abs(svlens[i]), 1);
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
                   }
                 /*return new Variant(chr, pos, 0, refs, alts,
