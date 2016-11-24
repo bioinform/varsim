@@ -1,5 +1,7 @@
 package com.bina.varsim.types;
 
+import com.bina.varsim.util.StringUtilities;
+
 import java.util.Hashtable;
 import java.util.StringJoiner;
 
@@ -70,7 +72,7 @@ public class MapRecord {
                     currentMapRecord.refPos = hostRefIdx.refIdx - 1;
                     currentMapRecord.feature = "INS";
                     currentMapRecord.isForward = true;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.len = insertion.varLength();
                     currentMapRecord.varId = varId;
 
                     break;
@@ -80,7 +82,7 @@ public class MapRecord {
                     currentMapRecord.refChr = insertion.getChr2().toString();
                     currentMapRecord.feature = "TRA";
                     currentMapRecord.isForward = insertion.getPos2() <= insertion.getEnd2() ? true : false;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.len = insertion.varLength();
                     currentMapRecord.varId = varId;
                     break;
                 case INV:
@@ -95,7 +97,7 @@ public class MapRecord {
                     currentMapRecord.feature = "INV";
                     //why direction is false (negative strand)?
                     currentMapRecord.isForward = false;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.len = insertion.varLength();
                     currentMapRecord.varId = varId;
 
                     break;
@@ -172,7 +174,7 @@ public class MapRecord {
     }
 
     public String toString() {
-        StringJoiner joiner = new StringJoiner("\t");
+        StringUtilities.StringJoiner joiner = new StringUtilities.StringJoiner("\t");
         joiner.add(Integer.toString(len));
         joiner.add(hostChr);
         joiner.add(Integer.toString(hostPos));
