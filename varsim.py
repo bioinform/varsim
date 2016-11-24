@@ -56,7 +56,8 @@ def convertCN(filenames, operation):
                         sampleInfo = fields[sampleIndex].split(':')
                         if two2one:
                             cn = delimiter.split(sampleInfo[cnIndex])
-                            sampleInfo[cnIndex] = str(max(cn))
+			    #here cn is list of strings
+			    sampleInfo[cnIndex] = str(max(cn, key = lambda x:int(x)))
                         elif len(delimiter.split(sampleInfo[cnIndex])) == 1:
                             #only split when there is only one number
                             gt = delimiter.split(sampleInfo[gtIndex])
