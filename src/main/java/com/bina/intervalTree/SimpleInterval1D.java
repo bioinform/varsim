@@ -21,7 +21,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @param right Right end-point (inclusive)
      */
     public SimpleInterval1D(long left, long right) {
-        if ((left <= right) && ((((right / 2) + 1) - ((left / 2) - 1)) < (Long.MAX_VALUE / 2))) {
+        if ((left - 1 <= right) && ((((right / 2) + 1) - ((left / 2) - 1)) < (Long.MAX_VALUE / 2))) {
             this.left = left;
             this.right = right;
         } else {
@@ -186,6 +186,20 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
     public boolean intersects(Interval1D that, double reciprocalRatio, int wiggle) {
         if (wiggle == 0) {
             return intersects(that, reciprocalRatio);
+        } else if (this.length() == 0 && that.length() == 0) {
+            /*both intervals are of length 0, special case
+            extend one interval with wiggle and see if the extended
+            interval will cover the other interval
+            **
+                 **
+
+            ||
+            \/
+
+   ---------**----------
+                    **
+            */
+            return this.getLeft() + wiggle >= that.getLeft() && this.getRight() - wiggle <= that.getRight();
         }
         long len_this = reciprocalRatio == 1.0 ? this.length() : (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1l);
         long len_that = reciprocalRatio == 1.0 ? that.length() : (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1l);
