@@ -511,7 +511,9 @@ public class VCFparser extends GzFileParser<Variant> {
                   return null;
               }
               //TODO major SVTYPE actually does not allow TRA
-          } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.TRA || alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA) {
+            //TODO support for minor SVTYPE=TRA
+          //} else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.TRA || alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA) {
+          } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.TRA) {
               //translocation SV
 
               //1-based end for reference allele
@@ -522,6 +524,11 @@ public class VCFparser extends GzFileParser<Variant> {
               int[] svlen = (int[]) info.getValue("SVLEN");
               String[] chr2 = (String[]) info.getValue("CHR2");
               String[] subtype = (String[]) info.getValue("TRASUBTYPE");
+              Variant.TranslocationSubtype[] translocationSubtypes = new Variant.TranslocationSubtype[subtype.length];
+
+              for (int i = 0; i < subtype.length; i++) {
+                  translocationSubtypes[i] = Variant.TranslocationSubtype.valueOf(subtype[i]);
+              }
 
               deletedReference = REF;
               byte[] refs = new byte[0];
@@ -544,13 +551,14 @@ public class VCFparser extends GzFileParser<Variant> {
                           currentCopyNumber = copyNumberArray[1];
                       }
                       currentCopyNumber = Math.max(1, currentCopyNumber);
+                    //allow svlen to be negative
                       int altAllelelength = Math.max(Math.abs(svlen[altAlleleIndex - 1]), 1);
-                    /*Not sure if INS is the most appropriate FlexSeq.Type
-                    use it unless it breaks things.
+                    /*
+                    a translocation is decomposed into a duplication (a special translocation) and a optionally a deletion
                      */
-                      if (subtype[altAlleleIndex - 1].equals("ACCEPT")) {
+                      if (subtype[altAlleleIndex - 1].equals(Variant.TranslocationSubtype.ACCEPT.name())) {
                           alts[altAlleleIndex - 1].setSeq(new FlexSeq(FlexSeq.Type.TRA, altAllelelength, currentCopyNumber));
-                      } else if (subtype[altAlleleIndex - 1].equals("REJECT")) {
+                      } else if (subtype[altAlleleIndex - 1].equals(Variant.TranslocationSubtype.REJECT.name())) {
                           alts[altAlleleIndex - 1].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
                       } else {
                           throw new IllegalArgumentException("ERROR: only ACCEPT and REJECT allowed.\n" + line);
@@ -574,7 +582,7 @@ public class VCFparser extends GzFileParser<Variant> {
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).chr2(ChrString.string2ChrString(chr2)).
-                          pos2(pos2).end2(end2).end(end[0]).translocationSubtype(subtype).build();
+                          pos2(pos2).end2(end2).end(end[0]).translocationSubtype(translocationSubtypes).build();
                   //TODO: this assumes only one alt, which might not be true
               } else {
                   log.error("No length information for TRA:");
@@ -591,9 +599,9 @@ public class VCFparser extends GzFileParser<Variant> {
           //ALT field contains actual sequence
             // Check
             for (int i = 0; i < alts.length; i++) {
-                if (REF.length() == 1 && alts[i].getSeq().length() == 1) {
+                if (REF.length() == 1 && alts[i].length() == 1) {
                     // SNP
-                } else if (REF.length() == 0 || alts[i].getSeq().length() == 0) {
+                } else if (REF.length() == 0 || alts[i].length() == 0) {
                     log.warn("Skipping invalid record:");
                     log.warn(line);
                     return null;
@@ -611,8 +619,8 @@ public class VCFparser extends GzFileParser<Variant> {
             if (REF.length() > 0) {
                 boolean same = true;
                 for (int i = 0; i < alts.length; i++) {
-                    if (alts[i].getSeq().length() == 0
-                            || REF.charAt(0) != alts[i].getSeq().charAt(0)) {
+                    if (alts[i].length() == 0
+                            || REF.charAt(0) != alts[i].byteAt(0)) {
                         same = false;
                         break;
                     }
@@ -638,7 +646,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
                 int minClipLength = Integer.MAX_VALUE;
                 for (int i = 0; i < alts.length; i++) {
-                    int alternativeAlleleLength = alts[i].getSeq().length();
+                    int alternativeAlleleLength = alts[i].length();
 
                     //what does clipLength represent?
                     int clipLength = 0;
@@ -649,7 +657,8 @@ public class VCFparser extends GzFileParser<Variant> {
                             clipLength = j;
                             break;
                         }
-                        if (REF.charAt(referenceAlleleLength - j - 1) != alts[i].getSeq().charAt(alternativeAlleleLength - j - 1)) {
+                        //this is based on the assumption that all characters are ASCII characters
+                        if (REF.charAt(referenceAlleleLength - j - 1) != alts[i].byteAt(alternativeAlleleLength - j - 1)) {
                             clipLength = j;
                             break;
                         }
@@ -670,7 +679,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     REF = REF.substring(0, referenceAlleleLength - minClipLength);
                     for (int i = 0; i < alts.length; i++) {
                         alts[i].setSeq(new FlexSeq(alts[i].getSeq().substring(0,
-                                alts[i].getSeq().length() - minClipLength)));
+                                alts[i].length() - minClipLength)));
                     }
                 }
             }
