@@ -43,6 +43,8 @@ import java.util.*;
 public class VCFcompare {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
+    static final byte[] ambiguousBase = "N".getBytes();
+    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA);
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
 
     @Option(name = "-reference", usage = "Reference Genome, specificity will be computed if provided", metaVar = "file")
@@ -320,19 +322,19 @@ public class VCFcompare {
             noSplit = true;
         }
         //paternal allele is not reference or sequence
-        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).getSeq().getType() != FlexSeq.Type.SEQ) {
+        if (variant.getGoodPaternal() > 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodPaternal()).getSeqType())) {
             noSplit = true;
         }
         //maternal allele is not reference or sequence
-        if (variant.getGoodMaternal() > 0 && variant.getAlt(variant.getGoodMaternal()).getSeq().getType() != FlexSeq.Type.SEQ) {
+        if (variant.getGoodMaternal() > 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodMaternal()).getSeqType())) {
             noSplit = true;
         }
         //paternal allele is not reference and has zero-length allele and reference sequence
-        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).getSeq().length() == 0 && variant.getReference().length == 0) {
+        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).length() == 0 && variant.getReference().length == 0) {
             noSplit = true;
         }
         //maternal allele is not reference and has zero-length allele and reference sequence
-        if (variant.getGoodMaternal() > 0 && variant.getAlt(variant.getGoodMaternal()).getSeq().length() == 0 && variant.getReference().length == 0) {
+        if (variant.getGoodMaternal() > 0 && variant.getAlt(variant.getGoodMaternal()).length() == 0 && variant.getReference().length == 0) {
             noSplit = true;
         }
 
@@ -341,14 +343,130 @@ public class VCFcompare {
             return variantList;
         }
 
+        /*
+        split long variants into small ones for unambiguous comparison
+        or into breakends
 
-        //split long variants into small ones for unambiguous comparison
-        if (variant.getType(variant.getGoodPaternal()) != VariantType.Reference
+        it feels like when we canonicalize variants, we treat all variants
+        as if they were pahsed, and then during comparison, we ignore
+        phasing information if not required to consider it.
+
+         */
+        if (variant.getType(variant.getGoodMaternal()) == VariantType.Translocation ||
+                variant.getType(variant.getGoodPaternal()) == VariantType.Translocation) {
+
+            //convert translocations to breakends, this part will be changed later as we finalize VCF formatting.
+            for (int alleleIndex = 0; alleleIndex < 2; alleleIndex++) {
+                if (variant.getType(alleleIndex) == VariantType.Reference)
+                    continue;
+                byte[] phase = new byte[2];
+                phase[alleleIndex] = 1;
+                if(variant.getTranslocationSubtype(alleleIndex) == Variant.TranslocationSubtype.ACCEPT) {
+                    /* an example (the format will be changed soon)
+                    >1
+                    12345678-901-2
+                    AATCATCG-TGG-C
+                    >2
+                    123456-7890-1234567
+                    TTCGTT-ATTA-CCCCAAA
+
+                    1	8	.	G	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=4;END=11;TRASUBTYPE=ACCEPT;CHR2=2;POS2=7;END2=10	GT	1|1
+                    ||
+                    \/
+                    #left-left, left breakend of the left adjacency
+                    1 8 . G G[2:7[
+                    #left-right
+                    2 7 . A ]1:8]A
+                    #right-left
+                    2 10 . A A[1:12[
+                    #right-right
+                    1 12 . C ]2:10]C
+                     */
+                  boolean isInversed = variant.isInversed(alleleIndex);
+                       //we got two new adjacencies here, represented by 4 breakends
+                  //left-left
+                    Alt alt1 = new Alt();
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(alleleIndex),
+                            isInversed? variant.getEnd2(alleleIndex) : variant.getPos2(alleleIndex), true, !isInversed));
+                    //treat breakends as intervals of length 0
+                    /*
+                    ******************
+                    why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
+                    however, here for a breakend, we need to shift it back
+                    ******************
+                    */
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos() - 1).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+
+                    //left-right
+                    Alt alt2 = new Alt();
+                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getPos() - 1, false, false));
+                    //treat breakends as intervals of length 0
+                    variantList.add(new Variant.Builder().chr(variant.getChr2(alleleIndex)).pos(isInversed ? variant.getEnd2(alleleIndex) : variant.getPos2(alleleIndex)).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+
+                    //right-left
+                    Alt alt3 = new Alt();
+                    alt3.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getEnd() + 1, true, true));
+                    //treat breakends as intervals of length 0
+                    variantList.add(new Variant.Builder().chr(variant.getChr2(alleleIndex)).pos(isInversed ? variant.getPos2(alleleIndex) : variant.getEnd2(alleleIndex) ).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt3}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+
+                    //right-right
+                    Alt alt4 = new Alt();
+                    alt4.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(alleleIndex),
+                            isInversed ? variant.getPos2(alleleIndex) : variant.getEnd2(alleleIndex), false, isInversed));
+                    //treat breakends as intervals of length 0
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt4}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                } else {
+                    /*REJECT
+                    it's essentially a deletion, creating one novel adjaceny with two breakends
+
+                    example
+                    >1
+                    12345678-901-2
+                    AATCATCG-TGG-C
+                    >2
+                    123456-7890-1234567
+                    TTCGTT-ATTA-CCCCAAA
+
+                    2	6	.	T	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=10;TRASUBTYPE=REJECT;CHR2=1;POS2=9;END2=11	GT	1|1
+                    ||
+                    \/
+                    2 6 . T T[2:11[
+                    2 11 . C ]2:6]C
+                    */
+                    //left
+                    Alt alt1 = new Alt();
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference(), variant.getChr(),
+                            variant.getEnd() + 1, true, true));
+                    //treat breakends as intervals of length 0
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    //right
+                    Alt alt2 = new Alt();
+                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(alleleIndex),
+                            variant.getPos(), false, false));
+                    //treat breakends as intervals of length 0
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                }
+                variant.setAllele(alleleIndex, (byte) 0); // set to reference
+            }
+        } else if (variant.getType(variant.getGoodPaternal()) != VariantType.Reference
                 && variant.getType(variant.getGoodMaternal()) != VariantType.Reference) {
+            //neither of paternal and maternal alleles are reference alleles
 
             //0 for reference, 1 for 1st alt allele, 2 for 2nd alt allele
             int[] alleleNumber = {variant.getAllele(0), variant.getAllele(1)};
-            byte[][] alternativeAlleleSequence = {variant.getAlt(alleleNumber[0]).getSeq().getSequence(), variant.getAlt(alleleNumber[1]).getSeq().getSequence()};
+            byte[][] alternativeAlleleSequence = {variant.getAlt(alleleNumber[0]).getSequence(), variant.getAlt(alleleNumber[1]).getSequence()};
             byte[] referenceAlleleSequence = variant.getReference();
             int currentPosition = variant.getPos();
 
@@ -524,14 +642,14 @@ public class VCFcompare {
             variant.setAllele(0, (byte) 0); // set to reference
             variant.setAllele(1, (byte) 0); // set to reference
         } else {
-            //at least one of paternal and maternal alleles is not reference
+            //at least one of paternal and maternal alleles is reference
             for (int alleleIndex = 0; alleleIndex < 2; alleleIndex++) {
                 int allele = variant.getAllele(alleleIndex);
                 //only process Complex, MNP and SNP variants
                 if (variant.getType(allele) == VariantType.Complex
                         || variant.getType(allele) == VariantType.MNP
                         || variant.getType(allele) == VariantType.SNP) {
-                    byte[] alternativeAlleleSequence = variant.getAlt(allele).getSeq().getSequence();
+                    byte[] alternativeAlleleSequence = variant.getAlt(allele).getSequence();
                     byte[] referenceSequence = variant.getReference();
                     int currentPosition = variant.getPos();
                     int alleleLengthDifference = alternativeAlleleSequence.length - referenceSequence.length;
@@ -625,6 +743,9 @@ public class VCFcompare {
 
     /**
      * Main method
+     * first put all true variants into chromosome-indexed interval tree
+     * then scan all comparison variants to find overlaps
+     *
      */
     public void run(String[] args) {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
@@ -740,8 +861,8 @@ public class VCFcompare {
 
         // allow duplicates, this is needed because insertions don't actually take up a location
         chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree = new chrSearchTree<>(true);
-        int numRead = 0;
-        int numAdded = 0;
+        int numReadOriginalVariant = 0;
+        int numAddedSplitVariant = 0;
 
         // this is for the original variants
         // it stores the total length of the original variant in bases
@@ -804,12 +925,12 @@ public class VCFcompare {
                     log.error("Bad variant: " + currentVariant);
                     System.exit(1);
                 }
-                currentVariant.splitVariantIndex = numAdded;
-                currentVariant.wholeVariantIndex = numRead;
+                currentVariant.splitVariantIndex = numAddedSplitVariant;
+                currentVariant.wholeVariantIndex = numReadOriginalVariant;
                 currentVariant.originalType = trueVariantOriginalType;
 
                 trueVariantIntervalTree.put(chr, new ValueInterval1D<>(currentVariantInterval, currentVariant));
-                numAdded++;
+                numAddedSplitVariant++;
             }
 
             if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio && canonicalVariantList.size() > 1) {
@@ -819,27 +940,27 @@ public class VCFcompare {
                     int currentLength = currentVariant.maxLen();
                     validatedTotalLength.add(currentLength);
                     trueCanonicalVariants.add(currentVariant);
-                    numRead++;
+                    numReadOriginalVariant++;
                 }
             } else {
                 validatedTotalLength.add(totalLength);
                 trueCanonicalVariants.add(trueVariant);
-                numRead++;
+                numReadOriginalVariant++;
             }
         }
 
-        log.info("Num read:  " + numRead);
-        log.info("Num added: " + numAdded);
+        log.info("Num read:  " + numReadOriginalVariant);
+        log.info("Num added: " + numAddedSplitVariant);
         log.info("Num nodes: " + trueVariantIntervalTree.size());
         log.info("Max depth: " + trueVariantIntervalTree.maxDepth());
 
         // this is for the split variants
         // set to true if the canonical original variant was validated true
-        BitSet validatedTrue = new BitSet(numAdded);
+        BitSet validatedTrue = new BitSet(numAddedSplitVariant);
 
         // this is for the original variants
         // count of the number of bases validated for the original variant
-        int[] fullValidatedCount = new int[numRead];
+        int[] fullValidatedCount = new int[numReadOriginalVariant];
 
         // generate the output files
         PrintWriter tpWriter = null;
@@ -1033,8 +1154,8 @@ public class VCFcompare {
             numRead2++;
         }
 
-        if (numRead != numRead2) {
-            log.error("Number of variants read are inconsistent: " + numRead + "," + numRead2);
+        if (numReadOriginalVariant != numRead2) {
+            log.error("Number of variants read are inconsistent: " + numReadOriginalVariant + "," + numRead2);
         }
 
         // Compute and update the true negatives here so that we have specificity values
@@ -1321,7 +1442,7 @@ public class VCFcompare {
                 // require SNP content to match
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompare);
 
-                byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSeq().getSequence()[0];
+                byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSequence()[0];
 
                 int numberOfSnpMatches = 0;
                 if (overlaps != null) {
@@ -1346,7 +1467,7 @@ public class VCFcompare {
                             // position is correct, check genotype
                             if (trueVariant.getType(trueVariant.getGoodPaternal()) == VariantType.SNP
                                     && variant.getPos() == trueVariant.getPos()) {
-                                if (alternativeAlleleFirstBase == trueVariant.getAlt(trueVariant.getGoodPaternal()).getSeq().getSequence()[0]) {
+                                if (alternativeAlleleFirstBase == trueVariant.getAlt(trueVariant.getGoodPaternal()).getSequence()[0]) {
                                     homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 }
                                 hasSnp = true;
@@ -1358,7 +1479,7 @@ public class VCFcompare {
                                 if (allele > 0) {
                                     if (trueVariant.getType(allele) == VariantType.SNP
                                             && variant.getPos() == trueVariant.getPos()) {
-                                        if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSeq().getSequence()[0]) {
+                                        if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
                                             heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                         }
                                         hasSnp = true;
@@ -1442,8 +1563,8 @@ public class VCFcompare {
                             if (intervalForCompare.intersects(trueVariant.getVariantInterval(allele), overlapRatio, wiggle)) {
                                 // it matches an allele!
                                 // now check alternate allele length
-                                int alternativeAlleleLength = variant.getAlt(genotype).getSeq().length(); // TODO ignore copy number for now
-                                int trueAlternativeAllele = trueVariant.getAlt(allele).getSeq().length();
+                                int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
+                                int trueAlternativeAllele = trueVariant.getAlt(allele).length();
                                 double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
                                 double minRatio = Math.min(ratio, 1 / ratio);
                                 if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
