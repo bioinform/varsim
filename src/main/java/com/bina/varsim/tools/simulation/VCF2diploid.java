@@ -750,11 +750,7 @@ public class VCF2diploid {
                         sbStr.append(Integer.toString(currVar.getEnd()));
                         sbStr.append(";");
                         sbStr.append("TRASUBTYPE=");
-<<<<<<< HEAD
-                        sbStr.append(StringUtilities.concatenateArray(curr_var.getAllTranslocationSubtypeString(), ","));
-=======
-                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtype(), ","));
->>>>>>> master
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtypeString(), ","));
                         sbStr.append(";");
                         //chr2,pos2,end2
                         sbStr.append("CHR2=");
