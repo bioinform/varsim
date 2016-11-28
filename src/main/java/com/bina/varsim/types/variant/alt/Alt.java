@@ -59,12 +59,19 @@ public final class Alt {
 
   /**
    * return seq length whenever available
-   * if not, return length of symbolic allele
-   * other return 0
+   * if not, return 1 for breakend, and 0
+   * for all other cases
+   *
+   * why return 1 for breakend? it is a
+   * point rather than an interval, reason
+   * is that varsim uses length to determine
+   * why a variant has a match with other
+   * variants.
+   *
    * @return
    */
   public int length() {
-    return seq == null ? 0 : seq.length();
+    return seq == null ? (breakend == null ? 0 : 1) : seq.length();
   }
   public boolean isSeq() {
     return seq == null ? false : seq.isSeq();

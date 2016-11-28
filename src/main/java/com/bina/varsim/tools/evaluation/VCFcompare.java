@@ -356,12 +356,12 @@ public class VCFcompare {
                 variant.getType(variant.getGoodPaternal()) == VariantType.Translocation) {
 
             //convert translocations to breakends, this part will be changed later as we finalize VCF formatting.
-            for (int alleleIndex = 0; alleleIndex < 2; alleleIndex++) {
-                if (variant.getType(alleleIndex) == VariantType.Reference)
+            for (int haplotypeIndex = 0; haplotypeIndex < 2; haplotypeIndex++) {
+                if (variant.getType(haplotypeIndex) == VariantType.Reference)
                     continue;
                 byte[] phase = new byte[2];
-                phase[alleleIndex] = 1;
-                if(variant.getTranslocationSubtype(alleleIndex) == Variant.TranslocationSubtype.ACCEPT) {
+                phase[haplotypeIndex] = 1;
+                if(variant.getTranslocationSubtype(variant.getAllele(haplotypeIndex)) == Variant.TranslocationSubtype.ACCEPT) {
                     /* an example (the format will be changed soon)
                     >1
                     12345678-901-2
@@ -382,12 +382,12 @@ public class VCFcompare {
                     #right-right
                     1 12 . C ]2:10]C
                      */
-                  boolean isInversed = variant.isInversed(alleleIndex);
+                  boolean isInversed = variant.isInversed(haplotypeIndex);
                        //we got two new adjacencies here, represented by 4 breakends
                   //left-left
                     Alt alt1 = new Alt();
-                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(alleleIndex),
-                            isInversed? variant.getEnd2(alleleIndex) : variant.getPos2(alleleIndex), true, !isInversed));
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(haplotypeIndex),
+                            isInversed? variant.getEnd2(haplotypeIndex) : variant.getPos2(haplotypeIndex), true, !isInversed));
                     //treat breakends as intervals of length 0
                     /*
                     ******************
@@ -403,7 +403,7 @@ public class VCFcompare {
                     Alt alt2 = new Alt();
                     alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getPos() - 1, false, false));
                     //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr2(alleleIndex)).pos(isInversed ? variant.getEnd2(alleleIndex) : variant.getPos2(alleleIndex)).
+                    variantList.add(new Variant.Builder().chr(variant.getChr2(haplotypeIndex)).pos(isInversed ? variant.getEnd2(haplotypeIndex) : variant.getPos2(haplotypeIndex)).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
 
@@ -411,36 +411,37 @@ public class VCFcompare {
                     Alt alt3 = new Alt();
                     alt3.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getEnd() + 1, true, true));
                     //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr2(alleleIndex)).pos(isInversed ? variant.getPos2(alleleIndex) : variant.getEnd2(alleleIndex) ).
+                    variantList.add(new Variant.Builder().chr(variant.getChr2(haplotypeIndex)).pos(isInversed ? variant.getPos2(haplotypeIndex) : variant.getEnd2(haplotypeIndex) ).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt3}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
 
                     //right-right
                     Alt alt4 = new Alt();
-                    alt4.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(alleleIndex),
-                            isInversed ? variant.getPos2(alleleIndex) : variant.getEnd2(alleleIndex), false, isInversed));
+                    alt4.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
+                            isInversed ? variant.getPos2(haplotypeIndex) : variant.getEnd2(haplotypeIndex), false, isInversed));
                     //treat breakends as intervals of length 0
                     variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt4}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                } else {
-                    /*REJECT
-                    it's essentially a deletion, creating one novel adjaceny with two breakends
-
-                    example
-                    >1
-                    12345678-901-2
-                    AATCATCG-TGG-C
-                    >2
-                    123456-7890-1234567
-                    TTCGTT-ATTA-CCCCAAA
-
-                    2	6	.	T	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=10;TRASUBTYPE=REJECT;CHR2=1;POS2=9;END2=11	GT	1|1
-                    ||
-                    \/
-                    2 6 . T T[2:11[
-                    2 11 . C ]2:6]C
-                    */
+                /*} else {
+                //internally REJECT is treated as a deletion, so no need to convert to breakends.
+//                    REJECT
+//                    it's essentially a deletion, creating one novel adjaceny with two breakends
+//
+//                    example
+//                    >1
+//                    12345678-901-2
+//                    AATCATCG-TGG-C
+//                    >2
+//                    123456-7890-1234567
+//                    TTCGTT-ATTA-CCCCAAA
+//
+//                    2	6	.	T	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=10;TRASUBTYPE=REJECT;CHR2=1;POS2=9;END2=11	GT	1|1
+//                    ||
+//                    \/
+//                    2 6 . T T[2:11[
+//                    2 11 . C ]2:6]C
+//
                     //left
                     Alt alt1 = new Alt();
                     alt1.setBreakend(new Alt.Breakend(variant.getReference(), variant.getChr(),
@@ -451,14 +452,15 @@ public class VCFcompare {
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
                     //right
                     Alt alt2 = new Alt();
-                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(alleleIndex),
+                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
                             variant.getPos(), false, false));
                     //treat breakends as intervals of length 0
                     variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    */
                 }
-                variant.setAllele(alleleIndex, (byte) 0); // set to reference
+                variant.setAllele(haplotypeIndex, (byte) 0); // set to reference
             }
         } else if (variant.getType(variant.getGoodPaternal()) != VariantType.Reference
                 && variant.getType(variant.getGoodMaternal()) != VariantType.Reference) {
@@ -1037,6 +1039,8 @@ public class VCFcompare {
                 boolean computeAsSplit = false;
                 if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio &&
                     canonicalVariantList.size() > 1) {
+                    //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
+                    //is longer than certain proportion of sum of lengths of all canonicalized variants.
                     computeAsSplit = true;
                 }
 
@@ -1137,6 +1141,10 @@ public class VCFcompare {
                 int totalLength = validatedTotalLength.get(numRead2);
                 int validatedLength = fullValidatedCount[numRead2];
 
+              //if a variant is canonicalized into a few smaller variants, validation
+                //will be carried out on a per-variant basis. An original variant will
+                //be considered a match only if the sum of lengths of all its VALIDATED
+                //canonicalized variants is larger than overlapRatio * totalLength
                 if (validatedLength >= (overlapRatio * totalLength)) {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
