@@ -135,4 +135,13 @@ public class VCFCompareTest {
   public void insertionVsInsertionTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/insertionVsInsertionTest", new String[]{"-wig", "20", "-over", "0.2"});
   }
+  /**
+   * compare two VCFs with 2 translocations, same source of duplication, different insertion positions
+   * let it fail with a small wiggle setting
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentInsertionsFailWithSmallWiggle() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentInsertionFailWithSmallWiggle", new String[]{"-wig", "1"});
+  }
 }
