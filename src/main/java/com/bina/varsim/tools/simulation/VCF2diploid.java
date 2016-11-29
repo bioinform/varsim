@@ -840,41 +840,36 @@ public class VCF2diploid {
      * @return
      */
     private String generateVCFHeader(final String referenceFileName, final List<String> sampleNames) {
-        String VCFHeader = "##fileformat=VCFv4.1\n" +
+        String VCFHeader = "##fileformat=VCFv4.3\n" +
                 "##reference=" + referenceFileName + "\n" +
                 /*
                 SVLEN is for alternative allele in truth VCF
                  */
-                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+                "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n" +
                 "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
                 /*if POS2<=END2, then another sequence is inserted at positive strand
                 if POS2>=END2, then reversed sequence is inserted at negative strand (insert with inversion)
                  */
-                "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
-                "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
-                "##INFO=<ID=END,Number=1,Type=Integer,Description=\"1-based End position of sink sequence\">\n" +
-                "##INFO=<ID=CHR2,Number=A,Type=String,Description=\"Chromosome of source sequence\">\n" +
-                "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
-                " source sequence deleted (REJECT); source sequence accepted (ACCEPT).\">\n" +
+                "##INFO=<ID=POS2,Number=1,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
+                "##INFO=<ID=END2,Number=1,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+                "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome of source sequence\">\n" +
+                "##INFO=<ID=ISINV,Number=1,Type=Flag,Description=\"whether a duplication is inverted\">\n" +
+                "##INFO=<ID=TRAID,Number=1,Type=String,Description=\"translocation ID\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 /*CN is defined as Integer in VCF4.1,4.3, making it impossible to specify multiple CN values
                 here we changed it to String to allow such behavior.
                  */
-                "##FORMAT=<ID=CN,Number=1,Type=String,Description=\"Copy number genotype. Different copy numbers do not imply same genotypes.\">\n" +
+                //TODO: this will be changed back to VCF4.3 format later.
+                "##FORMAT=<ID=CN,Number=1,Type=String,Description=\"Copy number genotype.\">\n" +
                 "##ALT=<ID=DEL,Description=\"Deletion\">\n" +
-                "##ALT=<ID=DEL:ME:ALU,Description=\"Deletion of ALU element\">\n" +
-                "##ALT=<ID=DEL:ME:L1,Description=\"Deletion of L1 element\">\n" +
+                "##ALT=<ID=DEL:TRA,Description=\"Deletion in translocation\">\n" +
                 "##ALT=<ID=DUP,Description=\"Duplication\">\n" +
                 "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n" +
+                "##ALT=<ID=DUP:ISP,Description=\"Interspersed duplication\">\n" +
+                "##ALT=<ID=DUP:TRA,Description=\"Duplication in translocation\">\n" +
                 "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
-                "##ALT=<ID=INS:ME:ALU,Description=\"Insertion of ALU element\">\n" +
-                "##ALT=<ID=INS:ME:L1,Description=\"Insertion of L1 element\">\n" +
                 "##ALT=<ID=INV,Description=\"Inversion\">\n" +
-                "##ALT=<ID=CNV,Description=\"Copy number variable region\">\n" +
-                "##ALT=<ID=ITX,Description=\"Intra-chromosomal translocation\">\n" +
-                "##ALT=<ID=TRA,Description=\"Translocation\">\n" +
-                "##ALT=<ID=CTX,Description=\"Inter-chromosomal translocation\">\n";
-        StringJoiner joiner = new StringJoiner("\t");
+                StringJoiner joiner = new StringJoiner("\t");
         for (String id : sampleNames) {
             joiner.add(id);
         }
