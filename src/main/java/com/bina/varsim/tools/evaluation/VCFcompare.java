@@ -381,6 +381,10 @@ public class VCFcompare {
                     2 10 . A A[1:12[
                     #right-right
                     1 12 . C ]2:10]C
+
+                    note here, half of the information is redundant, so we do not need to
+                    save and compare all 4 breakends, we only need to compare half of them.
+                    and during comparison, we compare both POS and ALT parts.
                      */
                   boolean isInversed = variant.isInversed(haplotypeIndex);
                        //we got two new adjacencies here, represented by 4 breakends
@@ -388,7 +392,6 @@ public class VCFcompare {
                     Alt alt1 = new Alt();
                     alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(haplotypeIndex),
                             isInversed? variant.getEnd2(haplotypeIndex) : variant.getPos2(haplotypeIndex), true, !isInversed));
-                    //treat breakends as intervals of length 0
                     /*
                     ******************
                     why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
@@ -399,29 +402,12 @@ public class VCFcompare {
                             ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
 
-                    //left-right
-                    Alt alt2 = new Alt();
-                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getPos() - 1, false, false));
-                    //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr2(haplotypeIndex)).pos(isInversed ? variant.getEnd2(haplotypeIndex) : variant.getPos2(haplotypeIndex)).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-
-                    //right-left
-                    Alt alt3 = new Alt();
-                    alt3.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr(), variant.getEnd() + 1, true, true));
-                    //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr2(haplotypeIndex)).pos(isInversed ? variant.getPos2(haplotypeIndex) : variant.getEnd2(haplotypeIndex) ).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt3}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-
                     //right-right
-                    Alt alt4 = new Alt();
-                    alt4.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
+                    Alt alt2 = new Alt();
+                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
                             isInversed ? variant.getPos2(haplotypeIndex) : variant.getEnd2(haplotypeIndex), false, isInversed));
-                    //treat breakends as intervals of length 0
                     variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt4}).phase(phase).isPhased(true).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
                 /*} else {
                 //internally REJECT is treated as a deletion, so no need to convert to breakends.
@@ -1569,20 +1555,25 @@ public class VCFcompare {
                             // this is the normal case
                             // check if the variant interval matches
                             if (intervalForCompare.intersects(trueVariant.getVariantInterval(allele), overlapRatio, wiggle)) {
-                                // it matches an allele!
-                                // now check alternate allele length
-                                int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
-                                int trueAlternativeAllele = trueVariant.getAlt(allele).length();
-                                double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
-                                double minRatio = Math.min(ratio, 1 / ratio);
-                                if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
-                                    // yay, it is a match!
-                                    if (trueVariant.isHom()) {
-                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                    } else {
-                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
+                                Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
+                                if (trueVariant.getType(allele) != VariantType.Breakend ||
+                                        Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle)) {
+                                    // it matches an allele!
+                                    // now check alternate allele length
+                                    int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
+                                    int trueAlternativeAllele = trueVariant.getAlt(allele).length();
+                                    double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
+                                    double minRatio = Math.min(ratio, 1 / ratio);
+                                    if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
+                                        // yay, it is a match!
+                                        if (trueVariant.isHom()) {
+                                            homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                        } else {
+                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                        }
+                                        matched = true;
                                     }
-                                    matched = true;
                                 }
                             }
                         }

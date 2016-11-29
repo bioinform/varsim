@@ -1,5 +1,6 @@
 package com.bina.varsim.types.variant.alt;
 
+import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
 
@@ -272,6 +273,24 @@ public final class Alt {
     }
 
     /**
+     * loosely compare two breakends
+     * all fields must be equal except for the exact positions
+     * which are allowed to have some shifts
+     *
+     * @param a
+     * @param b
+     * @param overlapRatio
+     * @param wiggle
+     * @return
+     */
+    public static boolean looseEquals(Breakend a, Breakend b, double overlapRatio, int wiggle) {
+              return a.getChr().equals(b.getChr()) &&
+                      a.isForward() == b.isForward() &&
+                      a.isLeft() == b.isLeft() &&
+                      a.getInterval().intersects(b.getInterval(), overlapRatio, wiggle);
+    }
+
+    /**
      * return a clone copy of underlying sequence
      * the class is immutable so any change to
      * the sequence (array) is irrelevant, has no
@@ -295,6 +314,17 @@ public final class Alt {
 
     public boolean isForward() {
       return forward;
+    }
+
+    /**
+     * return an interval of length 1 for comparison
+     * not length 0 because length 0 is difficult
+     * for length-based comparison
+     *
+     * @return
+     */
+    public SimpleInterval1D getInterval() {
+      return new SimpleInterval1D(pos, pos);
     }
   }
 }
