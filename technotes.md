@@ -28,7 +28,6 @@ The following fields are honored by VarSim. Other fields may be present, but wil
 ##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome of source sequence">
 ##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
 ##INFO=<ID=END2,Number=1,Type=Integer,Description="1-based end position of source sequence">
-##INFO=<ID=END,Number=1,Type=Integer,Description="1-based end position of variant">
 ##INFO=<ID=ISINV,Number=1,Type=Flag,Description="whether a duplication is inverted">
 ##INFO=<ID=TRAID,Number=1,Type=String,Description="translocation ID">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
