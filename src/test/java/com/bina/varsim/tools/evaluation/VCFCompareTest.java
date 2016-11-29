@@ -153,4 +153,13 @@ public class VCFCompareTest {
   public void breakendEvaluationDifferentInsertionsSucceedWithLargeWiggle() throws IOException {
     universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentInsertionSucceedWithLargeWiggle", new String[]{"-wig", "15"});
   }
+  /**
+   * compare two VCFs with 2 translocations, different sources of duplication, same insertion positions
+   * duplications come from two chromosomes, so must fail
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentDuplicationChromosomes() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentDuplicatedSequences");
+  }
 }
