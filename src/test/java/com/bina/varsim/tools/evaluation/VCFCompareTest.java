@@ -162,4 +162,15 @@ public class VCFCompareTest {
   public void breakendEvaluationDifferentDuplicationChromosomes() throws IOException {
     universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentDuplicatedSequences");
   }
+  /**
+   * compare two VCFs with 2 translocations, same sources of duplication, same insertion positions
+   * duplications are in different orientations
+   * the two translocations (aka interspersed duplications) should not match even if wiggle is very
+   * large, because of different orientations in breakend representations.
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentDuplicationOrientations() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentOrientationsAndLargeWiggle", new String[]{"-wig", "100"});
+  }
 }
