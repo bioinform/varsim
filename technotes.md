@@ -1,6 +1,6 @@
 # VCF format for complex structural variations
 ## Introduction
-VarSim follows the latest VCF format specification (4.3)[https://samtools.github.io/hts-specs/VCFv4.3.pdf].
+VarSim follows the latest VCF format specification [4.3](https://samtools.github.io/hts-specs/VCFv4.3.pdf).
 ## Details
 * In VCF Specification 4.3, the only values allowed for `SVTYPE` in `INFO` are `DEL`, `INS`, `DUP`, `INV`, `CNV` and `BND`.
 * In `ALT` column, a subtype can be specified, e.g. `<DUP:TANDEM>`.
@@ -48,6 +48,8 @@ The following fields are honored by VarSim. Other fields may be present, but wil
 ```
 1	4	.	C	<DEL>	.	.	SVTYPE=DEL;SVLEN=-3	GT	1|0
 ```
+It means reference sequence `1:5-7` is deleted.
+
 #### Tandem duplication
 ```
 1	3	.	T	<DUP:TANDEM>	.	PASS	SVTYPE=DUP;SVLEN=4	GT	1|1
@@ -56,33 +58,39 @@ The following line is equivalent.
 ```
 1	3	.	T	<DUP>	.	PASS	SVTYPE=DUP;SVLEN=4	GT	1|1
 ```
+It means 4bp of reference sequence (`1:4-7`) is copied and inserted right after `1:3`. Copy number is assumed to be 1 by default.
 
 #### Cut-and-paste translocation
 ```
 1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
 2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=3;END=5;TRAID=1	GT	1|1
 ```
+It means `2:3-5` is cut and pasted right after `1:1`.
 
 #### Interspersed duplication
 ```
-1	1	.	A	<DUP:ISP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=5;END2=3	GT	1/1
+1	1	.	A	<DUP:ISP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=3;END2=5	GT	1/1
 ```
 
 The following line is equivalent.
 ```
-1	1	.	A	<DUP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=5;END2=3	GT	1/1
+1	1	.	A	<DUP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=3;END2=5	GT	1/1
 ```
+It means 3bp of reference sequence (`2:3-5`) is copied and inserted right after `1:1`.
 
 #### Cut-and-paste translocation with inverted duplication
 ```
 1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;ISINV;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
 2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=3;END=5;TRAID=1	GT	1|1
 ```
+It means `2:3-5` is cut and pasted right after `1:1` in reverse-complement orientation.
 #### Insertion
 ```
 1	3	.	T	<INS>	.	.	SVTYPE=INS;SVLEN=3	GT	1/1
 ```
+It means 3 bp of unknown sequence is inserted after `1:3`.
 #### Inversion
 ```
 1	3	.	T	<INV>	.	PASS	SVTYPE=INV;SVLEN=4	GT	0|1
 ```
+It means 4 bp of reference sequence (`1:4-7`) is inverted.
