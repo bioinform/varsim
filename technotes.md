@@ -10,9 +10,9 @@ Evaluation will be performed independently on these two lines.
  The two lines can be reported as a single event (translocation) or 2 unrelated events (deletion + duplication).
  If reported as a single event, VarSim uses `TRAID` in `INFO` field to differentiate between different translocations.
 * For a duplication (copy-and-paste), it comes with additional INFO fields (`CHR2`, `POS2`, `END2`) to indicate source of duplicated sequences.
-If these additional fields are absent, we assume it is tandem duplication, otherwise it is essentially same as interspersed duplication (`DUP:ISP`).
+If these additional fields are absent, we assume it is tandem duplication otherwise `<DUP>` and `<DUP:ISP>` are essentially the same.
  The first level symbolic allele in `ALT` must be `DUP` to indicate that this line denotes a duplication.
- `SVLEN` will be used to determine length of duplication in absense of `CHR2`, `POS2` and `END2`.
+ `SVLEN` will be used to determine length of duplication regardless of `CHR2`, `POS2` and `END2`.
 * An additional tag is required in `INFO` field to indicate the direction of inserted duplicate. VarSim recognizes `ISINV`. If it is absent, then we assume it is on positive strand.
 * Some programs may report translocations in a different way, their output will be converted to VarSim format before complex variants can be analyzed.
 * Subtypes for `DUP` may include `TRA`, `TANDEM` and `ISP` (interspersed). Other subtypes are ignored (treated as if they were not there).
@@ -62,26 +62,26 @@ It means 4bp of reference sequence (`1:4-7`) is copied and inserted right after 
 
 #### Cut-and-paste translocation
 ```
-1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
-2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=3;END=5;TRAID=1	GT	1|1
+1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
+2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=-3;TRAID=1	GT	1|1
 ```
 It means `2:3-5` is cut and pasted right after `1:1`.
 
 #### Interspersed duplication
 ```
-1	1	.	A	<DUP:ISP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=3;END2=5	GT	1/1
+1	1	.	A	<DUP:ISP>	.	PASS	SVTYPE=DUP;SVLEN=3;CHR2=2;POS2=3;END2=5	GT	1/1
 ```
 
 The following line is equivalent.
 ```
-1	1	.	A	<DUP>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;CHR2=2;POS2=3;END2=5	GT	1/1
+1	1	.	A	<DUP>	.	PASS	SVTYPE=DUP;SVLEN=3;CHR2=2;POS2=3;END2=5	GT	1/1
 ```
 It means 3bp of reference sequence (`2:3-5`) is copied and inserted right after `1:1`.
 
 #### Cut-and-paste translocation with inverted duplication
 ```
-1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;END=1;ISINV;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
-2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=3;END=5;TRAID=1	GT	1|1
+1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;ISINV;TRAID=1;CHR2=2;POS2=3;END2=5	GT	1/1
+2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=-3;TRAID=1	GT	1|1
 ```
 It means `2:3-5` is cut and pasted right after `1:1` in reverse-complement orientation.
 #### Insertion
