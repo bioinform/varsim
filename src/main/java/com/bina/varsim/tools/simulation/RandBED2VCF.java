@@ -21,7 +21,7 @@ import java.util.Random;
  * @author johnmu
  */
 
-public class RandBED2VCF extends randVCFgenerator {
+public class RandBED2VCF extends RandVCFgenerator {
     // parameters
     static final int MIN_LEN_ARG = Constant.SVLEN;
     static final int MAX_LEN_ARG = 1000000;
@@ -95,7 +95,7 @@ public class RandBED2VCF extends randVCFgenerator {
     Variant parseBedLine(String line, VariantType type) {
         line = line.trim();
         String[] ll = line.split("\t");
-        if (ll.length < 4) return new Variant(_rand);
+        if (ll.length < 4) return new Variant(rand);
 
         if (ll[0].charAt(0) == '#') {
             return null;
@@ -156,12 +156,12 @@ public class RandBED2VCF extends randVCFgenerator {
         var_idx_str += var_idx;
         var_idx++;
 
-        Genotypes geno = new Genotypes(chr, gender, 1, _rand);
+        Genotypes geno = new Genotypes(chr, gender, 1, rand);
 
         assert ref_seq != null;
         return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
-                .charAt(chr, pos - 1)), _rand);
+                .charAt(chr, pos - 1)), rand);
 
     }
 
@@ -219,7 +219,7 @@ public class RandBED2VCF extends randVCFgenerator {
             log.error("Bad lengths, max < min");
         }
 
-        _rand = new Random(seed);
+        rand = new Random(seed);
 
         log.info("Reading reference");
         ref = new SimpleReference(reference_filename);
