@@ -14,11 +14,13 @@ abstract public class RandVCFgenerator {
 
     protected Random rand;
 
+    private final long DEFAULT_SEED = 3333;
+
     /**
      * This sets a default seed, ideally different between different runs
      */
     public RandVCFgenerator() {
-        rand = new Random(3333);
+        rand = new Random(DEFAULT_SEED);
     }
 
     /**
