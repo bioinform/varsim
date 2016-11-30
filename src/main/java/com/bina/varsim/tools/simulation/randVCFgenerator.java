@@ -85,22 +85,16 @@ abstract public class RandVCFgenerator {
         FlexSeq alt = var.getAlt(geno);
         if (alt != null) {
             if (alt.getType() == FlexSeq.Type.INS) {
+                final double NSEGMENTS = 10.0;
                 // if insertion sequence is not given, we fill it in
                 int len = alt.length();
                 byte newSeq[] = new byte[len];
-                if (len > insertSeq.length) {
-                    // need to randomly duplicate insertion sequence
-                    int segLen = (int) Math.ceil(insertSeq.length / 10.0);
-                    for (int i = 0; i < len; i += segLen) {
-                        // choose random start loc
-                        int randStart = rand.nextInt(newSeq.length - segLen);
-                        for (int j = i; (j < len && j < (i + segLen)); j++) {
-                            newSeq[j] = insertSeq[randStart + j - i];
-                        }
-                    }
-                } else {
-                    int randStart = rand.nextInt(insertSeq.length - len);
-                    System.arraycopy(insertSeq, randStart, newSeq, 0, len);
+                // randomly duplicate insertion sequence if it is small
+                final int segLen = (len > insertSeq.length) ? (int) Math.ceil(insertSeq.length / NSEGMENTS) : len;
+                for (int i = 0; i < len; i += segLen) {
+                    // choose random start loc
+                    int randStart = rand.nextInt(insertSeq.length - segLen);
+                    System.arraycopy(insertSeq, randStart, newSeq, i, Math.min(segLen, len - i));
                 }
                 alt = new FlexSeq(newSeq);
             }
