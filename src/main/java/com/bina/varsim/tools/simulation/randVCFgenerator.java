@@ -158,14 +158,14 @@ abstract public class randVCFgenerator {
         if (var.getType() == VariantOverallType.Tandem_Duplication) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         } else if (var.getType() == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         } else {
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         }
         bw.write(sbStr.toString());
         bw.write("\t");

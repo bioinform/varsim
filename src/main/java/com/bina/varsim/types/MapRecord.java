@@ -1,7 +1,5 @@
 package com.bina.varsim.types;
 
-import com.bina.varsim.util.StringUtilities;
-
 import java.util.Hashtable;
 import java.util.StringJoiner;
 
@@ -50,6 +48,7 @@ public class MapRecord {
         MapRecord currentMapRecord = new MapRecord();
         currentMapRecord.hostChr = chr_name;
         currentMapRecord.refChr = ref_chr_name;
+        int cn = 1;
 
         // compute what the first line is and store as object
 
@@ -76,15 +75,34 @@ public class MapRecord {
                     currentMapRecord.varId = varId;
 
                     break;
-                case TRA:
+                case TRA_DUP:
+                case ISP_DUP:
+                    // need to replicate several blocks
+                    cn = insertion.getCopyNumber();
+
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
-                    currentMapRecord.refPos = Math.min(insertion.getPos2(), insertion.getEnd2()) - 1;
+                    currentMapRecord.refPos = insertion.getPos2() - 1;
                     currentMapRecord.refChr = insertion.getChr2().toString();
-                    currentMapRecord.feature = "TRA";
-                    currentMapRecord.isForward = insertion.getPos2() <= insertion.getEnd2() ? true : false;
-                    currentMapRecord.len = insertion.varLength();
+                    currentMapRecord.feature = "DUP";
+                    currentMapRecord.isForward = !insertion.isInversed();
+                    currentMapRecord.len = insertion.length();
                     currentMapRecord.varId = varId;
-                    break;
+
+                    // iterate
+                    for (int i = 1; i < cn; i++) {
+                        hostRefIdx.adjust_idx(currentMapRecord);
+                        sb.append(currentMapRecord);
+                        sb.append('\n');
+                        currentMapRecord = new MapRecord();
+                        currentMapRecord.hostChr = chr_name;
+                        currentMapRecord.refChr = insertion.getChr2().toString();
+                        currentMapRecord.hostPos = hostRefIdx.hostIdx;
+                        currentMapRecord.refPos = insertion.getPos2() - 1;
+                        currentMapRecord.feature = "DUP";
+                        currentMapRecord.isForward = !insertion.isInversed();
+                        currentMapRecord.len = insertion.length();
+                        currentMapRecord.varId = varId;
+                    }
                 case INV:
                     // TODO: treat inversion like MNP
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
@@ -101,15 +119,15 @@ public class MapRecord {
                     currentMapRecord.varId = varId;
 
                     break;
-                case DUP:
+                case TANDEM_DUP:
                     // need to replicate several blocks
-                    int cn = insertion.getCopyNumber();
+                    cn = insertion.getCopyNumber();
 
                     // first build one
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
                     currentMapRecord.refPos = hostRefIdx.refIdx - 1;
                     currentMapRecord.feature = "DUP_TANDEM";
-                    currentMapRecord.isForward = true;
+                    currentMapRecord.isForward = !insertion.isInversed();
                     currentMapRecord.len = insertion.length();
                     currentMapRecord.varId = varId;
 

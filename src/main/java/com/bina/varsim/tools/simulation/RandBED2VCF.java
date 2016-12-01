@@ -143,7 +143,7 @@ public class RandBED2VCF extends randVCFgenerator {
             var_idx_str = "ins_";
             ref_seq = new byte[0];
         } else if (type == VariantType.Tandem_Duplication) {
-            alts[0] = new Alt(new FlexSeq(FlexSeq.Type.DUP, len, 2));
+            alts[0] = new Alt(new FlexSeq(FlexSeq.Type.TANDEM_DUP, len, 2));
             var_idx_str = "dup_";
             ref_seq = new byte[0];
         } else if (type == VariantType.Inversion) {

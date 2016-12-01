@@ -438,19 +438,12 @@ public class VCF2diploid {
                 return false;
             }
             //TODO: wrap insertion generation in Variant class
-            //NOTE: only translocation with ACCEPT subtype is marked as Translocation
-            //translocation with REJECT subject is marked as Deletion
-            if (variantType == VariantType.Translocation) {
-              if (Variant.TranslocationSubtype.ACCEPT.equals(variant.getTranslocationSubtype(allele))) {
-                  if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
-                      insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
+            if (variantType == VariantType.Translocation_Duplication || variantType == VariantType.Interspersed_Duplication) {
+                  if (variant.isInversed()) {
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getPos2(allele), variant.getEnd2(allele) + 1);
                   } else {
-                      insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
                   }
-              } else {
-                  //REJECT, essentially deletion
-                  insertions = null;
-              }
             }
 
             if (variantType == VariantType.Inversion) {
@@ -469,7 +462,8 @@ public class VCF2diploid {
 
                 referenceAlleleLength = variant.getInsertionLength(allele);
                 int singleInsLen = variant.getInsertionLength(allele);
-                final byte[] origSeq = referenceSequence.subSeq(position, position + singleInsLen);
+                //end is exclusive
+                final byte[] origSeq = variant.isInversed() ? referenceSequence.revComp(position, position + singleInsLen + 1) : referenceSequence.subSeq(position, position + singleInsLen + 1);
                 insertions = new byte[singleInsLen * variant.getCN(allele)];
                 for (int i = 0; i < variant.getCN(allele); i++) {
                     System.arraycopy(origSeq, 0, insertions, i * singleInsLen, singleInsLen);
@@ -479,28 +473,23 @@ public class VCF2diploid {
             // set to deleted base, so that we don't change those in future
             Arrays.fill(maskedSequence, position - 1, position + referenceAlleleLength - 1, (byte) DELETED_BASE);
 
-            // matter
             // TODO if insertions is null we still need to add??
             if (insertions != null && insertions.length > 0) {
                 // convert to flexseq
                 FlexSeq s = null;
+              FlexSeq.Builder builder = new FlexSeq.Builder().sequence(insertions).
+                        type(variant.getAlt(allele).getSeqType()).
+                        copyNumber(variant.getAlt(allele).getCopyNumber()).
+                        length(variant.getAlt(allele).length()).
+                        variantId(variant.getVariantId());
 
-                if (FlexSeq.Type.TRA.equals(variant.getAlt(allele).getSeqType())) {
-                    s = new FlexSeq.Builder().sequence(insertions).
-                            type(variant.getAlt(allele).getSeqType()).
-                            copyNumber(variant.getAlt(allele).getCopyNumber()).
-                            length(variant.getAlt(allele).length()).
-                            variantId(variant.getVariantId()).
-                            chr2(variant.getChr2(allele)).
+                if (FlexSeq.Type.TRA_DUP.equals(variant.getAlt(allele).getSeqType()) || FlexSeq.Type.ISP_DUP.equals(variant.getAlt(allele).getSeqType())) {
+                    s = builder.chr2(variant.getChr2(allele)).
                             pos2(variant.getPos2(allele)).
                             end2(variant.getEnd2(allele)).
                             referenceAlleleLength(variant.getReferenceAlleleLength()).build();
                 } else {
-                    s = new FlexSeq.Builder().sequence(insertions).
-                            type(variant.getAlt(allele).getSeqType()).
-                            copyNumber(variant.getAlt(allele).getCopyNumber()).
-                            length(variant.getAlt(allele).length()).
-                            variantId(variant.getVariantId()).build();
+                    s = builder.build();
                 }
                 /*
                 so although we model SNP as deletion+insertions, we do not record
@@ -736,34 +725,52 @@ public class VCF2diploid {
                     if (currVar.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(currVar.getLength());
+                        sbStr.append(currVar.getLengthString());
+                        if(currVar.isInversed()) {
+                            sbStr.append(";");
+                            sbStr.append("ISINV");
+                        }
                     } else if (currVar.getType() == VariantOverallType.Inversion) {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(currVar.getLength());
-                    } else if (currVar.getType() == VariantOverallType.Translocation) {
-                        sbStr.append("SVTYPE=TRA;");
+                        sbStr.append(currVar.getLengthString());
+                    } else if (currVar.getType() == VariantOverallType.Translocation_Duplication || currVar.getType() == VariantOverallType.Interspersed_Duplication) {
+                        sbStr.append("SVTYPE=DUP;");
                         sbStr.append("SVLEN=");
-                        sbStr.append(currVar.getLength());
-                        sbStr.append(";");
-                        sbStr.append("END=");
-                        sbStr.append(Integer.toString(currVar.getEnd()));
-                        sbStr.append(";");
-                        sbStr.append("TRASUBTYPE=");
-                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtypeString(), ","));
+                        sbStr.append(currVar.getLengthString());
                         sbStr.append(";");
                         //chr2,pos2,end2
                         sbStr.append("CHR2=");
                         sbStr.append(StringUtilities.concatenateArray(currVar.getAllChr2(), ","));
-                                sbStr.append(";");
+                        sbStr.append(";");
                         sbStr.append("POS2=");
                         sbStr.append(StringUtilities.concatenateArray(currVar.getAllPos2(), ","));
                         sbStr.append(";");
                         sbStr.append("END2=");
                         sbStr.append(StringUtilities.concatenateArray(currVar.getAllEnd2(), ","));
+                        if(currVar.isInversed()) {
+                            sbStr.append(";");
+                            sbStr.append("ISINV");
+                        }
+                        if (currVar.getTraid() != null) {
+                            sbStr.append(";TRAID=");
+                            sbStr.append(currVar.getTraid() + ";");
+                        }
+                    } else if (currVar.getType() == VariantOverallType.Translocation_Deletion) {
+                        sbStr.append("SVTYPE=DEL;");
+                        sbStr.append("SVLEN=");
+                        sbStr.append("-" + currVar.getLengthString());
+                        if (currVar.getTraid() != null) {
+                            sbStr.append(";TRAID=");
+                            sbStr.append(currVar.getTraid() + ";");
+                        }
+                    } else if (currVar.getType() == VariantOverallType.Deletion) {
+                        sbStr.append("SVTYPE=DEL;");
+                        sbStr.append("SVLEN=");
+                        sbStr.append("-" + currVar.getLengthString());
                     } else {
                         sbStr.append("SVLEN=");
-                        sbStr.append(currVar.getLength());
+                        sbStr.append(currVar.getLengthString());
                     }
                     bw.write(sbStr.toString());
                     bw.write("\t");
@@ -850,8 +857,9 @@ public class VCF2diploid {
                 /*if POS2<=END2, then another sequence is inserted at positive strand
                 if POS2>=END2, then reversed sequence is inserted at negative strand (insert with inversion)
                  */
-                "##INFO=<ID=POS2,Number=1,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
-                "##INFO=<ID=END2,Number=1,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+                "##INFO=<ID=POS2,Number=1,Type=Integer,Description=\"1-based start position of source sequence\">\n" +
+                "##INFO=<ID=END2,Number=1,Type=Integer,Description=\"1-based end position of source sequence\">\n" +
+                "##INFO=<ID=END,Number=1,Type=Integer,Description=\"1-based end position of variant\">\n" +
                 "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome of source sequence\">\n" +
                 "##INFO=<ID=ISINV,Number=1,Type=Flag,Description=\"whether a duplication is inverted\">\n" +
                 "##INFO=<ID=TRAID,Number=1,Type=String,Description=\"translocation ID\">\n" +
@@ -868,7 +876,7 @@ public class VCF2diploid {
                 "##ALT=<ID=DUP:ISP,Description=\"Interspersed duplication\">\n" +
                 "##ALT=<ID=DUP:TRA,Description=\"Duplication in translocation\">\n" +
                 "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
-                "##ALT=<ID=INV,Description=\"Inversion\">\n" +
+                "##ALT=<ID=INV,Description=\"Inversion\">\n";
                 StringJoiner joiner = new StringJoiner("\t");
         for (String id : sampleNames) {
             joiner.add(id);

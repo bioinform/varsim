@@ -44,7 +44,7 @@ public class VCFcompare {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
-    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA);
+    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA_DUP, FlexSeq.Type.ISP_DUP);
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
 
     @Option(name = "-reference", usage = "Reference Genome, specificity will be computed if provided", metaVar = "file")
@@ -352,17 +352,20 @@ public class VCFcompare {
         phasing information if not required to consider it.
 
          */
-        if (variant.getType(variant.getGoodMaternal()) == VariantType.Translocation ||
-                variant.getType(variant.getGoodPaternal()) == VariantType.Translocation) {
+        if ( variant.getType(variant.getGoodMaternal()) == VariantType.Translocation_Duplication ||
+                variant.getType(variant.getGoodMaternal()) == VariantType.Interspersed_Duplication ||
+                    variant.getType(variant.getGoodPaternal()) == VariantType.Translocation_Duplication ||
+                    variant.getType(variant.getGoodPaternal()) == VariantType.Interspersed_Duplication) {
 
-            //convert translocations to breakends, this part will be changed later as we finalize VCF formatting.
-            for (int haplotypeIndex = 0; haplotypeIndex < 2; haplotypeIndex++) {
-                if (variant.getType(haplotypeIndex) == VariantType.Reference)
+            for (int parentIndex = 0; parentIndex < 2; parentIndex++) {
+                int allele = variant.getAllele(parentIndex);
+                if (variant.getType(allele) == VariantType.Reference)
                     continue;
                 byte[] phase = new byte[2];
-                phase[haplotypeIndex] = 1;
-                if(variant.getTranslocationSubtype(variant.getAllele(haplotypeIndex)) == Variant.TranslocationSubtype.ACCEPT) {
-                    /* an example (the format will be changed soon)
+                phase[parentIndex] = 1;
+                if(variant.getType(allele) == VariantType.Translocation_Duplication ||
+                variant.getType(allele) == VariantType.Interspersed_Duplication ) {
+                    /* an example
                     >1
                     12345678-901-2
                     AATCATCG-TGG-C
@@ -370,7 +373,7 @@ public class VCFcompare {
                     123456-7890-1234567
                     TTCGTT-ATTA-CCCCAAA
 
-                    1	8	.	G	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=4;END=11;TRASUBTYPE=ACCEPT;CHR2=2;POS2=7;END2=10	GT	1|1
+                    1	8	.	G	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=4;END=11;CHR2=2;POS2=7;END2=10	GT	1|1
                     ||
                     \/
                     #left-left, left breakend of the left adjacency
@@ -386,12 +389,12 @@ public class VCFcompare {
                     save and compare all 4 breakends, we only need to compare half of them.
                     and during comparison, we compare both POS and ALT parts.
                      */
-                  boolean isInversed = variant.isInversed(haplotypeIndex);
+                  boolean isInversed = variant.isInversed();
                        //we got two new adjacencies here, represented by 4 breakends
                   //left-left
                     Alt alt1 = new Alt();
-                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(haplotypeIndex),
-                            isInversed? variant.getEnd2(haplotypeIndex) : variant.getPos2(haplotypeIndex), true, !isInversed));
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(allele),
+                            isInversed? variant.getEnd2(allele) : variant.getPos2(allele), true, !isInversed));
                     /*
                     ******************
                     why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
@@ -404,49 +407,17 @@ public class VCFcompare {
 
                     //right-right
                     Alt alt2 = new Alt();
-                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
-                            isInversed ? variant.getPos2(haplotypeIndex) : variant.getEnd2(haplotypeIndex), false, isInversed));
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
+                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(parentIndex),
+                            isInversed ? variant.getPos2(parentIndex) : variant.getEnd2(parentIndex), false, isInversed));
+                  //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
+                    //after the shifting in vcf parsing, pos points to the base after breakpoint
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                /*} else {
-                //internally REJECT is treated as a deletion, so no need to convert to breakends.
-//                    REJECT
-//                    it's essentially a deletion, creating one novel adjaceny with two breakends
-//
-//                    example
-//                    >1
-//                    12345678-901-2
-//                    AATCATCG-TGG-C
-//                    >2
-//                    123456-7890-1234567
-//                    TTCGTT-ATTA-CCCCAAA
-//
-//                    2	6	.	T	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=10;TRASUBTYPE=REJECT;CHR2=1;POS2=9;END2=11	GT	1|1
-//                    ||
-//                    \/
-//                    2 6 . T T[2:11[
-//                    2 11 . C ]2:6]C
-//
-                    //left
-                    Alt alt1 = new Alt();
-                    alt1.setBreakend(new Alt.Breakend(variant.getReference(), variant.getChr(),
-                            variant.getEnd() + 1, true, true));
-                    //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).referenceAlleleLength(0).
-                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                    //right
-                    Alt alt2 = new Alt();
-                    alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(haplotypeIndex),
-                            variant.getPos(), false, false));
-                    //treat breakends as intervals of length 0
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getEnd() + 1).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                    */
                 }
-                variant.setAllele(haplotypeIndex, (byte) 0); // set to reference
+                //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
+                //the deletion will be delt with as other variant types (type match + interval overlap)
+                variant.setAllele(parentIndex, (byte) 0); // set to reference
             }
         } else if (variant.getType(variant.getGoodPaternal()) != VariantType.Reference
                 && variant.getType(variant.getGoodMaternal()) != VariantType.Reference) {

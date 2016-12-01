@@ -1,7 +1,5 @@
 package com.bina.varsim.types;
 
-import com.bina.varsim.types.variant.Variant;
-
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
@@ -23,6 +21,7 @@ public final class FlexSeq {
     int pos2;
     int end2;
     int referenceAlleleLength;
+    Boolean isinv;
     volatile int hashCode;
 
     /*
@@ -38,6 +37,7 @@ public final class FlexSeq {
         int pos2;
         int end2;
         int referenceAlleleLength;
+        Boolean isinv;
 
         public Builder() {}
         public Builder type(final Type t) {
@@ -76,6 +76,10 @@ public final class FlexSeq {
           this.end2 = e;
             return this;
         }
+        public Builder isinv(final Boolean b) {
+            this.isinv = b;
+            return this;
+        }
         public FlexSeq build() {
             return new FlexSeq(this);
         }
@@ -90,6 +94,7 @@ public final class FlexSeq {
         this.pos2 = b.pos2;
         this.end2 = b.end2;
         this.referenceAlleleLength = b.referenceAlleleLength;
+        this.isinv = b.isinv;
     }
     /**
      * Empty FlexSeq, default to a SEQ type
@@ -160,6 +165,7 @@ public final class FlexSeq {
         type = b.type;
         length = b.length;
         copyNumber = b.copyNumber;
+        isinv = b.isinv;
         if (b.sequence == null) {
             sequence = null;
         } else {
@@ -205,11 +211,15 @@ public final class FlexSeq {
         return length;
     }
 
+    public Boolean isInversed() {
+        return isinv;
+    }
+
     /**
      * @return length of the sequence accounting for copy numbers
      */
     public int varLength() {
-        if (type == Type.DUP) {
+        if (type == Type.TANDEM_DUP || type == Type.ISP_DUP || type == Type.TRA_DUP) {
             return length * copyNumber;
         }
         return length;
@@ -272,16 +282,20 @@ public final class FlexSeq {
     public String toString() {
         if (sequence == null) {
             switch (type) {
-                case DUP:
+                case TANDEM_DUP:
                     return "<DUP:TANDEM>";
+                case TRA_DUP:
+                    return "<DUP:TRA>";
+                case ISP_DUP:
+                    return "<DUP:ISP>";
                 case INS:
                     return "<INS>";
                 case INV:
                     return "<INV>";
                 case DEL:
                     return "<DEL>";
-                case TRA:
-                    return "<TRA>";
+                case TRA_DEL:
+                    return "<DEL:TRA>";
                 default:
                     break;
             }
@@ -298,14 +312,16 @@ public final class FlexSeq {
 
     /**
      * SEQ means the byte sequence is given
-     * INV = inversion
-     * Deletion = delelton (unknown reference )
-     * DUP = duplication
-     * Insertion = insertion (unknown sequence)
-     * TRA = translocation (unknown sequence, sequence is defined at variant level)
+     * INV = simple inversion
+     * DEL = delelton (unknown reference )
+     * TRA_DEL = delelton in translocation
+     * TANDEM_DUP = tandem duplication
+     * INS = insertion (unknown sequence)
+     * ISP_DUP = interspersed duplication
+     * TRA_DUP = translocation duplication (essentially interspersed duplication)
      */
     public enum Type {
-        SEQ, INV, DUP, INS, DEL, TRA
+        SEQ, INV, TANDEM_DUP, TRA_DUP, ISP_DUP, INS, DEL, TRA_DEL
     }
 
     public ChrString getChr2() {
