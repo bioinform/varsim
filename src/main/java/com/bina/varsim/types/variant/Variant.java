@@ -937,8 +937,12 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == VariantOverallType.Tandem_Duplication || getType() == VariantOverallType.Interspersed_Duplication) {
-            sbStr.append("SVTYPE=DUP:TANDEM;");
+        if (getType() == VariantOverallType.Tandem_Duplication || getType() == VariantOverallType.Interspersed_Duplication || getType() == VariantOverallType.Translocation_Duplication) {
+            sbStr.append("SVTYPE=DUP;");
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
+        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.Translocation_Deletion) {
+            sbStr.append("SVTYPE=DEL;");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else if (getType() == VariantOverallType.Inversion) {
