@@ -1,27 +1,23 @@
-##fileformat=VCFv4.1
+##fileformat=VCFv4.3
 ##reference=src/test/resources/TranslocationTest/BalancedReciprocalTranslocationTest/twelveTranslocationTest.fa
-##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Length of variant">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
-##INFO=<ID=POS2,Number=A,Type=Integer,Description="1-based Start position of source sequence">
-##INFO=<ID=END2,Number=A,Type=Integer,Description="1-based End position of source sequence">
-##INFO=<ID=END,Number=1,Type=Integer,Description="1-based End position of sink sequence">
-##INFO=<ID=CHR2,Number=A,Type=String,Description="Chromosome of source sequence">
-##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description="Subtype of translocation event: source sequence deleted (REJECT); source sequence accepted (ACCEPT).">
+##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
+##INFO=<ID=END2,Number=1,Type=Integer,Description="1-based end position of source sequence">
+##INFO=<ID=END,Number=1,Type=Integer,Description="1-based end position of variant">
+##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome of source sequence">
+##INFO=<ID=ISINV,Number=1,Type=Flag,Description="whether a duplication is inverted">
+##INFO=<ID=TRAID,Number=1,Type=String,Description="translocation ID">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype. Different copy numbers do not imply same genotypes.">
+##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype.">
 ##ALT=<ID=DEL,Description="Deletion">
-##ALT=<ID=DEL:ME:ALU,Description="Deletion of ALU element">
-##ALT=<ID=DEL:ME:L1,Description="Deletion of L1 element">
+##ALT=<ID=DEL:TRA,Description="Deletion in translocation">
 ##ALT=<ID=DUP,Description="Duplication">
 ##ALT=<ID=DUP:TANDEM,Description="Tandem Duplication">
+##ALT=<ID=DUP:ISP,Description="Interspersed duplication">
+##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
-##ALT=<ID=INS:ME:ALU,Description="Insertion of ALU element">
-##ALT=<ID=INS:ME:L1,Description="Insertion of L1 element">
 ##ALT=<ID=INV,Description="Inversion">
-##ALT=<ID=CNV,Description="Copy number variable region">
-##ALT=<ID=ITX,Description="Intra-chromosomal translocation">
-##ALT=<ID=TRA,Description="Translocation">
-##ALT=<ID=CTX,Description="Inter-chromosomal translocation">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-1	1	.	A	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=1;TRASUBTYPE=ACCEPT;CHR2=1;POS2=11;END2=9	GT	0|1
-1	8	.	G	<TRA>	.	PASS	SVTYPE=TRA;SVLEN=3;END=11;TRASUBTYPE=REJECT;CHR2=1;POS2=2;END2=1	GT	0|1
+1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;SVLEN=3;CHR2=1;POS2=9;END2=11;ISINV	GT	0|1
+1	8	.	G	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=-3	GT	0|1
