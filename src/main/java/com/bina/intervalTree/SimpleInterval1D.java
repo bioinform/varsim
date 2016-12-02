@@ -185,9 +185,14 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
         when wiggle == 0,
         no shift is allowed.
          */
+        //guarantee that reciprocalRatio is not zero, which does not make sense for overlapping
+        reciprocalRatio = Math.max(reciprocalRatio, ((double)1/Long.MAX_VALUE));
         long maxAllowedShift = Math.max(-wiggle, Math.min(wiggle, that.getLeft() - this.getLeft()));
         long maxOverlap = Math.min(this.getRight() + maxAllowedShift, that.getRight()) - Math.max(this.getLeft() + maxAllowedShift, that.getLeft()) + 1l;
-        return maxOverlap == 0? false : maxOverlap >= Math.max(this.length(), that.length()) * reciprocalRatio;
+        /*assumption: 0-length interval vs 0-length interval or non-zero-length vs non-zero-length
+        not good for 1-vs-0 intervals
+         */
+        return maxOverlap >= Math.max(this.length(), that.length()) * reciprocalRatio;
 
     }
 
