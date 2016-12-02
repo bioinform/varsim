@@ -21,7 +21,7 @@ public final class FlexSeq {
     int pos2;
     int end2;
     int referenceAlleleLength;
-    Boolean isinv;
+    boolean isinv;
     volatile int hashCode;
 
     /*
@@ -76,7 +76,7 @@ public final class FlexSeq {
           this.end2 = e;
             return this;
         }
-        public Builder isinv(final Boolean b) {
+        public Builder isinv(final boolean b) {
             this.isinv = b;
             return this;
         }
@@ -211,7 +211,7 @@ public final class FlexSeq {
         return length;
     }
 
-    public Boolean isInversed() {
+    public boolean isInversed() {
         return isinv;
     }
 

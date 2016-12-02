@@ -3,6 +3,9 @@ package com.bina.varsim.types;
 /**
  * Created by guoy28 on 10/4/16.
  */
+
+import static com.bina.varsim.types.MapRecord.Feature.*;
+
 /**
  * class for storing host genome and
  * reference genome index
@@ -21,23 +24,23 @@ public class HostRefIdx {
      */
     public void adjust_idx(MapRecord currentMapRecord) {
         switch (currentMapRecord.feature) {
-            case "SEQ":
+            case SEQ:
                 this.hostIdx += currentMapRecord.len;
                 this.refIdx += currentMapRecord.len;
                 break;
-            case "DEL":
+            case DEL:
                 this.refIdx += currentMapRecord.len;
                 break;
-            case "INS":
+            case INS:
                 this.hostIdx += currentMapRecord.len;
                 break;
-            case "DUP_TANDEM":
+            case DUP_TANDEM:
                 this.hostIdx += currentMapRecord.len;
                 break;
-            case "INV":
+            case INV:
                 this.hostIdx += currentMapRecord.len;
                 break;
-            case "TRA":
+            case DUP:
                 this.hostIdx += currentMapRecord.len;
         }
     }

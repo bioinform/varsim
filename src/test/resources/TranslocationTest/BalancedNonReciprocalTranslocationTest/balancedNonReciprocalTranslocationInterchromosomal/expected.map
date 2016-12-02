@@ -1,8 +1,8 @@
 1	1_paternal	1	1	1	+	SEQ	.
-3	1_paternal	2	2	2	+	TRA	.
+3	1_paternal	2	2	2	+	DUP	.
 11	1_paternal	5	1	2	+	SEQ	.
 1	1_maternal	1	1	1	+	SEQ	.
-3	1_maternal	2	2	2	+	TRA	.
+3	1_maternal	2	2	2	+	DUP	.
 11	1_maternal	5	1	2	+	SEQ	.
 2	2_paternal	1	2	1	+	SEQ	.
 3	2_paternal	2	2	3	+	DEL	.

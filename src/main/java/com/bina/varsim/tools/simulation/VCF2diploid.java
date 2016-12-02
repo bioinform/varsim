@@ -16,6 +16,7 @@ import org.kohsuke.args4j.Option;
 
 import java.io.*;
 import java.util.*;
+import com.bina.varsim.types.MapRecord.Feature.*;
 
 /**
  * Class to construct diploid genome from genome reference and genome variants
@@ -487,7 +488,8 @@ public class VCF2diploid {
                     s = builder.chr2(variant.getChr2(allele)).
                             pos2(variant.getPos2(allele)).
                             end2(variant.getEnd2(allele)).
-                            referenceAlleleLength(variant.getReferenceAlleleLength()).build();
+                            referenceAlleleLength(variant.getReferenceAlleleLength()).
+                            isinv(variant.isInversed()).build();
                 } else {
                     s = builder.build();
                 }
@@ -553,12 +555,12 @@ public class VCF2diploid {
             boolean same_block = true;
 
             switch (currentMapRecord.feature) {
-                case "DEL":
+                case DEL:
                     if (genome[idx] != DELETED_BASE || insSeq.containsKey(idx + 1)) {
                         same_block = false;
                     }
                     break;
-                case "SEQ":
+                case SEQ:
                     if (genome[idx] == DELETED_BASE || insSeq.containsKey(idx + 1)) {
                         same_block = false;
                     }
@@ -754,20 +756,20 @@ public class VCF2diploid {
                         }
                         if (currVar.getTraid() != null) {
                             sbStr.append(";TRAID=");
-                            sbStr.append(currVar.getTraid() + ";");
+                            sbStr.append(currVar.getTraid());
                         }
                     } else if (currVar.getType() == VariantOverallType.Translocation_Deletion) {
                         sbStr.append("SVTYPE=DEL;");
                         sbStr.append("SVLEN=");
-                        sbStr.append("-" + currVar.getLengthString());
+                        sbStr.append(currVar.getLengthString());
                         if (currVar.getTraid() != null) {
                             sbStr.append(";TRAID=");
-                            sbStr.append(currVar.getTraid() + ";");
+                            sbStr.append(currVar.getTraid());
                         }
                     } else if (currVar.getType() == VariantOverallType.Deletion) {
                         sbStr.append("SVTYPE=DEL;");
                         sbStr.append("SVLEN=");
-                        sbStr.append("-" + currVar.getLengthString());
+                        sbStr.append(currVar.getLengthString());
                     } else {
                         sbStr.append("SVLEN=");
                         sbStr.append(currVar.getLengthString());

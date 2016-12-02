@@ -453,6 +453,8 @@ public class VCFparser extends GzFileParser<Variant> {
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).traid(traid == null ? null : traid[0]).build();
               } else if (end != null && end.length > 0 && end[0] > 0) {
+                //END is just one value, whereas there could be multiple alternative alleles with different svlens
+                  //so END is in general not a good way to get lengths
                   int alternativeAlleleLength = end[0] - pos + 1;
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
@@ -508,7 +510,7 @@ public class VCFparser extends GzFileParser<Variant> {
                       }
                   }
                   //pos is incremented by 1, so it becomes 1-based start
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(end[0] - pos + 1)).
+                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(0)).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).chr2(ChrString.string2ChrString(chr2)).
