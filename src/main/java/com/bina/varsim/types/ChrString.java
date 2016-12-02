@@ -84,7 +84,7 @@ public class ChrString implements Comparable<ChrString>{
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ChrString)) return false;
 
         ChrString chrString = (ChrString) o;
 

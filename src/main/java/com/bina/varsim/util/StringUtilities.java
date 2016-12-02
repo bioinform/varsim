@@ -2,6 +2,8 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -17,7 +19,7 @@ public class StringUtilities {
         if (a == null) {
             return "";
         }
-        StringJoiner joiner = new StringJoiner(delimiter);
+        StringJoiner joiner = new StringJoiner(delimiter.toString());
         for (int i = 0; i < a.length; i++) {
             joiner.add(Integer.toString(a[i]));
         }
@@ -34,7 +36,7 @@ public class StringUtilities {
         if (a == null) {
             return "";
         }
-        StringJoiner joiner = new StringJoiner(delimiter);
+        StringJoiner joiner = new StringJoiner(delimiter.toString());
         for (int i = 0; i < a.length; i++) {
             joiner.add(a[i]);
         }
@@ -51,7 +53,7 @@ public class StringUtilities {
         if (a == null) {
             return "";
         }
-        StringJoiner joiner = new StringJoiner(delimiter);
+        StringJoiner joiner = new StringJoiner(delimiter.toString());
         for (int i = 0; i < a.length; i++) {
             joiner.add(a[i].toString());
         }

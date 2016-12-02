@@ -4,6 +4,7 @@ import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantType;
+import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -121,11 +122,11 @@ public class RandBED2VCF extends randVCFgenerator {
 
         if (pos == 0 || len > max_length_lim || len < min_length_lim) return null;
 
-        FlexSeq[] alts = new FlexSeq[1];
+        Alt[] alts = new Alt[1];
         String var_idx_str;
         byte[] ref_seq;
         if (type == VariantType.Deletion) {
-            alts[0] = new FlexSeq();
+            alts[0] = new Alt(new FlexSeq());
             var_idx_str = "del_";
             ref_seq = ref.byteRange(chr, pos, pos + len);
 
@@ -135,18 +136,18 @@ public class RandBED2VCF extends randVCFgenerator {
 
         } else if (type == VariantType.Insertion) {
             if (ins_seq != null) {
-                alts[0] = new FlexSeq(ins_seq);
+                alts[0] = new Alt(new FlexSeq(ins_seq));
             } else {
-                alts[0] = new FlexSeq(FlexSeq.Type.INS, len);
+                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INS, len));
             }
             var_idx_str = "ins_";
             ref_seq = new byte[0];
         } else if (type == VariantType.Tandem_Duplication) {
-            alts[0] = new FlexSeq(FlexSeq.Type.DUP, len, 2);
+            alts[0] = new Alt(new FlexSeq(FlexSeq.Type.DUP, len, 2));
             var_idx_str = "dup_";
             ref_seq = new byte[0];
         } else if (type == VariantType.Inversion) {
-            alts[0] = new FlexSeq(FlexSeq.Type.INV, len);
+            alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INV, len));
             var_idx_str = "inv_";
             ref_seq = new byte[0];
         } else {
@@ -159,10 +160,13 @@ public class RandBED2VCF extends randVCFgenerator {
         Genotypes geno = new Genotypes(chr, gender, 1, _rand);
 
         assert ref_seq != null;
-        return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
+        /*return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
-                .charAt(chr, pos - 1)), _rand);
-
+                .charAt(chr, pos - 1)), _rand);*/
+        return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(ref_seq.length).
+                ref(ref_seq).alts(alts).phase(geno.geno).isPhased(false).varId(var_idx_str).
+                filter("PASS").refDeleted(String.valueOf(ref.charAt(chr, pos - 1))).randomNumberGenerator(_rand).
+                build();
     }
 
     private void process_bed(BufferedWriter out, BufferedReader bed_reader, VariantType type)

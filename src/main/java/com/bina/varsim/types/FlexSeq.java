@@ -1,25 +1,96 @@
 package com.bina.varsim.types;
 
+import com.bina.varsim.types.variant.Variant;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
  * This can represent a byte[] or a more flexible sequence such as insertion with unknown contents, dup, inv, etc...
+ * immutable class
  *
  * @author johnmu
  */
 
-public class FlexSeq {
+public final class FlexSeq {
+    //TODO make all fields final if possible
     Type type;
     int length;
-    int copyNumber;
+    int copyNumber = 1;
     byte[] sequence;
     String variantId = "";
     ChrString chr2;
     int pos2;
     int end2;
     int referenceAlleleLength;
+    volatile int hashCode;
 
+    /*
+    use Builder pattern to make code more readable and maintainable.
+     */
+    public static class Builder {
+        Type type;
+        int length;
+        int copyNumber = 1;
+        byte[] sequence;
+        String variantId = "";
+        ChrString chr2;
+        int pos2;
+        int end2;
+        int referenceAlleleLength;
+
+        public Builder() {}
+        public Builder type(final Type t) {
+            this.type = t;
+            return this;
+        }
+        public Builder length(final int l) {
+            this.length = l;
+            return this;
+        }
+        public Builder referenceAlleleLength(final int referenceAlleleLength) {
+            this.referenceAlleleLength = referenceAlleleLength;
+            return this;
+        }
+        public Builder copyNumber(final int c) {
+            this.copyNumber = c;
+            return this;
+        }
+        public Builder sequence(byte[] s) {
+            this.sequence = s.clone();
+            return this;
+        }
+        public Builder variantId(final String i) {
+            this.variantId = i;
+            return this;
+        }
+        public Builder chr2(ChrString c) {
+            this.chr2 = c;
+            return this;
+        }
+        public Builder pos2(final int p) {
+          this.pos2 = p;
+            return this;
+        }
+        public Builder end2(final int e) {
+          this.end2 = e;
+            return this;
+        }
+        public FlexSeq build() {
+            return new FlexSeq(this);
+        }
+    }
+    private FlexSeq(Builder b) {
+        this.type = b.type;
+        this.length = b.length;
+        this.copyNumber = b.copyNumber;
+        this.sequence = b.sequence;
+        this.variantId = b.variantId;
+        this.chr2 = b.chr2;
+        this.pos2 = b.pos2;
+        this.end2 = b.end2;
+        this.referenceAlleleLength = b.referenceAlleleLength;
+    }
     /**
      * Empty FlexSeq, default to a SEQ type
      */
@@ -27,7 +98,6 @@ public class FlexSeq {
         // empty sequence
         type = Type.SEQ;
         length = 0;
-        copyNumber = 1;
         sequence = new byte[0];
     }
 
@@ -42,7 +112,6 @@ public class FlexSeq {
         sequence[0] = seq;
         type = Type.SEQ;
         length = 1;
-        copyNumber = 1;
     }
 
     /**
@@ -55,7 +124,6 @@ public class FlexSeq {
         sequence = seq.clone();
         type = Type.SEQ;
         length = seq.length;
-        copyNumber = 1;
     }
 
     /**
@@ -72,7 +140,6 @@ public class FlexSeq {
         sequence = null;
         type = t;
         length = len;
-        copyNumber = 1;
     }
 
     /**
@@ -106,7 +173,7 @@ public class FlexSeq {
      * @param i index in sequence
      * @return
      */
-    public byte charAt(final int i) {
+    public byte byteAt(final int i) {
         if (sequence != null) {
             return sequence[i];
         } else {
@@ -141,7 +208,7 @@ public class FlexSeq {
     /**
      * @return length of the sequence accounting for copy numbers
      */
-    public int var_length() {
+    public int varLength() {
         if (type == Type.DUP) {
             return length * copyNumber;
         }
@@ -151,26 +218,33 @@ public class FlexSeq {
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FlexSeq)) return false;
 
         FlexSeq flexSeq = (FlexSeq) o;
 
         if (copyNumber != flexSeq.copyNumber) return false;
         if (length != flexSeq.length) return false;
-        if (!Arrays.equals(sequence, flexSeq.sequence)) return false;
         if (type != flexSeq.type) return false;
         if (variantId != null ? !variantId.equals(flexSeq.variantId) : flexSeq.variantId != null) return false;
+        if (!Arrays.equals(sequence, flexSeq.sequence)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = type != null ? type.hashCode() : 0;
+        int result = hashCode;
+        if (result != 0) return result;
+       /*initial hash code cannot be zero, otherwise, we cannot
+       tell the difference from hashCode if the first fields
+       are zero.
+        */
+        result = type != null ? type.hashCode() : 17;
         result = 31 * result + length;
         result = 31 * result + copyNumber;
         result = 31 * result + (sequence != null ? Arrays.hashCode(sequence) : 0);
         result = 31 * result + (variantId != null ? variantId.hashCode() : 0);
+        hashCode = result;
         return result;
     }
 
@@ -178,28 +252,12 @@ public class FlexSeq {
         return copyNumber;
     }
 
-    public void setCopyNumber(int cn) {
-        copyNumber = cn;
-    }
-
     public Type getType() {
         return type;
     }
 
-    public void setType(final Type t) {
-        type = t;
-    }
-
     public String getVariantId() {
         return variantId;
-    }
-
-    public void setVariantId(final String variantId) {
-        this.variantId = variantId;
-    }
-
-    public void setLength(int l) {
-        length = l;
     }
 
     public byte[] getSequence() {
@@ -237,23 +295,6 @@ public class FlexSeq {
         return "";
     }
 
-    public boolean equals(final FlexSeq seq) {
-        if (type != seq.type) {
-            return false;
-        }
-        if (length != seq.length) {
-            return false;
-        }
-        if (copyNumber != seq.copyNumber) {
-            return false;
-        }
-
-        if (!Arrays.equals(sequence, seq.sequence)) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * SEQ means the byte sequence is given
@@ -266,12 +307,6 @@ public class FlexSeq {
     public enum Type {
         SEQ, INV, DUP, INS, DEL, TRA
     }
-    public void setChr2(ChrString chr2) {
-        this.chr2 = chr2;
-    }
-    public void setPos2(int pos2) {
-        this.pos2 = pos2;
-    }
 
     public ChrString getChr2() {
         return chr2;
@@ -283,14 +318,6 @@ public class FlexSeq {
 
     public int getEnd2() {
         return end2;
-    }
-
-    public void setEnd2(final int end2) {
-        this.end2 = end2;
-    }
-
-    public void setReferenceAlleleLength(int referenceAlleleLength) {
-        this.referenceAlleleLength = referenceAlleleLength;
     }
 
     public int getReferenceAlleleLength() {

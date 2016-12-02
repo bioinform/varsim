@@ -66,6 +66,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
 
     @Override
     public boolean equals(Object object) {
+        if (this == object) return true; //this is purely for performance sake
         if (!(object instanceof GenomeInterval)) return false;
         GenomeInterval rhs = (GenomeInterval) object;
         return chromosome.equals(rhs.chromosome) && start == rhs.start && end == rhs.end && strand == rhs.strand && feature == rhs.feature;

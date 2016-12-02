@@ -66,6 +66,7 @@ public class GenomeLocation implements Comparable<GenomeLocation> {
 
     @Override
     public boolean equals(Object object) {
+        if (this == object) return true;
         if (!(object instanceof GenomeLocation)) return false;
         GenomeLocation rhs = (GenomeLocation) object;
         return chromosome.equals(rhs.chromosome) && location == rhs.location && direction == rhs.direction;

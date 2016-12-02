@@ -441,11 +441,16 @@ public class VCF2diploid {
             //NOTE: only translocation with ACCEPT subtype is marked as Translocation
             //translocation with REJECT subject is marked as Deletion
             if (variantType == VariantType.Translocation) {
-                if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
-                    insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
-                } else {
-                    insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
-                }
+              if (Variant.TranslocationSubtype.ACCEPT.equals(variant.getTranslocationSubtype(allele))) {
+                  if (variant.getPos2(allele) <= variant.getEnd2(allele)) {
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).subSeq(variant.getPos2(allele), variant.getEnd2(allele) + 1);
+                  } else {
+                      insertions = allSequences.getSequence(variant.getChr2(allele)).revComp(variant.getEnd2(allele), variant.getPos2(allele) + 1);
+                  }
+              } else {
+                  //REJECT, essentially deletion
+                  insertions = null;
+              }
             }
 
             if (variantType == VariantType.Inversion) {
@@ -478,17 +483,24 @@ public class VCF2diploid {
             // TODO if insertions is null we still need to add??
             if (insertions != null && insertions.length > 0) {
                 // convert to flexseq
-                FlexSeq s = new FlexSeq(insertions);
-                s.setType(variant.getAlt(allele).getType());
-                s.setCopyNumber(variant.getAlt(allele).getCopyNumber());
-                s.setLength(variant.getAlt(allele).length());
-                s.setVariantId(variant.getVariantId());
+                FlexSeq s = null;
 
-                if (s.getType() == FlexSeq.Type.TRA) {
-                    s.setChr2(variant.getChr2(allele));
-                    s.setPos2(variant.getPos2(allele));
-                    s.setEnd2(variant.getEnd2(allele));
-                    s.setReferenceAlleleLength(variant.getReferenceAlleleLength());
+                if (FlexSeq.Type.TRA.equals(variant.getAlt(allele).getSeqType())) {
+                    s = new FlexSeq.Builder().sequence(insertions).
+                            type(variant.getAlt(allele).getSeqType()).
+                            copyNumber(variant.getAlt(allele).getCopyNumber()).
+                            length(variant.getAlt(allele).length()).
+                            variantId(variant.getVariantId()).
+                            chr2(variant.getChr2(allele)).
+                            pos2(variant.getPos2(allele)).
+                            end2(variant.getEnd2(allele)).
+                            referenceAlleleLength(variant.getReferenceAlleleLength()).build();
+                } else {
+                    s = new FlexSeq.Builder().sequence(insertions).
+                            type(variant.getAlt(allele).getSeqType()).
+                            copyNumber(variant.getAlt(allele).getCopyNumber()).
+                            length(variant.getAlt(allele).length()).
+                            variantId(variant.getVariantId()).build();
                 }
                 /*
                 so although we model SNP as deletion+insertions, we do not record
@@ -702,7 +714,7 @@ public class VCF2diploid {
                     bw.write("\t");
                     // start position
                     bw.write(String.valueOf(currVar.getPos()
-                            - currVar.getRef_deleted().length()));
+                            - currVar.getRef_deleted().length));
                     bw.write("\t");
                     // variant id
                     bw.write(currVar.getVariantId());
@@ -720,7 +732,6 @@ public class VCF2diploid {
                     bw.write("\t");
                     // INFO
                     // TODO write len here
-                    //TODO: use StringJoiner to replace StringBuilder
                     StringBuilder sbStr = new StringBuilder();
                     if (currVar.getType() == VariantOverallType.Tandem_Duplication) {
                         sbStr.append("SVTYPE=DUP;");
@@ -739,7 +750,7 @@ public class VCF2diploid {
                         sbStr.append(Integer.toString(currVar.getEnd()));
                         sbStr.append(";");
                         sbStr.append("TRASUBTYPE=");
-                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtype(), ","));
+                        sbStr.append(StringUtilities.concatenateArray(currVar.getAllTranslocationSubtypeString(), ","));
                         sbStr.append(";");
                         //chr2,pos2,end2
                         sbStr.append("CHR2=");

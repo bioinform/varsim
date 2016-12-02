@@ -4,6 +4,7 @@ package com.bina.varsim.types.variant;
 
 import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.varsim.types.*;
+import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
@@ -21,7 +22,7 @@ public class Variant implements Comparable<Variant>{
     private int pos = -1, referenceAlleleLength = -1;
     private byte[] ref;
     private ChrString chr;
-    private FlexSeq[] alts;
+    private Alt[] alts;
     private byte maternal = 0, paternal = 0; // -1 for not avaliable
     private boolean isPhased = false; // Phasing
     private String filter;
@@ -35,11 +36,21 @@ public class Variant implements Comparable<Variant>{
     private int[] pos2;
     private int[] end2;
     private int end;
-    private String[] translocationSubtype;
+    private TranslocationSubtype[] translocationSubtype;
+    private volatile int hashCode; //caching hashcode
 
     public Variant(final Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
         this.rand = rand;
+    }
+    public boolean isInversed(int idx) {
+        if (getType(idx) == VariantType.Inversion) {
+            return true;
+        }
+        if (pos2 != null && end2 != null && end2[getAllele(idx) - 1] < pos2[getAllele(idx) - 1]) {
+            return true;
+        }
+        return false;
     }
 
     /*
@@ -50,7 +61,7 @@ public class Variant implements Comparable<Variant>{
         private int pos = -1, referenceAlleleLength = -1;
         private byte[] ref;
         private ChrString chr;
-        private FlexSeq[] alts;
+        private Alt[] alts;
         private byte maternal = 0, paternal = 0; // -1 for not avaliable
         private boolean isPhased = false; // Phasing
         private String filter;
@@ -64,7 +75,7 @@ public class Variant implements Comparable<Variant>{
         private int[] pos2;
         private int[] end2;
         private int end;
-        private String[] translocationSubtype;
+        private TranslocationSubtype[] translocationSubtype;
 
         public Builder() {}
         public Builder chr(final ChrString chr) {
@@ -83,11 +94,11 @@ public class Variant implements Comparable<Variant>{
             this.ref = ref.clone();
             return this;
         }
-        public Builder alts(final FlexSeq[] alts) {
-            this.alts = new FlexSeq[alts.length];
+        public Builder alts(final Alt[] alts) {
+            this.alts = new Alt[alts.length];
             for (int i = 0; i < alts.length; i++) {
                 if (alts[i] != null) {
-                    this.alts[i] = new FlexSeq(alts[i]);
+                    this.alts[i] = alts[i].copy(); //deep copy
                 } else {
                     this.alts[i] = null;
                 }
@@ -135,7 +146,7 @@ public class Variant implements Comparable<Variant>{
             this.end2 = end2;
             return this;
         }
-        public Builder translocationSubtype(String[] translocationSubtype) {
+        public Builder translocationSubtype(TranslocationSubtype[] translocationSubtype) {
             this.translocationSubtype = translocationSubtype;
             return this;
         }
@@ -163,21 +174,34 @@ public class Variant implements Comparable<Variant>{
         this.end = builder.end;
         this.translocationSubtype = builder.translocationSubtype;
     }
+    //TODO move this into Alt class
+    public static enum TranslocationSubtype {
+        ACCEPT, REJECT;
+    }
+
+    /*consider making Alt class immutable, all breakend, symbolic allele interpretation,
+    alt allele sequence accessing/storing handled internally and automatically
+    without explicitly invoking any public methods.
+
+    also make the Variant constructor with many arguments private, so that clients
+    will not use it any more. this will force the client to use Builder and then
+    we are free to change the constructor.
+    */
 
     public Variant(final ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
+                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
                    final String ref_deleted) {
         this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, varId, filter, ref_deleted, null, null, null, null, -1, null);
     }
 
     public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
+                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
                    final String ref_deleted, Random rand) {
         this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, varId, filter, ref_deleted, rand, null, null, null, -1, null);
     }
     public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final FlexSeq[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
-                   final String ref_deleted, Random rand, final ChrString[] chr2, final int[] pos2, final int[] end2, final int end, final String[] translocationSubtype) {
+                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
+                   final String ref_deleted, Random rand, final ChrString[] chr2, final int[] pos2, final int[] end2, final int end, final TranslocationSubtype[] translocationSubtype) {
         this(rand);
 
         this.filter = filter;
@@ -190,10 +214,10 @@ public class Variant implements Comparable<Variant>{
         // TODO we should put the reference matching code here
         this.ref = ref.clone();
         refDeleted = ref_deleted;
-        this.alts = new FlexSeq[alts.length];
+        this.alts = new Alt[alts.length];
         for (int i = 0; i < alts.length; i++) {
             if (alts[i] != null) {
-                this.alts[i] = new FlexSeq(alts[i]);
+                this.alts[i] = alts[i].copy();
             } else {
                 this.alts[i] = null;
             }
@@ -217,10 +241,10 @@ public class Variant implements Comparable<Variant>{
         referenceAlleleLength = var.referenceAlleleLength;
         ref = var.ref.clone();
         refDeleted = var.refDeleted;
-        alts = new FlexSeq[var.alts.length];
+        alts = new Alt[var.alts.length];
         for (int i = 0; i < var.alts.length; i++) {
             if (var.alts[i] != null) {
-                alts[i] = new FlexSeq(var.alts[i]);
+                alts[i] = var.alts[i].copy();
             } else {
                 alts[i] = null;
             }
@@ -229,10 +253,12 @@ public class Variant implements Comparable<Variant>{
         this.chr2 = var.chr2;
         this.pos2 = var.pos2;
         this.end2 = var.end2;
+        this.end = var.end;
         paternal = var.paternal;
         maternal = var.maternal;
         isPhased = var.isPhased;
         rand = var.rand;
+        translocationSubtype = var.getAllTranslocationSubtype() == null ? null : var.getAllTranslocationSubtype().clone();
     }
 
     /**
@@ -278,12 +304,12 @@ public class Variant implements Comparable<Variant>{
                 }
             }
 
-            for (FlexSeq f : alts) {
-                if (f.getSequence() != null) {
+            for (Alt alt : alts) {
+                if (alt.getSequence() != null) {
                     // make sure there is no prefix the same
                     for (int i = 0; i < temp_ref.length; i++) {
-                        if (i < f.getSequence().length) {
-                            if (temp_ref[i] == f.getSequence()[i]) {
+                        if (i < alt.getSequence().length) {
+                            if (temp_ref[i] == alt.getSequence()[i]) {
                                 log.warn("Same ref at alt at " + pos + " to " + (pos + len));
                                 return false;
                             } else {
@@ -382,8 +408,22 @@ public class Variant implements Comparable<Variant>{
     public int getEnd() {
         return this.end;
     }
-    public String[] getAllTranslocationSubtype() {
+    public TranslocationSubtype[] getAllTranslocationSubtype() {
         return this.translocationSubtype;
+    }
+    public TranslocationSubtype getTranslocationSubtype(int ind) {
+        if (ind <= 0 || ind > alts.length)
+            return null;
+        return this.translocationSubtype[ind - 1];
+    }
+    public String[] getAllTranslocationSubtypeString() {
+        if (translocationSubtype == null)
+            return null;
+        String[] s = new String[translocationSubtype.length];
+        for (int i = 0; i < translocationSubtype.length; i++) {
+            s[i] = translocationSubtype[i].name();
+        }
+        return s;
     }
 
     /**
@@ -517,9 +557,9 @@ public class Variant implements Comparable<Variant>{
     // TODO this is wrong, but it only effects the count of variant bases
     public int variantBases() {
         int ret = referenceAlleleLength;
-        for (FlexSeq _alt : alts) {
-            if (referenceAlleleLength != _alt.length()) {
-                ret += _alt.length();
+        for (Alt alt : alts) {
+            if (referenceAlleleLength != alt.length()) {
+                ret += alt.length();
             }
         }
         return ret;
@@ -539,7 +579,32 @@ public class Variant implements Comparable<Variant>{
         we can be assured that correct variant type is
         returned.
          */
-        FlexSeq.Type type = alts[ind - 1].getType();
+        Alt alt = alts[ind - 1];
+        if (alt.getSymbolicAllele() != null) {
+            Alt.SVType major = alt.getSymbolicAllele().getMajor();
+            Alt.SVType.SVSubtype minor = alt.getSymbolicAllele().getMinor();
+            if (major == Alt.SVType.TRA || minor == Alt.SVType.SVSubtype.TRA) {
+                return VariantType.Translocation;
+            } else if (major == Alt.SVType.INS) {
+                return VariantType.Insertion;
+            } else if (major == Alt.SVType.DEL) {
+                return VariantType.Deletion;
+            } else if (major == Alt.SVType.INV) {
+                return VariantType.Inversion;
+            } else if (major == Alt.SVType.DUP && (minor == null || minor == Alt.SVType.SVSubtype.TANDEM)) {
+                return VariantType.Tandem_Duplication;
+            } else {
+                return VariantType.Complex;
+            }
+        } else if (alt.getBreakend() != null) {
+            return VariantType.Breakend;
+        }
+        /*
+        FlexSeq is the least reliable source of variant type
+        because some variants will be transformed into different
+        seq types
+         */
+        FlexSeq.Type type = alts[ind - 1].getSeqType();
         switch (type) {
             case DUP:
                 return VariantType.Tandem_Duplication;
@@ -561,7 +626,8 @@ public class Variant implements Comparable<Variant>{
             return VariantType.SNP;
         } else if (insertionLength == 0 && deletionLength > 0) {
             return VariantType.Deletion;
-        } else if (deletionLength - insertionLength > 0 && new String(ref).endsWith(alts[ind - 1].toString())) {
+        } else if (deletionLength - insertionLength > 0 && new String(ref).endsWith(alts[ind - 1].getSeq().toString())) {
+            //the second part will check if block substitutions possibly exist
             return VariantType.Deletion;
         } else if (insertionLength > 0 && deletionLength == 0) {
             return VariantType.Insertion;
@@ -638,14 +704,13 @@ public class Variant implements Comparable<Variant>{
      * @param ind
      * @return
      */
-    public FlexSeq getAlt(final int ind) {
+    public Alt getAlt(final int ind) {
         return (ind <= 0 || ind > alts.length) ? null : alts[ind - 1];
     }
 
-    public void setAlt(final int ind, FlexSeq alt) {
-        if (ind > 0 && ind <= alts.length) {
+    public void setAlt(final int ind, Alt alt) {
+        if (ind > 0 && ind <= alts.length)
             alts[ind - 1] = alt;
-        }
     }
 
     public String getFilter() {
@@ -677,8 +742,8 @@ public class Variant implements Comparable<Variant>{
         }
     }
 
-    public String getRef_deleted() {
-        return refDeleted;
+    public byte[] getRef_deleted() {
+        return refDeleted.getBytes();
     }
 
     public int getCN(final int ind) {
@@ -690,7 +755,7 @@ public class Variant implements Comparable<Variant>{
      */
     public boolean hasCN() {
         boolean isCopyNumberPositive = false;
-        for (FlexSeq alt : alts) {
+        for (Alt alt : alts) {
             if (alt.getCopyNumber() > 1) {
                 isCopyNumberPositive = true;
             }
@@ -702,17 +767,21 @@ public class Variant implements Comparable<Variant>{
     public String alternativeAlleleString() {
         StringBuilder sbStr = new StringBuilder();
         for (int i = 0; i < alts.length; i++) {
-            //if (i > 0 && alts[i].toString().equals(alts[i - 1].toString())) {
+            //if (i > 0 && alts[i].getSeq().toString().equals(alts[i - 1].toString())) {
                 /*Marghoob suggested that two identical symbolic alternative alleles are
                 allowed. so essentially we go back to original behavior of VarSim.
                  */
             if (i > 0) {
                 sbStr.append(",");
             }
-            if (alts[i].isSeq()) {
-                sbStr.append(refDeleted).append(alts[i].toString()).append(extraBase);
-            } else {
-                sbStr.append(alts[i].toString());
+            if (alts[i].getSymbolicAllele() != null) {
+                sbStr.append(alts[i].getSymbolicAllele().toString());
+            } else if (alts[i].getSeq() != null) {
+                if (alts[i].getSeq().isSeq()) {
+                    sbStr.append(refDeleted).append(alts[i].getSeq().toString()).append(extraBase);
+                } else {
+                    sbStr.append(alts[i].getSeq().toString());
+                }
             }
         }
         return sbStr.toString();
@@ -762,9 +831,9 @@ public class Variant implements Comparable<Variant>{
     Tests if all of the alternate alleles with sequence are ACTGN
      */
     public boolean isAltACTGN() {
-        for (FlexSeq a : alts) {
+        for (Alt a : alts) {
             if (a.isSeq()) {
-                if (!a.toString().matches("[ACTGN]*")) {
+                if (!a.getSeq().toString().matches("[ACTGN]*")) {
                     return false;
                 }
             }
@@ -782,7 +851,7 @@ public class Variant implements Comparable<Variant>{
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Variant)) return false;
 
         Variant variant = (Variant) o;
 
@@ -808,7 +877,13 @@ public class Variant implements Comparable<Variant>{
 
     @Override
     public int hashCode() {
-        int result = rand != null ? rand.hashCode() : 0;
+        int result = hashCode;
+        if (result != 0) return result;
+       /*initial hash code cannot be zero, otherwise, we cannot
+       tell the difference from hashCode if the first fields
+       are zero.
+        */
+        result = rand != null ? rand.hashCode() : 17;
         result = 31 * result + splitVariantIndex;
         result = 31 * result + wholeVariantIndex;
         result = 31 * result + (originalType != null ? originalType.hashCode() : 0);
@@ -823,6 +898,7 @@ public class Variant implements Comparable<Variant>{
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
         result = 31 * result + (varId != null ? varId.hashCode() : 0);
         result = 31 * result + (refDeleted != null ? refDeleted.hashCode() : 0);
+        hashCode = result;
         return result;
     }
 
@@ -833,7 +909,7 @@ public class Variant implements Comparable<Variant>{
             return chrCmp;
         }
 
-        return getPos() - getRef_deleted().length() - (other.getPos() - other.getRef_deleted().length());
+        return getPos() - getRef_deleted().length - (other.getPos() - other.getRef_deleted().length);
     }
 
     public String getLength() {
@@ -846,14 +922,20 @@ public class Variant implements Comparable<Variant>{
 
             VariantType t = getType(i + 1);
 
-            if (t == VariantType.Deletion) {
+            if (VariantType.Deletion.equals(t)) {
                 len.append(-referenceAlleleLength + alts[i].length()); // negative for deletions
-            } else if (t == VariantType.Complex) {
+            } else if (VariantType.Complex.equals(t)) {
                 int alt_len = alts[i].length();
                 if (referenceAlleleLength > alt_len) {
                     len.append(-referenceAlleleLength);
                 } else {
                     len.append(alt_len);
+                }
+            } else if (VariantType.Translocation.equals(t)) {
+                if (TranslocationSubtype.REJECT.equals(this.translocationSubtype[i])) {
+                    len.append("" + -(end - pos + 1));
+                } else if (TranslocationSubtype.ACCEPT.equals(this.translocationSubtype[i])) {
+                    len.append(alts[i].length());
                 }
             } else {
                 len.append(alts[i].length());
@@ -864,7 +946,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public void calculateExtraBase(final Sequence refSeq) {
-        for (final FlexSeq alt : alts) {
+        for (final Alt alt : alts) {
             if (alt.isSeq() && alt.length() == 0 && getPos() + referenceAlleleLength < refSeq.length()) {
                 //why extrabase is only 1-bp long?
                 extraBase = String.valueOf((char) refSeq.byteAt(getPos() + referenceAlleleLength));

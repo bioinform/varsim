@@ -7,6 +7,7 @@ import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.alt.Alt;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -142,7 +143,7 @@ public class DGVparser extends GzFileParser<Variant> {
         // int observedlosses = Integer.parseInt(ll[16]);
 
         String REF;
-        FlexSeq[] alts = new FlexSeq[1];
+        Alt[] alts = new Alt[1];
 
         switch (type) {
             case Deletion:
@@ -156,22 +157,21 @@ public class DGVparser extends GzFileParser<Variant> {
                     log.error(" " + line);
                     return null;
                 }
-                alts[0] = new FlexSeq();
+                alts[0] = new Alt(new FlexSeq());
                 break;
             case Insertion:
                 REF = "";
                 // TODO this is suspect... should sample from distribution of deletions.. maybe ok for now
-                alts[0] = new FlexSeq(FlexSeq.Type.INS, end_loc - start_loc + 1);
+                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INS, end_loc - start_loc + 1));
                 break;
             case Tandem_Duplication:
                 REF = "";
+                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.DUP, end_loc - start_loc + 1,observedgains));
                 observedgains = Math.max(2, observedgains);
-                alts[0] = new FlexSeq(FlexSeq.Type.DUP, end_loc - start_loc + 1,
-                        observedgains);
                 break;
             case Inversion:
                 REF = "";
-                alts[0] = new FlexSeq(FlexSeq.Type.INV, end_loc - start_loc + 1);
+                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INV, end_loc - start_loc + 1));
                 break;
             default:
                 return null;
@@ -197,9 +197,12 @@ public class DGVparser extends GzFileParser<Variant> {
         }
 
         byte[] phase = {1, 1};
-        return new Variant(chr, start_loc, refs.length, refs,
-                alts, phase, false, var_id, "PASS", String.valueOf((char) reference
-                .byteAt(chr, start_loc - 1)), rand);
+        /*return new Variant(chr, start_loc, refs.length, refs,
+                alts, phase, false, var_id, "PASS", String.valueOf((char) _reference
+                .byteAt(chr, start_loc - 1)), _rand);*/
+        return new Variant.Builder().chr(chr).pos(start_loc).referenceAlleleLength(refs.length).
+                ref(refs).alts(alts).phase(phase).isPhased(false).varId(var_id).filter("PASS").
+                refDeleted(String.valueOf((char) reference.byteAt(chr, start_loc - 1))).randomNumberGenerator(rand).build();
     }
 
 }
