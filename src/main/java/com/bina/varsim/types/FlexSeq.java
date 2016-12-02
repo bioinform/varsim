@@ -37,7 +37,7 @@ public final class FlexSeq {
         int pos2;
         int end2;
         int referenceAlleleLength;
-        Boolean isinv;
+        boolean isinv;
 
         public Builder() {}
         public Builder type(final Type t) {
