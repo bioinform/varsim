@@ -152,13 +152,12 @@ public final class Alt {
 
   public enum SVType {
     DEL, INS, DUP, INV, CNV,
-    TRA, //temporarily added for debugging
     BND; //breakend
     public enum SVSubtype {
       TANDEM, //consecutive events
       ME, //mobile element
       TRA, //translocation (cut-and-paste)
-      IPS; //interspersed
+      ISP; //interspersed
     }
   }
 

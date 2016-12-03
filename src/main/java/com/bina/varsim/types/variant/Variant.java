@@ -11,6 +11,8 @@ import org.apache.log4j.Logger;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import static java.lang.Character.getType;
+
 public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
     public int splitVariantIndex = 0; // this is hopefully a unique index, for the split variants
@@ -36,21 +38,22 @@ public class Variant implements Comparable<Variant>{
     private int[] pos2;
     private int[] end2;
     private int end;
-    private TranslocationSubtype[] translocationSubtype;
+    private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
+    private String traid; //translocation ID
     private volatile int hashCode; //caching hashcode
 
     public Variant(final Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
         this.rand = rand;
     }
-    public boolean isInversed(int idx) {
-        if (getType(idx) == VariantType.Inversion) {
-            return true;
-        }
-        if (pos2 != null && end2 != null && end2[getAllele(idx) - 1] < pos2[getAllele(idx) - 1]) {
-            return true;
-        }
-        return false;
+
+    /**
+     * whether have flag ISINV?
+     * @param idx
+     * @return
+     */
+    public boolean isInversed() {
+        return isinv != null && isinv.booleanValue();
     }
 
     /*
@@ -75,7 +78,8 @@ public class Variant implements Comparable<Variant>{
         private int[] pos2;
         private int[] end2;
         private int end;
-        private TranslocationSubtype[] translocationSubtype;
+        private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
+        private String traid; //translocation ID
 
         public Builder() {}
         public Builder chr(final ChrString chr) {
@@ -146,8 +150,12 @@ public class Variant implements Comparable<Variant>{
             this.end2 = end2;
             return this;
         }
-        public Builder translocationSubtype(TranslocationSubtype[] translocationSubtype) {
-            this.translocationSubtype = translocationSubtype;
+        public Builder isinv(final Boolean b) {
+            this.isinv = b;
+            return this;
+        }
+        public Builder traid(final String id) {
+            this.traid = id;
             return this;
         }
         public Variant build() {
@@ -172,11 +180,8 @@ public class Variant implements Comparable<Variant>{
         this.maternal = builder.maternal;
         this.isPhased = builder.isPhased;
         this.end = builder.end;
-        this.translocationSubtype = builder.translocationSubtype;
-    }
-    //TODO move this into Alt class
-    public static enum TranslocationSubtype {
-        ACCEPT, REJECT;
+        this.traid = builder.traid;
+        this.isinv = builder.isinv;
     }
 
     /*consider making Alt class immutable, all breakend, symbolic allele interpretation,
@@ -187,51 +192,6 @@ public class Variant implements Comparable<Variant>{
     will not use it any more. this will force the client to use Builder and then
     we are free to change the constructor.
     */
-
-    public Variant(final ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
-                   final String ref_deleted) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, varId, filter, ref_deleted, null, null, null, null, -1, null);
-    }
-
-    public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
-                   final String ref_deleted, Random rand) {
-        this(chr, pos, referenceAlleleLength, ref, alts, phase, isPhased, varId, filter, ref_deleted, rand, null, null, null, -1, null);
-    }
-    public Variant(ChrString chr, final int pos, final int referenceAlleleLength, final byte[] ref,
-                   final Alt[] alts, final byte[] phase, final boolean isPhased, final String varId, final String filter,
-                   final String ref_deleted, Random rand, final ChrString[] chr2, final int[] pos2, final int[] end2, final int end, final TranslocationSubtype[] translocationSubtype) {
-        this(rand);
-
-        this.filter = filter;
-        this.varId = varId;
-
-        this.chr = chr;
-        this.pos = pos;
-        this.referenceAlleleLength = referenceAlleleLength;
-
-        // TODO we should put the reference matching code here
-        this.ref = ref.clone();
-        refDeleted = ref_deleted;
-        this.alts = new Alt[alts.length];
-        for (int i = 0; i < alts.length; i++) {
-            if (alts[i] != null) {
-                this.alts[i] = alts[i].copy();
-            } else {
-                this.alts[i] = null;
-            }
-        }
-
-        this.chr2 = chr2;
-        this.pos2 = pos2;
-        this.end2 = end2;
-        paternal = phase[0];
-        maternal = phase[1];
-        this.isPhased = isPhased;
-        this.end = end;
-        this.translocationSubtype = translocationSubtype;
-    }
 
     public Variant(final Variant var) {
         filter = var.filter;
@@ -258,7 +218,8 @@ public class Variant implements Comparable<Variant>{
         maternal = var.maternal;
         isPhased = var.isPhased;
         rand = var.rand;
-        translocationSubtype = var.getAllTranslocationSubtype() == null ? null : var.getAllTranslocationSubtype().clone();
+        isinv = var.isinv;
+        traid = var.traid;
     }
 
     /**
@@ -408,22 +369,9 @@ public class Variant implements Comparable<Variant>{
     public int getEnd() {
         return this.end;
     }
-    public TranslocationSubtype[] getAllTranslocationSubtype() {
-        return this.translocationSubtype;
-    }
-    public TranslocationSubtype getTranslocationSubtype(int ind) {
-        if (ind <= 0 || ind > alts.length)
-            return null;
-        return this.translocationSubtype[ind - 1];
-    }
-    public String[] getAllTranslocationSubtypeString() {
-        if (translocationSubtype == null)
-            return null;
-        String[] s = new String[translocationSubtype.length];
-        for (int i = 0; i < translocationSubtype.length; i++) {
-            s[i] = translocationSubtype[i].name();
-        }
-        return s;
+
+    public String getTraid() {
+        return traid;
     }
 
     /**
@@ -583,16 +531,18 @@ public class Variant implements Comparable<Variant>{
         if (alt.getSymbolicAllele() != null) {
             Alt.SVType major = alt.getSymbolicAllele().getMajor();
             Alt.SVType.SVSubtype minor = alt.getSymbolicAllele().getMinor();
-            if (major == Alt.SVType.TRA || minor == Alt.SVType.SVSubtype.TRA) {
-                return VariantType.Translocation;
+            if (minor == Alt.SVType.SVSubtype.TRA) {
+                return major == Alt.SVType.DUP ? VariantType.Translocation_Duplication : VariantType.Translocation_Deletion;
             } else if (major == Alt.SVType.INS) {
                 return VariantType.Insertion;
-            } else if (major == Alt.SVType.DEL) {
+            } else if (major == Alt.SVType.DEL && (minor == null || minor != Alt.SVType.SVSubtype.TRA)) {
                 return VariantType.Deletion;
             } else if (major == Alt.SVType.INV) {
                 return VariantType.Inversion;
             } else if (major == Alt.SVType.DUP && (minor == null || minor == Alt.SVType.SVSubtype.TANDEM)) {
                 return VariantType.Tandem_Duplication;
+            } else if (major == Alt.SVType.DUP && (minor == Alt.SVType.SVSubtype.ISP || (minor == null && pos2 != null))) {
+                return VariantType.Interspersed_Duplication;
             } else {
                 return VariantType.Complex;
             }
@@ -606,14 +556,20 @@ public class Variant implements Comparable<Variant>{
          */
         FlexSeq.Type type = alts[ind - 1].getSeqType();
         switch (type) {
-            case DUP:
+            case TANDEM_DUP:
                 return VariantType.Tandem_Duplication;
             case INS:
                 return VariantType.Insertion;
             case INV:
                 return VariantType.Inversion;
-            case TRA:
-                return VariantType.Translocation;
+            case TRA_DEL:
+                return VariantType.Translocation_Deletion;
+            case TRA_DUP:
+                return VariantType.Translocation_Duplication;
+            case ISP_DUP:
+                return VariantType.Interspersed_Duplication;
+            case DEL:
+                return VariantType.Deletion;
             default:
                 break;
         }
@@ -667,8 +623,14 @@ public class Variant implements Comparable<Variant>{
             if (variantTypes.contains(VariantType.Insertion)) {
                 return VariantOverallType.Insertion;
             }
-            if (variantTypes.contains(VariantType.Translocation)) {
-                return VariantOverallType.Translocation;
+            if (variantTypes.contains(VariantType.Translocation_Deletion)) {
+                return VariantOverallType.Translocation_Deletion;
+            }
+            if (variantTypes.contains(VariantType.Translocation_Duplication)) {
+                return VariantOverallType.Translocation_Duplication;
+            }
+            if (variantTypes.contains(VariantType.Interspersed_Duplication)) {
+                return VariantOverallType.Interspersed_Duplication;
             }
         }
 
@@ -912,7 +874,7 @@ public class Variant implements Comparable<Variant>{
         return getPos() - getRef_deleted().length - (other.getPos() - other.getRef_deleted().length);
     }
 
-    public String getLength() {
+    public String getLengthString() {
         StringBuilder len = new StringBuilder();
 
         for (int i = 0; i < alts.length; i++) {
@@ -922,7 +884,7 @@ public class Variant implements Comparable<Variant>{
 
             VariantType t = getType(i + 1);
 
-            if (VariantType.Deletion.equals(t)) {
+            if (VariantType.Deletion.equals(t) || VariantType.Translocation_Deletion.equals(t)) {
                 len.append(-referenceAlleleLength + alts[i].length()); // negative for deletions
             } else if (VariantType.Complex.equals(t)) {
                 int alt_len = alts[i].length();
@@ -930,12 +892,6 @@ public class Variant implements Comparable<Variant>{
                     len.append(-referenceAlleleLength);
                 } else {
                     len.append(alt_len);
-                }
-            } else if (VariantType.Translocation.equals(t)) {
-                if (TranslocationSubtype.REJECT.equals(this.translocationSubtype[i])) {
-                    len.append("" + -(end - pos + 1));
-                } else if (TranslocationSubtype.ACCEPT.equals(this.translocationSubtype[i])) {
-                    len.append(alts[i].length());
                 }
             } else {
                 len.append(alts[i].length());
@@ -981,17 +937,21 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == VariantOverallType.Tandem_Duplication) {
+        if (getType() == VariantOverallType.Tandem_Duplication || getType() == VariantOverallType.Interspersed_Duplication || getType() == VariantOverallType.Translocation_Duplication) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
-            sbStr.append(getLength());
+            sbStr.append(getLengthString());
+        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.Translocation_Deletion) {
+            sbStr.append("SVTYPE=DEL;");
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
         } else if (getType() == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
-            sbStr.append(getLength());
+            sbStr.append(getLengthString());
         } else {
             sbStr.append("SVLEN=");
-            sbStr.append(getLength());
+            sbStr.append(getLengthString());
         }
         sbStr.append("\t");
 

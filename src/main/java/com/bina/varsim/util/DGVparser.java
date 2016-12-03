@@ -166,7 +166,7 @@ public class DGVparser extends GzFileParser<Variant> {
                 break;
             case Tandem_Duplication:
                 REF = "";
-                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.DUP, end_loc - start_loc + 1,observedgains));
+                alts[0] = new Alt(new FlexSeq(FlexSeq.Type.TANDEM_DUP, end_loc - start_loc + 1,observedgains));
                 observedgains = Math.max(2, observedgains);
                 break;
             case Inversion:

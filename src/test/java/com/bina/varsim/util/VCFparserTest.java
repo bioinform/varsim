@@ -45,7 +45,7 @@ public class VCFparserTest {
         ref: A CAAAAGAAATGATCATGTTTGTAGGT
         alt: A A AAAGAAATGATCATGTTTGTAGGT
         */
-        assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tSVLEN=-1\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tSVTYPE=DEL;SVLEN=-1\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 1); //[C]
         assertTrue(v.getAlt(1).length() == 0); //""

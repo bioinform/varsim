@@ -322,36 +322,35 @@ public class VCFparser extends GzFileParser<Variant> {
         Alt[] alts = string2Alt(ALT);
 
       if (alts[0].getSymbolicAllele() != null) {
+          int[] end = (int[]) info.getValue("END");
+          //SVLEN for alternative allele length
+          int[] svlen = (int[]) info.getValue("SVLEN");
+          int[] end2 = (int[]) info.getValue("END2");
+          int[] pos2 = (int[]) info.getValue("POS2");
+          Boolean isinv = (Boolean) info.getValue("ISINV");
+          String[] traid = (String[]) info.getValue("TRAID");
+          String[] chr2 = (String[]) info.getValue("CHR2");
+          deletedReference = REF;
+          byte[] refs = new byte[0];
+          pos++; //1-based start
+
           if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INV) {
               // inversion SV
-
-              int[] end = (int[]) info.getValue("END");
-              int[] svlen = (int[]) info.getValue("SVLEN");
-
-              deletedReference = REF;
-              byte[] refs = new byte[0];
-              pos++;
-
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       int alternativeAlleleLength = Math.max(Math.abs(svlen[i]), 1);
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength));
                   }
                   // TODO this assumes only one alt
-                /*return new Variant(chr, pos, Math.abs(svlen[0]), refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).build();
                   //TODO: this assumes only one alt, might not be true
-              } else if (end[0] > 0) {
+              } else if (end != null && end.length > 0 && end[0] > 0) {
+                  //assume only one END
                   int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos + 1), 1);
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength));
-                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
 
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
                           ref(refs).alts(alts).phase(genotypeArray).
@@ -365,20 +364,12 @@ public class VCFparser extends GzFileParser<Variant> {
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DUP &&
-                    (alts[0].getSymbolicAllele().getMinor() == null ||
+                    ((alts[0].getSymbolicAllele().getMinor() != Alt.SVType.SVSubtype.TRA &&
+                            alts[0].getSymbolicAllele().getMinor() != Alt.SVType.SVSubtype.ISP &&
+                            info.getValue("POS2") == null) ||
                      alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TANDEM)) {
-              // duplication or tandem duplication SV
-              int[] svlens = (int[]) info.getValue("SVLEN");
-              // may need to check inconsistency
-              int[] ends = (int[]) info.getValue("END");
-              // btw length and end location
-
-              deletedReference = REF;
-              byte[] refs = new byte[0];
-              pos++;
-
-              if (svlens.length > 0) {
-                  for (int i = 0; i < svlens.length; i++) {
+              if (svlen.length > 0) {
+                  for (int i = 0; i < svlen.length; i++) {
                       // TODO this is temporary, how to encode copy number?
                       int currentCopyNumber = 1;
                       for (int j = 0; j < 2; j++) {
@@ -395,65 +386,48 @@ public class VCFparser extends GzFileParser<Variant> {
                           }
                       }
 
-                      int alternativeAlleleLength = Math.max(Math.abs(svlens[i]), 1);
+                      int alternativeAlleleLength = Math.max(Math.abs(svlen[i]), 1);
 
-                      alts[i].setSeq(new FlexSeq(FlexSeq.Type.DUP, alternativeAlleleLength, currentCopyNumber));
+                      alts[i].setSeq(new FlexSeq(FlexSeq.Type.TANDEM_DUP, alternativeAlleleLength, currentCopyNumber));
                   }
 
-                /*return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlens[0])).
+                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).build();
                   //TODO: this assumes only one alt, which might not be true
-              } else if (ends[0] > 0) {
-                  int alternativeAlleleLength = Math.max(Math.abs(ends[0] - pos + 1), 1);
-                  alts[0].setSeq(new FlexSeq(FlexSeq.Type.DUP, alternativeAlleleLength, Math.max(
+              } else if (end != null && end.length > 0 && end[0] > 0) {
+                  int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos + 1), 1);
+                  alts[0].setSeq(new FlexSeq(FlexSeq.Type.TANDEM_DUP, alternativeAlleleLength, Math.max(
                           copyNumberArray[0], copyNumberArray[1])));
 
-                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                */
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).build();
               } else {
-                  log.error("No length information for DUP:");
+                  log.error("No length information for DUP:TANDEM:");
                   log.error(line);
                   log.error("skipping...");
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INS) {
               // insertion SV
-              int[] ends = (int[]) info.getValue("END");
-              // TODO may need to check
-              int[] svlens = (int[]) info.getValue("SVLEN");
 
-              deletedReference = REF;
-              byte[] refs = new byte[0];
-              pos++;
-
-              if (svlens.length > 0) {
-                  for (int i = 0; i < svlens.length; i++) {
-                      int alternativeAlleleLength = svlens[i] == 0 ? Integer.MAX_VALUE : Math.max(Math.abs(svlens[i]), 1);
+              if (svlen.length > 0) {
+                  for (int i = 0; i < svlen.length; i++) {
+                    //if SVLEN=0, we take it as infinitely long
+                      int alternativeAlleleLength = svlen[i] == 0 ? Integer.MAX_VALUE : Math.max(Math.abs(svlen[i]), 1);
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
                   }
-                /*return new Variant(chr, pos, 0, refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).build();
-              } else if (ends[0] > 0) {
-                  int alternativeAlleleLength = Math.max(Math.abs(ends[0] - pos), 1);
+                //TODO, remove this as END should be equal to POS for insertion
+              } else if (end != null && end.length > 0 && end[0] > 0) {
+                  int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos), 1);
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
-                /*return new Variant(chr, pos, 0, refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
@@ -465,40 +439,28 @@ public class VCFparser extends GzFileParser<Variant> {
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
-              // deletion SV
+              // deletion SV (maybe part of a translocation)
               // but... we don't have the reference... so we add some random sequence?
 
-              int[] ends = (int[]) info.getValue("END");
-              // TODO may need to check
-              int[] svlens = (int[]) info.getValue("SVLEN");
-
-              deletedReference = REF;
-              byte[] refs = new byte[0];
-              pos++;
-
-              if (svlens.length > 0) {
-                  for (int i = 0; i < svlens.length; i++) {
+              if (svlen.length > 0) {
+                  for (int i = 0; i < svlen.length; i++) {
                       // deletion has no alt
-                      alts[i].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
+                      alts[i].setSeq(new FlexSeq(alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA ? FlexSeq.Type.TRA_DEL : FlexSeq.Type.DEL, 0));
                   }
 
-                /*return new Variant(chr, pos, Math.abs(svlens[0]), refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlens[0])).
+                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
-              } else if (ends[0] > 0) {
-                  int alternativeAlleleLength = ends[0] - pos + 1;
+                          randomNumberGenerator(random).traid(traid == null ? null : traid[0]).build();
+              } else if (end != null && end.length > 0 && end[0] > 0) {
+                //END is just one value, whereas there could be multiple alternative alleles with different svlens
+                  //so END is in general not a good way to get lengths
+                  int alternativeAlleleLength = end[0] - pos + 1;
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
-                /*return new Variant(chr, pos, alternativeAlleleLength, refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random);
-                        */
                   return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                          traid(traid == null ? null : traid[0]).randomNumberGenerator(random).build();
               } else {
                   log.error("No length information for DEL:");
                   log.error(line);
@@ -506,28 +468,10 @@ public class VCFparser extends GzFileParser<Variant> {
                   return null;
               }
               //TODO major SVTYPE actually does not allow TRA
-            //TODO support for minor SVTYPE=TRA
-          //} else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.TRA || alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA) {
-          } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.TRA) {
-              //translocation SV
-
-              //1-based end for reference allele
-              int[] end = (int[]) info.getValue("END");
-              int[] end2 = (int[]) info.getValue("END2");
-              int[] pos2 = (int[]) info.getValue("POS2");
-              //SVLEN for alternative allele length
-              int[] svlen = (int[]) info.getValue("SVLEN");
-              String[] chr2 = (String[]) info.getValue("CHR2");
-              String[] subtype = (String[]) info.getValue("TRASUBTYPE");
-              Variant.TranslocationSubtype[] translocationSubtypes = new Variant.TranslocationSubtype[subtype.length];
-
-              for (int i = 0; i < subtype.length; i++) {
-                  translocationSubtypes[i] = Variant.TranslocationSubtype.valueOf(subtype[i]);
-              }
-
-              deletedReference = REF;
-              byte[] refs = new byte[0];
-              pos++; //1-based start
+          } else if ( alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DUP &&
+                  (alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA || alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.ISP ||
+                  info.getValue("POS2") != null)) {
+              //translocation SV DUP or interspersed DUP
 
               if (svlen.length > 0) {
                   //0 is for reference allele
@@ -546,18 +490,14 @@ public class VCFparser extends GzFileParser<Variant> {
                           currentCopyNumber = copyNumberArray[1];
                       }
                       currentCopyNumber = Math.max(1, currentCopyNumber);
-                    //allow svlen to be negative
+                      //allow svlen to be negative
                       int altAllelelength = Math.max(Math.abs(svlen[altAlleleIndex - 1]), 1);
                     /*
-                    a translocation is decomposed into a duplication (a special translocation) and a optionally a deletion
+                    a translocation is decomposed into a duplication (a special translocation) and a deletion
                      */
-                      if (subtype[altAlleleIndex - 1].equals(Variant.TranslocationSubtype.ACCEPT.name())) {
-                          alts[altAlleleIndex - 1].setSeq(new FlexSeq(FlexSeq.Type.TRA, altAllelelength, currentCopyNumber));
-                      } else if (subtype[altAlleleIndex - 1].equals(Variant.TranslocationSubtype.REJECT.name())) {
-                          alts[altAlleleIndex - 1].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
-                      } else {
-                          throw new IllegalArgumentException("ERROR: only ACCEPT and REJECT allowed.\n" + line);
-                      }
+                      alts[altAlleleIndex - 1].setSeq(new FlexSeq(
+                              alts[altAlleleIndex - 1].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA ? FlexSeq.Type.TRA_DUP : FlexSeq.Type.ISP_DUP,
+                              altAllelelength, currentCopyNumber));
                   }
 
                   //TODO: there could be multiple SVLEN values, but for now we only use one
@@ -570,22 +510,19 @@ public class VCFparser extends GzFileParser<Variant> {
                       }
                   }
                   //pos is incremented by 1, so it becomes 1-based start
-                /*return new Variant(chr, pos, Math.abs(end[0] - pos + 1), refs, alts,
-                        genotypeArray, isGenotypePhased, variantId, FILTER, deletedReference, random, ChrString.string2ChrString(chr2), pos2, end2, end[0], subtype);
-                        */
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(end[0] - pos + 1)).
+                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(0)).
                           ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                           varId(variantId).filter(FILTER).refDeleted(deletedReference).
                           randomNumberGenerator(random).chr2(ChrString.string2ChrString(chr2)).
-                          pos2(pos2).end2(end2).end(end[0]).translocationSubtype(translocationSubtypes).build();
+                          pos2(pos2).end2(end2).isinv(isinv).traid(traid == null? null : traid[0]).build();
                   //TODO: this assumes only one alt, which might not be true
               } else {
-                  log.error("No length information for TRA:");
+                  log.error("No length information for DUP:TRA or DUP:ISP:");
                   log.error(line);
                   log.error("skipping...");
                   return null;
               }
-          } else if (alts[0].getSymbolicAllele() != null) {
+          } else {
               // imprecise variant
               log.warn("Imprecise line: " + line);
               return null;
