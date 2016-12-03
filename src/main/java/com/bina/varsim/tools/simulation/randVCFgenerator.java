@@ -4,6 +4,7 @@ import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.SampleParams;
 import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.types.variant.alt.Alt;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -84,9 +85,9 @@ abstract public class RandVCFgenerator {
      * @param geno       allele to be filled in
      */
     public void fillInSeq(Variant var, byte[] insertSeq, int geno) {
-        FlexSeq alt = var.getAlt(geno);
+        Alt alt = var.getAlt(geno);
         if (alt != null) {
-            if (alt.getType() == FlexSeq.Type.INS) {
+            if (alt.getSeqType() == FlexSeq.Type.INS) {
                 final double NSEGMENTS = 10.0;
                 // if insertion sequence is not given, we fill it in
                 int len = alt.length();
@@ -98,7 +99,7 @@ abstract public class RandVCFgenerator {
                     int randStart = rand.nextInt(insertSeq.length - segLen);
                     System.arraycopy(insertSeq, randStart, newSeq, i, Math.min(segLen, len - i));
                 }
-                alt = new FlexSeq(newSeq);
+                alt = new Alt(new FlexSeq(newSeq));
             }
 
             var.setAlt(geno, alt);
@@ -130,7 +131,7 @@ abstract public class RandVCFgenerator {
         bw.write(var.getChr().toString());
         bw.write("\t");
         // start position
-        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length()));
+        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length));
         bw.write("\t");
         // variant id
         bw.write(var.getVariantId());
@@ -153,14 +154,14 @@ abstract public class RandVCFgenerator {
         if (var.getType() == VariantOverallType.Tandem_Duplication) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         } else if (var.getType() == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         } else {
             sbStr.append("SVLEN=");
-            sbStr.append(var.getLength());
+            sbStr.append(var.getLengthString());
         }
         bw.write(sbStr.toString());
         bw.write("\t");

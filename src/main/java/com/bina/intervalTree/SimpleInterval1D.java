@@ -141,11 +141,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @return True if it intersects
      */
     public boolean intersects(Interval1D that) {
-        if (that.getRight() < this.getLeft())
-            return false;
-        if (this.getRight() < that.getLeft())
-            return false;
-        return true;
+        return intersects(that, 0, 0);
     }
 
     /**
@@ -159,18 +155,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @return True if it intersects, with the required reciprocal overlap
      */
     public boolean intersects(Interval1D that, double reciprocalRatio) {
-        if (reciprocalRatio == 0) {
-            return intersects(that);
-        }
-        // Note: The max may be able to be removed in this case, left to be safe
-        long thisLen = reciprocalRatio == 1.0 ? this.length() : (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1l);
-        long thatLen = reciprocalRatio == 1.0 ? that.length() : (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1l);
-        long overlap = Math.min(this.getRight(), that.getRight())
-                - Math.max(this.getLeft(), that.getLeft()) + 1l;
-        if (overlap >= Math.max(thisLen, thatLen)) {
-            return true;
-        }
-        return false;
+        return intersects(that, reciprocalRatio, 0);
     }
 
     /**
@@ -184,78 +169,31 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @return True if overlaps with given criterion
      */
     public boolean intersects(Interval1D that, double reciprocalRatio, int wiggle) {
-        if (wiggle == 0) {
-            return intersects(that, reciprocalRatio);
-        }
-        long len_this = reciprocalRatio == 1.0 ? this.length() : (long) Math.max(Math.ceil(this.length() * reciprocalRatio), 1l);
-        long len_that = reciprocalRatio == 1.0 ? that.length() : (long) Math.max(Math.ceil(that.length() * reciprocalRatio), 1l);
+        /*
+        //assume wiggle >= 0
+        when that.left > this.left
+                ------------------that
+        --------------this
+        min(wiggle, that.left - this.left) >= 0, this can be shifted to the right
 
-        long maxOverlap = 0;
-        long rightLim;
-        long leftLim;
+        when that.left < this.left
+        -----------that
+                --------------this
+        min(wiggle, that.left - this.left) == that.left - this.left
+        0 >= max(-wiggle, that.left - this.left) >= -wiggle, this can be shifted to the left
 
-        // adjust right limit by wiggle. wiggle is allowance of shift for current interval
-        // right limit
-        if (getRight() < that.getRight()) {
-          /*
-          if 2nd interval's end is to the right of 1st interval's end
-          shift 1st interval to the right to maximize overlap
+        when wiggle == 0,
+        no shift is allowed.
+         */
+        //guarantee that reciprocalRatio is not zero, which does not make sense for overlapping
+        reciprocalRatio = Math.max(reciprocalRatio, ((double)1/Long.MAX_VALUE));
+        long maxAllowedShift = Math.max(-wiggle, Math.min(wiggle, that.getLeft() - this.getLeft()));
+        long maxOverlap = Math.min(this.getRight() + maxAllowedShift, that.getRight()) - Math.max(this.getLeft() + maxAllowedShift, that.getLeft()) + 1l;
+        /*assumption: 0-length interval vs 0-length interval or non-zero-length vs non-zero-length
+        not good for 1-vs-0 intervals
+         */
+        return maxOverlap >= Math.max(this.length(), that.length()) * reciprocalRatio;
 
-          |-->------|--> right shift
-              |-----------|
-           */
-            rightLim = Math.min(that.getRight(), getRight() + wiggle);
-        } else {
-          /*
-          if 2nd interval's end is to the left of 1st interval's end
-          shift 1st interval to the left to maximize overlap
-
-                    <--|------<--| left shift
-              |-----------|
-           */
-            rightLim = Math.max(that.getRight(), getRight() - wiggle);
-        }
-        leftLim = rightLim - length() + 1l;
-
-        //TODO: make overlap calculation a private method
-        long overlap = Math.min(rightLim, that.getRight())
-                - Math.max(leftLim, that.getLeft()) + 1l;
-
-        maxOverlap = Math.max(maxOverlap, overlap);
-
-        // left limit
-        //TODO: can we only calculate overlap for left shift and right shift without respect to left/right limit?
-        if (getLeft() < that.getLeft()) {
-          /*
-          if 2nd interval's start is to the right of 1st interval's start
-          shift 1st interval to the right to maximize overlap
-
-          |-->------|--> right shift
-              |-----------|
-           */
-            leftLim = Math.min(that.getLeft(), getLeft() + wiggle);
-        } else {
-          /*
-          if 2nd interval's start is to the left of 1st interval's end
-          shift 1st interval to the left to maximize overlap
-
-                    <--|------<--| left shift
-              |-----------|
-           */
-            leftLim = Math.max(that.getLeft(), getLeft() - wiggle);
-        }
-        rightLim = leftLim + length() - 1l;
-
-        overlap = Math.min(rightLim, that.getRight())
-                - Math.max(leftLim, that.getLeft()) + 1l;
-
-        maxOverlap = Math.max(maxOverlap, overlap);
-
-        //overlap must occupy over a fraction of both intervals
-        if (maxOverlap >= Math.max(len_this, len_that)) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -307,7 +245,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof SimpleInterval1D)) return false;
 
         SimpleInterval1D that = (SimpleInterval1D) o;
 

@@ -14,6 +14,9 @@ import static com.bina.varsim.tools.simulation.VCF2diploid.DELETED_BASE;
  TODO: MapRecord contains essentially same information as Variant, these two classes can be consolidated.
  */
 public class MapRecord {
+    public enum Feature {
+        SEQ, DEL, INS, INV, DUP, DUP_TANDEM;
+    }
     //len for length of alternative allele
     public int len = 0;
     public String hostChr = "";
@@ -21,7 +24,7 @@ public class MapRecord {
     public String refChr = "";
     public int refPos = 0;
     public boolean isForward = true; // true is forward
-    public String feature = ".";
+    public Feature feature = null;
     public String varId = ".";
 
     private MapRecord() {}
@@ -48,6 +51,7 @@ public class MapRecord {
         MapRecord currentMapRecord = new MapRecord();
         currentMapRecord.hostChr = chr_name;
         currentMapRecord.refChr = ref_chr_name;
+        int cn = 1;
 
         // compute what the first line is and store as object
 
@@ -68,20 +72,40 @@ public class MapRecord {
                 case INS:
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
                     currentMapRecord.refPos = hostRefIdx.refIdx - 1;
-                    currentMapRecord.feature = "INS";
+                    currentMapRecord.feature = Feature.INS;
                     currentMapRecord.isForward = true;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.len = insertion.varLength();
                     currentMapRecord.varId = varId;
 
                     break;
-                case TRA:
+                case TRA_DUP:
+                case ISP_DUP:
+                    // need to replicate several blocks
+                    cn = insertion.getCopyNumber();
+
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
-                    currentMapRecord.refPos = Math.min(insertion.getPos2(), insertion.getEnd2()) - 1;
+                    currentMapRecord.refPos = insertion.getPos2() - 1;
                     currentMapRecord.refChr = insertion.getChr2().toString();
-                    currentMapRecord.feature = "TRA";
-                    currentMapRecord.isForward = insertion.getPos2() <= insertion.getEnd2() ? true : false;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.feature = Feature.DUP;
+                    currentMapRecord.isForward = !insertion.isInversed();
+                    currentMapRecord.len = insertion.length();
                     currentMapRecord.varId = varId;
+
+                    // iterate
+                    for (int i = 1; i < cn; i++) {
+                        hostRefIdx.adjust_idx(currentMapRecord);
+                        sb.append(currentMapRecord);
+                        sb.append('\n');
+                        currentMapRecord = new MapRecord();
+                        currentMapRecord.hostChr = chr_name;
+                        currentMapRecord.refChr = insertion.getChr2().toString();
+                        currentMapRecord.hostPos = hostRefIdx.hostIdx;
+                        currentMapRecord.refPos = insertion.getPos2() - 1;
+                        currentMapRecord.feature = Feature.DUP;
+                        currentMapRecord.isForward = !insertion.isInversed();
+                        currentMapRecord.len = insertion.length();
+                        currentMapRecord.varId = varId;
+                    }
                     break;
                 case INV:
                     // TODO: treat inversion like MNP
@@ -92,22 +116,22 @@ public class MapRecord {
                     before the event?
                     */
                     currentMapRecord.refPos = hostRefIdx.refIdx - 1;
-                    currentMapRecord.feature = "INV";
+                    currentMapRecord.feature = Feature.INV;
                     //why direction is false (negative strand)?
                     currentMapRecord.isForward = false;
-                    currentMapRecord.len = insertion.var_length();
+                    currentMapRecord.len = insertion.varLength();
                     currentMapRecord.varId = varId;
 
                     break;
-                case DUP:
+                case TANDEM_DUP:
                     // need to replicate several blocks
-                    int cn = insertion.getCopyNumber();
+                    cn = insertion.getCopyNumber();
 
                     // first build one
                     currentMapRecord.hostPos = hostRefIdx.hostIdx;
                     currentMapRecord.refPos = hostRefIdx.refIdx - 1;
-                    currentMapRecord.feature = "DUP_TANDEM";
-                    currentMapRecord.isForward = true;
+                    currentMapRecord.feature = Feature.DUP_TANDEM;
+                    currentMapRecord.isForward = !insertion.isInversed();
                     currentMapRecord.len = insertion.length();
                     currentMapRecord.varId = varId;
 
@@ -121,7 +145,7 @@ public class MapRecord {
                         currentMapRecord.refChr = ref_chr_name;
                         currentMapRecord.hostPos = hostRefIdx.hostIdx;
                         currentMapRecord.refPos = hostRefIdx.refIdx - 1;
-                        currentMapRecord.feature = "DUP_TANDEM";
+                        currentMapRecord.feature = Feature.DUP_TANDEM;
                         currentMapRecord.isForward = true;
                         currentMapRecord.len = insertion.length();
                         currentMapRecord.varId = varId;
@@ -144,7 +168,7 @@ public class MapRecord {
             // deleted base
             currentMapRecord.hostPos = hostRefIdx.hostIdx - 1;
             currentMapRecord.refPos = hostRefIdx.refIdx;
-            currentMapRecord.feature = "DEL";
+            currentMapRecord.feature = Feature.DEL;
             currentMapRecord.isForward = true;
             /*
             although length is 1 here, currentMapRecord is just the beginning
@@ -159,7 +183,7 @@ public class MapRecord {
             // regular sequence
             currentMapRecord.hostPos = hostRefIdx.hostIdx;
             currentMapRecord.refPos = hostRefIdx.refIdx;
-            currentMapRecord.feature = "SEQ";
+            currentMapRecord.feature = Feature.SEQ;
             currentMapRecord.isForward = true;
             /*
             although length is 1 here, currentMapRecord is just the beginning
@@ -183,7 +207,7 @@ public class MapRecord {
         } else {
             joiner.add("-");
         }
-        joiner.add(feature);
+        joiner.add(feature.toString());
         joiner.add(varId);
 
         return joiner.toString();

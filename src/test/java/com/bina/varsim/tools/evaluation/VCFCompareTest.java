@@ -118,4 +118,59 @@ public class VCFCompareTest {
   public void canonicalizationTest3() throws IOException {
     universalTestMethod("src/test/resources/validationTest/canonicalizationTest3");
   }
+  /**
+   * compare two VCFs with two same balanced, nonreciprocal intrachromosomal translocations
+   * (cut-and-paste). Validation will be done by evaluating breakend.
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationOnIdenticalBalancedNonreciprocalTranslocation() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/breakendEvaluationOnIdenticalBalancedNonreciprocalTranslocation");
+  }
+  /**
+   * compare two VCFs with one insertion and one deletion
+   * @throws IOException
+   */
+  @Test
+  public void insertionVsInsertionTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/insertionVsInsertionTest", new String[]{"-wig", "20", "-over", "0.2"});
+  }
+  /**
+   * compare two VCFs with 2 translocations, same source of duplication, different insertion positions
+   * let it fail with a small wiggle setting
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentInsertionsFailWithSmallWiggle() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentInsertionFailWithSmallWiggle", new String[]{"-wig", "1"});
+  }
+  /**
+   * compare two VCFs with 2 translocations, same source of duplication, different insertion positions
+   * let it succeed with a large wiggle
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentInsertionsSucceedWithLargeWiggle() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentInsertionSucceedWithLargeWiggle", new String[]{"-wig", "15"});
+  }
+  /**
+   * compare two VCFs with 2 translocations, different sources of duplication, same insertion positions
+   * duplications come from two chromosomes, so must fail
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentDuplicationChromosomes() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentDuplicatedSequences");
+  }
+  /**
+   * compare two VCFs with 2 translocations, same sources of duplication, same insertion positions
+   * duplications are in different orientations
+   * the two translocations (aka interspersed duplications) should not match even if wiggle is very
+   * large, because of different orientations in breakend representations.
+   * @throws IOException
+   */
+  @Test
+  public void breakendEvaluationDifferentDuplicationOrientations() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentOrientationsAndLargeWiggle", new String[]{"-wig", "100"});
+  }
 }

@@ -32,6 +32,12 @@ public class VCFInfo {
         }
     }
 
+    /**
+     * return value indexed by id, if id is absent
+     * return null
+     * @param id
+     * @return
+     */
     public Object getValue(final String id) {
         return this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue() : null;
     }
@@ -97,12 +103,11 @@ public class VCFInfo {
      * spec)
      * TODO: replace hard-coded infoID-type mapping with VCF header defined mapping
      *
-     "##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Length of variant\">\n" +
-     "##INFO=<ID=POS2,Number=A,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
-     "##INFO=<ID=END2,Number=A,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
+     "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Length of variant\">\n" +
+     "##INFO=<ID=POS2,Number=1,Type=Integer,Description=\"1-based Start position of source sequence\">\n" +
+     "##INFO=<ID=END2,Number=1,Type=Integer,Description=\"1-based End position of source sequence\">\n" +
      "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
-     "##INFO=<ID=CHR2,Number=A,Type=String,Description=\"Chromosome of source sequence\">\n" +
-     "##INFO=<ID=TRASUBTYPE,Number=A,Type=String,Description=\"Subtype of translocation event:" +
+     "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome of source sequence\">\n" +
      " source sequence deleted (SELFISHNESS); source sequence accepted (CHIVALRY).\">\n"
 
      * @param infoID
@@ -112,8 +117,10 @@ public class VCFInfo {
         if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2") || infoID.equals("END")
                 || infoID.equals("DP")) {
             return "Integer";
-        } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRASUBTYPE")) {
+        } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRAID")) {
             return "String";
+        } else if (infoID.equals("ISINV")) {
+            return "Boolean";
         } else {
             //unrecognized INFO ID, retrun String for now
             return "String";
