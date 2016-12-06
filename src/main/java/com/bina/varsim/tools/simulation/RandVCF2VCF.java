@@ -24,7 +24,7 @@ import java.util.*;
  */
 
 
-public class RandVCF2VCF extends randVCFgenerator {
+public class RandVCF2VCF extends RandVCFgenerator {
     static final int SEED_ARG = 333;
     static final int NUM_SNP_ARG = 3000000;
     static final int NUM_INS_ARG = 100000;
@@ -91,7 +91,7 @@ public class RandVCF2VCF extends randVCFgenerator {
         ChrString chr = var.getChr();
 
         // determine whether this one is novel
-        double rand_num = _rand.nextDouble();
+        double rand_num = rand.nextDouble();
         if (rand_num <= ratio_novel) {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
@@ -105,7 +105,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            int rand_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            int rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
             while (!var.setNovelPosition(rand_pos, ref)) {
                 if (time_out > 100) {
                     log.warn("Error: cannot set novel position: " + (end_val - start_val + 1));
@@ -114,7 +114,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                     break;
                 }
 
-                rand_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 //log.info(time_out + " : " + var.getReferenceAlleleLength());
 
                 time_out++;
@@ -157,7 +157,7 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         SimpleReference ref = new SimpleReference(reference_filename);
 
-        _rand = new Random(seed);
+        rand = new Random(seed);
 
         // read through VCF file and count the
         log.info("Counting variants and assigning genotypes");
@@ -180,8 +180,8 @@ public class RandVCF2VCF extends randVCFgenerator {
         variantCountsToSample.put(VariantType.MNP, num_MNP);
         variantCountsToSample.put(VariantType.Complex, num_COMPLEX);
 
-        VCFparser parser_one = new VCFparser(vcf_filename, null, false, _rand);
-        Variant prev_var = new Variant(_rand);
+        VCFparser parser_one = new VCFparser(vcf_filename, null, false, rand);
+        Variant prev_var = new Variant(rand);
 
         // read though once to count the totals, this is so we don't have
         // to store an array of the variants for sampling without replacement
@@ -195,7 +195,7 @@ public class RandVCF2VCF extends randVCFgenerator {
             ChrString chr = var.getChr();
             int num_alt = var.getNumberOfAlternativeAlleles();
 
-            Genotypes geno = new Genotypes(chr, gender, num_alt, _rand, prop_het);
+            Genotypes geno = new Genotypes(chr, gender, num_alt, rand, prop_het);
             selected_geno.add(geno);
 
             if (prev_var.equals(var)) {
@@ -247,9 +247,9 @@ public class RandVCF2VCF extends randVCFgenerator {
         System.out
                 .print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
 
-        final Map<VariantType, Sample_params> variantTypeParams = new HashMap<>();
+        final Map<VariantType, SampleParams> variantTypeParams = new HashMap<>();
         for (final VariantType variantType : variantTypesToSample) {
-            variantTypeParams.put(variantType, new Sample_params());
+            variantTypeParams.put(variantType, new SampleParams());
         }
 
         BufferedWriter out = null;
@@ -261,8 +261,8 @@ public class RandVCF2VCF extends randVCFgenerator {
 
         int geno_idx = 0;
 
-        parser_one = new VCFparser(vcf_filename, null, false, _rand);
-        prev_var = new Variant(_rand);
+        parser_one = new VCFparser(vcf_filename, null, false, rand);
+        prev_var = new Variant(rand);
 
         // Read through it a second time, this time we do the sampling
         while (parser_one.hasMoreInput()) {
@@ -301,7 +301,7 @@ public class RandVCF2VCF extends randVCFgenerator {
                 }
                 final VariantType variantType = var.getType(geno.geno[i]);
                 if (variantTypeParams.containsKey(variantType)) {
-                    geno.geno[i] = sample_genotype(geno.geno[i], variantTypeParams.get(variantType),
+                    geno.geno[i] = sampleGenotype(geno.geno[i], variantTypeParams.get(variantType),
                             variantCountsToSample.get(variantType), variantTypeCounts.get(variantType));
                 }
             }
