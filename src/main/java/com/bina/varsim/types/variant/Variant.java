@@ -615,7 +615,7 @@ public class Variant implements Comparable<Variant>{
                 return VariantOverallType.Inversion;
             }
             if (variantTypes.contains(VariantType.Tandem_Duplication)) {
-                return VariantOverallType.Tandem_Duplication;
+                return VariantOverallType.TandemDup;
             }
             if (variantTypes.contains(VariantType.Deletion)) {
                 return VariantOverallType.Deletion;
@@ -624,13 +624,13 @@ public class Variant implements Comparable<Variant>{
                 return VariantOverallType.Insertion;
             }
             if (variantTypes.contains(VariantType.Translocation_Deletion)) {
-                return VariantOverallType.Translocation_Deletion;
+                return VariantOverallType.TransDel;
             }
             if (variantTypes.contains(VariantType.Translocation_Duplication)) {
-                return VariantOverallType.Translocation_Duplication;
+                return VariantOverallType.TransDup;
             }
             if (variantTypes.contains(VariantType.Interspersed_Duplication)) {
-                return VariantOverallType.Interspersed_Duplication;
+                return VariantOverallType.InterDup;
             }
         }
 
@@ -937,11 +937,11 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == VariantOverallType.Tandem_Duplication || getType() == VariantOverallType.Interspersed_Duplication || getType() == VariantOverallType.Translocation_Duplication) {
+        if (getType() == VariantOverallType.TandemDup || getType() == VariantOverallType.InterDup || getType() == VariantOverallType.TransDup) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.Translocation_Deletion) {
+        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.TransDel) {
             sbStr.append("SVTYPE=DEL;");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
