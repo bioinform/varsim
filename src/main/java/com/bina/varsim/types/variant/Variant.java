@@ -939,10 +939,14 @@ public class Variant implements Comparable<Variant>{
         // INFO
         if (getType() == VariantOverallType.Tandem_Duplication || getType() == VariantOverallType.Interspersed_Duplication || getType() == VariantOverallType.Translocation_Duplication) {
             sbStr.append("SVTYPE=DUP;");
+            if (traid != null)
+                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.Translocation_Deletion) {
             sbStr.append("SVTYPE=DEL;");
+            if (traid != null)
+                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else if (getType() == VariantOverallType.Inversion) {
