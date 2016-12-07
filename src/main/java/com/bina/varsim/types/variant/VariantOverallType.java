@@ -18,7 +18,7 @@ public enum VariantOverallType implements INonReference{
         return nonReference;
     }
 
-    public static VariantOverallType fromString(String s){^
+    public static VariantOverallType fromString(String s){
         for (VariantOverallType type : VariantOverallType.values()) {
             if(s.equalsIgnoreCase(type.toString())){
                 return type;
