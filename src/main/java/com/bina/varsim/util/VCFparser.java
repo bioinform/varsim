@@ -334,6 +334,12 @@ public class VCFparser extends GzFileParser<Variant> {
           byte[] refs = new byte[0];
           pos++; //1-based start
 
+          if (Alt.SVType.SVSubtype.TRA.equals(alts[0].getSymbolicAllele().getMinor())) {
+            if (traid == null || traid.length == 0) {
+                throw new IllegalArgumentException("ERROR: <*:TRA> must have TRAID in INFO field.\n" + line);
+            }
+          }
+
           if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INV) {
               // inversion SV
               if (svlen.length > 0) {
