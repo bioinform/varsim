@@ -173,4 +173,14 @@ public class VCFCompareTest {
   public void breakendEvaluationDifferentDuplicationOrientations() throws IOException {
     universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalWithDifferentOrientationsAndLargeWiggle", new String[]{"-wig", "100"});
   }
+  /**
+   * validate one reciprocal balanced translocation with another
+   *
+   * there are 4 records
+   *
+   */
+  @Test
+  public void breakendEvaluationNonReciprocalBalancedWithLargeWiggle() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalBalancedWithLargeWiggle", new String[]{"-wig", "10"});
+  }
 }
