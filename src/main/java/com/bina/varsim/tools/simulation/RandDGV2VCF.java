@@ -57,6 +57,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
     GenderType gender = GenderType.MALE;
     @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
     double propHet = PROP_HET_ARG;
+    @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
+    String outFilename = null;
 
     private final Set<VariantType> variantTypesInDGV = EnumSet.of(VariantType.Insertion, VariantType.Deletion,
             VariantType.Tandem_Duplication, VariantType.Inversion);
@@ -76,7 +78,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
     /**
      * @param args command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         RandDGV2VCF runner = new RandDGV2VCF();
         runner.run(args);
@@ -108,11 +110,11 @@ public class RandDGV2VCF extends RandVCFgenerator {
         // count the number of variants
         log.info("Counting variants and assigning genotypes");
 
-        int total_num_other = 0;
-        int total_num = 0;
-        int total_lines = 0;
-        int total_duplicate = 0;
-        int total_out_of_range = 0;
+        int totalNumOther = 0;
+        int totalNum = 0;
+        int totalLines = 0;
+        int totalDuplicate = 0;
+        int totalOutOfRange = 0;
         DGVparser dgVparser = new DGVparser(dgvFilename, reference, rand);
         Variant prevVar = new Variant(rand);
 
@@ -134,11 +136,11 @@ public class RandDGV2VCF extends RandVCFgenerator {
 
             Genotypes geno = new Genotypes(chr, gender, numberOfAlternativeAlleles, rand, propHet);
             selectedGenotypes.add(geno);
-            total_lines++;
+            totalLines++;
 
             if (prevVar.getPos() == var.getPos()) {
                 // duplicate
-                total_duplicate++;
+                totalDuplicate++;
                 continue;
             }
 
@@ -146,7 +148,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
 
             if (var.maxLen() > maxLengthLim
                     || var.minLen() < minLengthLim) {
-                total_out_of_range++;
+                totalOutOfRange++;
                 continue;
             }
 
@@ -156,46 +158,46 @@ public class RandDGV2VCF extends RandVCFgenerator {
                 if (variantCounts.containsKey(variantType)) {
                     variantCounts.put(variantType, variantCounts.get(variantType) + 1);
                 } else {
-                    total_num_other++;
+                    totalNumOther++;
                 }
             }
-            total_num++;
+            totalNum++;
         }
 
         for (final Map.Entry<VariantType, Integer> entry : variantCounts.entrySet()) {
             log.info(entry.getKey().name() + entry.getValue());
         }
-        log.info("total_num_skipped: " + total_num_other);
-        log.info("total_num: " + total_num);
-        log.info("total_duplicate: " + total_duplicate);
-        log.info("total_out_of_range: " + total_out_of_range);
-        log.info("total_lines: " + total_lines);
+        log.info("total_num_skipped: " + totalNumOther);
+        log.info("total_num: " + totalNum);
+        log.info("total_duplicate: " + totalDuplicate);
+        log.info("total_out_of_range: " + totalOutOfRange);
+        log.info("total_lines: " + totalLines);
 
         return variantCounts;
     }
 
     void sampleFromDGV(final String dgvFilename, final SimpleReference reference, final byte[] insertSeq,
-                       final List<Genotypes> selectedGenotypes, final Map<VariantType, Integer> variantCounts) {
-        // write the header
-        System.out.print("##fileformat=VCFv4.0\n");
-        System.out
-                .print("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
-        System.out
-                .print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
+                       final List<Genotypes> selectedGenotypes, final Map<VariantType, Integer> variantCounts,
+                       final OutputStream outputStream) throws IOException {
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
 
-        BufferedWriter out = null;
-        try {
-            out = new BufferedWriter(new OutputStreamWriter(System.out));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        final String VCF_HEADER = "##fileformat=VCFv4.0\n" +
+                "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n";
+        out.write(VCF_HEADER);
 
         final Map<VariantType, SampleParams> variantParams = new EnumMap(VariantType.class);
         for (final VariantType variantType : variantTypesInDGV) {
             variantParams.put(variantType, new SampleParams());
         }
 
-        int geno_idx = 0;
+        final Map<VariantType, Integer> maxCounts = new EnumMap(VariantType.class);
+        maxCounts.put(VariantType.Insertion, numIns);
+        maxCounts.put(VariantType.Deletion, numDel);
+        maxCounts.put(VariantType.Inversion, numInv);
+        maxCounts.put(VariantType.Tandem_Duplication, numDup);
+
+        int genoIdx = 0;
         final DGVparser dgVparser = new DGVparser(dgvFilename, reference, rand);
         Variant prevVar = new Variant(rand);
 
@@ -206,8 +208,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
                 continue;
             }
 
-            Genotypes geno = selectedGenotypes.get(geno_idx);
-            geno_idx++;
+            Genotypes geno = selectedGenotypes.get(genoIdx);
+            genoIdx++;
 
             if (prevVar.getPos() == var.getPos()) {
                 // duplicate
@@ -226,26 +228,17 @@ public class RandDGV2VCF extends RandVCFgenerator {
                 final VariantType variantType = var.getType(geno.geno[i]);
                 if (variantParams.containsKey(variantType)) {
                     geno.geno[i] = sampleGenotype(geno.geno[i], variantParams.get(variantType),
-                            numIns, variantCounts.get(variantType), outputAll);
+                            maxCounts.get(variantType), variantCounts.get(variantType), outputAll);
                 }
             }
 
             // write out variant
-            try {
-                if (geno.isNonRef()) {
-                    randOutputVcfRecord(out, var, reference, insertSeq, ratioNovel, geno);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (geno.isNonRef()) {
+                randOutputVcfRecord(out, var, reference, insertSeq, ratioNovel, geno);
             }
         }
 
-        try {
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            log.error(e);
-        }
+        out.close();
     }
 
     // outputs VCF record with random phase
@@ -299,7 +292,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
     }
 
 
-    public void run(String[] args) {
+    public void run(String[] args) throws IOException {
         String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
         String usage = "Outputs VCF to stdout. Randomly samples variants from DGV flat file.\n";
 
@@ -329,17 +322,17 @@ public class RandDGV2VCF extends RandVCFgenerator {
         rand = new Random(seed);
 
         log.info("Reading reference");
-        final SimpleReference ref = new SimpleReference(referenceFilename);
+        final SimpleReference reference = new SimpleReference(referenceFilename);
 
         // read in the insert sequences
         log.info("Reading insert sequences");
         final byte[] insertSeq = fileToByteArray(new File(insertFilename));
 
         final List<Genotypes> selectedGenotypes = new ArrayList<>();
-        final Map<VariantType, Integer> variantCounts = countVariantsInDGV(dgvFilename, ref, selectedGenotypes);
+        final Map<VariantType, Integer> variantCounts = countVariantsInDGV(dgvFilename, reference, selectedGenotypes);
 
-        sampleFromDGV(dgvFilename, ref, insertSeq, selectedGenotypes, variantCounts);
-
+        final OutputStream outputStream = (outFilename != null) ? new FileOutputStream(outFilename) : System.out;
+        sampleFromDGV(dgvFilename, reference, insertSeq, selectedGenotypes, variantCounts, outputStream);
     }
 
 }
