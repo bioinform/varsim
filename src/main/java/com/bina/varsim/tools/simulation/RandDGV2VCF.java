@@ -198,12 +198,12 @@ public class RandDGV2VCF extends RandVCFgenerator {
         maxCounts.put(VariantType.Tandem_Duplication, numDup);
 
         int genoIdx = 0;
-        final DGVparser dgVparser = new DGVparser(dgvFilename, reference, rand);
+        final DGVparser dgvParser = new DGVparser(dgvFilename, reference, rand);
         Variant prevVar = new Variant(rand);
 
         // Read through and do the sampling
-        while (dgVparser.hasMoreInput()) {
-            Variant var = dgVparser.parseLine();
+        while (dgvParser.hasMoreInput()) {
+            Variant var = dgvParser.parseLine();
             if (var == null) {
                 continue;
             }
@@ -230,6 +230,9 @@ public class RandDGV2VCF extends RandVCFgenerator {
                     geno.geno[i] = sampleGenotype(geno.geno[i], variantParams.get(variantType),
                             maxCounts.get(variantType), variantCounts.get(variantType), outputAll);
                 }
+            }
+            if (numIters == 1) {
+                geno.geno[1] = geno.geno[0];
             }
 
             // write out variant
