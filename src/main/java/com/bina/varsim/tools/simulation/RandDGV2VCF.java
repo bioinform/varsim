@@ -84,27 +84,6 @@ public class RandDGV2VCF extends RandVCFgenerator {
         runner.run(args);
     }
 
-    byte[] fileToByteArray(final File file) {
-        byte[] array = null;
-
-        try {
-            FileReader fileReader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                line = line.trim();
-                sb.append(line);
-            }
-            bufferedReader.close();
-            array = sb.toString().getBytes("US-ASCII");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return array;
-    }
-
     Map<VariantType, Integer> countVariantsInDGV(final String dgvFilename, final SimpleReference reference,
                                                  final List<Genotypes> selectedGenotypes) {
         // count the number of variants

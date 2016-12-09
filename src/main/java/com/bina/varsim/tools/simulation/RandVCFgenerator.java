@@ -6,8 +6,7 @@ import com.bina.varsim.types.SampleParams;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Random;
 
 
@@ -29,6 +28,32 @@ abstract public class RandVCFgenerator {
      */
     public RandVCFgenerator(long seed) {
         rand = new Random(seed);
+    }
+
+    /**
+     *
+     * @param  file Sequence file
+     * @return Sequence file as a byte array
+     */
+    byte[] fileToByteArray(final File file) {
+        byte[] array = null;
+
+        try {
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                line = line.trim();
+                sb.append(line);
+            }
+            bufferedReader.close();
+            array = sb.toString().getBytes("US-ASCII");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return array;
     }
 
 

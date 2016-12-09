@@ -297,10 +297,10 @@ public class RandVCF2VCF extends RandVCFgenerator {
         rand = new Random(seed);
 
         final List<Genotypes> selectedGeno = new ArrayList<>();
-        final Map<VariantType, Integer> variantTypeCounts = countVariants(vcfFilename, selectedGeno);
+        final Map<VariantType, Integer> variantCounts = countVariants(vcfFilename, selectedGeno);
 
         final OutputStream outputStream = (outFilename != null) ? new FileOutputStream(outFilename) : System.out;
-        sampleFromVCF(vcfFilename, reference, selectedGeno, variantTypeCounts, outputStream);
+        sampleFromVCF(vcfFilename, reference, selectedGeno, variantCounts, outputStream);
     }
 
 }
