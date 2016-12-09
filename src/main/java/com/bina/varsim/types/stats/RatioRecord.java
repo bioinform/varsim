@@ -14,7 +14,7 @@ public class RatioRecord {
     private int TN = 0; // True Positive
     @JsonProperty(value = "_FN")
     private int FN = 0; // False Positive
-    @JsonProperty(value = "T")
+    @JsonProperty(value = "_T")
     private int T = 0; // True = True Positive + False Negative
 
     // these are inclusive

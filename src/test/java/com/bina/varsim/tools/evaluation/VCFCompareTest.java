@@ -40,6 +40,7 @@ public class VCFCompareTest {
     Path outputTruePositive = Paths.get(wd.getCanonicalPath(), "test_TP.vcf");
     Path outputUnknownFalsePositive = Paths.get(wd.getCanonicalPath(), "test_unknown_FP.vcf");
     Path outputUnknownTruePositive = Paths.get(wd.getCanonicalPath(), "test_unknown_TP.vcf");
+    Path outputJson = Paths.get(wd.getCanonicalPath(), "test_report.json");
 
     //example: java -jar ~/Downloads/varsim_0.6.3/VarSim.jar vcfcompare -true_vcf simu.truth.vcf -prefix try small.lumpy.vcf
     String[] args = new String[]{
@@ -53,6 +54,8 @@ public class VCFCompareTest {
     assertTrue(FileUtils.contentEquals(outputTruePositive.toFile(), new File(expectedTruePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownFalsePositive.toFile(), new File(expectedUnknownFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownTruePositive.toFile(), new File(expectedUnknownTruePositive)));
+
+    outputJson.toFile().renameTo(new File(directory, "test_report.json"));
   }
 
   /**

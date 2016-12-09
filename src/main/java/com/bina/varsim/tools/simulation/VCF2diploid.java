@@ -16,7 +16,6 @@ import org.kohsuke.args4j.Option;
 
 import java.io.*;
 import java.util.*;
-import com.bina.varsim.types.MapRecord.Feature.*;
 
 /**
  * Class to construct diploid genome from genome reference and genome variants
@@ -724,7 +723,7 @@ public class VCF2diploid {
                     // INFO
                     // TODO write len here
                     StringBuilder sbStr = new StringBuilder();
-                    if (currVar.getType() == VariantOverallType.Tandem_Duplication) {
+                    if (currVar.getType() == VariantOverallType.TandemDup) {
                         sbStr.append("SVTYPE=DUP;");
                         sbStr.append("SVLEN=");
                         sbStr.append(currVar.getLengthString());
@@ -736,7 +735,7 @@ public class VCF2diploid {
                         sbStr.append("SVTYPE=INV;");
                         sbStr.append("SVLEN=");
                         sbStr.append(currVar.getLengthString());
-                    } else if (currVar.getType() == VariantOverallType.Translocation_Duplication || currVar.getType() == VariantOverallType.Interspersed_Duplication) {
+                    } else if (currVar.getType() == VariantOverallType.TransDup || currVar.getType() == VariantOverallType.InterDup) {
                         sbStr.append("SVTYPE=DUP;");
                         if (currVar.getTraid() != null) {
                             sbStr.append("TRAID=");
@@ -759,7 +758,11 @@ public class VCF2diploid {
                             sbStr.append(";");
                             sbStr.append("ISINV");
                         }
-                    } else if (currVar.getType() == VariantOverallType.Translocation_Deletion) {
+                        if (currVar.getTraid() != null) {
+                            sbStr.append(";TRAID=");
+                            sbStr.append(currVar.getTraid());
+                        }
+                    } else if (currVar.getType() == VariantOverallType.TransDel) {
                         sbStr.append("SVTYPE=DEL;");
                         if (currVar.getTraid() != null) {
                             sbStr.append("TRAID=");

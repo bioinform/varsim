@@ -18,7 +18,7 @@ import java.util.Random;
  * @author johnmu
  */
 
-public class RandDGV2VCF extends randVCFgenerator {
+public class RandDGV2VCF extends RandVCFgenerator {
     static final int SEED_ARG = 333;
     static final int NUM_INS_ARG = 2000;
     static final int NUM_DEL_ARG = 2000;
@@ -87,7 +87,7 @@ public class RandDGV2VCF extends randVCFgenerator {
         ChrString chr = var.getChr();
 
         // determine whether this one is novel
-        double rand_num = _rand.nextDouble();
+        double rand_num = rand.nextDouble();
         if (rand_num <= ratio_novel) {
             // make the variant novel, simply modify it
             // TODO maybe modifying it is bad
@@ -102,7 +102,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
 
             int time_out = 0;
-            int new_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
+            int new_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
             while (!var.setNovelPosition(new_pos, ref)) {
                 if (time_out > 100) {
                     log.warn("Error, cannot set novel position: " + (end_val - start_val + 1));
@@ -113,7 +113,7 @@ public class RandDGV2VCF extends randVCFgenerator {
 
                 log.info(time_out + " : " + new_pos + " : " + var.getReferenceAlleleLength());
 
-                new_pos = _rand.nextInt(end_val - start_val + 1) + start_val + 1;
+                new_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
                 time_out++;
             }
 
@@ -157,7 +157,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             System.exit(1);
         }
 
-        _rand = new Random(seed);
+        rand = new Random(seed);
 
         log.info("Reading reference");
         SimpleReference ref = new SimpleReference(reference_filename);
@@ -195,8 +195,8 @@ public class RandDGV2VCF extends randVCFgenerator {
         int total_lines = 0;
         int total_duplicate = 0;
         int total_out_of_range = 0;
-        DGVparser parser_one = new DGVparser(dgv_filename, ref, _rand);
-        Variant prev_var = new Variant(_rand);
+        DGVparser parser_one = new DGVparser(dgv_filename, ref, rand);
+        Variant prev_var = new Variant(rand);
 
         // Read through a first time to generate the counts for sampling without replacement
         while (parser_one.hasMoreInput()) {
@@ -209,7 +209,7 @@ public class RandDGV2VCF extends randVCFgenerator {
             ChrString chr = var.getChr();
             int numberOfAlternativeAlleles = var.getNumberOfAlternativeAlleles();
 
-            Genotypes geno = new Genotypes(chr, gender, numberOfAlternativeAlleles, _rand, prop_het);
+            Genotypes geno = new Genotypes(chr, gender, numberOfAlternativeAlleles, rand, prop_het);
             selected_geno.add(geno);
             total_lines++;
 
@@ -283,14 +283,14 @@ public class RandDGV2VCF extends randVCFgenerator {
             e.printStackTrace();
         }
 
-        Sample_params INS_params = new Sample_params();
-        Sample_params DEL_params = new Sample_params();
-        Sample_params DUP_params = new Sample_params();
-        Sample_params INV_params = new Sample_params();
+        SampleParams INS_params = new SampleParams();
+        SampleParams DEL_params = new SampleParams();
+        SampleParams DUP_params = new SampleParams();
+        SampleParams INV_params = new SampleParams();
 
         int geno_idx = 0;
-        parser_one = new DGVparser(dgv_filename, ref, _rand);
-        prev_var = new Variant(_rand);
+        parser_one = new DGVparser(dgv_filename, ref, rand);
+        prev_var = new Variant(rand);
 
 
         // Read through and do the sampling
@@ -327,19 +327,19 @@ public class RandDGV2VCF extends randVCFgenerator {
                 }
                 switch (var.getType(geno.geno[i])) {
                     case Insertion:
-                        geno.geno[i] = sample_genotype(geno.geno[i], INS_params,
+                        geno.geno[i] = sampleGenotype(geno.geno[i], INS_params,
                                 num_INS, total_num_INS, output_all);
                         break;
                     case Deletion:
-                        geno.geno[i] = sample_genotype(geno.geno[i], DEL_params,
+                        geno.geno[i] = sampleGenotype(geno.geno[i], DEL_params,
                                 num_DEL, total_num_DEL, output_all);
                         break;
                     case Tandem_Duplication:
-                        geno.geno[i] = sample_genotype(geno.geno[i], DUP_params,
+                        geno.geno[i] = sampleGenotype(geno.geno[i], DUP_params,
                                 num_DUP, total_num_DUP, output_all);
                         break;
                     case Inversion:
-                        geno.geno[i] = sample_genotype(geno.geno[i], INV_params,
+                        geno.geno[i] = sampleGenotype(geno.geno[i], INV_params,
                                 num_INV, total_num_INV, output_all);
                         break;
                     default:
