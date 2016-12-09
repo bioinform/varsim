@@ -6,10 +6,7 @@ import com.bina.varsim.tools.VCFstats;
 import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
 import com.bina.varsim.tools.evaluation.VCFcompare;
-import com.bina.varsim.tools.simulation.RandBED2VCF;
-import com.bina.varsim.tools.simulation.RandDGV2VCF;
-import com.bina.varsim.tools.simulation.RandVCF2VCF;
-import com.bina.varsim.tools.simulation.VCF2diploid;
+import com.bina.varsim.tools.simulation.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -86,6 +83,8 @@ public class VarSim {
             case "longislnd_liftover":
                 new LongISLNDReadMapLiftOver().run(pass_args);
                 break;
+            case "randsequencevcf":
+                new RandSequenceVCF().run(pass_args);
             default:
                 log.error("Unknown tool: " + args[0]);
                 System.err.println(usage);
