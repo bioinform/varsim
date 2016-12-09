@@ -15,17 +15,20 @@ public class RandSequenceVCF extends RandVCFgenerator {
     private final static Logger log = Logger.getLogger(RandSequenceVCF.class.getName());
 
     static final int SEED_DEFAULT = 3333;
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_DEFAULT + "]")
+    @Option(name = "-seed", usage = "Seed for random sampling")
     static int seed = SEED_DEFAULT;
 
     @Option(name = "-in_vcf", usage = "Input VCF to fill in", required = true)
-    String inFilename = null;
+    File inFile = null;
 
     @Option(name = "-seq", usage = "Sequence file", required=true)
-    String sequenceFilename = null;
+    File sequenceFile;
 
-    @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
-    String outFilename = null;
+    @Option(name = "-out_vcf", usage = "Output VCF to generate")
+    File outFile = null;
+
+    @Option(name = "-h", usage = "Print help message", help=true, aliases = {"-help"})
+    boolean help = false;
 
     public RandSequenceVCF() {
         super();
@@ -36,39 +39,42 @@ public class RandSequenceVCF extends RandVCFgenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        // TODO Auto-generated method stub
-        RandSequenceVCF runner = new RandSequenceVCF();
-        runner.run(args);
+        new RandSequenceVCF().run(args);
+    }
+
+    void printUsage(final CmdLineParser parser) {
+        final String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+        final String usage = "Outputs VCF to stdout. Randomly fills in missing ALT sequences.\n";
+
+        System.err.println(VERSION);
+        System.err.println("java -jar VarSim.jar randsequencevcf [options...]");
+        System.err.println(usage);
+        // print the list of available options
+        parser.printUsage(System.err);
     }
 
     public void run(String[] args) throws IOException {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Outputs VCF to stdout. Randomly fills in missing ALT sequences.\n";
 
         CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(VERSION);
             System.err.println(e.getMessage());
-            System.err.println("java -jar randdgv2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
+            printUsage(parser);
+            return;
+        }
+
+        if (help) {
+            printUsage(parser);
             return;
         }
 
         rand = new Random(seed);
 
-        final byte[] samplingSequence = fileToByteArray(new File(sequenceFilename));
+        final byte[] samplingSequence = fileToByteArray(sequenceFile);
 
-        final VCFparser vcfParser = new VCFparser(inFilename, false);
-        final OutputStream outputStream = (outFilename != null) ? new FileOutputStream(outFilename) : System.out;
+        final VCFparser vcfParser = new VCFparser(inFile, false);
+        final OutputStream outputStream = (outFile != null) ? new FileOutputStream(outFile) : System.out;
         final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(outputStream));
 
         while (vcfParser.hasMoreInput()) {
