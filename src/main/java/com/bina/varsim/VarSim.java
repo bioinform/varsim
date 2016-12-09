@@ -85,6 +85,7 @@ public class VarSim {
                 break;
             case "randsequencevcf":
                 new RandSequenceVCF().run(pass_args);
+                break;
             default:
                 log.error("Unknown tool: " + args[0]);
                 System.err.println(usage);
