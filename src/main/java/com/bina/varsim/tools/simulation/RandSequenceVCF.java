@@ -14,7 +14,7 @@ import java.util.Random;
 public class RandSequenceVCF extends RandVCFgenerator {
     private final static Logger log = Logger.getLogger(RandSequenceVCF.class.getName());
 
-    private final int SEED_DEFAULT = 3333;
+    static final int SEED_DEFAULT = 3333;
     @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_DEFAULT + "]")
     static int seed = SEED_DEFAULT;
 
