@@ -11,7 +11,11 @@ public abstract class GzFileParser<T> {
     protected String line = "";
 
     protected InputStream decompressStream(final String fileName) throws IOException {
-        PushbackInputStream pb = new PushbackInputStream(new FileInputStream(fileName), 1024 * 1024); //we need a pushbackstream to look ahead
+        return decompressStream(new File(fileName));
+    }
+
+    protected InputStream decompressStream(final File file) throws IOException {
+        PushbackInputStream pb = new PushbackInputStream(new FileInputStream(file), 1024 * 1024); //we need a pushbackstream to look ahead
         byte[] signature = new byte[2];
         pb.read(signature); //read the signature
         pb.unread(signature); //push back the signature to the stream
