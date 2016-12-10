@@ -177,7 +177,7 @@ abstract public class RandVCFgenerator extends VarSimTool {
         // the SV info is written here
         StringBuilder sbStr = new StringBuilder();
         // assume the SV type is consistent across alleles
-        if (var.getType() == VariantOverallType.Tandem_Duplication) {
+        if (var.getType() == VariantOverallType.TandemDup) {
             sbStr.append("SVTYPE=DUP;");
             sbStr.append("SVLEN=");
             sbStr.append(var.getLengthString());

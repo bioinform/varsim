@@ -553,12 +553,14 @@ public class VCFparser extends GzFileParser<Variant> {
              basically if first base of ref and alt match, first base of
              ref and alt will both be removed, pos will increment by 1 to
              account for the removal.
-            */
-             // TODO: This needs to be updated to account for multiple matching reference bases
-            //e.g. ref=AT alt=ATC (VCFv4.1 spec requires only 1-bp before event, but it might
-            //not be the case all the time.
 
-            if (REF.length() > 0) {
+            this is updated to account for multiple matching reference bases
+            e.g. ref=AT alt=ATC (VCFv4.1 spec requires only 1-bp before event, but it might
+            not be the case all the time.
+
+            */
+
+            while (REF.length() > 0) {
                 boolean same = true;
                 for (int i = 0; i < alts.length; i++) {
                     if (alts[i].length() == 0
@@ -577,6 +579,8 @@ public class VCFparser extends GzFileParser<Variant> {
                     for (int i = 0; i < alts.length; i++) {
                         alts[i].setSeq(new FlexSeq(alts[i].getSeq().substring(1)));
                     }
+                } else {
+                    break;
                 }
             }
 
@@ -594,8 +598,8 @@ public class VCFparser extends GzFileParser<Variant> {
                     int clipLength = 0;
                     for (int j = 0; j < alternativeAlleleLength; j++) {
 
-                        // make sure there is at least something in alt
-                        if (referenceAlleleLength - j <= 0 || alternativeAlleleLength - j <= 0) {
+                        // make sure there is at least something in ref
+                        if (referenceAlleleLength <= j) {
                             clipLength = j;
                             break;
                         }
@@ -616,12 +620,17 @@ public class VCFparser extends GzFileParser<Variant> {
                 apparently this code block is part of normalization.
                 is this working properly, though? e.g. it converts
                 CGTG,CG => GT,""
+
+                what this is doing is clip off tailing characters shared by both
+                 REF and ALT.
+
+                 make sure length after subtracting clip is nonnegative
                  */
                 if (minClipLength > 0) {
-                    REF = REF.substring(0, referenceAlleleLength - minClipLength);
+                    REF = REF.substring(0, Math.max(0, referenceAlleleLength - minClipLength));
                     for (int i = 0; i < alts.length; i++) {
                         alts[i].setSeq(new FlexSeq(alts[i].getSeq().substring(0,
-                                alts[i].length() - minClipLength)));
+                                Math.max(0, alts[i].length() - minClipLength))));
                     }
                 }
             }
