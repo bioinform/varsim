@@ -1,5 +1,6 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.fastqLiftover.readers.ARTPairedFastqAlnReader;
 import com.bina.varsim.fastqLiftover.readers.DWGSIMPairedFastqReader;
 import com.bina.varsim.fastqLiftover.readers.PBSIMFastqReader;
@@ -20,7 +21,7 @@ import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class FastqLiftOver {
+public class FastqLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
     String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file")
@@ -79,10 +80,6 @@ public class FastqLiftOver {
     public void run(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -92,6 +89,11 @@ public class FastqLiftOver {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println();
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

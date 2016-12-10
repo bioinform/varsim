@@ -7,6 +7,7 @@ package com.bina.varsim.tools.evaluation;
  */
 
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock.BlockType;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
@@ -30,7 +31,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class SAMcompare {
+public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
     static final int MAPQ_CUTOFF = 10;
     static final int MAPQ_UNMAPPED = 255;
@@ -82,10 +83,6 @@ public class SAMcompare {
 
         CmdLineParser parser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -94,6 +91,11 @@ public class SAMcompare {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

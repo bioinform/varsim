@@ -1,5 +1,6 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.fastqLiftover.types.MapBlocks;
 import com.bina.varsim.readers.longislnd.LongISLNDReadAlignmentMap;
 import com.bina.varsim.types.ReadMapRecord;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
-public class LongISLNDReadMapLiftOver {
+public class LongISLNDReadMapLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(LongISLNDReadMapLiftOver.class.getName());
     String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file", required = true)
@@ -49,10 +50,6 @@ public class LongISLNDReadMapLiftOver {
     public void run(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -62,6 +59,11 @@ public class LongISLNDReadMapLiftOver {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println();
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

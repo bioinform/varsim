@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.evaluation;
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.constants.Constant;
 import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.intervalTree.ValueInterval1D;
@@ -40,7 +41,7 @@ import java.util.*;
 
 // TODO this class does not yet compare the contents of the larger variants
     //TODO refactor variable naming
-public class VCFcompare {
+public class VCFcompare extends VarSimTool {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
@@ -721,10 +722,6 @@ public class VCFcompare {
 
         CmdLineParser parser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -733,6 +730,11 @@ public class VCFcompare {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

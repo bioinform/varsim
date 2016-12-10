@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.evaluation;
 
+import com.bina.varsim.VarSimTool;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -17,7 +18,7 @@ import java.util.TreeMap;
 /**
  * Created by johnmu on 12/3/14.
  */
-public class JSONInserter {
+public class JSONInserter extends VarSimTool {
     private final static Logger log = Logger.getLogger(JSONInserter.class.getName());
     @Option(name = "-html", usage = "VarSim HTML to insert the JSON into", metaVar = "file", required = true)
     File html_file;
@@ -40,8 +41,6 @@ public class JSONInserter {
 
         CmdLineParser parser = new CmdLineParser(this);
 
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -51,6 +50,11 @@ public class JSONInserter {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

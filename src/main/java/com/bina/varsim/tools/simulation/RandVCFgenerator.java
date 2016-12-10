@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.SampleParams;
@@ -10,7 +11,7 @@ import java.io.*;
 import java.util.Random;
 
 
-abstract public class RandVCFgenerator {
+abstract public class RandVCFgenerator extends VarSimTool {
 
     protected Random rand;
 

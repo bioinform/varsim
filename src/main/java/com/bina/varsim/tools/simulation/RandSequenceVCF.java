@@ -69,6 +69,11 @@ public class RandSequenceVCF extends RandVCFgenerator {
             return;
         }
 
+        if (printVersion) {
+            System.out.println(VERSION);
+            return;
+        }
+
         rand = new Random(seed);
 
         final byte[] samplingSequence = fileToByteArray(sequenceFile);

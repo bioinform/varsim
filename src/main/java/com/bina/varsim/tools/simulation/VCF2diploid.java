@@ -2,6 +2,7 @@ package com.bina.varsim.tools.simulation;
 
 //--- Java imports ---
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
@@ -25,7 +26,7 @@ import com.bina.varsim.types.MapRecord.Feature.*;
  * @author Alexej Abyzov, John C. Mu
  */
 
-public class VCF2diploid {
+public class VCF2diploid extends VarSimTool {
     final int LineWidth = 50; // this is default for FASTA files
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
@@ -88,10 +89,6 @@ public class VCF2diploid {
 
         CmdLineParser cmdParser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        cmdParser.setUsageWidth(80);
-
         try {
             cmdParser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -101,6 +98,11 @@ public class VCF2diploid {
             // print the list of available options
             cmdParser.printUsage(System.err);
             log.error(usage);
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

@@ -271,10 +271,6 @@ public class RandVCF2VCF extends RandVCFgenerator {
 
         CmdLineParser parser = new CmdLineParser(this);
 
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
@@ -284,6 +280,11 @@ public class RandVCF2VCF extends RandVCFgenerator {
             // print the list of available options
             parser.printUsage(System.err);
             System.err.println(usage);
+            return;
+        }
+
+        if (printVersion) {
+            System.out.println(VERSION);
             return;
         }
 

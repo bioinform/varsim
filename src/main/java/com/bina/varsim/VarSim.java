@@ -7,10 +7,14 @@ import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
 import com.bina.varsim.tools.evaluation.VCFcompare;
 import com.bina.varsim.tools.simulation.*;
+import org.apache.commons.jexl2.UnifiedJEXL;
 import org.apache.log4j.Logger;
+import org.kohsuke.args4j.*;
+import org.kohsuke.args4j.spi.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * VarSim
@@ -24,15 +28,14 @@ import java.util.Arrays;
 public class VarSim {
     private final static Logger log = Logger.getLogger(VarSim.class.getName());
 
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+    final String VERSION = getClass().getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException {
-        VarSim runner = new VarSim();
-        runner.run(args);
+        new VarSim().run(args);
     }
 
-    public void run(String[] args) throws IOException {
-        String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
+    void printUsage() {
+        final String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
                 + "      --= Simulation =-- \n"
                 + "       randvcf2vcf    -- Randomly samples variants from a VCF file\n"
                 + "       randdgv2vcf    -- Randomly samples variants from a DGV database file\n"
@@ -44,55 +47,65 @@ public class VarSim {
                 + "       vcf2diploid    -- Enhanced version of vcf2diploid from alleleseq \n"
                 + "       fastq_liftover -- Lifts over simulated FASTQ files to reference coordinates \n"
                 + "\n";
-        if (args.length == 0) {
-            System.err.println(VERSION);
-            System.err.println(usage);
-            System.exit(1);
-        }
 
+        System.err.println(VarSim.class.getSimpleName() + " " + VERSION);
+        System.err.println(usage);
+    }
+
+    void runVarSimTool(final VarSimToolNamespace tool, final String[] args) throws IOException {
         String[] pass_args = Arrays.copyOfRange(args, 1, args.length);
 
-        switch (args[0]) {
-            case "vcf2diploid":
+        switch (tool) {
+            case VCF2Diploid:
                 new VCF2diploid().run(pass_args);
                 break;
-            case "randvcf2vcf":
+            case RandVCF2VCF:
                 new RandVCF2VCF().run(pass_args);
                 break;
-            case "randdgv2vcf":
+            case RandDGV2VCF:
                 new RandDGV2VCF().run(pass_args);
                 break;
-            case "vcfstats":
+            case VCFStats:
                 new VCFstats().run(pass_args);
                 break;
-            case "vcfcompare":
+            case VCFCompare:
                 new VCFcompare().run(pass_args);
                 break;
-            case "samcompare":
+            case SAMCompare:
                 new SAMcompare().run(pass_args);
                 break;
-            case "randbed2vcf":
+            case RandBED2VCF:
                 new RandBED2VCF().run(pass_args);
                 break;
-            case "fastq_liftover":
+            case FastqLiftover:
                 new FastqLiftOver().run(pass_args);
                 break;
-            case "json_inserter":
+            case JSONInserter:
                 new JSONInserter().run(pass_args);
                 break;
-            case "longislnd_liftover":
+            case LongISLNDLiftover:
                 new LongISLNDReadMapLiftOver().run(pass_args);
                 break;
-            case "randsequencevcf":
+            case RandSequenceVCF:
                 new RandSequenceVCF().run(pass_args);
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);
-                System.err.println(usage);
                 System.exit(1);
                 break;
         }
-
     }
 
+
+    public void run(String[] args) throws IOException {
+        if (args.length == 0) {
+            printUsage();
+            System.exit(1);
+        }
+
+        final VarSimToolNamespace varSimToolName = VarSimToolNamespace.fromName(args[0]);
+        runVarSimTool(varSimToolName, args);
+
+        return;
+    }
 }
