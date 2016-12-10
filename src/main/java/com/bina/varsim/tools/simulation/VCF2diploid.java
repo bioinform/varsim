@@ -82,8 +82,6 @@ public class VCF2diploid extends VarSimTool {
      * @param args
      */
     public void run(final String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-
         String usage = "Create a diploid genome as associated files from a reference genome\n"
                 + "and some VCF files. \n";
 
