@@ -177,9 +177,7 @@ def fill_missing_sequences(vcf, seq_file, work_dir, log_dir):
     command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf]
     with open(out_log, "w") as log_fd:
         logger.info("Running command " + " ".join(command))
-        p = Process(target=run_shell_command, args=(command, None, log_fd))
-        p.start()
-        p.join()
+        subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
     return out_vcf
         
 
@@ -369,8 +367,8 @@ if __name__ == "__main__":
     for i, vcf in enumerate(args.vcfs):
         tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
         makedirs([tool_work_dir])
-        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), tool_work_dir, tool_work_dir)
-    args.vcfs = in_vcfs
+        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), tool_work_dir, tool_work_dir))
+    args.vcfs = map(os.path.realpath, in_vcfs)
 
     open_fds = []
     if not args.disable_rand_vcf:
