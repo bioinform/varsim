@@ -54,8 +54,8 @@ public class VCFCompareTest {
     assertTrue(FileUtils.contentEquals(outputTruePositive.toFile(), new File(expectedTruePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownFalsePositive.toFile(), new File(expectedUnknownFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputUnknownTruePositive.toFile(), new File(expectedUnknownTruePositive)));
-
-    outputJson.toFile().renameTo(new File(directory, "test_report.json"));
+    //move json file to test dir
+    //outputJson.toFile().renameTo(new File(directory, "test_report.json"));
   }
 
   /**

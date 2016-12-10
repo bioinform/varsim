@@ -758,10 +758,6 @@ public class VCF2diploid {
                             sbStr.append(";");
                             sbStr.append("ISINV");
                         }
-                        if (currVar.getTraid() != null) {
-                            sbStr.append(";TRAID=");
-                            sbStr.append(currVar.getTraid());
-                        }
                     } else if (currVar.getType() == VariantOverallType.TransDel) {
                         sbStr.append("SVTYPE=DEL;");
                         if (currVar.getTraid() != null) {

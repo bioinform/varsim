@@ -165,7 +165,7 @@ public class RandBED2VCF extends RandVCFgenerator {
                 .charAt(chr, pos - 1)), _rand);*/
         return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(ref_seq.length).
                 ref(ref_seq).alts(alts).phase(geno.geno).isPhased(false).varId(var_idx_str).
-                filter("PASS").refDeleted(String.valueOf(ref.charAt(chr, pos - 1))).randomNumberGenerator(_rand).
+                filter("PASS").refDeleted(String.valueOf(ref.charAt(chr, pos - 1))).randomNumberGenerator(rand).
                 build();
     }
 
