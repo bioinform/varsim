@@ -7,14 +7,10 @@ import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
 import com.bina.varsim.tools.evaluation.VCFcompare;
 import com.bina.varsim.tools.simulation.*;
-import org.apache.commons.jexl2.UnifiedJEXL;
 import org.apache.log4j.Logger;
-import org.kohsuke.args4j.*;
-import org.kohsuke.args4j.spi.*;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * VarSim
