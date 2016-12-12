@@ -38,15 +38,15 @@ public class VCFInfo {
      * @param id
      * @return
      */
-    public Object getValue(final String id) {
-        return this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue() : null;
+    public <T> T getValue(String id, Class<T> type) {
+        return type.cast(this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue(type) : null);
     }
     private class VCFInfoElement {
         private String[] stringFields;
         //TODO: Integer should be changed to Long if varsim is used for large genome.
         private int[] numberFields;
         private Boolean flagValue;
-        private String type;
+        private Class type;
 
         /**
          * parse comma separated value and store it
@@ -57,18 +57,15 @@ public class VCFInfo {
         public VCFInfoElement(final String id, String value) throws UnexpectedException {
             this.type = getType(id);
             String[] valueArray = value.split(",");
-            switch(this.type) {
-                case "Integer":
-                    numberFields = new int[valueArray.length];
-                    for (int i = 0; i < valueArray.length; i++) {
-                        numberFields[i] = Integer.parseInt(valueArray[i]);
-                    }
-                    break;
-                case "String":
+            if (type == int[].class) {
+                numberFields = new int[valueArray.length];
+                for (int i = 0; i < valueArray.length; i++) {
+                    numberFields[i] = Integer.parseInt(valueArray[i]);
+                }
+            } else if (type == String[].class) {
                     stringFields = valueArray;
-                    break;
-                default:
-                    throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
+            } else {
+                throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
             }
         }
 
@@ -76,25 +73,23 @@ public class VCFInfo {
          * store id as a boolean field
          */
         public VCFInfoElement() {
-            this.type = "Boolean";
+            this.type = Boolean.class;
             this.flagValue = true;
         }
 
         /**
          * return appropriate values based on types
-         * @return return should be casted
+         * @return return should be casted before being return
          */
-        public Object getValue() {
-            switch (this.type) {
-                case "Integer":
-                    return this.numberFields;
-                case "String":
-                    return this.stringFields;
-                case "Boolean":
-                    return this.flagValue;
-                default:
-                    return null;
+        private <T> T getValue(Class<T> t) {
+            if (t == int[].class) {
+                return t.cast(numberFields);
+            } else if (t == String[].class) {
+                return t.cast(stringFields);
+            } else if (t == Boolean.class) {
+                return t.cast(flagValue);
             }
+            return null;
         }
     }
 
@@ -113,17 +108,17 @@ public class VCFInfo {
      * @param infoID
      * @return
      */
-    public static String getType(final String infoID) {
+    public static Class getType(final String infoID) {
         if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2") || infoID.equals("END")
                 || infoID.equals("DP")) {
-            return "Integer";
+            return int[].class;
         } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRAID")) {
-            return "String";
+            return String[].class;
         } else if (infoID.equals("ISINV")) {
-            return "Boolean";
+            return Boolean.class;
         } else {
-            //unrecognized INFO ID, retrun String for now
-            return "String";
+            //unrecognized INFO ID, return String for now
+            return String[].class;
         }
     }
 }

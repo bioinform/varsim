@@ -14,9 +14,9 @@ public class VCFInfoTest {
     public void VCFInfoParsingTest() {
         try {
             VCFInfo test = new VCFInfo("SVTYPE=TRA;END=156001999;TRASUBTYPE=ACCEPT,REJECT;SVLEN=100,200;POS2=155000679,156000999;END2=155110000,155100999;CHR2=1,1");
-            String[] svtypeList = (String[]) test.getValue("SVTYPE");
+            String[] svtypeList = (String[]) test.getValue("SVTYPE", VCFInfo.getType("SVTYPE"));
             assertTrue(svtypeList[0].equals("TRA"));
-            int[] posList = (int[]) test.getValue("POS2");
+            int[] posList = (int[]) test.getValue("POS2", VCFInfo.getType("POS2"));
             assertTrue(posList[0] == 155000679 && posList[1] == 156000999);
         } catch (Exception e) {
             System.out.println(e.getMessage());
