@@ -12,8 +12,7 @@ import org.apache.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
-import java.util.Random;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import static com.bina.varsim.types.VCFInfo.getType;
 
@@ -449,26 +448,23 @@ public class VCFparser extends GzFileParser<Variant> {
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
               // deletion SV (maybe part of a translocation)
               // but... we don't have the reference... so we add some random sequence?
+              Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
+                      ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                      varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                      randomNumberGenerator(random).traid(traid == null ? null : traid[0]);
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       // deletion has no alt
                       alts[i].setSeq(new FlexSeq(alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA ? FlexSeq.Type.TRA_DEL : FlexSeq.Type.DEL, 0));
                   }
-
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).traid(traid == null ? null : traid[0]).build();
+                  return template.referenceAlleleLength(Math.abs(svlen[0])).build();
               } else if (end != null && end.length > 0 && end[0] > 0) {
                 //END is just one value, whereas there could be multiple alternative alleles with different svlens
                   //so END is in general not a good way to get lengths
                   int alternativeAlleleLength = end[0] - pos + 1;
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          traid(traid == null ? null : traid[0]).randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(alternativeAlleleLength).build();
               } else {
                   log.error("No length information for DEL:");
                   log.error(line);
