@@ -311,7 +311,7 @@ public class VCFparser extends GzFileParser<Variant> {
          */
         if (ALT.indexOf('<') != -1) {
             String[] alternativeAlleles = ALT.split(",");
-            int[] svlen = (int[]) info.getValue("SVLEN", getType("SVLEN"));
+            int[] svlen = info.getValue("SVLEN", int[].class);
             if (alternativeAlleles.length != svlen.length) {
                 throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
             }
@@ -324,14 +324,14 @@ public class VCFparser extends GzFileParser<Variant> {
         Alt[] alts = string2Alt(ALT);
 
       if (alts[0].getSymbolicAllele() != null) {
-          int[] end = (int[]) info.getValue("END", getType("END"));
+          int[] end = info.getValue("END", int[].class);
           //SVLEN for alternative allele length
-          int[] svlen = (int[]) info.getValue("SVLEN", getType("SVLEN"));
-          int[] end2 = (int[]) info.getValue("END2", getType("END2"));
-          int[] pos2 = (int[]) info.getValue("POS2", getType("POS2"));
-          Boolean isinv = (Boolean) info.getValue("ISINV", getType("ISINV"));
-          String[] traid = (String[]) info.getValue("TRAID", getType("TRAID"));
-          String[] chr2 = (String[]) info.getValue("CHR2", getType("CHR2"));
+          int[] svlen =  info.getValue("SVLEN", int[].class);
+          int[] end2 =  info.getValue("END2", int[].class);
+          int[] pos2 =  info.getValue("POS2", int[].class);
+          Boolean isinv =  info.getValue("ISINV", Boolean.class);
+          String[] traid =  info.getValue("TRAID", String[].class);
+          String[] chr2 =  info.getValue("CHR2", String[].class);
           deletedReference = REF;
           byte[] refs = new byte[0];
           pos++; //1-based start
