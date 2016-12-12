@@ -27,7 +27,7 @@ public class VCFInfo {
                 this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement());
+                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0]));
             }
         }
     }
@@ -41,29 +41,27 @@ public class VCFInfo {
     public <T> T getValue(String id, Class<T> type) {
         return type.cast(this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue(type) : null);
     }
-    private class VCFInfoElement {
-        private String[] stringFields;
-        //TODO: Integer should be changed to Long if varsim is used for large genome.
-        private int[] numberFields;
-        private Boolean flagValue;
-        private Class type;
+    private class VCFInfoElement<T> {
+        private T value;
+        private Class<T> type;
 
         /**
          * parse comma separated value and store it
          * in proper types
          * @param id
-         * @param value
+         * @param vcfIdValue
          */
-        public VCFInfoElement(final String id, String value) throws UnexpectedException {
+        public VCFInfoElement(final String id, String vcfIdValue) throws UnexpectedException {
             this.type = getType(id);
-            String[] valueArray = value.split(",");
+            String[] valueArray = vcfIdValue.split(",");
             if (type == int[].class) {
-                numberFields = new int[valueArray.length];
+                int[] nums = new int[valueArray.length];
                 for (int i = 0; i < valueArray.length; i++) {
-                    numberFields[i] = Integer.parseInt(valueArray[i]);
+                    nums[i] = Integer.parseInt(valueArray[i]);
                 }
+                this.value = type.cast(nums);
             } else if (type == String[].class) {
-                    stringFields = valueArray;
+                    this.value = type.cast(valueArray);
             } else {
                 throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
             }
@@ -72,9 +70,9 @@ public class VCFInfo {
         /**
          * store id as a boolean field
          */
-        public VCFInfoElement() {
-            this.type = Boolean.class;
-            this.flagValue = true;
+        public VCFInfoElement(final String id) {
+            this.type = getType(id);
+            this.value = type.cast(true);
         }
 
         /**
@@ -82,14 +80,7 @@ public class VCFInfo {
          * @return return should be casted before being return
          */
         private <T> T getValue(Class<T> t) {
-            if (t == int[].class) {
-                return t.cast(numberFields);
-            } else if (t == String[].class) {
-                return t.cast(stringFields);
-            } else if (t == Boolean.class) {
-                return t.cast(flagValue);
-            }
-            return null;
+            return t.cast(value);
         }
     }
 
