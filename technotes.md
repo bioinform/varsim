@@ -93,3 +93,25 @@ It means 3 bp of unknown sequence is inserted after `1:3`.
 1	3	.	T	<INV>	.	PASS	SVTYPE=INV;SVLEN=4	GT	0|1
 ```
 It means 4 bp of reference sequence (`1:4-7`) is inverted.
+
+## Implementation details
+
+### `<DUP:TRA>`, `<DUP:ISP>`
+
+As of 12/12/2016，VarSim validates translocation duplication via breakends. Each `<DUP:TRA>` or `<DUP:ISP>` is broken into two nonadjacent novel breakends, i.e. the two breakends at the outermost positions of duplication insertion.
+
+### validation of breakend
+
+Breakends are validated by two criteria:
+1. the locus, plus/minus `wiggle`.
+2. the oritentation
+
+It's possible that there are inserted sequences before/after breakends, for now, we ignore them.
+
+### `<DEL:TRA>`
+
+As of 12/12/2016, we treat translocation deletion same as regular deletion, i.e. as intervals whose overlapping is subject to control of `overlapRatio` and `wiggle`.
+
+### `<TRAID>`
+
+Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination acts as if they are one translocation, and will be valided and reported as a single event. Partial matching will have to exceed `overlapRatio` to make this translocation match with another.
