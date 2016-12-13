@@ -422,12 +422,32 @@ public class Variant implements Comparable<Variant>{
      * @return
      */
     public int maxLen() {
-        return Math.max(maxLen(getAllele(0)), maxLen(getAllele(1)));
+        if (compositions == null) {
+            return Math.max(maxLen(getAllele(0)), maxLen(getAllele(1)));
+        } else {
+            if (compositions.isEmpty())
+                return 0;
+            int maxLen = compositions.get(0).maxLen();
+            for (Variant c : compositions) {
+                maxLen = Math.max(maxLen, c.maxLen());
+            }
+            return maxLen;
+        }
     }
 
     // this is the minimum length of the variants
     public int minLen() {
-        return Math.min(maxLen(getAllele(0)), maxLen(getAllele(1)));
+        if (compositions == null) {
+            return Math.min(maxLen(getAllele(0)), maxLen(getAllele(1)));
+        } else {
+            if (compositions.isEmpty())
+                return 0;
+            int minLen = compositions.get(0).minLen();
+            for (Variant c : compositions) {
+                minLen = Math.min(minLen, c.minLen());
+            }
+            return minLen;
+        }
     }
 
     /*
