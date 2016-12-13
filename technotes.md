@@ -98,7 +98,7 @@ It means 4 bp of reference sequence (`1:4-7`) is inverted.
 
 ### `<DUP:TRA>`, `<DUP:ISP>`
 
-As of 12/12/2016，VarSim validates translocation duplication via breakends. Each `<DUP:TRA>` or `<DUP:ISP>` is broken into two nonadjacent novel breakends, i.e. the two breakends at the outermost positions of duplication insertion.
+VarSim validates translocation duplication via breakends. Each `<DUP:TRA>` or `<DUP:ISP>` is broken into two nonadjacent novel breakends, i.e. the two breakends at the outermost positions of duplication insertion.
 
 ### validation of breakend
 
@@ -110,8 +110,8 @@ It's possible that there are inserted sequences before/after breakends, for now,
 
 ### `<DEL:TRA>`
 
-As of 12/12/2016, we treat translocation deletion same as regular deletion, i.e. as intervals whose overlapping is subject to control of `overlapRatio` and `wiggle`.
+A translocation deletion will be treated as a novel breakend, with another breakend next to it.
 
 ### `<TRAID>`
 
-Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination acts as if they are one translocation, and will be valided and reported as a single event. Partial matching will have to exceed `overlapRatio` to make this translocation match with another.
+Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination acts as if they were one translocation, and will be valided and reported as a single event. Partial matching will have to exceed `overlapRatio` to make this translocation match with another. In practice, each linked translocation can be decomposed into 3 breakends, each with one more breakend adjacent to it. The translocation will be considered as valided as long as `x/3.0 >= overlapRatio`.
