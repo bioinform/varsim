@@ -626,8 +626,8 @@ public class Variant implements Comparable<Variant>{
         final Set<VariantType> variantTypes = EnumSet.noneOf(VariantType.class);
         if (compositions != null) {
             for (Variant c : compositions) {
-                variantTypes.add(c.getType(getAllele(0)));
-                variantTypes.add(c.getType(getAllele(1)));
+                variantTypes.add(c.getType(c.getAllele(0)));
+                variantTypes.add(c.getType(c.getAllele(1)));
             }
         } else {
             variantTypes.add(getType(getAllele(0)));
