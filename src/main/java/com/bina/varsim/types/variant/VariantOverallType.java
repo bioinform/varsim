@@ -5,7 +5,8 @@ package com.bina.varsim.types.variant;
  */ // Type for whole variant
 public enum VariantOverallType implements INonReference{
     Reference(false), SNP(false), Deletion(false), Insertion(true), Inversion(false), TandemDup(false), Complex(false),
-    TransDup(false), TransDel(false), InterDup(false);
+    TransDup(false), TransDel(false), InterDup(false),
+    CutPasteTrans(false);
 
     boolean nonReference;
 
@@ -45,6 +46,8 @@ public enum VariantOverallType implements INonReference{
                 return TransDup;
             case "TRA_DEL":
                 return TransDel;
+            case "CUT_PASTE_TRANS":
+                return CutPasteTrans;
             case "CLPX":
                 return Complex;
             default:

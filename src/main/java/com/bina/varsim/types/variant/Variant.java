@@ -41,6 +41,18 @@ public class Variant implements Comparable<Variant>{
     private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
     private String traid; //translocation ID
     private volatile int hashCode; //caching hashcode
+    private List<Variant> compositions; //when this variant is a composite variant, this field will store constitutional variants
+
+
+    public List<Variant> getCompositions() {
+        return compositions;
+    }
+
+    public void setCompositions(List<Variant> compositions) {
+        this.compositions = compositions;
+    }
+
+
 
     public Variant(final Random rand) {
         // TODO define some methods to determine if a Variant is uninitialised
@@ -80,6 +92,7 @@ public class Variant implements Comparable<Variant>{
         private int end;
         private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
         private String traid; //translocation ID
+        private List<Variant> compositions;
 
         public Builder() {}
         public Builder chr(final ChrString chr) {
@@ -158,6 +171,10 @@ public class Variant implements Comparable<Variant>{
             this.traid = id;
             return this;
         }
+        public Builder compositions(final List<Variant> compositions) {
+            this.compositions = compositions;
+            return this;
+        }
         public Variant build() {
             return new Variant(this);
         }
@@ -182,6 +199,7 @@ public class Variant implements Comparable<Variant>{
         this.end = builder.end;
         this.traid = builder.traid;
         this.isinv = builder.isinv;
+        this.compositions = builder.compositions;
     }
 
     /*consider making Alt class immutable, all breakend, symbolic allele interpretation,
@@ -199,14 +217,16 @@ public class Variant implements Comparable<Variant>{
         chr = var.chr;
         pos = var.pos;
         referenceAlleleLength = var.referenceAlleleLength;
-        ref = var.ref.clone();
+        ref = var.ref == null ? null : var.ref.clone();
         refDeleted = var.refDeleted;
-        alts = new Alt[var.alts.length];
-        for (int i = 0; i < var.alts.length; i++) {
-            if (var.alts[i] != null) {
-                alts[i] = var.alts[i].copy();
-            } else {
-                alts[i] = null;
+        if (var.alts != null) {
+            alts = new Alt[var.alts.length];
+            for (int i = 0; i < var.alts.length; i++) {
+                if (var.alts[i] != null) {
+                    alts[i] = var.alts[i].copy();
+                } else {
+                    alts[i] = null;
+                }
             }
         }
 
@@ -220,6 +240,7 @@ public class Variant implements Comparable<Variant>{
         rand = var.rand;
         isinv = var.isinv;
         traid = var.traid;
+        compositions = var.getCompositions();
     }
 
     /**
@@ -522,6 +543,10 @@ public class Variant implements Comparable<Variant>{
             return VariantType.Reference;
         }
 
+        if (compositions != null) {
+            return VariantType.Composite;
+        }
+
         /*when variant type is explicitly specified in VCF,
         alt allele will be set to the correct type,
         we can be assured that correct variant type is
@@ -598,7 +623,16 @@ public class Variant implements Comparable<Variant>{
      * @return overall type of the variant considering all alleles
      */
     public VariantOverallType getType() {
-        final Set<VariantType> variantTypes = EnumSet.of(getType(getAllele(0)), getType(getAllele(1)));
+        final Set<VariantType> variantTypes = EnumSet.noneOf(VariantType.class);
+        if (compositions != null) {
+            for (Variant c : compositions) {
+                variantTypes.add(c.getType(getAllele(0)));
+                variantTypes.add(c.getType(getAllele(1)));
+            }
+        } else {
+            variantTypes.add(getType(getAllele(0)));
+            variantTypes.add(getType(getAllele(1)));
+        }
 
         if (variantTypes.size() == 1 && variantTypes.contains(VariantType.Reference)) {
             return VariantOverallType.Reference;
@@ -632,6 +666,8 @@ public class Variant implements Comparable<Variant>{
             if (variantTypes.contains(VariantType.Interspersed_Duplication)) {
                 return VariantOverallType.InterDup;
             }
+        } else if (variantTypes.contains(VariantType.Translocation_Deletion) && variantTypes.contains(VariantType.Translocation_Deletion)) {
+            return VariantOverallType.CutPasteTrans;
         }
 
         /* Treat these as complex for now
@@ -884,8 +920,10 @@ public class Variant implements Comparable<Variant>{
 
             VariantType t = getType(i + 1);
 
-            if (VariantType.Deletion.equals(t) || VariantType.Translocation_Deletion.equals(t)) {
+            if (VariantType.Deletion.equals(t)) {
                 len.append(-referenceAlleleLength + alts[i].length()); // negative for deletions
+            } else if (VariantType.Translocation_Deletion.equals(t)) {
+                len.append(-referenceAlleleLength); // negative for deletions
             } else if (VariantType.Complex.equals(t)) {
                 int alt_len = alts[i].length();
                 if (referenceAlleleLength > alt_len) {

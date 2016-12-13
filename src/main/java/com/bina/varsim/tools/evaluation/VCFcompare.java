@@ -44,7 +44,7 @@ public class VCFcompare {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
-    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA_DUP, FlexSeq.Type.ISP_DUP);
+    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA_DUP, FlexSeq.Type.ISP_DUP, FlexSeq.Type.TRA_DEL);
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
 
     @Option(name = "-reference", usage = "Reference Genome, specificity will be computed if provided", metaVar = "file")
@@ -363,8 +363,8 @@ public class VCFcompare {
                     continue;
                 byte[] phase = new byte[2];
                 phase[parentIndex] = 1;
-                if(variant.getType(allele) == VariantType.Translocation_Duplication ||
-                variant.getType(allele) == VariantType.Interspersed_Duplication ) {
+                if (variant.getType(allele) == VariantType.Translocation_Duplication ||
+                        variant.getType(allele) == VariantType.Interspersed_Duplication) {
                     /* an example
                     >1
                     12345678-901-2
@@ -389,12 +389,12 @@ public class VCFcompare {
                     save and compare all 4 breakends, we only need to compare half of them.
                     and during comparison, we compare both POS and ALT parts.
                      */
-                  boolean isInversed = variant.isInversed();
-                       //we got two new adjacencies here, represented by 4 breakends
-                  //left-left
+                    boolean isInversed = variant.isInversed();
+                    //we got two new adjacencies here, represented by 4 breakends
+                    //left-left
                     Alt alt1 = new Alt();
                     alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(allele),
-                            isInversed? variant.getEnd2(allele) : variant.getPos2(allele), true, !isInversed));
+                            isInversed ? variant.getEnd2(allele) : variant.getPos2(allele), true, !isInversed));
                     /*
                     ******************
                     why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
@@ -409,10 +409,59 @@ public class VCFcompare {
                     Alt alt2 = new Alt();
                     alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(parentIndex),
                             isInversed ? variant.getPos2(parentIndex) : variant.getEnd2(parentIndex), false, isInversed));
-                  //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
+                    //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
                     //after the shifting in vcf parsing, pos points to the base after breakpoint
                     variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                }
+                //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
+                //the deletion will be delt with as other variant types (type match + interval overlap)
+                variant.setAllele(parentIndex, (byte) 0); // set to reference
+            }
+        } else if ( variant.getType(variant.getGoodMaternal()) == VariantType.Translocation_Deletion ||
+                variant.getType(variant.getGoodPaternal()) == VariantType.Translocation_Deletion) {
+
+            for (int parentIndex = 0; parentIndex < 2; parentIndex++) {
+                int allele = variant.getAllele(parentIndex);
+                if (variant.getType(allele) == VariantType.Reference)
+                    continue;
+                byte[] phase = new byte[2];
+                phase[parentIndex] = 1;
+                if (variant.getType(allele) == VariantType.Translocation_Deletion) {
+                    /* an example
+                    >1
+                    12345678-901-2
+                    AATCATCG-TGG-C
+                    >2
+                    123456-7890-1234567
+                    TTCGTT-ATTA-CCCCAAA
+
+                    2 6 . T <DEL:TRA> . PASS  SVTYPE=DEL;SVLEN=-4 GT 1|1
+                    ||
+                    \/
+                    #left
+                    1 6 . T T[2:11[
+                    #right
+                    1 11 . C ]1:6]C
+
+                    note here, half of the information is redundant, so we do not need to
+                    save and compare both breakends, we only need to compare half of them.
+                    and during comparison, we compare both POS and ALT parts.
+                     */
+                    //we got two new adjacencies here, represented by 2 breakends
+                    //left
+                    Alt alt1 = new Alt();
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr(),
+                            variant.getPos() + variant.getReferenceAlleleLength(), true, true));
+                    /*
+                    ******************
+                    why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
+                    however, here for a breakend, we need to shift it back
+                    ******************
+                    */
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos() - 1).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
@@ -1019,6 +1068,7 @@ public class VCFcompare {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
+                                //***
                                 fpWriter.println(variant);
                             } else {
                                 unknownFpWriter.println(variant);
@@ -1054,6 +1104,7 @@ public class VCFcompare {
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + currentVariant);
                                 }
+                                //***
                                 fpWriter.println(variant);
                             } else {
                                 unknownFpWriter.println(variant);
@@ -1070,6 +1121,7 @@ public class VCFcompare {
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
                             log.warn("SNP with bad length: " + variant);
                         }
+                        //***
                         fpWriter.println(variant);
                     } else {
                         unknownFpWriter.println(variant);
@@ -1106,8 +1158,10 @@ public class VCFcompare {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
+                    //***
                     tpWriter.println(var);
                 } else {
+                    //***
                     fnWriter.println(var);
                 }
 

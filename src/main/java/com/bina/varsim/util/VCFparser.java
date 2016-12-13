@@ -448,23 +448,33 @@ public class VCFparser extends GzFileParser<Variant> {
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
               // deletion SV (maybe part of a translocation)
               // but... we don't have the reference... so we add some random sequence?
+              //alts() will save a deep copy of alts, rathern than reference, so we
+              //cannot assign it until all changes are done.
               Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
-                      ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
+                      ref(refs).phase(genotypeArray).isPhased(isGenotypePhased).
                       varId(variantId).filter(FILTER).refDeleted(deletedReference).
                       randomNumberGenerator(random).traid(traid == null ? null : traid[0]);
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       // deletion has no alt
-                      alts[i].setSeq(new FlexSeq(alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA ? FlexSeq.Type.TRA_DEL : FlexSeq.Type.DEL, 0));
+                      if (Alt.SVType.SVSubtype.TRA == alts[i].getSymbolicAllele().getMinor()) {
+                          alts[i].setSeq(new FlexSeq(FlexSeq.Type.TRA_DEL, svlen[i]));
+                      } else {
+                          alts[i].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
+                      }
                   }
-                  return template.referenceAlleleLength(Math.abs(svlen[0])).build();
+                  return template.alts(alts).referenceAlleleLength(Math.abs(svlen[0])).build();
               } else if (end != null && end.length > 0 && end[0] > 0) {
                 //END is just one value, whereas there could be multiple alternative alleles with different svlens
                   //so END is in general not a good way to get lengths
                   int alternativeAlleleLength = end[0] - pos + 1;
-                  alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
-                  return template.referenceAlleleLength(alternativeAlleleLength).build();
+                  if (Alt.SVType.SVSubtype.TRA == alts[0].getSymbolicAllele().getMinor()) {
+                      alts[0].setSeq(new FlexSeq(FlexSeq.Type.TRA_DEL, -alternativeAlleleLength));
+                  } else {
+                      alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
+                  }
+                  return template.alts(alts).referenceAlleleLength(alternativeAlleleLength).build();
               } else {
                   log.error("No length information for DEL:");
                   log.error(line);
