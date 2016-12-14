@@ -13,8 +13,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
-import java.util.Random;
-import java.util.StringTokenizer;
+import java.util.*;
+
+import static com.bina.varsim.types.VCFInfo.getType;
 
 public class VCFparser extends GzFileParser<Variant> {
     public static final String DEFAULT_FILTER = "."; //default value for many columns
@@ -319,7 +320,7 @@ public class VCFparser extends GzFileParser<Variant> {
          */
         if (ALT.indexOf('<') != -1) {
             String[] alternativeAlleles = ALT.split(",");
-            int[] svlen = (int[]) info.getValue("SVLEN");
+            int[] svlen = info.getValue("SVLEN", int[].class);
             if (alternativeAlleles.length != svlen.length) {
                 throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
             }
@@ -332,17 +333,23 @@ public class VCFparser extends GzFileParser<Variant> {
         Alt[] alts = string2Alt(ALT);
 
       if (alts[0].getSymbolicAllele() != null) {
-          int[] end = (int[]) info.getValue("END");
+          int[] end = info.getValue("END", int[].class);
           //SVLEN for alternative allele length
-          int[] svlen = (int[]) info.getValue("SVLEN");
-          int[] end2 = (int[]) info.getValue("END2");
-          int[] pos2 = (int[]) info.getValue("POS2");
-          Boolean isinv = (Boolean) info.getValue("ISINV");
-          String[] traid = (String[]) info.getValue("TRAID");
-          String[] chr2 = (String[]) info.getValue("CHR2");
+          int[] svlen =  info.getValue("SVLEN", int[].class);
+          int[] end2 =  info.getValue("END2", int[].class);
+          int[] pos2 =  info.getValue("POS2", int[].class);
+          Boolean isinv =  info.getValue("ISINV", Boolean.class);
+          String[] traid =  info.getValue("TRAID", String[].class);
+          String[] chr2 =  info.getValue("CHR2", String[].class);
           deletedReference = REF;
           byte[] refs = new byte[0];
           pos++; //1-based start
+
+          if (Alt.SVType.SVSubtype.TRA.equals(alts[0].getSymbolicAllele().getMinor())) {
+            if (traid == null || traid.length == 0) {
+                throw new IllegalArgumentException("ERROR: <*:TRA> must have TRAID in INFO field.\n" + line);
+            }
+          }
 
           if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INV) {
               // inversion SV
@@ -376,7 +383,7 @@ public class VCFparser extends GzFileParser<Variant> {
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DUP &&
                     ((alts[0].getSymbolicAllele().getMinor() != Alt.SVType.SVSubtype.TRA &&
                             alts[0].getSymbolicAllele().getMinor() != Alt.SVType.SVSubtype.ISP &&
-                            info.getValue("POS2") == null) ||
+                            info.getValue("POS2", getType("POS2")) == null) ||
                      alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TANDEM)) {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
@@ -451,26 +458,33 @@ public class VCFparser extends GzFileParser<Variant> {
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
               // deletion SV (maybe part of a translocation)
               // but... we don't have the reference... so we add some random sequence?
+              //alts() will save a deep copy of alts, rathern than reference, so we
+              //cannot assign it until all changes are done.
+              Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
+                      ref(refs).phase(genotypeArray).isPhased(isGenotypePhased).
+                      varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                      randomNumberGenerator(random).traid(traid == null ? null : traid[0]);
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       // deletion has no alt
-                      alts[i].setSeq(new FlexSeq(alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA ? FlexSeq.Type.TRA_DEL : FlexSeq.Type.DEL, 0));
+                      if (Alt.SVType.SVSubtype.TRA == alts[i].getSymbolicAllele().getMinor()) {
+                          alts[i].setSeq(new FlexSeq(FlexSeq.Type.TRA_DEL, svlen[i]));
+                      } else {
+                          alts[i].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
+                      }
                   }
-
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).traid(traid == null ? null : traid[0]).build();
+                  return template.alts(alts).referenceAlleleLength(Math.abs(svlen[0])).build();
               } else if (end != null && end.length > 0 && end[0] > 0) {
                 //END is just one value, whereas there could be multiple alternative alleles with different svlens
                   //so END is in general not a good way to get lengths
                   int alternativeAlleleLength = end[0] - pos + 1;
-                  alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          traid(traid == null ? null : traid[0]).randomNumberGenerator(random).build();
+                  if (Alt.SVType.SVSubtype.TRA == alts[0].getSymbolicAllele().getMinor()) {
+                      alts[0].setSeq(new FlexSeq(FlexSeq.Type.TRA_DEL, -alternativeAlleleLength));
+                  } else {
+                      alts[0].setSeq(new FlexSeq(FlexSeq.Type.DEL, 0));
+                  }
+                  return template.alts(alts).referenceAlleleLength(alternativeAlleleLength).build();
               } else {
                   log.error("No length information for DEL:");
                   log.error(line);
@@ -480,7 +494,7 @@ public class VCFparser extends GzFileParser<Variant> {
               //TODO major SVTYPE actually does not allow TRA
           } else if ( alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DUP &&
                   (alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TRA || alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.ISP ||
-                  info.getValue("POS2") != null)) {
+                  info.getValue("POS2", getType("POS2")) != null)) {
               //translocation SV DUP or interspersed DUP
 
               if (svlen.length > 0) {

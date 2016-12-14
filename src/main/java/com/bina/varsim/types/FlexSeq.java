@@ -138,9 +138,10 @@ public final class FlexSeq {
      * @param len Length of the sequence
      */
     public FlexSeq(final Type t, int len) {
-        if (len < 0) {
+        /*temporarily lift this restriction*/
+        /*if (len < 0) {
             len = 0;
-        }
+        }*/
         // regular byte array
         sequence = null;
         type = t;

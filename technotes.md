@@ -5,7 +5,7 @@ VarSim follows the latest VCF format specification [4.3](https://samtools.github
 * In VCF Specification 4.3, the only values allowed for `SVTYPE` in `INFO` are `DEL`, `INS`, `DUP`, `INV`, `CNV` and `BND`.
 * In `ALT` column, a subtype can be specified, e.g. `<DUP:TANDEM>`.
 * In `ALT` column, values allowed for first level symbolic alleles are `DEL`, `INS`, `DUP`, `INV`, `CNV`. Reserved subtypes include `DUP:TANDEM`, `DEL:ME`, `INS:ME`.
-* A cut-and-paste translocation is represented in 2 lines, one as `<DEL:TRA>`, the other as `<DUP:TRA>`. That is, they must appear in pairs.
+* A cut-and-paste translocation, or simply as translocation, is represented in 2 lines, one as `<DEL:TRA>`, the other as `<DUP:TRA>`. That is, they must appear in pairs.
 Evaluation will be performed independently on these two lines.
  The two lines can be reported as a single event (translocation) or 2 unrelated events (deletion + duplication).
  If reported as a single event, VarSim uses `TRAID` in `INFO` field to differentiate between different translocations.
@@ -93,3 +93,29 @@ It means 3 bp of unknown sequence is inserted after `1:3`.
 1	3	.	T	<INV>	.	PASS	SVTYPE=INV;SVLEN=4	GT	0|1
 ```
 It means 4 bp of reference sequence (`1:4-7`) is inverted.
+
+## Implementation details
+
+### `<DUP:TRA>`, `<DUP:ISP>`
+
+VarSim validates translocation duplication via breakends. Each `<DUP:TRA>` or `<DUP:ISP>` is broken into two nonadjacent novel breakends, i.e. the two breakends at the outermost positions of duplication insertion.
+
+### validation of breakend
+
+Breakends are validated by two criteria:
+1. the locus, plus/minus `wiggle`.
+2. the oritentation
+
+It's possible that there are inserted sequences before/after breakends, for now, we ignore them.
+
+### `<DEL:TRA>`
+
+A translocation deletion will be treated as a novel breakend, with another breakend next to it.
+
+### `<TRAID>`
+
+Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination acts as if they were one translocation, and will be valided and reported as a single event. Partial matching will have to exceed `overlapRatio` to make this translocation match with another. In practice, each linked translocation can be decomposed into 3 breakends, each with one more breakend adjacent to it. The translocation will be considered as valided as long as `x/3.0 >= overlapRatio`.
+
+Because of the linkage established by `TRAID`, the number of variants reported as `TP` in `json` might differ from that in `VCF` because each translocation is counted once in statistics but has two underly records in `VCF`.
+
+The lengths of a translocation are represented by the maximum length of underlying variants.

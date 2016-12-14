@@ -27,7 +27,7 @@ public class VCFInfo {
                 this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement());
+                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0]));
             }
         }
     }
@@ -38,63 +38,49 @@ public class VCFInfo {
      * @param id
      * @return
      */
-    public Object getValue(final String id) {
-        return this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue() : null;
+    public <T> T getValue(String id, Class<T> type) {
+        return type.cast(this.info2Value.containsKey(id) ? this.info2Value.get(id).getValue(type) : null);
     }
-    private class VCFInfoElement {
-        private String[] stringFields;
-        //TODO: Integer should be changed to Long if varsim is used for large genome.
-        private int[] numberFields;
-        private Boolean flagValue;
-        private String type;
+    private class VCFInfoElement<T> {
+        private T value;
+        private Class<T> type;
 
         /**
          * parse comma separated value and store it
          * in proper types
          * @param id
-         * @param value
+         * @param vcfIdValue
          */
-        public VCFInfoElement(final String id, String value) throws UnexpectedException {
+        public VCFInfoElement(final String id, String vcfIdValue) throws UnexpectedException {
             this.type = getType(id);
-            String[] valueArray = value.split(",");
-            switch(this.type) {
-                case "Integer":
-                    numberFields = new int[valueArray.length];
-                    for (int i = 0; i < valueArray.length; i++) {
-                        numberFields[i] = Integer.parseInt(valueArray[i]);
-                    }
-                    break;
-                case "String":
-                    stringFields = valueArray;
-                    break;
-                default:
-                    throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
+            String[] valueArray = vcfIdValue.split(",");
+            if (type == int[].class) {
+                int[] nums = new int[valueArray.length];
+                for (int i = 0; i < valueArray.length; i++) {
+                    nums[i] = Integer.parseInt(valueArray[i]);
+                }
+                this.value = type.cast(nums);
+            } else if (type == String[].class) {
+                    this.value = type.cast(valueArray);
+            } else {
+                throw new UnexpectedException("ERROR: only Integer and String supported for INFO field (" + id + ").");
             }
         }
 
         /**
          * store id as a boolean field
          */
-        public VCFInfoElement() {
-            this.type = "Boolean";
-            this.flagValue = true;
+        public VCFInfoElement(final String id) {
+            this.type = getType(id);
+            this.value = type.cast(true);
         }
 
         /**
          * return appropriate values based on types
-         * @return return should be casted
+         * @return return should be casted before being return
          */
-        public Object getValue() {
-            switch (this.type) {
-                case "Integer":
-                    return this.numberFields;
-                case "String":
-                    return this.stringFields;
-                case "Boolean":
-                    return this.flagValue;
-                default:
-                    return null;
-            }
+        private <T> T getValue(Class<T> t) {
+            return t.cast(value);
         }
     }
 
@@ -113,17 +99,17 @@ public class VCFInfo {
      * @param infoID
      * @return
      */
-    public static String getType(final String infoID) {
+    public static Class getType(final String infoID) {
         if (infoID.equals("SVLEN") || infoID.equals("POS2") || infoID.equals("END2") || infoID.equals("END")
                 || infoID.equals("DP")) {
-            return "Integer";
+            return int[].class;
         } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRAID")) {
-            return "String";
+            return String[].class;
         } else if (infoID.equals("ISINV")) {
-            return "Boolean";
+            return Boolean.class;
         } else {
-            //unrecognized INFO ID, retrun String for now
-            return "String";
+            //unrecognized INFO ID, return String for now
+            return String[].class;
         }
     }
 }
