@@ -360,7 +360,6 @@ if __name__ == "__main__":
     t_s = time.time()
 
     args.vcfs = map(os.path.realpath, args.vcfs)
-    makedirs(map(lambda x: os.path.join(args.out_dir, "filled_in", str(x)), range(len(args.vcfs))))
     in_vcfs = []
     for i, vcf in enumerate(args.vcfs):
         tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
