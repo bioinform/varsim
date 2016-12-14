@@ -99,8 +99,12 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-con", usage = "One or more constraints on the accuracy of the output", metaVar = "CONSTRAINT")
     List<String> constraintArgs = null;
 
+    public VCFcompare(final String command, final String description) {
+        super(command, description);
+    }
+
     public static void main(String[] args) {
-        new VCFcompare().run(args);
+        new VCFcompare("", "").run(args);
     }
 
     /**
@@ -764,10 +768,9 @@ public class VCFcompare extends VarSimTool {
      *
      */
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
-
-        System.err.println(VERSION);
+        if (!parseArguments(args)) {
+            return;
+        }
 
         // these are the statistics we "ideally" want to collect
         // number of variants correct (either genotype) (for each type)
@@ -776,23 +779,6 @@ public class VCFcompare extends VarSimTool {
         // number homozygous genotype correct (for each type)
         // number heterozyous genotype correct (for each type)
 
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("java -jar VarSim.jar vcfcompare [options...] vcf_files ...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
-            return;
-        }
 
         BedFile intersector = null;
         boolean bedExists = false;

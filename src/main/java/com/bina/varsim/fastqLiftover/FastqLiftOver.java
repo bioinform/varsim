@@ -23,7 +23,6 @@ import java.util.zip.GZIPOutputStream;
 
 public class FastqLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file")
     private File mapFile;
     @Option(name = "-type", usage = "Type of FASTQ (art/dwgsim)", metaVar = "fastqType")
@@ -45,8 +44,12 @@ public class FastqLiftOver extends VarSimTool {
     @Option(name = "-force_five_base_encoding", usage = "For ART, force bases to be ACTGN")
     private boolean forceFiveBaseEncoding = false;
 
+    public FastqLiftOver(final String command, final String reference) {
+        super(command, reference);
+    }
+
     public static void main(String[] args) throws IOException {
-        new FastqLiftOver().run(args);
+        new FastqLiftOver("", "").run(args);
     }
 
     public InputStream decompressStream(final File inputFile) throws IOException {
@@ -78,22 +81,7 @@ public class FastqLiftOver extends VarSimTool {
     }
 
     public void run(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java Fastq_liftOver [options...] arguments...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println();
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

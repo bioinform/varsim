@@ -25,6 +25,10 @@ public class JSONInserter extends VarSimTool {
     @Argument(usage = "One or more JSON files from VarSim", metaVar = "json_files ...", required = true)
     private ArrayList<String> jsonFilename = new ArrayList<>();
 
+    public JSONInserter(final String command, final String description) {
+        super(command, description);
+    }
+
     public static String insertJSON(String varsim_html, String jsonStr) {
         TreeMap<String, String> lookup = new TreeMap<>();
         lookup.put("varsim_data", "var varsim_data = \'" + StringEscapeUtils.escapeEcmaScript(jsonStr) + "\';");
@@ -32,29 +36,11 @@ public class JSONInserter extends VarSimTool {
     }
 
     public static void main(String[] args) throws IOException {
-        new JSONInserter().run(args);
+        new JSONInserter("", "").run(args);
     }
 
     public void run(String[] args) throws IOException {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Inserts n JSON files to one HTML to create n HTML files\n";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar VarSim.jar json_inserter [options...] json_files ...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

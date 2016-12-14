@@ -17,7 +17,6 @@ import java.util.zip.GZIPOutputStream;
 
 public class LongISLNDReadMapLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(LongISLNDReadMapLiftOver.class.getName());
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file", required = true)
     private File mapFile;
     @Option(name = "-longislnd", usage = "Read map files from LongISLND", metaVar = "file", required = true)
@@ -29,8 +28,12 @@ public class LongISLNDReadMapLiftOver extends VarSimTool {
     @Option(name = "-minIntervalLength", usage = "Minimum interval length in liftover")
     private int minIntervalLength = MapBlocks.MIN_LENGTH_INTERVAL;
 
+    public LongISLNDReadMapLiftOver(final String command, final String description) {
+        super(command, description);
+    }
+
     public static void main(String[] args) throws IOException {
-        new LongISLNDReadMapLiftOver().run(args);
+        new LongISLNDReadMapLiftOver("", "").run(args);
     }
 
     public PrintStream getOutStream(final File outFile, boolean compress) throws IOException {
@@ -48,22 +51,7 @@ public class LongISLNDReadMapLiftOver extends VarSimTool {
     }
 
     public void run(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java LongISLNDReadMapLiftOver [options...] arguments...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println();
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

@@ -23,50 +23,16 @@ public class RandSequenceVCF extends RandVCFgenerator {
     @Option(name = "-out_vcf", usage = "Output VCF to generate")
     File outFile = null;
 
-    @Option(name = "-h", usage = "Print help message", help=true, aliases = {"-help"})
-    boolean help = false;
-
-    public RandSequenceVCF() {
-        super();
-    }
-
-    public RandSequenceVCF(long seed) {
-        super(seed);
+    public RandSequenceVCF(final String command, final String description) {
+        super(command, description);
     }
 
     public static void main(String[] args) throws IOException {
-        new RandSequenceVCF().run(args);
-    }
-
-    void printUsage(final CmdLineParser parser) {
-        final String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        final String usage = "Outputs VCF to stdout. Randomly fills in missing ALT sequences.\n";
-
-        System.err.println(VERSION);
-        System.err.println("java -jar VarSim.jar randsequencevcf [options...]");
-        System.err.println(usage);
-        // print the list of available options
-        parser.printUsage(System.err);
+        new RandSequenceVCF("", "").run(args);
     }
 
     public void run(String[] args) throws IOException {
-
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            printUsage(parser);
-            return;
-        }
-
-        if (help) {
-            printUsage(parser);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

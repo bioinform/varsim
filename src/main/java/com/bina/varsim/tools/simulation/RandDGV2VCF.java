@@ -62,13 +62,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
 
     int numNovelAdded = 0;
 
-    public RandDGV2VCF() {
-        super();
-        numNovelAdded = 0;
-    }
-
-    public RandDGV2VCF(long seed) {
-        super(seed);
+    public RandDGV2VCF(final String command, final String description) {
+        super(command, description);
         numNovelAdded = 0;
     }
 
@@ -76,9 +71,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
      * @param args command line arguments
      */
     public static void main(String[] args) throws IOException {
-        // TODO Auto-generated method stub
-        RandDGV2VCF runner = new RandDGV2VCF();
-        runner.run(args);
+        new RandDGV2VCF("", "").run(args);
     }
 
     Map<VariantType, Integer> countVariantsInDGV(final String dgvFilename, final SimpleReference reference,
@@ -272,25 +265,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
 
 
     public void run(String[] args) throws IOException {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Outputs VCF to stdout. Randomly samples variants from DGV flat file.\n";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar randdgv2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

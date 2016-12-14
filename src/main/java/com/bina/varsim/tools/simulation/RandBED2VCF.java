@@ -58,14 +58,8 @@ public class RandBED2VCF extends RandVCFgenerator {
     @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]", metaVar = "BED_file", required = true)
     String inv_bed_filename;
 
-    public RandBED2VCF() {
-        super();
-        num_novel_added = 0;
-        var_idx = 0;
-    }
-
-    public RandBED2VCF(long seed) {
-        super(seed);
+    public RandBED2VCF(final String command, final String description) {
+        super(command, description);
         num_novel_added = 0;
         var_idx = 0;
     }
@@ -74,8 +68,7 @@ public class RandBED2VCF extends RandVCFgenerator {
      * @param args
      */
     public static void main(String[] args) {
-        RandBED2VCF runner = new RandBED2VCF();
-        runner.run(args);
+        new RandBED2VCF("", "").run(args);
     }
 
 
@@ -196,26 +189,7 @@ public class RandBED2VCF extends RandVCFgenerator {
     }
 
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Generates a VCF file (to stdout) from an insertion and a deletion BED file. Insertions sequences\n"
-                + "are randomly sampled from the insert_seq file. This is designed for the Venter SV BED files. \n";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar randbed2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

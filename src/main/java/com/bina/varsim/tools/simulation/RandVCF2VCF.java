@@ -70,8 +70,8 @@ public class RandVCF2VCF extends RandVCFgenerator {
 
     int numNovelAdded;
 
-    public RandVCF2VCF() {
-        super();
+    public RandVCF2VCF(final String command, final String description) {
+        super(command, description);
         numNovelAdded = 0;
     }
 
@@ -80,8 +80,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
      */
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
-        RandVCF2VCF runner = new RandVCF2VCF();
-        runner.run(args);
+        new RandVCF2VCF("", "").run(args);
     }
 
     public Map<VariantType, Integer> countVariants(final String vcfFilename, final List<Genotypes> selectedGeno) {
@@ -264,25 +263,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
     }
 
     public void run(String[] args) throws IOException {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Outputs VCF to stdout. Randomly samples variants from VCF file.";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar randvcf2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 

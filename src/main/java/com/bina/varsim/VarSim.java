@@ -30,7 +30,7 @@ public class VarSim {
         new VarSim().run(args);
     }
 
-    void printUsage() {
+    private void printUsage() {
         final String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
                 + "      --= Simulation =-- \n"
                 + "       randvcf2vcf    -- Randomly samples variants from a VCF file\n"
@@ -51,39 +51,41 @@ public class VarSim {
     void runVarSimTool(final VarSimToolNamespace tool, final String[] args) throws IOException {
         String[] pass_args = Arrays.copyOfRange(args, 1, args.length);
 
+        final String command = tool.command;
+        final String description = tool.description;
         switch (tool) {
             case VCF2Diploid:
-                new VCF2diploid().run(pass_args);
+                new VCF2diploid(command, description).run(pass_args);
                 break;
             case RandVCF2VCF:
-                new RandVCF2VCF().run(pass_args);
+                new RandVCF2VCF(command, description).run(pass_args);
                 break;
             case RandDGV2VCF:
-                new RandDGV2VCF().run(pass_args);
+                new RandDGV2VCF(command, description).run(pass_args);
                 break;
             case VCFStats:
-                new VCFstats().run(pass_args);
+                new VCFstats(command, description).run(pass_args);
                 break;
             case VCFCompare:
-                new VCFcompare().run(pass_args);
+                new VCFcompare(command, description).run(pass_args);
                 break;
             case SAMCompare:
-                new SAMcompare().run(pass_args);
+                new SAMcompare(command, description).run(pass_args);
                 break;
             case RandBED2VCF:
-                new RandBED2VCF().run(pass_args);
+                new RandBED2VCF(command, description).run(pass_args);
                 break;
             case FastqLiftover:
-                new FastqLiftOver().run(pass_args);
+                new FastqLiftOver(command, description).run(pass_args);
                 break;
             case JSONInserter:
-                new JSONInserter().run(pass_args);
+                new JSONInserter(command, description).run(pass_args);
                 break;
             case LongISLNDLiftover:
-                new LongISLNDReadMapLiftOver().run(pass_args);
+                new LongISLNDReadMapLiftOver(command, description).run(pass_args);
                 break;
             case RandSequenceVCF:
-                new RandSequenceVCF().run(pass_args);
+                new RandSequenceVCF(command, description).run(pass_args);
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);

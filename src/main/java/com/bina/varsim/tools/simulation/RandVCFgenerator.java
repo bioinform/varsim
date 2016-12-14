@@ -24,15 +24,9 @@ abstract public class RandVCFgenerator extends VarSimTool {
     /**
      * This sets a default seed, ideally different between different runs
      */
-    public RandVCFgenerator() {
+    public RandVCFgenerator(final String command, final String description) {
+        super(command, description);
         rand = new Random(DEFAULT_SEED);
-    }
-
-    /**
-     * @param seed User specified seed for random numbers
-     */
-    public RandVCFgenerator(long seed) {
-        rand = new Random(seed);
     }
 
     /**

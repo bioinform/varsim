@@ -53,12 +53,15 @@ public class SAMcompare extends VarSimTool {
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
+    public SAMcompare(final String command, final String description) {
+        super(command, description);
+    }
+
     /**
      * @param args
      */
     public static void main(String[] args) {
-        SAMcompare runner = new SAMcompare();
-        runner.run(args);
+        new SAMcompare("", "").run(args);
     }
 
     /**
@@ -75,27 +78,7 @@ public class SAMcompare extends VarSimTool {
 
 
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
-                "bed_file restricts the analysis to the bed regions\n";
-
-        System.err.println(VERSION);
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("java -jar VarSim.jar samcompare [options...] bam_files ...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (printVersion) {
-            System.out.println(VERSION);
+        if (!parseArguments(args)) {
             return;
         }
 
