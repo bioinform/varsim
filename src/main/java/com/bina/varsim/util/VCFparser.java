@@ -10,6 +10,7 @@ import com.bina.varsim.types.variant.alt.Alt;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
@@ -39,12 +40,17 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param pass     If true, only output pass lines
      */
     public VCFparser(String fileName, String id, boolean pass, Random rand) {
+        this(new File(fileName), id, pass, rand);
+    }
+
+
+    public VCFparser(File file, String id, boolean pass, Random rand) {
         random = rand;
         try {
-            bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(fileName)));
+            bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(file)));
             readLine();
         } catch (Exception ex) {
-            log.error("Can't open file " + fileName);
+            log.error("Can't open file " + file.getName());
             log.error(ex.toString());
         }
         sampleId = id;
@@ -86,6 +92,10 @@ public class VCFparser extends GzFileParser<Variant> {
      */
     public VCFparser(String fileName, boolean pass) {
         this(fileName, null, pass, null);
+    }
+
+    public VCFparser(File file, boolean pass) {
+        this(file, null, pass, null);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.readers.ARTPairedFastqAlnReader;
 import com.bina.varsim.fastqLiftover.readers.DWGSIMPairedFastqReader;
 import com.bina.varsim.fastqLiftover.readers.PBSIMFastqReader;
@@ -20,9 +22,8 @@ import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class FastqLiftOver {
+public class FastqLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(FastqLiftOver.class.getName());
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file")
     private File mapFile;
     @Option(name = "-type", usage = "Type of FASTQ (art/dwgsim)", metaVar = "fastqType")
@@ -44,8 +45,12 @@ public class FastqLiftOver {
     @Option(name = "-force_five_base_encoding", usage = "For ART, force bases to be ACTGN")
     private boolean forceFiveBaseEncoding = false;
 
+    public FastqLiftOver(final String command, final String reference) {
+        super(command, reference);
+    }
+
     public static void main(String[] args) throws IOException {
-        new FastqLiftOver().run(args);
+        new FastqLiftOver("", VarSimToolNamespace.FastqLiftover.description).run(args);
     }
 
     public InputStream decompressStream(final File inputFile) throws IOException {
@@ -77,21 +82,7 @@ public class FastqLiftOver {
     }
 
     public void run(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java Fastq_liftOver [options...] arguments...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println();
+        if (!parseArguments(args)) {
             return;
         }
 

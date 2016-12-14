@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
@@ -11,9 +12,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.*;
 /**
  * TODO ignores the input genotypes for now
@@ -25,7 +24,6 @@ import java.util.*;
 
 
 public class RandVCF2VCF extends RandVCFgenerator {
-    static final int SEED_ARG = 333;
     static final int NUM_SNP_ARG = 3000000;
     static final int NUM_INS_ARG = 100000;
     static final int NUM_DEL_ARG = 100000;
@@ -36,197 +34,105 @@ public class RandVCF2VCF extends RandVCFgenerator {
     static final int MAX_LEN_ARG = Constant.SVLEN - 1;
     static final double PROP_HET_ARG = 0.6;
     private final static Logger log = Logger.getLogger(RandVCF2VCF.class.getName());
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    int seed = SEED_ARG;
+
     @Option(name = "-num_snp", usage = "Number of SNPs to sample [" + NUM_SNP_ARG + "]")
-    int num_SNP = NUM_SNP_ARG;
+    int numSNP = NUM_SNP_ARG;
     @Option(name = "-num_ins", usage = "Number of simple insertions to sample [" + NUM_INS_ARG + "]")
-    int num_INS = NUM_INS_ARG;
+    int numIns = NUM_INS_ARG;
     @Option(name = "-num_del", usage = "Number of simple deletions to sample [" + NUM_DEL_ARG + "]")
-    int num_DEL = NUM_DEL_ARG;
+    int numDel = NUM_DEL_ARG;
     @Option(name = "-num_mnp", usage = "Number of MNPs to sample [" + NUM_MNP_ARG + "]")
-    int num_MNP = NUM_MNP_ARG;
+    int numMNP = NUM_MNP_ARG;
     @Option(name = "-num_complex", usage = "Number of complex variants (other ones) to sample [" + NUM_COMPLEX_ARG + "]")
-    int num_COMPLEX = NUM_COMPLEX_ARG;
+    int numComplex = NUM_COMPLEX_ARG;
     @Option(name = "-novel", usage = "Average ratio of novel variants[" + NOVEL_RATIO_ARG + "]")
-    double ratio_novel = NOVEL_RATIO_ARG;
+    double ratioNovel = NOVEL_RATIO_ARG;
     @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
-    int min_length_lim = MIN_LEN_ARG;
+    int minLengthLim = MIN_LEN_ARG;
     @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
-    int max_length_lim = MAX_LEN_ARG;
+    int maxLengthLim = MAX_LEN_ARG;
     @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
-    double prop_het = PROP_HET_ARG;
+    double propHet = PROP_HET_ARG;
 
     @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
-    String reference_filename;
+    String referenceFilename;
 
     @Option(name = "-vcf", usage = "Known VCF file, eg. dbSNP [Required]", metaVar = "file", required = true)
-    String vcf_filename;
+    String vcfFilename;
 
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
 
+    @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
+    String outFilename = null;
 
-    int num_novel_added;
+    private final Set<VariantType> variantTypes = EnumSet.of(VariantType.SNP, VariantType.Insertion,
+            VariantType.Deletion, VariantType.MNP, VariantType.Complex);
 
-    public RandVCF2VCF() {
-        super();
-        num_novel_added = 0;
+    int numNovelAdded;
+
+    public RandVCF2VCF(final String command, final String description) {
+        super(command, description);
+        numNovelAdded = 0;
     }
 
     /**
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
-        RandVCF2VCF runner = new RandVCF2VCF();
-        runner.run(args);
+        new RandVCF2VCF("", VarSimToolNamespace.RandVCF2VCF.description).run(args);
     }
 
-    // outputs VCF record with random phase
-    void rand_output_vcf_record(BufferedWriter bw, Variant var,
-                                SimpleReference ref, double ratio_novel, Genotypes geno)
-            throws IOException {
+    public Map<VariantType, Integer> countVariants(final String vcfFilename, final List<Genotypes> selectedGeno) {
+        int totalNumOther = 0;
+        int totalNum = 0;
 
-        ChrString chr = var.getChr();
-
-        // determine whether this one is novel
-        double rand_num = rand.nextDouble();
-        if (rand_num <= ratio_novel) {
-            // make the variant novel, simply modify it
-            // TODO maybe modifying it is bad
-
-            int chr_len = ref.getRefLen(chr);
-            int buffer = Math.max(
-                    10,
-                    Math.max(var.maxLen(geno.geno[0]),
-                            var.maxLen(geno.geno[1])));
-            int start_val = Math.min(buffer, Math.max(chr_len - buffer, 0));
-            int end_val = Math.max(chr_len - buffer, Math.min(buffer, chr_len));
-
-            int time_out = 0;
-            int rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
-            while (!var.setNovelPosition(rand_pos, ref)) {
-                if (time_out > 100) {
-                    log.warn("Error: cannot set novel position: " + (end_val - start_val + 1));
-                    log.warn(var.getReferenceAlleleLength());
-                    log.warn(var);
-                    break;
-                }
-
-                rand_pos = rand.nextInt(end_val - start_val + 1) + start_val + 1;
-                //log.info(time_out + " : " + var.getReferenceAlleleLength());
-
-                time_out++;
-            }
-            num_novel_added++;
-
-            var.setVarID("Novel_" + num_novel_added);
-        }
-
-        outputVcfRecord(bw, var, geno.geno[0], geno.geno[1]);
-
-    }
-
-    public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Outputs VCF to stdout. Randomly samples variants from VCF file.";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar randvcf2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
-
-        if (ratio_novel > 1 || ratio_novel < 0) {
-            System.err.println("Novel ratio out of range [0,1]");
-            System.exit(1);
-        }
-
-        SimpleReference ref = new SimpleReference(reference_filename);
-
-        rand = new Random(seed);
-
-        // read through VCF file and count the
-        log.info("Counting variants and assigning genotypes");
-        final List<Genotypes> selected_geno = new ArrayList<>();
-
-        int total_num_other = 0;
-        int total_num = 0;
-        final Set<VariantType> variantTypesToSample = EnumSet.of(VariantType.SNP, VariantType.Insertion,
-                VariantType.Deletion, VariantType.MNP, VariantType.Complex);
-
-        final Map<VariantType, Integer> variantTypeCounts = new HashMap<>();
-        for (final VariantType variantType : variantTypesToSample) {
+        final Map<VariantType, Integer> variantTypeCounts = new EnumMap(VariantType.class);
+        for (final VariantType variantType : variantTypes) {
             variantTypeCounts.put(variantType, 0);
         }
 
-        final Map<VariantType, Integer> variantCountsToSample = new HashMap<>();
-        variantCountsToSample.put(VariantType.SNP, num_SNP);
-        variantCountsToSample.put(VariantType.Insertion, num_INS);
-        variantCountsToSample.put(VariantType.Deletion, num_DEL);
-        variantCountsToSample.put(VariantType.MNP, num_MNP);
-        variantCountsToSample.put(VariantType.Complex, num_COMPLEX);
-
-        VCFparser parser_one = new VCFparser(vcf_filename, null, false, rand);
-        Variant prev_var = new Variant(rand);
+        VCFparser vcfParser = new VCFparser(vcfFilename, null, false, rand);
+        Variant prevVar = new Variant(rand);
 
         // read though once to count the totals, this is so we don't have
         // to store an array of the variants for sampling without replacement
-        while (parser_one.hasMoreInput()) {
-            Variant var = parser_one.parseLine();
+        while (vcfParser.hasMoreInput()) {
+            Variant var = vcfParser.parseLine();
             if (var == null) {
                 continue;
             }
 
             // select genotypes here
             ChrString chr = var.getChr();
-            int num_alt = var.getNumberOfAlternativeAlleles();
+            int numAlt = var.getNumberOfAlternativeAlleles();
 
-            Genotypes geno = new Genotypes(chr, gender, num_alt, rand, prop_het);
-            selected_geno.add(geno);
+            Genotypes geno = new Genotypes(chr, gender, numAlt, rand, propHet);
+            selectedGeno.add(geno);
 
-            if (prev_var.equals(var)) {
+            if (prevVar.equals(var)) {
                 continue;
             }
 
             // this is ok because var is not changed later
-            prev_var = var;
+            prevVar = var;
 
-            if (var.maxLen() > max_length_lim
-                    || var.minLen() < min_length_lim) {
+            if (var.maxLen() > maxLengthLim
+                    || var.minLen() < minLengthLim) {
                 continue;
             }
 
-            boolean same_geno = false;
-            if (geno.geno[0] == geno.geno[1]) {
-                same_geno = true;
-            }
-
-            for (int i = 0; i < 2; i++) {
-                if (i == 1 && same_geno) {
-                    break;
-                }
+            int numIters = (geno.geno[0] == geno.geno[1]) ? 1 : 2;
+            for (int i = 0; i < numIters; i++) {
                 final VariantType variantType = var.getType(geno.geno[i]);
-                if (variantTypesToSample.contains(variantType)) {
+                if (variantTypeCounts.containsKey(variantType)) {
                     variantTypeCounts.put(variantType, variantTypeCounts.get(variantType) + 1);
                 } else {
-                    total_num_other++;
+                    totalNumOther++;
                 }
             }
-            total_num++;
+            totalNum++;
         }
 
         log.info("total_num_SNP: " + variantTypeCounts.get(VariantType.SNP));
@@ -234,94 +140,148 @@ public class RandVCF2VCF extends RandVCFgenerator {
         log.info("total_num_DEL: " + variantTypeCounts.get(VariantType.Deletion));
         log.info("total_num_MNP: " + variantTypeCounts.get(VariantType.MNP));
         log.info("total_num_COMPLEX: " + variantTypeCounts.get(VariantType.Complex));
-        log.info("total_num_skipped: " + total_num_other);
-        log.info("total_num: " + total_num);
+        log.info("total_num_skipped: " + totalNumOther);
+        log.info("total_num: " + totalNum);
 
+        return variantTypeCounts;
+    }
+
+    void sampleFromVCF(final String samplingVCF, final SimpleReference reference, final List<Genotypes> selectedGeno,
+                       final Map<VariantType, Integer> variantCounts, final OutputStream outputStream)
+            throws IOException {
         // read through VCF file again and output the new sampled VCF file
         log.info("Writing sampled variant file");
 
-        // write the header
-        System.out.print("##fileformat=VCFv4.0\n");
-        System.out
-                .print("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
-        System.out
-                .print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n");
+        final String VCF_HEADER = "##fileformat=VCFv4.0\n" +
+                "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n";
 
-        final Map<VariantType, SampleParams> variantTypeParams = new HashMap<>();
-        for (final VariantType variantType : variantTypesToSample) {
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
+        out.write(VCF_HEADER);
+
+        final Map<VariantType, SampleParams> variantTypeParams = new EnumMap(VariantType.class);
+        for (final VariantType variantType : variantTypes) {
             variantTypeParams.put(variantType, new SampleParams());
         }
 
-        BufferedWriter out = null;
-        try {
-            out = new BufferedWriter(new OutputStreamWriter(System.out));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        final Map<VariantType, Integer> maxCounts = new EnumMap(VariantType.class);
+        maxCounts.put(VariantType.SNP, numSNP);
+        maxCounts.put(VariantType.Insertion, numIns);
+        maxCounts.put(VariantType.Deletion, numDel);
+        maxCounts.put(VariantType.MNP, numMNP);
+        maxCounts.put(VariantType.Complex, numComplex);
 
-        int geno_idx = 0;
+        int genoIdx = 0;
 
-        parser_one = new VCFparser(vcf_filename, null, false, rand);
-        prev_var = new Variant(rand);
+        final VCFparser vcfParser = new VCFparser(samplingVCF, null, false, rand);
+        Variant prevVar = new Variant(rand);
 
         // Read through it a second time, this time we do the sampling
-        while (parser_one.hasMoreInput()) {
-            Variant var = parser_one.parseLine();
+        while (vcfParser.hasMoreInput()) {
+            Variant var = vcfParser.parseLine();
             if (var == null) {
-                // System.err.println("Bad variant or not a variant line");
                 continue;
             }
 
-            Genotypes geno = selected_geno.get(geno_idx);
-            geno_idx++;
+            Genotypes geno = selectedGeno.get(genoIdx);
+            genoIdx++;
 
-            if (prev_var.equals(var)) {
+            if (prevVar.equals(var)) {
                 // duplicate
                 continue;
             }
 
-            prev_var = var;
+            prevVar = var;
 
-            if (var.maxLen() > max_length_lim
-                    || var.minLen() < min_length_lim) {
+            if (var.maxLen() > maxLengthLim
+                    || var.minLen() < minLengthLim) {
                 continue;
             }
 
-            // sample genotypes
-            boolean same_geno = false;
-            if (geno.geno[0] == geno.geno[1]) {
-                same_geno = true;
-            }
-
             // this samples genotypes from each allele individually
-            for (int i = 0; i < 2; i++) {
-                if (i == 1 && same_geno) {
-                    geno.geno[1] = geno.geno[0];
-                    break;
-                }
+            int numIter = (geno.geno[0] == geno.geno[1]) ? 1 : 2;
+            for (int i = 0; i < numIter; i++) {
                 final VariantType variantType = var.getType(geno.geno[i]);
                 if (variantTypeParams.containsKey(variantType)) {
                     geno.geno[i] = sampleGenotype(geno.geno[i], variantTypeParams.get(variantType),
-                            variantCountsToSample.get(variantType), variantTypeCounts.get(variantType));
+                            maxCounts.get(variantType), variantCounts.get(variantType));
                 }
+            }
+            if (numIter == 1) {
+                geno.geno[1] = geno.geno[0];
             }
 
             // write out variant
-            try {
-                if (geno.isNonRef()) {
-                    rand_output_vcf_record(out, var, ref, ratio_novel, geno);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (geno.isNonRef()) {
+                randOutputVcfRecord(out, var, reference, ratioNovel, geno);
             }
         }
+        out.close();
+    }
 
-        try {
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            log.error(e);
+    // outputs VCF record with random phase
+    void randOutputVcfRecord(BufferedWriter bw, Variant var,
+                             SimpleReference ref, double ratioNovel, Genotypes geno)
+            throws IOException {
+
+        ChrString chr = var.getChr();
+
+        // determine whether this one is novel
+        double randNum = rand.nextDouble();
+        if (randNum <= ratioNovel) {
+            // make the variant novel, simply modify it
+            // TODO maybe modifying it is bad
+
+            int chrLen = ref.getRefLen(chr);
+            int buffer = Math.max(
+                    10,
+                    Math.max(var.maxLen(geno.geno[0]),
+                            var.maxLen(geno.geno[1])));
+            int startVal = Math.min(buffer, Math.max(chrLen - buffer, 0));
+            int endVal = Math.max(chrLen - buffer, Math.min(buffer, chrLen));
+
+            int timeOut = 0;
+            int randPos = rand.nextInt(endVal - startVal + 1) + startVal + 1;
+            while (!var.setNovelPosition(randPos, ref)) {
+                if (timeOut > 100) {
+                    log.warn("Error: cannot set novel position: " + (endVal - startVal + 1));
+                    log.warn(var.getReferenceAlleleLength());
+                    log.warn(var);
+                    break;
+                }
+
+                randPos = rand.nextInt(endVal - startVal + 1) + startVal + 1;
+                //log.info(time_out + " : " + var.getReferenceAlleleLength());
+
+                timeOut++;
+            }
+            numNovelAdded++;
+
+            var.setVarID("Novel_" + numNovelAdded);
         }
+
+        outputVcfRecord(bw, var, geno.geno[0], geno.geno[1]);
+    }
+
+    public void run(String[] args) throws IOException {
+        if (!parseArguments(args)) {
+            return;
+        }
+
+        if (ratioNovel > 1 || ratioNovel < 0) {
+            System.err.println("Novel ratio out of range [0,1]");
+            System.exit(1);
+        }
+
+        final SimpleReference reference = new SimpleReference(referenceFilename);
+
+        rand = new Random(seed);
+
+        final List<Genotypes> selectedGeno = new ArrayList<>();
+        final Map<VariantType, Integer> variantCounts = countVariants(vcfFilename, selectedGeno);
+
+        final OutputStream outputStream = (outFilename != null) ? new FileOutputStream(outFilename) : System.out;
+        sampleFromVCF(vcfFilename, reference, selectedGeno, variantCounts, outputStream);
     }
 
 }

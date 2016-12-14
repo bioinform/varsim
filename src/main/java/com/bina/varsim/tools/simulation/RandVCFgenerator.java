@@ -1,34 +1,58 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimTool;
 import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.SampleParams;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
+import org.kohsuke.args4j.Option;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Random;
 
 
-abstract public class RandVCFgenerator {
+abstract public class RandVCFgenerator extends VarSimTool {
 
     protected Random rand;
 
-    private final long DEFAULT_SEED = 3333;
+    static private final long DEFAULT_SEED = 3333;
+
+    @Option(name = "-seed", usage = "Seed for random number generator")
+    static protected long seed = DEFAULT_SEED;
 
     /**
      * This sets a default seed, ideally different between different runs
      */
-    public RandVCFgenerator() {
+    public RandVCFgenerator(final String command, final String description) {
+        super(command, description);
         rand = new Random(DEFAULT_SEED);
     }
 
     /**
-     * @param seed User specified seed for random numbers
+     *
+     * @param  file Sequence file
+     * @return Sequence file as a byte array
      */
-    public RandVCFgenerator(long seed) {
-        rand = new Random(seed);
+    byte[] fileToByteArray(final File file) {
+        byte[] array = null;
+
+        try {
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                line = line.trim();
+                sb.append(line);
+            }
+            bufferedReader.close();
+            array = sb.toString().getBytes("US-ASCII");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return array;
     }
 
 

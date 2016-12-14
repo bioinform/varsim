@@ -2,6 +2,8 @@ package com.bina.varsim.tools.simulation;
 
 //--- Java imports ---
 
+import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
@@ -24,7 +26,7 @@ import java.util.*;
  * @author Alexej Abyzov, John C. Mu
  */
 
-public class VCF2diploid {
+public class VCF2diploid extends VarSimTool {
     final int LineWidth = 50; // this is default for FASTA files
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
@@ -55,7 +57,13 @@ public class VCF2diploid {
      * set seed for random number generation
      * seed comes from the command line
      */
+    public VCF2diploid(final String command, final String description) {
+        super(command, description);
+        rand = new Random(seed);
+    }
+
     public VCF2diploid() {
+        super("", VarSimToolNamespace.VCF2Diploid.description);
         rand = new Random(seed);
     }
 
@@ -65,8 +73,7 @@ public class VCF2diploid {
      * @param args
      */
     public static void main(final String[] args) {
-        VCF2diploid runner = new VCF2diploid();
-        runner.run(args);
+        new VCF2diploid().run(args);
     }
 
     public File getOutputMap() {
@@ -80,31 +87,12 @@ public class VCF2diploid {
      * @param args
      */
     public void run(final String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-
-        String usage = "Create a diploid genome as associated files from a reference genome\n"
-                + "and some VCF files. \n";
-
-        CmdLineParser cmdParser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        cmdParser.setUsageWidth(80);
-
-        try {
-            cmdParser.parseArgument(args);
-        } catch (CmdLineException e) {
-            log.error(VERSION);
-            log.error(e.getMessage());
-            log.error("java -jar vcf2diploid.jar [options...]");
-            // print the list of available options
-            cmdParser.printUsage(System.err);
-            log.error(usage);
+        if (!parseArguments(args)) {
             return;
         }
 
         if (chrfiles.size() == 0) {
-            log.error("No chromosome file(s) is given!\n" + usage);
+            log.error("No chromosome file(s) is given!\n" + getDescription());
             return;
         }
 

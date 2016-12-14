@@ -1,5 +1,7 @@
 package com.bina.varsim.tools.evaluation;
 
+import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.intervalTree.ValueInterval1D;
@@ -40,7 +42,7 @@ import java.util.*;
 
 // TODO this class does not yet compare the contents of the larger variants
     //TODO refactor variable naming
-public class VCFcompare {
+public class VCFcompare extends VarSimTool {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
@@ -98,8 +100,12 @@ public class VCFcompare {
     @Option(name = "-con", usage = "One or more constraints on the accuracy of the output", metaVar = "CONSTRAINT")
     List<String> constraintArgs = null;
 
+    public VCFcompare(final String command, final String description) {
+        super(command, description);
+    }
+
     public static void main(String[] args) {
-        new VCFcompare().run(args);
+        new VCFcompare("", VarSimToolNamespace.VCFCompare.description).run(args);
     }
 
     /**
@@ -763,10 +769,9 @@ public class VCFcompare {
      *
      */
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Generates a JSON with accuracy statistics of a VCF file relative to a truth\n";
-
-        System.err.println(VERSION);
+        if (!parseArguments(args)) {
+            return;
+        }
 
         // these are the statistics we "ideally" want to collect
         // number of variants correct (either genotype) (for each type)
@@ -775,22 +780,6 @@ public class VCFcompare {
         // number homozygous genotype correct (for each type)
         // number heterozyous genotype correct (for each type)
 
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("java -jar VarSim.jar vcfcompare [options...] vcf_files ...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
-            return;
-        }
 
         BedFile intersector = null;
         boolean bedExists = false;
