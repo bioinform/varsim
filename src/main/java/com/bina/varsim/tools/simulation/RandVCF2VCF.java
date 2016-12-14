@@ -23,7 +23,6 @@ import java.util.*;
 
 
 public class RandVCF2VCF extends RandVCFgenerator {
-    static final int SEED_ARG = 333;
     static final int NUM_SNP_ARG = 3000000;
     static final int NUM_INS_ARG = 100000;
     static final int NUM_DEL_ARG = 100000;
@@ -34,8 +33,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
     static final int MAX_LEN_ARG = Constant.SVLEN - 1;
     static final double PROP_HET_ARG = 0.6;
     private final static Logger log = Logger.getLogger(RandVCF2VCF.class.getName());
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    int seed = SEED_ARG;
+
     @Option(name = "-num_snp", usage = "Number of SNPs to sample [" + NUM_SNP_ARG + "]")
     int numSNP = NUM_SNP_ARG;
     @Option(name = "-num_ins", usage = "Number of simple insertions to sample [" + NUM_INS_ARG + "]")

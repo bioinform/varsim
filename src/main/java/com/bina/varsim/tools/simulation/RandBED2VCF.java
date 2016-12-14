@@ -27,10 +27,8 @@ public class RandBED2VCF extends RandVCFgenerator {
     // parameters
     static final int MIN_LEN_ARG = Constant.SVLEN;
     static final int MAX_LEN_ARG = 1000000;
-    static final long SEED_ARG = 333;
     private final static Logger log = Logger.getLogger(RandBED2VCF.class.getName());
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    static long seed = 333;
+
     SimpleReference ref;
     int num_novel_added = 0;
     int var_idx = 0;

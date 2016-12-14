@@ -19,7 +19,6 @@ import java.util.*;
  */
 
 public class RandDGV2VCF extends RandVCFgenerator {
-    static final int SEED_ARG = 333;
     static final int NUM_INS_ARG = 2000;
     static final int NUM_DEL_ARG = 2000;
     static final int NUM_DUP_ARG = 500;
@@ -29,8 +28,6 @@ public class RandDGV2VCF extends RandVCFgenerator {
     static final int MAX_LEN_ARG = 1000000;
     static final double PROP_HET_ARG = 0.6;
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    static int seed = SEED_ARG;
     @Option(name = "-all", usage = "Output all variants, don't sample")
     boolean outputAll;
     @Option(name = "-num_ins", usage = "Number of insertion SV to sample [" + NUM_INS_ARG + "]")

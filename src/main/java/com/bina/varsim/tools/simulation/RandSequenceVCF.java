@@ -14,10 +14,6 @@ import java.util.Random;
 public class RandSequenceVCF extends RandVCFgenerator {
     private final static Logger log = Logger.getLogger(RandSequenceVCF.class.getName());
 
-    static final int SEED_DEFAULT = 3333;
-    @Option(name = "-seed", usage = "Seed for random sampling")
-    static int seed = SEED_DEFAULT;
-
     @Option(name = "-in_vcf", usage = "Input VCF to fill in", required = true)
     File inFile = null;
 

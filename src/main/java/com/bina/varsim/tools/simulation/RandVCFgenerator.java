@@ -6,6 +6,7 @@ import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.SampleParams;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
+import org.kohsuke.args4j.Option;
 
 import java.io.*;
 import java.util.Random;
@@ -15,7 +16,10 @@ abstract public class RandVCFgenerator extends VarSimTool {
 
     protected Random rand;
 
-    private final long DEFAULT_SEED = 3333;
+    static private final long DEFAULT_SEED = 3333;
+
+    @Option(name = "-seed", usage = "Seed for random number generator")
+    static protected long seed = DEFAULT_SEED;
 
     /**
      * This sets a default seed, ideally different between different runs
