@@ -351,6 +351,14 @@ public class VCFparser extends GzFileParser<Variant> {
             }
           }
 
+          //why no alts()? because it's not reference-based operation
+          //alts() will save a deep copy of alts, rathern than reference, so we
+          //cannot assign it until all changes are done.
+          Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
+                  ref(refs).phase(genotypeArray).isPhased(isGenotypePhased).
+                  varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                  randomNumberGenerator(random);
+
           if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INV) {
               // inversion SV
               if (svlen.length > 0) {
@@ -359,21 +367,14 @@ public class VCFparser extends GzFileParser<Variant> {
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength));
                   }
                   // TODO this assumes only one alt
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                return template.referenceAlleleLength(Math.abs(svlen[0])).alts(alts).build();
                   //TODO: this assumes only one alt, might not be true
               } else if (end != null && end.length > 0 && end[0] > 0) {
                   //assume only one END
                   int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos + 1), 1);
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength));
 
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
-                          ref(refs).alts(alts).phase(genotypeArray).
-                          isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(alternativeAlleleLength).alts(alts).build();
               } else {
                   log.error("No length information for INV:");
                   log.error(line);
@@ -408,20 +409,14 @@ public class VCFparser extends GzFileParser<Variant> {
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.TANDEM_DUP, alternativeAlleleLength, currentCopyNumber));
                   }
 
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(svlen[0])).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(Math.abs(svlen[0])).alts(alts).build();
                   //TODO: this assumes only one alt, which might not be true
               } else if (end != null && end.length > 0 && end[0] > 0) {
                   int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos + 1), 1);
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.TANDEM_DUP, alternativeAlleleLength, Math.max(
                           copyNumberArray[0], copyNumberArray[1])));
 
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(alternativeAlleleLength).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(alternativeAlleleLength).alts(alts).build();
               } else {
                   log.error("No length information for DUP:TANDEM:");
                   log.error(line);
@@ -437,18 +432,12 @@ public class VCFparser extends GzFileParser<Variant> {
                       int alternativeAlleleLength = svlen[i] == 0 ? Integer.MAX_VALUE : Math.max(Math.abs(svlen[i]), 1);
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
                   }
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(0).alts(alts).build();
                 //TODO, remove this as END should be equal to POS for insertion
               } else if (end != null && end.length > 0 && end[0] > 0) {
                   int alternativeAlleleLength = Math.max(Math.abs(end[0] - pos), 1);
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(0).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).build();
+                  return template.referenceAlleleLength(0).alts(alts).build();
               } else {
                   log.error("No length information for INS:");
                   log.error(line);
@@ -458,12 +447,7 @@ public class VCFparser extends GzFileParser<Variant> {
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
               // deletion SV (maybe part of a translocation)
               // but... we don't have the reference... so we add some random sequence?
-              //alts() will save a deep copy of alts, rathern than reference, so we
-              //cannot assign it until all changes are done.
-              Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
-                      ref(refs).phase(genotypeArray).isPhased(isGenotypePhased).
-                      varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                      randomNumberGenerator(random).traid(traid == null ? null : traid[0]);
+              template = template.traid(traid == null ? null : traid[0]);
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
@@ -534,11 +518,8 @@ public class VCFparser extends GzFileParser<Variant> {
                       }
                   }
                   //pos is incremented by 1, so it becomes 1-based start
-                  return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(Math.abs(0)).
-                          ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                          varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                          randomNumberGenerator(random).chr2(ChrString.string2ChrString(chr2)).
-                          pos2(pos2).end2(end2).isinv(isinv).traid(traid == null? null : traid[0]).build();
+                  return template.referenceAlleleLength(0).alts(alts).
+                          chr2(ChrString.string2ChrString(chr2)).pos2(pos2).end2(end2).isinv(isinv).traid(traid == null? null : traid[0]).build();
                   //TODO: this assumes only one alt, which might not be true
               } else {
                   log.error("No length information for DUP:TRA or DUP:ISP:");
