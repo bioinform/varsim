@@ -917,23 +917,13 @@ public class VCFcompare extends VarSimTool {
         int[] fullValidatedCount = new int[numReadOriginalVariant];
 
         // generate the output files
-        PrintWriter tpWriter = null;
-        PrintWriter unknownTpWriter = null;
-        PrintWriter fpWriter = null;
-        PrintWriter unknownFpWriter = null;
-        PrintWriter fnWriter = null;
-        PrintWriter jsonWriter = null;
-        try {
-            tpWriter = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
-            unknownTpWriter = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
-            fpWriter = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
-            unknownFpWriter = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
-            fnWriter = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
-            jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        try (
+            PrintWriter tpWriter = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
+            PrintWriter unknownTpWriter = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
+            PrintWriter fpWriter = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
+            PrintWriter unknownFpWriter = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
+            PrintWriter fnWriter = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
+            PrintWriter jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");) {
 
 
         // for this case we add to false positives if the variant is not validated.
@@ -1173,15 +1163,9 @@ public class VCFcompare extends VarSimTool {
             }
         }
 
-        try {
-            tpWriter.close();
-            unknownTpWriter.close();
-            fpWriter.close();
-            unknownFpWriter.close();
-            fnWriter.close();
-            jsonWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
         // Check the validity
