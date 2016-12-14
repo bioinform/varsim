@@ -12,16 +12,27 @@ public enum VarSimToolNamespace {
     FastqLiftover("fastq_liftover", "Lift FASTQs to the right reference", com.bina.varsim.fastqLiftover.FastqLiftOver.class),
     LongISLNDLiftover("longislnd_liftover", "Lift read map files to the right reference", com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver.class),
     JSONInserter("json_inserter", "Inserts n JSON files to one HTML to create n HTML files", com.bina.varsim.tools.evaluation.JSONInserter.class),
+    Help("-help", null, null, new String[]{"-h"}),
+    Version("-version", null, null),
     Unknown("", null, null);
 
     public String command;
     public String description;
     Class toolClass;
+    String[] commandAliases;
 
     VarSimToolNamespace(final String command, final String description, final Class toolClass) {
         this.command = command;
         this.description = description;
         this.toolClass = toolClass;
+        this.commandAliases = null;
+    }
+
+    VarSimToolNamespace(final String command, final String description, final Class toolClass, final String[] aliases) {
+        this.command = command;
+        this.description = description;
+        this.toolClass = toolClass;
+        this.commandAliases = aliases;
     }
 
     public static VarSimToolNamespace fromName(final String name) {
@@ -32,6 +43,13 @@ public enum VarSimToolNamespace {
                 }
                 if (varSimTool.command.equals(name) || varSimTool.name().equalsIgnoreCase(name)) {
                     return varSimTool;
+                }
+                if (varSimTool.commandAliases != null) {
+                    for (final String commandAlias : varSimTool.commandAliases) {
+                        if (commandAlias.equalsIgnoreCase(name)) {
+                            return varSimTool;
+                        }
+                    }
                 }
             }
         }
