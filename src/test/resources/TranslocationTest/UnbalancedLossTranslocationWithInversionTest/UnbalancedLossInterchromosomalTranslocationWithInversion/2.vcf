@@ -19,4 +19,4 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;SVLEN=-3	GT	1|1
+2	2	.	T	<DEL:TRA>	.	PASS	SVTYPE=DEL;TRAID=1;SVLEN=-3	GT	1|1
