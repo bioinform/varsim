@@ -342,9 +342,7 @@ if __name__ == "__main__":
     args = main_parser.parse_args()
 
     # make the directories we need
-    for d in [args.log_dir, args.out_dir]:
-        if not os.path.exists(d):
-            os.makedirs(d)
+    makedirs([args.log_dir, args.out_dir])
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
@@ -446,8 +444,7 @@ if __name__ == "__main__":
 
         if args.lift_ref:
             lifted_dir = os.path.join(args.out_dir, "lifted")
-            if not os.path.isdir(lifted_dir):
-                os.makedirs(lifted_dir)
+            makedirs([lifted_dir])
             #quick fix for issue of CN
             convertCN([merged_truth_vcf], "two2one")
             merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
