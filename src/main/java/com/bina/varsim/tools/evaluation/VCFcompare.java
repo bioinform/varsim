@@ -1112,19 +1112,9 @@ public class VCFcompare {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
-                                if (variant.getCompositions() == null) {
-                                    fpWriter.println(variant);
-                                } else {
-                                  for (Variant c : variant.getCompositions())
-                                    fpWriter.println(c);
-                                }
+                                variant.output(fpWriter);
                             } else {
-                                if (variant.getCompositions() == null) {
-                                    unknownFpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        unknownFpWriter.println(c);
-                                }
+                                variant.output(unknownFpWriter);
                             }
                         }
 
@@ -1157,19 +1147,9 @@ public class VCFcompare {
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + currentVariant);
                                 }
-                                if (variant.getCompositions() == null) {
-                                    fpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        fpWriter.println(c);
-                                }
+                                variant.output(fpWriter);
                             } else {
-                                if (variant.getCompositions() == null) {
-                                    unknownFpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        unknownFpWriter.println(c);
-                                }
+                                variant.output(unknownFpWriter);
                             }
                         }
                     }
@@ -1183,21 +1163,9 @@ public class VCFcompare {
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
                             log.warn("SNP with bad length: " + variant);
                         }
-                        if (variant.getCompositions() == null) {
-                            fpWriter.println(variant);
-                        } else {
-                            for (Variant c : variant.getCompositions()) {
-                                fpWriter.println(c);
-                            }
-                        }
+                        variant.output(fpWriter);
                     } else {
-                        if (variant.getCompositions() == null) {
-                            unknownFpWriter.println(variant);
-                        } else {
-                            for (Variant c : variant.getCompositions()) {
-                                unknownFpWriter.println(c);
-                            }
-                        }
+                        variant.output(unknownFpWriter);
                     }
                 }
 
@@ -1232,30 +1200,15 @@ public class VCFcompare {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
-                    if (var.getCompositions() == null) {
-                        tpWriter.println(var);
-                    } else {
-                        for (Variant c : var.getCompositions())
-                            tpWriter.println(c);
-                    }
+                    var.output(tpWriter);
                 } else {
-                    if (var.getCompositions() == null) {
-                        fnWriter.println(var);
-                    } else {
-                        for (Variant c : var.getCompositions())
-                            fnWriter.println(c);
-                    }
+                    var.output(fnWriter);
                 }
 
                 outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
                 validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
             } else {
-                if (var.getCompositions() == null) {
-                    unknownTpWriter.println(var);
-                } else {
-                    for (Variant c : var.getCompositions())
-                        unknownTpWriter.println(c);
-                }
+                var.output(unknownTpWriter);
             }
             numRead2++;
         }

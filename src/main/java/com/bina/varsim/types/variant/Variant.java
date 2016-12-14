@@ -8,6 +8,7 @@ import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
 
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
@@ -1033,6 +1034,20 @@ public class Variant implements Comparable<Variant>{
 
     }
 
+    /**
+     * write variant to a writer or write its compositions
+     * to the writer using java8 streams
+     *
+     * @since 1.8
+     * @param p
+     */
+    public void output(PrintWriter p) {
+       if (compositions == null) {
+           p.println(this);
+       } else {
+           compositions.stream().forEach(p::println);
+       }
+    }
     /**
      * @return a VCF record of the variant
      */
