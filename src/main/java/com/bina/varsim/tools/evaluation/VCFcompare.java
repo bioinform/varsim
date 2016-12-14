@@ -719,9 +719,7 @@ public class VCFcompare extends VarSimTool {
         // check if the file exists
         try {
             File f = new File(bedFilename);
-            if (f.exists()) {
-                bedExists = true;
-            }
+            bedExists = f.exists();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -822,22 +820,14 @@ public class VCFcompare extends VarSimTool {
         // store true variants as canonical ones, but remember original form
         while (trueVcfParser.hasMoreInput()) {
             Variant trueVariant = trueVcfParser.parseLine();
-            if (trueVariant == null) {
+            if (trueVariant == null ||
+                (!trueVariant.getGenotypes().isNonRef()) ||
+                (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName()))) {
                 log.info("skip line");
                 continue;
             }
 
-            Genotypes geno = trueVariant.getGenotypes();
-
-            if (!geno.isNonRef()) {
-                continue;
-            }
-
             VariantOverallType trueVariantOriginalType = trueVariant.getType();
-
-            if (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName())) {
-                continue;
-            }
 
             if (trueVariant.getTraid() != null) {
                 String currentTraid = trueVariant.getTraid();
@@ -851,7 +841,6 @@ public class VCFcompare extends VarSimTool {
                     continue;
                 }
             }
-
             // determine max variant region
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
@@ -942,17 +931,11 @@ public class VCFcompare extends VarSimTool {
                 Variant variant = newParser.parseLine();
 
                 //TODO: wrap variant comparison into a method for easier reading
-                if (variant == null) {
-                    // System.err.println("Bad variant or not a variant line");
+                if (variant == null ||
+                   (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName()))) {
+                    log.info("skip line");
                     continue;
                 }
-
-                Genotypes geno;
-
-                if (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName())) {
-                    continue;
-                }
-
 
                 boolean skipFP = false;
 
@@ -1008,7 +991,7 @@ public class VCFcompare extends VarSimTool {
 
                 for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
-                    geno = currentVariant.getGenotypes();
+                    Genotypes geno = currentVariant.getGenotypes();
                     //note here ResultComparator is created for each canonical variant
                     ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
 
