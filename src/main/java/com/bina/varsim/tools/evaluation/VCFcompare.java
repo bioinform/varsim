@@ -44,7 +44,7 @@ public class VCFcompare {
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
-    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA_DUP, FlexSeq.Type.ISP_DUP);
+    private static final Set<FlexSeq.Type> canonicalizableFlexSeqTypes = EnumSet.of(FlexSeq.Type.SEQ, FlexSeq.Type.TRA_DUP, FlexSeq.Type.ISP_DUP, FlexSeq.Type.TRA_DEL);
     private final static Logger log = Logger.getLogger(VCFcompare.class.getName());
 
     @Option(name = "-reference", usage = "Reference Genome, specificity will be computed if provided", metaVar = "file")
@@ -318,7 +318,7 @@ public class VCFcompare {
             noSplit = true;
         }
         //both alleles are reference alleles
-        if (variant.getGoodPaternal() == 0 && variant.getGoodMaternal() == 0) {
+        if (variant.getCompositions() == null && variant.getGoodPaternal() == 0 && variant.getGoodMaternal() == 0) {
             noSplit = true;
         }
         //paternal allele is not reference or sequence
@@ -343,6 +343,13 @@ public class VCFcompare {
             return variantList;
         }
 
+        if (variant.getCompositions() != null) {
+            for (Variant c : variant.getCompositions()) {
+                variantList.addAll(canonicalizeVariant(new Variant(c), end));
+            }
+            return variantList;
+        }
+
         /*
         split long variants into small ones for unambiguous comparison
         or into breakends
@@ -363,8 +370,8 @@ public class VCFcompare {
                     continue;
                 byte[] phase = new byte[2];
                 phase[parentIndex] = 1;
-                if(variant.getType(allele) == VariantType.Translocation_Duplication ||
-                variant.getType(allele) == VariantType.Interspersed_Duplication ) {
+                if (variant.getType(allele) == VariantType.Translocation_Duplication ||
+                        variant.getType(allele) == VariantType.Interspersed_Duplication) {
                     /* an example
                     >1
                     12345678-901-2
@@ -389,12 +396,12 @@ public class VCFcompare {
                     save and compare all 4 breakends, we only need to compare half of them.
                     and during comparison, we compare both POS and ALT parts.
                      */
-                  boolean isInversed = variant.isInversed();
-                       //we got two new adjacencies here, represented by 4 breakends
-                  //left-left
+                    boolean isInversed = variant.isInversed();
+                    //we got two new adjacencies here, represented by 4 breakends
+                    //left-left
                     Alt alt1 = new Alt();
                     alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr2(allele),
-                            isInversed? variant.getEnd2(allele) : variant.getPos2(allele), true, !isInversed));
+                            isInversed ? variant.getEnd2(allele) : variant.getPos2(allele), true, !isInversed));
                     /*
                     ******************
                     why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
@@ -409,10 +416,59 @@ public class VCFcompare {
                     Alt alt2 = new Alt();
                     alt2.setBreakend(new Alt.Breakend(ambiguousBase, variant.getChr2(parentIndex),
                             isInversed ? variant.getPos2(parentIndex) : variant.getEnd2(parentIndex), false, isInversed));
-                  //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
+                    //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
                     //after the shifting in vcf parsing, pos points to the base after breakpoint
                     variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).
                             referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
+                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                }
+                //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
+                //the deletion will be delt with as other variant types (type match + interval overlap)
+                variant.setAllele(parentIndex, (byte) 0); // set to reference
+            }
+        } else if ( variant.getType(variant.getGoodMaternal()) == VariantType.Translocation_Deletion ||
+                variant.getType(variant.getGoodPaternal()) == VariantType.Translocation_Deletion) {
+
+            for (int parentIndex = 0; parentIndex < 2; parentIndex++) {
+                int allele = variant.getAllele(parentIndex);
+                if (variant.getType(allele) == VariantType.Reference)
+                    continue;
+                byte[] phase = new byte[2];
+                phase[parentIndex] = 1;
+                if (variant.getType(allele) == VariantType.Translocation_Deletion) {
+                    /* an example
+                    >1
+                    12345678-901-2
+                    AATCATCG-TGG-C
+                    >2
+                    123456-7890-1234567
+                    TTCGTT-ATTA-CCCCAAA
+
+                    2 6 . T <DEL:TRA> . PASS  SVTYPE=DEL;SVLEN=-4 GT 1|1
+                    ||
+                    \/
+                    #left
+                    1 6 . T T[2:11[
+                    #right
+                    1 11 . C ]1:6]C
+
+                    note here, half of the information is redundant, so we do not need to
+                    save and compare both breakends, we only need to compare half of them.
+                    and during comparison, we compare both POS and ALT parts.
+                     */
+                    //we got two new adjacencies here, represented by 2 breakends
+                    //left
+                    Alt alt1 = new Alt();
+                    alt1.setBreakend(new Alt.Breakend(variant.getReference().clone(), variant.getChr(),
+                            variant.getPos() + variant.getReferenceAlleleLength(), true, true));
+                    /*
+                    ******************
+                    why pos-1? because VarSim will shift the start position to the right to mark the 1-based start of a variant
+                    however, here for a breakend, we need to shift it back
+                    ******************
+                    */
+                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos() - 1).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
                             varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
@@ -823,11 +879,15 @@ public class VCFcompare {
         int numReadOriginalVariant = 0;
         int numAddedSplitVariant = 0;
 
+
+        //track TRAID-linked variants
+        Map<String, List<Variant>> traid2composingVariants = new HashMap<>();
+
         // this is for the original variants
         // it stores the total length of the original variant in bases
         // Still check for validation of canonical full variants
         ArrayList<Integer> validatedTotalLength = new ArrayList<>();
-        ArrayList<Variant> trueCanonicalVariants = new ArrayList<>();
+        ArrayList<Variant> trueVariantsForOutput = new ArrayList<>();
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
@@ -851,11 +911,23 @@ public class VCFcompare {
                 continue;
             }
 
-            ChrString chr = trueVariant.getChr();
             VariantOverallType trueVariantOriginalType = trueVariant.getType();
 
-            if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
+            if (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName())) {
                 continue;
+            }
+
+            if (trueVariant.getTraid() != null) {
+                String currentTraid = trueVariant.getTraid();
+                if (traid2composingVariants.containsKey(currentTraid)) {
+                    traid2composingVariants.get(currentTraid).add(trueVariant);
+                    trueVariant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
+                    traid2composingVariants.remove(currentTraid);
+                } else {
+                    traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
+                    traid2composingVariants.get(currentTraid).add(trueVariant);
+                    continue;
+                }
             }
 
             // determine max variant region
@@ -871,6 +943,7 @@ public class VCFcompare {
             // add to interval tree
             for (Variant currentVariant : canonicalVariantList) {
 
+                ChrString chr = currentVariant.getChr();
                 int currentLength = currentVariant.maxLen();
                 maxLength = Math.max(maxLength, currentLength);
 
@@ -898,12 +971,12 @@ public class VCFcompare {
                 for (Variant currentVariant : canonicalVariantList) {
                     int currentLength = currentVariant.maxLen();
                     validatedTotalLength.add(currentLength);
-                    trueCanonicalVariants.add(currentVariant);
+                    trueVariantsForOutput.add(currentVariant);
                     numReadOriginalVariant++;
                 }
             } else {
                 validatedTotalLength.add(totalLength);
-                trueCanonicalVariants.add(trueVariant);
+                trueVariantsForOutput.add(trueVariant);
                 numReadOriginalVariant++;
             }
         }
@@ -948,6 +1021,8 @@ public class VCFcompare {
         int numberOfNewVariants = 0;
         // iterate over new VCF and collect stats
 
+        traid2composingVariants.clear();
+
         for (String currentVcfFile : newVcfFilename) {
             VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
 
@@ -962,18 +1037,36 @@ public class VCFcompare {
 
                 Genotypes geno;
 
-                ChrString chr = variant.getChr();
-
-                if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
+                if (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName())) {
                     continue;
                 }
 
-                SimpleInterval1D variantInterval = variant.getGenotypeUnionAlternativeInterval();
 
                 boolean skipFP = false;
-                if (intersector != null) {
-                    if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(chr, variantInterval, bedEither)) {
-                        skipFP = true;
+
+                if (variant.getTraid() != null) {
+                    String currentTraid = variant.getTraid();
+                    if (traid2composingVariants.containsKey(currentTraid)) {
+                        traid2composingVariants.get(currentTraid).add(variant);
+                        variant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
+                        traid2composingVariants.remove(currentTraid);
+                        if (intersector != null) {
+                          for (Variant c : variant.getCompositions()) {
+                              if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                                  skipFP = true;
+                              }
+                          }
+                        }
+                    } else {
+                        traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
+                        traid2composingVariants.get(currentTraid).add(variant);
+                        continue;
+                    }
+                } else {
+                    if (intersector != null) {
+                        if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(variant.getChr(), variant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                            skipFP = true;
+                        }
                     }
                 }
 
@@ -1019,9 +1112,19 @@ public class VCFcompare {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
-                                fpWriter.println(variant);
+                                if (variant.getCompositions() == null) {
+                                    fpWriter.println(variant);
+                                } else {
+                                  for (Variant c : variant.getCompositions())
+                                    fpWriter.println(c);
+                                }
                             } else {
-                                unknownFpWriter.println(variant);
+                                if (variant.getCompositions() == null) {
+                                    unknownFpWriter.println(variant);
+                                } else {
+                                    for (Variant c : variant.getCompositions())
+                                        unknownFpWriter.println(c);
+                                }
                             }
                         }
 
@@ -1054,9 +1157,19 @@ public class VCFcompare {
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + currentVariant);
                                 }
-                                fpWriter.println(variant);
+                                if (variant.getCompositions() == null) {
+                                    fpWriter.println(variant);
+                                } else {
+                                    for (Variant c : variant.getCompositions())
+                                        fpWriter.println(c);
+                                }
                             } else {
-                                unknownFpWriter.println(variant);
+                                if (variant.getCompositions() == null) {
+                                    unknownFpWriter.println(variant);
+                                } else {
+                                    for (Variant c : variant.getCompositions())
+                                        unknownFpWriter.println(c);
+                                }
                             }
                         }
                     }
@@ -1070,9 +1183,21 @@ public class VCFcompare {
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
                             log.warn("SNP with bad length: " + variant);
                         }
-                        fpWriter.println(variant);
+                        if (variant.getCompositions() == null) {
+                            fpWriter.println(variant);
+                        } else {
+                            for (Variant c : variant.getCompositions()) {
+                                fpWriter.println(c);
+                            }
+                        }
                     } else {
-                        unknownFpWriter.println(variant);
+                        if (variant.getCompositions() == null) {
+                            unknownFpWriter.println(variant);
+                        } else {
+                            for (Variant c : variant.getCompositions()) {
+                                unknownFpWriter.println(c);
+                            }
+                        }
                     }
                 }
 
@@ -1084,17 +1209,18 @@ public class VCFcompare {
 
         // read through again and compute for the true variants
         int numRead2 = 0;
-        for (Variant var : trueCanonicalVariants) {
+        for (Variant var : trueVariantsForOutput) {
 
-            ChrString chr = var.getChr();
+            boolean isKnown = intersector == null || excludeTprFromBedFiltering;
 
-            if (chrAcceptor != null && !chrAcceptor.contains(chr.getName())) {
-                continue;
+            if (var.getCompositions() == null) {
+                isKnown = isKnown || intersector.containsEndpoints(var.getChr(), var.getGenotypeUnionAlternativeInterval(), bedEither);
+            } else {
+                for (Variant c : var.getCompositions()) {
+                    isKnown = isKnown || intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither);
+                }
             }
-
-            SimpleInterval1D currentVariantInterval = var.getGenotypeUnionAlternativeInterval();
-
-            if (intersector == null || excludeTprFromBedFiltering || intersector.containsEndpoints(chr, currentVariantInterval, bedEither)) {
+            if (isKnown) {
                 int totalLength = validatedTotalLength.get(numRead2);
                 int validatedLength = fullValidatedCount[numRead2];
 
@@ -1106,15 +1232,30 @@ public class VCFcompare {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
-                    tpWriter.println(var);
+                    if (var.getCompositions() == null) {
+                        tpWriter.println(var);
+                    } else {
+                        for (Variant c : var.getCompositions())
+                            tpWriter.println(c);
+                    }
                 } else {
-                    fnWriter.println(var);
+                    if (var.getCompositions() == null) {
+                        fnWriter.println(var);
+                    } else {
+                        for (Variant c : var.getCompositions())
+                            fnWriter.println(c);
+                    }
                 }
 
                 outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
                 validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
             } else {
-                unknownTpWriter.println(var);
+                if (var.getCompositions() == null) {
+                    unknownTpWriter.println(var);
+                } else {
+                    for (Variant c : var.getCompositions())
+                        unknownTpWriter.println(c);
+                }
             }
             numRead2++;
         }

@@ -737,6 +737,11 @@ public class VCF2diploid {
                         sbStr.append(currVar.getLengthString());
                     } else if (currVar.getType() == VariantOverallType.TransDup || currVar.getType() == VariantOverallType.InterDup) {
                         sbStr.append("SVTYPE=DUP;");
+                        if (currVar.getTraid() != null) {
+                            sbStr.append("TRAID=");
+                            sbStr.append(currVar.getTraid());
+                            sbStr.append(";");
+                        }
                         sbStr.append("SVLEN=");
                         sbStr.append(currVar.getLengthString());
                         sbStr.append(";");
@@ -753,18 +758,15 @@ public class VCF2diploid {
                             sbStr.append(";");
                             sbStr.append("ISINV");
                         }
-                        if (currVar.getTraid() != null) {
-                            sbStr.append(";TRAID=");
-                            sbStr.append(currVar.getTraid());
-                        }
                     } else if (currVar.getType() == VariantOverallType.TransDel) {
                         sbStr.append("SVTYPE=DEL;");
+                        if (currVar.getTraid() != null) {
+                            sbStr.append("TRAID=");
+                            sbStr.append(currVar.getTraid());
+                            sbStr.append(";");
+                        }
                         sbStr.append("SVLEN=");
                         sbStr.append(currVar.getLengthString());
-                        if (currVar.getTraid() != null) {
-                            sbStr.append(";TRAID=");
-                            sbStr.append(currVar.getTraid());
-                        }
                     } else if (currVar.getType() == VariantOverallType.Deletion) {
                         sbStr.append("SVTYPE=DEL;");
                         sbStr.append("SVLEN=");

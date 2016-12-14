@@ -5,5 +5,6 @@ package com.bina.varsim.types.variant;
  */
 public enum VariantType {
     Reference, SNP, Insertion, Deletion, MNP, Inversion, Tandem_Duplication, Translocation_Duplication, Translocation_Deletion, Complex,
-    Breakend, Interspersed_Duplication;
+    Breakend, Interspersed_Duplication,
+    Composite; //consisting of more than one variant
 }
