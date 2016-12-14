@@ -1,6 +1,7 @@
 package com.bina.varsim.tools.evaluation;
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -36,7 +37,7 @@ public class JSONInserter extends VarSimTool {
     }
 
     public static void main(String[] args) throws IOException {
-        new JSONInserter("", "").run(args);
+        new JSONInserter("", VarSimToolNamespace.JSONInserter.description).run(args);
     }
 
     public void run(String[] args) throws IOException {

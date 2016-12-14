@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
@@ -80,7 +81,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
      */
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
-        new RandVCF2VCF("", "").run(args);
+        new RandVCF2VCF("", VarSimToolNamespace.RandVCF2VCF.description).run(args);
     }
 
     public Map<VariantType, Integer> countVariants(final String vcfFilename, final List<Genotypes> selectedGeno) {

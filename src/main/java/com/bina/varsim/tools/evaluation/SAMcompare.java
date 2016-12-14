@@ -8,6 +8,7 @@ package com.bina.varsim.tools.evaluation;
 
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock.BlockType;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
@@ -61,7 +62,7 @@ public class SAMcompare extends VarSimTool {
      * @param args
      */
     public static void main(String[] args) {
-        new SAMcompare("", "").run(args);
+        new SAMcompare("", VarSimToolNamespace.SAMCompare.description).run(args);
     }
 
     /**

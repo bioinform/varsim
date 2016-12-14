@@ -34,7 +34,7 @@ public class VCFstats extends VarSimTool {
      * @param args command line parameters
      */
     public static void main(String[] args) {
-        new VCFstats("", "").run(args);
+        new VCFstats("", VarSimToolNamespace.VCFStats.description).run(args);
     }
 
     public void run(String[] args) {

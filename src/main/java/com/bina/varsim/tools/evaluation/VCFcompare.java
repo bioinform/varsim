@@ -1,6 +1,7 @@
 package com.bina.varsim.tools.evaluation;
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.intervalTree.ValueInterval1D;
@@ -104,7 +105,7 @@ public class VCFcompare extends VarSimTool {
     }
 
     public static void main(String[] args) {
-        new VCFcompare("", "").run(args);
+        new VCFcompare("", VarSimToolNamespace.VCFCompare.description).run(args);
     }
 
     /**

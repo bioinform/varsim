@@ -3,6 +3,7 @@ package com.bina.varsim.tools.simulation;
 //--- Java imports ---
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
@@ -61,13 +62,18 @@ public class VCF2diploid extends VarSimTool {
         rand = new Random(seed);
     }
 
+    public VCF2diploid() {
+        super("", VarSimToolNamespace.VCF2Diploid.description);
+        rand = new Random(seed);
+    }
+
     /**
      * main method
      *
      * @param args
      */
     public static void main(final String[] args) {
-        new VCF2diploid("", "").run(args);
+        new VCF2diploid().run(args);
     }
 
     public File getOutputMap() {

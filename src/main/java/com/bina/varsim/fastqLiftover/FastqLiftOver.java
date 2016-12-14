@@ -1,6 +1,7 @@
 package com.bina.varsim.fastqLiftover;
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.readers.ARTPairedFastqAlnReader;
 import com.bina.varsim.fastqLiftover.readers.DWGSIMPairedFastqReader;
 import com.bina.varsim.fastqLiftover.readers.PBSIMFastqReader;
@@ -49,7 +50,7 @@ public class FastqLiftOver extends VarSimTool {
     }
 
     public static void main(String[] args) throws IOException {
-        new FastqLiftOver("", "").run(args);
+        new FastqLiftOver("", VarSimToolNamespace.FastqLiftover.description).run(args);
     }
 
     public InputStream decompressStream(final File inputFile) throws IOException {

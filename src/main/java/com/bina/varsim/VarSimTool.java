@@ -15,7 +15,7 @@ public abstract class VarSimTool {
     @Option(name = "-version", usage = "Print version", help = true)
     protected boolean printVersion = false;
 
-    @Option(name = "-h", usage = "Print help message", help=true, aliases = {"-help"})
+    @Option(name = "-h", usage = "Print help message", help = true, aliases = {"-help"})
     protected boolean help = false;
 
     protected String command = "";

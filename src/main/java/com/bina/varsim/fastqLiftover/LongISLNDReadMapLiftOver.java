@@ -1,6 +1,7 @@
 package com.bina.varsim.fastqLiftover;
 
 import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.types.MapBlocks;
 import com.bina.varsim.readers.longislnd.LongISLNDReadAlignmentMap;
 import com.bina.varsim.types.ReadMapRecord;
@@ -33,7 +34,7 @@ public class LongISLNDReadMapLiftOver extends VarSimTool {
     }
 
     public static void main(String[] args) throws IOException {
-        new LongISLNDReadMapLiftOver("", "").run(args);
+        new LongISLNDReadMapLiftOver("", VarSimToolNamespace.LongISLNDLiftover.description).run(args);
     }
 
     public PrintStream getOutStream(final File outFile, boolean compress) throws IOException {

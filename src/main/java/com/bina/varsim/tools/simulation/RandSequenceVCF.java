@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.util.VCFparser;
@@ -28,7 +29,7 @@ public class RandSequenceVCF extends RandVCFgenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        new RandSequenceVCF("", "").run(args);
+        new RandSequenceVCF("", VarSimToolNamespace.RandSequenceVCF.description).run(args);
     }
 
     public void run(String[] args) throws IOException {

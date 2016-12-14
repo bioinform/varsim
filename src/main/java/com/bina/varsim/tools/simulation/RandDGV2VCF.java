@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
@@ -71,7 +72,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
      * @param args command line arguments
      */
     public static void main(String[] args) throws IOException {
-        new RandDGV2VCF("", "").run(args);
+        new RandDGV2VCF("", VarSimToolNamespace.RandDGV2VCF.description).run(args);
     }
 
     Map<VariantType, Integer> countVariantsInDGV(final String dgvFilename, final SimpleReference reference,

@@ -14,8 +14,8 @@ public enum VarSimToolNamespace {
     JSONInserter("json_inserter", "Inserts n JSON files to one HTML to create n HTML files", com.bina.varsim.tools.evaluation.JSONInserter.class),
     Unknown("", null, null);
 
-    protected String command;
-    protected String description;
+    public String command;
+    public String description;
     Class toolClass;
 
     VarSimToolNamespace(final String command, final String description, final Class toolClass) {

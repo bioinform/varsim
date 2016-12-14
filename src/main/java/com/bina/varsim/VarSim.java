@@ -53,7 +53,7 @@ public class VarSim {
 
         final String command = tool.command;
         final String description = tool.description;
-        
+
         switch (tool) {
             case VCF2Diploid:
                 new VCF2diploid(command, description).run(pass_args);
