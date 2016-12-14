@@ -1,5 +1,6 @@
 package com.bina.varsim.tools.simulation;
 
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.Variant;
@@ -7,8 +8,6 @@ import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
@@ -26,10 +25,8 @@ public class RandBED2VCF extends RandVCFgenerator {
     // parameters
     static final int MIN_LEN_ARG = Constant.SVLEN;
     static final int MAX_LEN_ARG = 1000000;
-    static final long SEED_ARG = 333;
     private final static Logger log = Logger.getLogger(RandBED2VCF.class.getName());
-    @Option(name = "-seed", usage = "Seed for random sampling [" + SEED_ARG + "]")
-    static long seed = 333;
+
     SimpleReference ref;
     int num_novel_added = 0;
     int var_idx = 0;
@@ -59,14 +56,8 @@ public class RandBED2VCF extends RandVCFgenerator {
     @Option(name = "-inv_bed", usage = "Known Inversions BED file [Required]", metaVar = "BED_file", required = true)
     String inv_bed_filename;
 
-    public RandBED2VCF() {
-        super();
-        num_novel_added = 0;
-        var_idx = 0;
-    }
-
-    public RandBED2VCF(long seed) {
-        super(seed);
+    public RandBED2VCF(final String command, final String description) {
+        super(command, description);
         num_novel_added = 0;
         var_idx = 0;
     }
@@ -75,8 +66,7 @@ public class RandBED2VCF extends RandVCFgenerator {
      * @param args
      */
     public static void main(String[] args) {
-        RandBED2VCF runner = new RandBED2VCF();
-        runner.run(args);
+        new RandBED2VCF("", VarSimToolNamespace.RandBED2VCF.description).run(args);
     }
 
 
@@ -197,25 +187,7 @@ public class RandBED2VCF extends RandVCFgenerator {
     }
 
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Generates a VCF file (to stdout) from an insertion and a deletion BED file. Insertions sequences\n"
-                + "are randomly sampled from the insert_seq file. This is designed for the Venter SV BED files. \n";
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java -jar randbed2vcf.jar [options...]");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
+        if (!parseArguments(args)) {
             return;
         }
 

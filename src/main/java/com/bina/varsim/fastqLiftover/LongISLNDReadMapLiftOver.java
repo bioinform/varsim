@@ -1,5 +1,7 @@
 package com.bina.varsim.fastqLiftover;
 
+import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.types.MapBlocks;
 import com.bina.varsim.readers.longislnd.LongISLNDReadAlignmentMap;
 import com.bina.varsim.types.ReadMapRecord;
@@ -14,9 +16,8 @@ import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
-public class LongISLNDReadMapLiftOver {
+public class LongISLNDReadMapLiftOver extends VarSimTool {
     private final static Logger log = Logger.getLogger(LongISLNDReadMapLiftOver.class.getName());
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
     @Option(name = "-map", usage = "Map file", metaVar = "file", required = true)
     private File mapFile;
     @Option(name = "-longislnd", usage = "Read map files from LongISLND", metaVar = "file", required = true)
@@ -28,8 +29,12 @@ public class LongISLNDReadMapLiftOver {
     @Option(name = "-minIntervalLength", usage = "Minimum interval length in liftover")
     private int minIntervalLength = MapBlocks.MIN_LENGTH_INTERVAL;
 
+    public LongISLNDReadMapLiftOver(final String command, final String description) {
+        super(command, description);
+    }
+
     public static void main(String[] args) throws IOException {
-        new LongISLNDReadMapLiftOver().run(args);
+        new LongISLNDReadMapLiftOver("", VarSimToolNamespace.LongISLNDLiftover.description).run(args);
     }
 
     public PrintStream getOutStream(final File outFile, boolean compress) throws IOException {
@@ -47,21 +52,7 @@ public class LongISLNDReadMapLiftOver {
     }
 
     public void run(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(VERSION);
-            System.err.println(e.getMessage());
-            System.err.println("java LongISLNDReadMapLiftOver [options...] arguments...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println();
+        if (!parseArguments(args)) {
             return;
         }
 

@@ -74,6 +74,8 @@ def convertCN(filenames, operation):
             shutil.copyfile(output.name, name)
             os.remove(output.name)
     return
+
+
 def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
@@ -165,6 +167,19 @@ def check_executable(fpath):
         logger.error("ERROR: File %s is not executable\n" % (fpath))
         sys.exit(os.EX_NOINPUT)
 
+
+def fill_missing_sequences(vcf, seq_file, work_dir, log_dir):
+    logger = logging.getLogger(fill_missing_sequences.__name__)
+
+    out_vcf = os.path.join(work_dir, os.path.basename(vcf))
+    out_log = os.path.join(log_dir, "%s_fill_missing.log" % (os.path.basename(vcf)))
+
+    command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf]
+    with open(out_log, "w") as log_fd:
+        logger.info("Running command " + " ".join(command))
+        subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
+    return out_vcf
+        
 
 def run_vcfstats(vcfs, out_dir, log_dir):
     logger = logging.getLogger(run_vcfstats.__name__)
@@ -327,9 +342,7 @@ if __name__ == "__main__":
     args = main_parser.parse_args()
 
     # make the directories we need
-    for d in [args.log_dir, args.out_dir]:
-        if not os.path.exists(d):
-            os.makedirs(d)
+    makedirs([args.log_dir, args.out_dir])
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
@@ -347,6 +360,13 @@ if __name__ == "__main__":
     t_s = time.time()
 
     args.vcfs = map(os.path.realpath, args.vcfs)
+    makedirs(map(lambda x: os.path.join(args.out_dir, "filled_in", str(x)), range(len(args.vcfs))))
+    in_vcfs = []
+    for i, vcf in enumerate(args.vcfs):
+        tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
+        makedirs([tool_work_dir])
+        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), tool_work_dir, tool_work_dir))
+    args.vcfs = map(os.path.realpath, in_vcfs)
 
     open_fds = []
     if not args.disable_rand_vcf:
@@ -424,8 +444,7 @@ if __name__ == "__main__":
 
         if args.lift_ref:
             lifted_dir = os.path.join(args.out_dir, "lifted")
-            if not os.path.isdir(lifted_dir):
-                os.makedirs(lifted_dir)
+            makedirs([lifted_dir])
             #quick fix for issue of CN
             convertCN([merged_truth_vcf], "two2one")
             merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)

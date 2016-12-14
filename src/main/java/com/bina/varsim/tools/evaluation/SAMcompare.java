@@ -7,6 +7,8 @@ package com.bina.varsim.tools.evaluation;
  */
 
 
+import com.bina.varsim.VarSimTool;
+import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock.BlockType;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
@@ -30,7 +32,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
-public class SAMcompare {
+public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
     static final int MAPQ_CUTOFF = 10;
     static final int MAPQ_UNMAPPED = 255;
@@ -52,12 +54,15 @@ public class SAMcompare {
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
     private ArrayList<String> bam_filename = new ArrayList<>();
 
+    public SAMcompare(final String command, final String description) {
+        super(command, description);
+    }
+
     /**
      * @param args
      */
     public static void main(String[] args) {
-        SAMcompare runner = new SAMcompare();
-        runner.run(args);
+        new SAMcompare("", VarSimToolNamespace.SAMCompare.description).run(args);
     }
 
     /**
@@ -74,26 +79,7 @@ public class SAMcompare {
 
 
     public void run(String[] args) {
-        String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
-        String usage = "Analyses the accuracy of the alignments in a SAM/BAM file\n" +
-                "bed_file restricts the analysis to the bed regions\n";
-
-        System.err.println(VERSION);
-
-        CmdLineParser parser = new CmdLineParser(this);
-
-        // if you have a wider console, you could increase the value;
-        // here 80 is also the default
-        parser.setUsageWidth(80);
-
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("java -jar VarSim.jar samcompare [options...] bam_files ...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println(usage);
+        if (!parseArguments(args)) {
             return;
         }
 
