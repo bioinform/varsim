@@ -687,7 +687,7 @@ public class Variant implements Comparable<Variant>{
                 return VariantOverallType.InterDup;
             }
         } else if (variantTypes.contains(VariantType.Translocation_Deletion) && variantTypes.contains(VariantType.Translocation_Deletion)) {
-            return VariantOverallType.CutPasteTrans;
+            return VariantOverallType.Translocation;
         }
 
         /* Treat these as complex for now

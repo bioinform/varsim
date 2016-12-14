@@ -5,7 +5,7 @@ VarSim follows the latest VCF format specification [4.3](https://samtools.github
 * In VCF Specification 4.3, the only values allowed for `SVTYPE` in `INFO` are `DEL`, `INS`, `DUP`, `INV`, `CNV` and `BND`.
 * In `ALT` column, a subtype can be specified, e.g. `<DUP:TANDEM>`.
 * In `ALT` column, values allowed for first level symbolic alleles are `DEL`, `INS`, `DUP`, `INV`, `CNV`. Reserved subtypes include `DUP:TANDEM`, `DEL:ME`, `INS:ME`.
-* A cut-and-paste translocation is represented in 2 lines, one as `<DEL:TRA>`, the other as `<DUP:TRA>`. That is, they must appear in pairs.
+* A cut-and-paste translocation, or simply as translocation, is represented in 2 lines, one as `<DEL:TRA>`, the other as `<DUP:TRA>`. That is, they must appear in pairs.
 Evaluation will be performed independently on these two lines.
  The two lines can be reported as a single event (translocation) or 2 unrelated events (deletion + duplication).
  If reported as a single event, VarSim uses `TRAID` in `INFO` field to differentiate between different translocations.
