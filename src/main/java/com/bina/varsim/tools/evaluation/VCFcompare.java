@@ -26,11 +26,15 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import com.bina.varsim.types.ComparisonResultWriter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+
+import static com.bina.varsim.types.ComparisonResultWriter.*;
+
 
 /**
  * Compare two VCF files, output the TPR and FDR for various bins and variant types
@@ -271,7 +275,6 @@ public class VCFcompare extends VarSimTool {
     private List<Variant> canonicalizeVariant(Variant variant, boolean end) {
         List<Variant> variantList = new ArrayList<>();
 
-        //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
 
         boolean noSplit = false;
@@ -903,12 +906,12 @@ public class VCFcompare extends VarSimTool {
 
         // generate the output files
         try (
-            PrintWriter tpWriter = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
-            PrintWriter unknownTpWriter = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
-            PrintWriter fpWriter = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
-            PrintWriter unknownFpWriter = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
-            PrintWriter fnWriter = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
-            PrintWriter jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");) {
+            PrintWriter tpWriter = TP_WRITER.getWriter(outPrefix);
+            PrintWriter unknownTpWriter = UNKNOWN_TP_WRITER.getWriter(outPrefix);
+            PrintWriter fpWriter = FP_WRITER.getWriter(outPrefix);
+            PrintWriter unknownFpWriter = UNKNOWN_FP_WRITER.getWriter(outPrefix);
+            PrintWriter fnWriter = FN_WRITER.getWriter(outPrefix);
+            PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
 
 
         // for this case we add to false positives if the variant is not validated.
