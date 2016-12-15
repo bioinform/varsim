@@ -1373,67 +1373,59 @@ public class VCFcompare extends VarSimTool {
                 // require SNP content to match
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompare);
 
+                if (overlaps == null) {
+                    // nothing found
+                    return maxTrueVarianLength;
+                }
+
                 byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSequence()[0];
 
                 int numberOfSnpMatches = 0;
-                if (overlaps != null) {
-                    for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
-                        Variant trueVariant = trueVariantInterval.getContent();
-                        boolean hasSnp = false;
-                        int splitVariantIndex = trueVariant.splitVariantIndex;
-                        int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                    Variant trueVariant = trueVariantInterval.getContent();
+                    boolean hasSnp = false;
+                    int splitVariantIndex = trueVariant.splitVariantIndex;
+                    int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
 
-                        if (trueVariant.originalType == VariantOverallType.Complex) {
-                            //System.err.println("Overlap complex SNP!");
-                            overlapComplex = true;
-                        }
+                    if (validated.get(splitVariantIndex)) {
+                        // skip ones already validated
+                        continue;
+                    }
 
-                        if (validated.get(splitVariantIndex)) {
-                            // skip ones already validated
-                            continue;
-                        }
-
-                        // check genotype
-                        if (trueVariant.isHom()) {
-                            // position is correct, check genotype
-                            if (trueVariant.getType(trueVariant.getGoodPaternal()) == VariantType.SNP
+                    // check genotype
+                    for (int parent = 0; parent < 2; parent++) {
+                        int allele = trueVariant.getAllele(parent);
+                        //true variant is heterozygous, so only one allele has non-reference sequence
+                        if (trueVariant.isHom() || allele > 0) {
+                            if (trueVariant.getType(allele) == VariantType.SNP
                                     && variant.getPos() == trueVariant.getPos()) {
-                                if (alternativeAlleleFirstBase == trueVariant.getAlt(trueVariant.getGoodPaternal()).getSequence()[0]) {
-                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
+                                    if (trueVariant.isHom())
+                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                    else
+                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 }
                                 hasSnp = true;
                             }
-                        } else {
-                            for (int parent = 0; parent < 2; parent++) {
-                                int allele = trueVariant.getAllele(parent);
-                                //true variant is heterozygous, so only one allele has non-reference sequence
-                                if (allele > 0) {
-                                    if (trueVariant.getType(allele) == VariantType.SNP
-                                            && variant.getPos() == trueVariant.getPos()) {
-                                        if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
-                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        }
-                                        hasSnp = true;
-                                    }
-                                }
-                            }
                         }
-
-                        if (hasSnp) {
-                            numberOfSnpMatches++;
-                            maxTrueVarianLength = 1;
-                        }
+                        if (trueVariant.isHom())
+                            break;
                     }
 
-                    if (numberOfSnpMatches > 1) {
-                        log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
+                    if (hasSnp) {
+                        numberOfSnpMatches++;
+                        maxTrueVarianLength = 1;
                     }
+                }
+
+                if (numberOfSnpMatches > 1) {
+                    log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
                 }
             } else {
                 // Non-SNPs
                 SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
-
 
                 if (overlaps == null) {
                     // nothing found
@@ -1444,83 +1436,41 @@ public class VCFcompare extends VarSimTool {
                     Variant trueVariant = trueVariantInterval.getContent();
                     int splitVariantIndex = trueVariant.splitVariantIndex;
                     int wholeVariantIndex = trueVariant.wholeVariantIndex;
-
-                    if (trueVariant.originalType == VariantOverallType.Complex) {
-                        overlapComplex = true;
-                    }
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
 
                     if (validated.get(splitVariantIndex)) {
                         // skip ones already validated
-                        //System.err.println("Skip..." + splitVariantIndex);
                         continue;
                     }
 
                     //all genotypes in the overlapping true variant will be checked
                     for (int parent = 0; parent < 2; parent++) {
-                        if (trueVariant.isHom() && parent == 1) {
-                            break;
-                        }
-
                         int allele = trueVariant.getAllele(parent);
 
-                        if (allele == 0) {
-                            // reference allele
+                        if (allele == 0 || // reference allele
+                            type != trueVariant.getType(allele)) { // need type to be the same
                             continue;
                         }
 
-                        if (type != trueVariant.getType(allele)) {
-                            // need type to be the same
-                            continue;
-                        }
-
-                        boolean matched = false;
-
-                        if (type == VariantType.Insertion && ignoreInsertionLength) {
-                            // this is the case where we want to ignore insertion lengths when comparing
-                            // just do a check of the start position
-
-                            if (Math.abs(trueVariant.getPos() - variant.getPos()) <= wiggle) {
-                                // Matches!
-                                if (trueVariant.isHom()) {
-                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                } else {
-                                    heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                }
-                                matched = true;
-                            }
-                        } else {
-                            // this is the normal case
-                            // check if the variant interval matches
-                            if (intervalForCompare.intersects(trueVariant.getVariantInterval(allele), overlapRatio, wiggle)) {
-                                Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
-                                Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
-                                if (trueVariant.getType(allele) != VariantType.Breakend ||
-                                        Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle)) {
-                                    // it matches an allele!
-                                    // now check alternate allele length
-                                    int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
-                                    int trueAlternativeAllele = trueVariant.getAlt(allele).length();
-                                    double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
-                                    double minRatio = Math.min(ratio, 1 / ratio);
-                                    if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
-                                        // yay, it is a match!
-                                        if (trueVariant.isHom()) {
-                                            homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        } else {
-                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        }
-                                        matched = true;
-                                    }
-                                }
-                            }
-                        }
+                        Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
+                        Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
+                        boolean overlap = trueVariant.getVariantInterval(allele, ignoreInsertionLength).
+                                intersects(intervalForCompare, overlapRatio, wiggle);
+                        boolean breakendMatch =  trueVariant.getType(allele) == VariantType.Breakend &&
+                                Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle);
+                        boolean matched = trueVariant.getType(allele) == VariantType.Breakend ? breakendMatch : overlap;
 
                         if (matched) {
-                            int len = trueVariant.maxLen(allele);
-                            if (len > maxTrueVarianLength) {
-                                maxTrueVarianLength = len;
+                            if (trueVariant.isHom()) {
+                                homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                            } else {
+                                heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                             }
+                            maxTrueVarianLength = Math.max(trueVariant.maxLen(allele), maxTrueVarianLength);
                         }
+                        //for homozygous variants, we only check the first allele
+                        if (trueVariant.isHom())
+                            break;
                     }
                 }
 
