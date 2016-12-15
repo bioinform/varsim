@@ -487,6 +487,22 @@ public class Variant implements Comparable<Variant>{
         }
     }
 
+    /**
+     * if the variant is an insertion and ignoreInsertionLength is true
+     * then return interval of length 1, otherwise, return normal
+     * interval
+     *
+     * @param ind
+     * @return
+     */
+    public SimpleInterval1D getVariantInterval(final int ind, final boolean ignoreInsertionLength) {
+        if (getType(ind) == VariantType.Insertion && ignoreInsertionLength) {
+            return new SimpleInterval1D(getPos(), getPos());
+        } else {
+            return getVariantInterval(ind);
+        }
+    }
+
     // union of intervals from the genotypes
     public SimpleInterval1D getGenotypeUnionAlternativeInterval() {
         return getAlternativeAlleleInterval(getGoodPaternal()).union(getAlternativeAlleleInterval(getGoodMaternal()));

@@ -848,17 +848,13 @@ public class VCFcompare extends VarSimTool {
             //TODO: remove constructor here (because another copy will be created inside canonicalizeVariant
             List<Variant> canonicalVariantList = canonicalizeVariant(new Variant(trueVariant));
 
-            int totalLength = 0;
-            double maxLength = 0;
+            int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
+            int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
 
             // add to interval tree
             for (Variant currentVariant : canonicalVariantList) {
 
                 ChrString chr = currentVariant.getChr();
-                int currentLength = currentVariant.maxLen();
-                maxLength = Math.max(maxLength, currentLength);
-
-                totalLength += currentLength;
                 SimpleInterval1D currentVariantInterval = null;
                 try {
                     currentVariantInterval = currentVariant.getGenotypeUnionVariantInterval();
@@ -876,7 +872,7 @@ public class VCFcompare extends VarSimTool {
                 numAddedSplitVariant++;
             }
 
-            if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio && canonicalVariantList.size() > 1) {
+            if (totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength && canonicalVariantList.size() > 1) {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant currentVariant : canonicalVariantList) {
@@ -971,23 +967,15 @@ public class VCFcompare extends VarSimTool {
                 // if called as complex variant convert to indel+snps
                 List<Variant> canonicalVariantList = canonicalizeVariant(variant);
 
-                double totalLength = 0;
+                int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
                 double validatedLength = 0;
-                double maxLength = 0;
-
-                for (Variant currentVariant : canonicalVariantList) {
-                    totalLength += currentVariant.maxLen();
-                    maxLength = Math.max(maxLength, currentVariant.maxLen());
-                }
+                int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
 
                 // split up variants that are basically one big variant and one small one
-                boolean computeAsSplit = false;
-                if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio &&
-                    canonicalVariantList.size() > 1) {
-                    //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
-                    //is longer than certain proportion of sum of lengths of all canonicalized variants.
-                    computeAsSplit = true;
-                }
+                //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
+                //is longer than certain proportion of sum of lengths of all canonicalized variants.
+                boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
+                    canonicalVariantList.size() > 1;
 
                 for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
@@ -998,7 +986,7 @@ public class VCFcompare extends VarSimTool {
                     if (currentVariant.isHom()) {
                         int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
                         final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
-                        if (dualIdx.splitVariantIndex >= 0) {
+                        if (dualIdx.isSplitVariantValid()) {
                             // validated
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
@@ -1031,7 +1019,7 @@ public class VCFcompare extends VarSimTool {
 
                         final DualIdx dualIdx = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
 
-                        if (dualIdx.splitVariantIndex >= 0) {
+                        if (dualIdx.isSplitVariantValid()) {
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
@@ -1251,6 +1239,12 @@ public class VCFcompare extends VarSimTool {
             wholeVariantIndex = -1;
         }
 
+        public boolean isSplitVariantValid() {
+            return splitVariantIndex >= 0;
+        }
+        public boolean isWholeVariantValid() {
+            return wholeVariantIndex >= 0;
+        }
         public boolean equals(Object obj) {
             if (obj == this)
                 return true;
@@ -1287,15 +1281,13 @@ public class VCFcompare extends VarSimTool {
         // Results to store
         // this stores the indexes of the true variants matched
         List<DualIdx> homozygousMatches = new ArrayList<>();
-        List<List<DualIdx>> heterozygousMatches = new ArrayList<>(2); // matches either parent
+        List<List<DualIdx>> heterozygousMatches = Arrays.asList(new ArrayList<DualIdx>(), new ArrayList<DualIdx>()); // matches either parent
 
         public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
             this.trueVariantIntervalTree = trueVariantIntervalTree;
             this.overlapRatio = overlapRatio;
             this.wiggle = wiggle;
 
-            heterozygousMatches.add(new ArrayList<DualIdx>());
-            heterozygousMatches.add(new ArrayList<DualIdx>());
             overlapComplex = false;
             ignoreInsertionLength = ignoreInsLen;
         }
@@ -1305,10 +1297,7 @@ public class VCFcompare extends VarSimTool {
          * @return
          */
         public DualIdx isHomMatch() {
-            if (homozygousMatches.size() > 0) {
-                return homozygousMatches.get(0);
-            }
-            return new DualIdx();
+            return homozygousMatches.isEmpty() ? new DualIdx() : homozygousMatches.get(0);
         }
 
         /**
@@ -1319,7 +1308,7 @@ public class VCFcompare extends VarSimTool {
             List<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
             temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
             //if there is a match in intersection, return the first one from the intersection
-            if (temp.size() > 0) {
+            if (!temp.isEmpty()) {
                 return temp.get(0);
               /*
               if no match in intersection, return the first one from the larger list (the genotype
@@ -1334,7 +1323,7 @@ public class VCFcompare extends VarSimTool {
               1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
 
                */
-            } else if (heterozygousMatches.get(0).size() > 0 || heterozygousMatches.get(1).size() > 0) {
+            } else if (heterozygousMatches.stream().anyMatch(l -> !l.isEmpty())) {
                 if (heterozygousMatches.get(0).size() > heterozygousMatches.get(1).size()) {
                     return heterozygousMatches.get(0).get(0);
                 } else {
@@ -1350,11 +1339,11 @@ public class VCFcompare extends VarSimTool {
          */
         public DualIdx isMatch() {
             DualIdx idx = isHomMatch();
-            if (idx.splitVariantIndex >= 0) {
+            if (idx.isSplitVariantValid()) {
                 return idx;
             }
             idx = isHetMatch();
-            if (idx.splitVariantIndex >= 0) {
+            if (idx.isSplitVariantValid()) {
                 return idx;
             }
             return idx;
@@ -1371,16 +1360,10 @@ public class VCFcompare extends VarSimTool {
          * @return The maximum length of all true variants
          */
         public int compareVariant(Variant variant, int genotype, BitSet validated) {
-            double overlapRatio = this.overlapRatio;
-            // consider type to change overlap percent
+            //TODO: consider type to change overlap percent
             VariantType type = variant.getType(genotype);
             ChrString chr = variant.getChr();
-            SimpleInterval1D intervalForCompare;
-            if (type == VariantType.Insertion && ignoreInsertionLength) {
-                intervalForCompare = new SimpleInterval1D(variant.getPos(), variant.getPos());
-            } else {
-                intervalForCompare = variant.getVariantInterval(genotype);
-            }
+            SimpleInterval1D intervalForCompare = variant.getVariantInterval(genotype, ignoreInsertionLength);
 
             int maxTrueVarianLength = 0;
 
