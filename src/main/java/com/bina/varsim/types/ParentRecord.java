@@ -9,7 +9,7 @@ import com.bina.varsim.types.variant.VariantType;
 /**
  * Stores the data for each haplotype separately
  */
-public class Parent_record {
+public class ParentRecord {
     // 0 = paternal, 1 = maternal
     public final static int PATERNAL = 0;
     public final static int MATERNAL = 1;
@@ -17,7 +17,7 @@ public class Parent_record {
     Type_record<VariantOverallType> overall_data;
     int total_count;
 
-    public Parent_record() {
+    public ParentRecord() {
         data = (Type_record<VariantType>[]) new Type_record[2];
         data[PATERNAL] = new Type_record<>();
         data[MATERNAL] = new Type_record<>();

@@ -7,12 +7,10 @@ package com.bina.varsim.tools;
 import com.bina.varsim.VarSimTool;
 import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.types.BedFile;
-import com.bina.varsim.types.Parent_record;
+import com.bina.varsim.types.ParentRecord;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 public class VCFstats extends VarSimTool {
@@ -49,7 +47,7 @@ public class VCFstats extends VarSimTool {
             bed_file = new BedFile(bed_filename);
         }
 
-        Parent_record data = new Parent_record();
+        ParentRecord data = new ParentRecord();
 
         VCFparser parser = new VCFparser(vcf_filename, null, false);
 
