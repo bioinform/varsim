@@ -58,6 +58,23 @@ public class DGVparser extends GzFileParser<Variant> {
      * @return VariantType. Return value is null if cannot map to the right VariantType
      */
     public VariantType getVariantType(final String dgvVariantType, final String dgvVariantSubtype) {
+
+      /* as of 12/16/2016 the following subtypes are found in dgvdb
+        complex
+                deletion
+        duplication
+                gain
+        gain+loss
+        insertion
+                inversion
+        loss
+        mobile element insertion
+        novel sequence insertion
+        sequence alteration
+        tandem duplication
+
+        subtypes not handled by dgvparser will be ignored
+        */
         switch (dgvVariantType) {
             case "CNV":
                 switch (dgvVariantSubtype) {
@@ -74,7 +91,7 @@ public class DGVparser extends GzFileParser<Variant> {
                     case "Deletion":
                         return VariantType.Deletion;
                     default:
-                        return null;
+                        throw new IllegalArgumentException("Unrecognized subtype: " + dgvVariantSubtype);
                 }
             case "OTHER":
                 switch (dgvVariantSubtype) {
@@ -83,10 +100,10 @@ public class DGVparser extends GzFileParser<Variant> {
                     case "Inversion":
                         return VariantType.Inversion;
                     default:
-                        return null;
+                        throw new IllegalArgumentException("Unrecognized subtype: " + dgvVariantSubtype);
                 }
             default:
-                return null;
+                throw new IllegalArgumentException("Unrecognized type: " + dgvVariantType);
         }
     }
 
@@ -133,7 +150,13 @@ public class DGVparser extends GzFileParser<Variant> {
         final int end_loc = Integer.parseInt(ll[3]);
 
         // determine variant type
-        final VariantType type = getVariantType(ll[4], ll[5]);
+        VariantType type = null;
+        try {
+            type = getVariantType(ll[4], ll[5]);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
 
         // TODO right now we treat all gains as tandem duplications
         int observedgains = (ll[15].length() > 0) ? Integer.parseInt(ll[15]) : 0;
@@ -197,9 +220,6 @@ public class DGVparser extends GzFileParser<Variant> {
         }
 
         byte[] phase = {1, 1};
-        /*return new Variant(chr, start_loc, refs.length, refs,
-                alts, phase, false, var_id, "PASS", String.valueOf((char) _reference
-                .byteAt(chr, start_loc - 1)), _rand);*/
         return new Variant.Builder().chr(chr).pos(start_loc).referenceAlleleLength(refs.length).
                 ref(refs).alts(alts).phase(phase).isPhased(false).varId(var_id).filter("PASS").
                 refDeleted(String.valueOf((char) reference.byteAt(chr, start_loc - 1))).randomNumberGenerator(rand).build();
