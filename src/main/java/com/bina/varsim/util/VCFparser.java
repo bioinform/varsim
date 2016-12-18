@@ -41,6 +41,7 @@ public class VCFparser extends GzFileParser<Variant> {
      */
     public VCFparser(String fileName, String id, boolean pass, Random rand) {
         this(new File(fileName), id, pass, rand);
+        log.info("Reading " + fileName);
     }
 
 
