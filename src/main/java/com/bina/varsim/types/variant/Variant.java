@@ -984,7 +984,7 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(varId);
         sbStr.append("\t");
         // ref allele
-        sbStr.append(getReferenceString());
+        sbStr.append(getReferenceString() + extraBase);
         sbStr.append("\t");
         // alt alleles
         sbStr.append(alternativeAlleleString());
