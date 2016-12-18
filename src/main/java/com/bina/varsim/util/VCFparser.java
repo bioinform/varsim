@@ -7,6 +7,7 @@ import com.bina.varsim.types.FlexSeq;
 import com.bina.varsim.types.VCFInfo;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
+import com.google.common.base.Splitter;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -200,14 +201,13 @@ public class VCFparser extends GzFileParser<Variant> {
     public Variant processLine(String line) throws UnexpectedException {
 
         // try to determine the column we should read for the genotype
-        StringTokenizer toks = new StringTokenizer(line);
+        Iterable<String> toks = Splitter.on('\t').split(line);
         if (line.startsWith("#")) {
             if (sampleId != null && line.startsWith("#CHROM")) {
                 chromLineSeen = true;
                 int index = 0;
-                while (toks.hasMoreTokens()) {
+                for (String tok : toks) {
                     index++;
-                    String tok = toks.nextToken();
                     if (tok.equals(sampleId))
                         sampleIndex = index;
                 }
@@ -232,28 +232,28 @@ public class VCFparser extends GzFileParser<Variant> {
         String REF = "", FILTER = "", ALT = "", variantId = "";
         String phase = ".", copyNumber = "0/0", infoString = "", FORMAT;
         String[] sampleInfo;
-        while (toks.hasMoreTokens()) {
+        for (String tok : toks) {
             index++;
             if (index == 1) { // Parsing chromosome
-                chr = new ChrString(toks.nextToken());
+                chr = new ChrString(tok);
             } else if (index == 2) // Parsing position
-                pos = Integer.parseInt(toks.nextToken());
+                pos = Integer.parseInt(tok);
             else if (index == 3) // Parsing position
-                variantId = toks.nextToken();
+                variantId = tok;
             else if (index == 4) // Parsing reference allele
-                REF = toks.nextToken();
+                REF = tok;
             else if (index == 5) // Parsing alternative allele
-                ALT = toks.nextToken();
+                ALT = tok;
             else if (index == 7) // FILTER field
-                FILTER = toks.nextToken();
+                FILTER = tok;
             else if (index == 8) // INFO field
-                infoString = toks.nextToken();
+                infoString = tok;
             else if (index == 9) { // Output format
-                FORMAT = toks.nextToken();
+                FORMAT = tok;
                 genotypeIndex = getFormatKeyIndex(FORMAT, "GT");
                 copyNumberIndex = getFormatKeyIndex(FORMAT, "CN");
             } else if (index == sampleIndex) { // phased or unphased genotype
-                sampleInfo = (toks.nextToken()).split(":");
+                sampleInfo = tok.split(":");
                 if (genotypeIndex >= 0) {
                     phase = sampleInfo[genotypeIndex];
                 }
@@ -262,8 +262,6 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
 
                 break;
-            } else {
-                toks.nextToken();
             }
         }
 
