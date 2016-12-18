@@ -1037,16 +1037,7 @@ public class Variant implements Comparable<Variant>{
      * @return a VCF record of the variant
      */
     public String toString() {
-        StringBuilder sbStr = new StringBuilder();
-
-        buildVCFstr(sbStr);
-
-
-        sbStr.append(getGoodPaternal());
-        sbStr.append("|");
-        sbStr.append(getGoodMaternal());
-
-        return sbStr.toString();
+        return toString(getGoodPaternal(), getGoodMaternal());
     }
 
     /**
