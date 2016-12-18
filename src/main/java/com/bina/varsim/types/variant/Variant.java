@@ -6,6 +6,7 @@ import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.StringUtilities;
 import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -982,6 +983,7 @@ public class Variant implements Comparable<Variant>{
      */
     public String toString(final int paternal, final int maternal) {
         StringBuilder sbStr = new StringBuilder();
+        VariantOverallType t = getType();
 
         // chromosome name
         sbStr.append(chr.toString());
@@ -1004,19 +1006,45 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == VariantOverallType.TandemDup || getType() == VariantOverallType.InterDup || getType() == VariantOverallType.TransDup) {
+        if (t == VariantOverallType.TandemDup) {
             sbStr.append("SVTYPE=DUP;");
-            if (traid != null)
-                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.TransDel) {
+            if(isInversed()) {
+                sbStr.append(";ISINV");
+            }
+        } else if (t == VariantOverallType.TransDup || t == VariantOverallType.InterDup) {
+            sbStr.append("SVTYPE=DUP;");
+            if (getTraid() != null) {
+                sbStr.append("TRAID=" + getTraid() + ";");
+            }
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
+            sbStr.append(";");
+            //chr2,pos2,end2
+            sbStr.append("CHR2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllChr2(), ","));
+            sbStr.append(";");
+            sbStr.append("POS2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllPos2(), ","));
+            sbStr.append(";");
+            sbStr.append("END2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllEnd2(), ","));
+            if(isInversed()) {
+                sbStr.append(";ISINV");
+            }
+        } else if (t == VariantOverallType.Deletion) {
             sbStr.append("SVTYPE=DEL;");
-            if (traid != null)
-                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-        } else if (getType() == VariantOverallType.Inversion) {
+        } else if (t == VariantOverallType.TransDel) {
+            sbStr.append("SVTYPE=DEL;");
+            if (getTraid() != null) {
+                sbStr.append("TRAID=" + getTraid() + ";");
+            }
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
+        } else if (t == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
@@ -1034,15 +1062,27 @@ public class Variant implements Comparable<Variant>{
         }
 
         // for this one we need to work out which one is added
-        sbStr.append(paternal);
-        sbStr.append("|");
-        sbStr.append(maternal);
+        if (paternal != -1 && maternal != -1) {
+            sbStr.append(paternal);
+            sbStr.append("|");
+            sbStr.append(maternal);
+        } else if (paternal != -1){
+            sbStr.append(paternal);
+        } else if (maternal != -1) {
+            sbStr.append(maternal);
+        }
 
         if (hasCN()) {
             sbStr.append(":");
-            sbStr.append(String.valueOf(getCN(paternal)));
-            sbStr.append("|");
-            sbStr.append(String.valueOf(getCN(maternal)));
+            if (paternal != -1 && maternal != -1) {
+                sbStr.append(String.valueOf(getCN(paternal)));
+                sbStr.append("|");
+                sbStr.append(String.valueOf(getCN(maternal)));
+            } else if (paternal != -1) {
+                sbStr.append(String.valueOf(getCN(paternal)));
+            } else if (maternal != -1) {
+                sbStr.append(String.valueOf(getCN(maternal)));
+            }
         }
 
         return sbStr.toString();
