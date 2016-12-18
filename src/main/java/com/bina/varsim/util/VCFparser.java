@@ -686,7 +686,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return processLine(line);
         } catch (Exception e) {
             //TODO: right now just be lazy, die on any error
-            log.error(e.getMessage());
+            log.error(e.getMessage() + "\n" + line);
             System.exit(255);
         }
         return null;
