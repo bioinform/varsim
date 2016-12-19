@@ -6,6 +6,7 @@ import com.bina.intervalTree.SimpleInterval1D;
 import com.bina.varsim.types.*;
 import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.SimpleReference;
+import com.bina.varsim.util.StringUtilities;
 import org.apache.log4j.Logger;
 
 import java.io.PrintWriter;
@@ -985,12 +986,22 @@ public class Variant implements Comparable<Variant>{
         }
     }
 
+    /**
+     * @return a VCF record of the variant
+     */
+    public String toString() {
+        return toString(getGoodPaternal(), getGoodMaternal());
+    }
 
     /**
-     * @param sbStr will build a VCF record without genotype
+     * @param paternal specified paternal allele
+     * @param maternal specified maternal allele
+     * @return the VCF record with prespecified genotype
      */
-    // TODO, this should be self contained and output a VCF record
-    private void buildVCFstr(final StringBuilder sbStr) {
+    public String toString(final int paternal, final int maternal) {
+        StringBuilder sbStr = new StringBuilder();
+        VariantOverallType t = getType();
+
         // chromosome name
         sbStr.append(chr.toString());
         sbStr.append("\t");
@@ -1001,7 +1012,7 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(varId);
         sbStr.append("\t");
         // ref allele
-        sbStr.append(getReferenceString());
+        sbStr.append(getReferenceString() + extraBase);
         sbStr.append("\t");
         // alt alleles
         sbStr.append(alternativeAlleleString());
@@ -1012,19 +1023,45 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(filter);
         sbStr.append("\t");
         // INFO
-        if (getType() == VariantOverallType.TandemDup || getType() == VariantOverallType.InterDup || getType() == VariantOverallType.TransDup) {
+        if (t == VariantOverallType.TandemDup) {
             sbStr.append("SVTYPE=DUP;");
-            if (traid != null)
-                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-        } else if (getType() == VariantOverallType.Deletion || getType() == VariantOverallType.TransDel) {
+            if(isInversed()) {
+                sbStr.append(";ISINV");
+            }
+        } else if (t == VariantOverallType.TransDup || t == VariantOverallType.InterDup) {
+            sbStr.append("SVTYPE=DUP;");
+            if (getTraid() != null) {
+                sbStr.append("TRAID=" + getTraid() + ";");
+            }
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
+            sbStr.append(";");
+            //chr2,pos2,end2
+            sbStr.append("CHR2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllChr2(), ","));
+            sbStr.append(";");
+            sbStr.append("POS2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllPos2(), ","));
+            sbStr.append(";");
+            sbStr.append("END2=");
+            sbStr.append(StringUtilities.concatenateArray(getAllEnd2(), ","));
+            if(isInversed()) {
+                sbStr.append(";ISINV");
+            }
+        } else if (t == VariantOverallType.Deletion) {
             sbStr.append("SVTYPE=DEL;");
-            if (traid != null)
-                sbStr.append("TRAID=" + traid + ";");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-        } else if (getType() == VariantOverallType.Inversion) {
+        } else if (t == VariantOverallType.TransDel) {
+            sbStr.append("SVTYPE=DEL;");
+            if (getTraid() != null) {
+                sbStr.append("TRAID=" + getTraid() + ";");
+            }
+            sbStr.append("SVLEN=");
+            sbStr.append(getLengthString());
+        } else if (t == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
@@ -1036,18 +1073,35 @@ public class Variant implements Comparable<Variant>{
 
         // label (GT)
         if (hasCN()) {
-            sbStr.append("CN:GT\t");
+            sbStr.append("GT:CN\t");
         } else {
             sbStr.append("GT\t");
         }
 
-        if (hasCN()) {
-            sbStr.append(String.valueOf(getCN(getGoodPaternal())));
+        // for this one we need to work out which one is added
+        if (paternal != -1 && maternal != -1) {
+            sbStr.append(paternal);
             sbStr.append("|");
-            sbStr.append(String.valueOf(getCN(getGoodMaternal())));
-            sbStr.append(":");
+            sbStr.append(maternal);
+        } else if (paternal != -1){
+            sbStr.append(paternal);
+        } else if (maternal != -1) {
+            sbStr.append(maternal);
         }
 
+        if (hasCN()) {
+            sbStr.append(":");
+            if (paternal != -1 && maternal != -1) {
+                sbStr.append(String.valueOf(getCN(paternal)));
+                sbStr.append("|");
+                sbStr.append(String.valueOf(getCN(maternal)));
+            } else if (paternal != -1) {
+                sbStr.append(String.valueOf(getCN(paternal)));
+            } else if (maternal != -1) {
+                sbStr.append(String.valueOf(getCN(maternal)));
+            }
+        }
+        return sbStr.toString();
     }
 
     /**
@@ -1063,39 +1117,6 @@ public class Variant implements Comparable<Variant>{
        } else {
            compositions.stream().forEach(p::println);
        }
-    }
-    /**
-     * @return a VCF record of the variant
-     */
-    public String toString() {
-        StringBuilder sbStr = new StringBuilder();
-
-        buildVCFstr(sbStr);
-
-
-        sbStr.append(getGoodPaternal());
-        sbStr.append("|");
-        sbStr.append(getGoodMaternal());
-
-        return sbStr.toString();
-    }
-
-    /**
-     * @param paternal specified paternal allele
-     * @param maternal specified maternal allele
-     * @return the VCF record with prespecified genotype
-     */
-    public String toString(final int paternal, final int maternal) {
-        StringBuilder sbStr = new StringBuilder();
-
-        buildVCFstr(sbStr);
-
-        // for this one we need to work out which one is added
-        sbStr.append(paternal);
-        sbStr.append("|");
-        sbStr.append(maternal);
-
-        return sbStr.toString();
     }
 
     /**

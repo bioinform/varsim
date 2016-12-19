@@ -150,61 +150,7 @@ abstract public class RandVCFgenerator extends VarSimTool {
         if (!ref.matches("[ACTGN]*") || (!var.isAltACTGN())) {
             return; // don't output if it is not ACTGN
         }
-
-        // chromosome name
-        bw.write(var.getChr().toString());
-        bw.write("\t");
-        // start position
-        bw.write(String.valueOf(var.getPos() - var.getRef_deleted().length));
-        bw.write("\t");
-        // variant id
-        bw.write(var.getVariantId());
-        bw.write("\t");
-        // ref allele
-        bw.write(ref);
-        bw.write("\t");
-        // alt alleles
-        bw.write(alt);
-        bw.write("\t");
-        // variant quality
-        bw.write(".\t");
-        // pass label
-        bw.write(var.getFilter());
-        bw.write("\t");
-        // INFO
-        // the SV info is written here
-        StringBuilder sbStr = new StringBuilder();
-        // assume the SV type is consistent across alleles
-        if (var.getType() == VariantOverallType.TandemDup) {
-            sbStr.append("SVTYPE=DUP;");
-            sbStr.append("SVLEN=");
-            sbStr.append(var.getLengthString());
-        } else if (var.getType() == VariantOverallType.Inversion) {
-            sbStr.append("SVTYPE=INV;");
-            sbStr.append("SVLEN=");
-            sbStr.append(var.getLengthString());
-        } else {
-            sbStr.append("SVLEN=");
-            sbStr.append(var.getLengthString());
-        }
-        bw.write(sbStr.toString());
-        bw.write("\t");
-        // label (GT)
-        bw.write("GT:CN");
-        bw.write("\t");
-        // the genotype
-        // for this one we need to work out which one is added
-        sbStr = new StringBuilder();
-        sbStr.append(geno0);
-        sbStr.append("|");
-        sbStr.append(geno1);
-        sbStr.append(":");
-        sbStr.append(var.getCN(geno0));
-        sbStr.append("|");
-        sbStr.append(var.getCN(geno1));
-
-        bw.write(sbStr.toString());
-
+        bw.write(var.toString(geno0, geno1));
         bw.newLine();
     }
 
