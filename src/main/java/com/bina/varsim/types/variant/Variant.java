@@ -9,6 +9,7 @@ import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.StringUtilities;
 import org.apache.log4j.Logger;
 
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
@@ -484,6 +485,22 @@ public class Variant implements Comparable<Variant>{
             log.error("maxLen(ind): " + maxLen(ind));
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * if the variant is an insertion and ignoreInsertionLength is true
+     * then return interval of length 1, otherwise, return normal
+     * interval
+     *
+     * @param ind
+     * @return
+     */
+    public SimpleInterval1D getVariantInterval(final int ind, final boolean ignoreInsertionLength) {
+        if (getType(ind) == VariantType.Insertion && ignoreInsertionLength) {
+            return new SimpleInterval1D(getPos(), getPos());
+        } else {
+            return getVariantInterval(ind);
         }
     }
 
@@ -1084,8 +1101,22 @@ public class Variant implements Comparable<Variant>{
                 sbStr.append(String.valueOf(getCN(maternal)));
             }
         }
-
         return sbStr.toString();
+    }
+
+    /**
+     * write variant to a writer or write its compositions
+     * to the writer using java8 streams
+     *
+     * @since 1.8
+     * @param p
+     */
+    public void output(PrintWriter p) {
+       if (compositions == null) {
+           p.println(this);
+       } else {
+           compositions.stream().forEach(p::println);
+       }
     }
 
     /**
