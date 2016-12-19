@@ -110,8 +110,8 @@ public class DGVparser extends GzFileParser<Variant> {
     
     // returns null if the line is not a variant
     public Variant parseLine() {
+      String line = this.line;
       try {
-        String line = this.line;
         readLine();
 
         if (line == null || line.length() == 0) {
