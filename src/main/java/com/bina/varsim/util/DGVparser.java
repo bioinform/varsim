@@ -211,8 +211,8 @@ public class DGVparser extends GzFileParser<Variant> {
                 ref(refs).alts(alts).phase(phase).isPhased(false).varId(var_id).filter("PASS").
                 refDeleted(String.valueOf((char) reference.byteAt(chr, start_loc - 1))).randomNumberGenerator(rand).build();
       } catch (Exception e) {
-        log.error(e.getMessage());
-        log.error("line: " + line);
+        log.warn(e.getMessage());
+        log.warn("line: " + line);
         return null;
       }
     }
