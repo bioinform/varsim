@@ -26,11 +26,15 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import com.bina.varsim.types.ComparisonResultWriter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+
+import static com.bina.varsim.types.ComparisonResultWriter.*;
+
 
 /**
  * Compare two VCF files, output the TPR and FDR for various bins and variant types
@@ -120,6 +124,8 @@ public class VCFcompare extends VarSimTool {
       */
     private void canonicalizeToIndels(List<Variant> canonicalVariantList, int[] alleleLengthDifference, byte[] reference, byte[][] alternativeAlleles,
                                       Variant variant, int currentPosition, boolean end) {
+        Variant.Builder template = new Variant.Builder().chr(variant.getChr()).isPhased(true).
+                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("");
         // add insertions or deletions for complex variants
         if (alleleLengthDifference[0] == alleleLengthDifference[1] && alleleLengthDifference[0] != 0) {
             // homozygous
@@ -129,68 +135,44 @@ public class VCFcompare extends VarSimTool {
                     byte[] phase = {1, 1};
 
                     if (end) {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                     } else {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                     }
                 } else {
                     byte[] phase = {0, 0};
                     if (end) {
                         phase[0] = 1;
                         phase[1] = 0;
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                         phase[0] = 0;
                         phase[1] = 1;
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt2 = new Alt();
                         alt2.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                         phase[0] = 0;
                         phase[1] = 1;
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt2 = new Alt();
                         alt2.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                        canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
+                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
                     }
                 }
             } else if (alleleLengthDifference[0] < 0) {
@@ -199,27 +181,19 @@ public class VCFcompare extends VarSimTool {
                 byte[] phase = {1, 1};
                 //VarSim will try adding indels both to left end and to right end
                 if (end) {
-                    /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[0].length, -alleleLengthDifference[0],
-                            Arrays.copyOfRange(reference, alternativeAlleles[0].length, alternativeAlleles[0].length - alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                     Alt alt = new Alt();
                     alt.setSeq(new FlexSeq());
-                    canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + alternativeAlleles[0].length).
+                    canonicalVariantList.add(template.pos(currentPosition + alternativeAlleles[0].length).
                             referenceAlleleLength(-alleleLengthDifference[0]).
                             ref(Arrays.copyOfRange(reference, alternativeAlleles[0].length, alternativeAlleles[0].length - alleleLengthDifference[0])).
-                            alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                            alts(new Alt[]{alt}).phase(phase).build());
                 } else {
-                    /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[0],
-                            Arrays.copyOfRange(reference, 0, -alleleLengthDifference[0]), new FlexSeq[]{new FlexSeq()},
-                            phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                     Alt alt = new Alt();
                     alt.setSeq(new FlexSeq());
-                    canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).
+                    canonicalVariantList.add(template.pos(currentPosition).
                             referenceAlleleLength(-alleleLengthDifference[0]).
                             ref(Arrays.copyOfRange(reference, 0, -alleleLengthDifference[0])).
-                            alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                            alts(new Alt[]{alt}).phase(phase).build());
                 }
             }
         } else {
@@ -229,52 +203,37 @@ public class VCFcompare extends VarSimTool {
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + reference.length, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + reference.length).
+                        canonicalVariantList.add(template.pos(currentPosition + reference.length).
                                 referenceAlleleLength(0).ref(new byte[0]).
-                                alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                                alts(new Alt[]{alt}).phase(phase).build());
                     } else {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, 0, new byte[0],
-                                new FlexSeq[]{new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a]))},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a])));
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).
+                        canonicalVariantList.add(template.pos(currentPosition).
                                 referenceAlleleLength(0).ref(new byte[0]).
-                                alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                                alts(new Alt[]{alt}).phase(phase).build());
+
                     }
                 } else if (alleleLengthDifference[a] < 0) {
                     // deletion
                     byte[] phase = {0, 0};
                     phase[a] = 1;
                     if (end) {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition + alternativeAlleles[a].length, -alleleLengthDifference[a],
-                                Arrays.copyOfRange(reference, alternativeAlleles[a].length, alternativeAlleles[a].length - alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq());
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + alternativeAlleles[a].length).
+                        canonicalVariantList.add(template.pos(currentPosition + alternativeAlleles[a].length).
                                 referenceAlleleLength(-alleleLengthDifference[a]).
                                 ref(Arrays.copyOfRange(reference, alternativeAlleles[a].length, alternativeAlleles[a].length - alleleLengthDifference[a])).
-                                alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                                alts(new Alt[]{alt}).phase(phase).build());
                     } else {
-                        /*canonicalVariantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference[a],
-                                Arrays.copyOfRange(reference, 0, -alleleLengthDifference[a]), new FlexSeq[]{new FlexSeq()},
-                                phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq());
-                        canonicalVariantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).
+                        canonicalVariantList.add(template.pos(currentPosition).
                                 referenceAlleleLength(-alleleLengthDifference[a]).
                                 ref(Arrays.copyOfRange(reference, 0, -alleleLengthDifference[a])).
-                                alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                                alts(new Alt[]{alt}).phase(phase).build());
                     }
                 }
             }
@@ -316,7 +275,6 @@ public class VCFcompare extends VarSimTool {
     private List<Variant> canonicalizeVariant(Variant variant, boolean end) {
         List<Variant> variantList = new ArrayList<>();
 
-        //System.err.println("pat|mat: " + var.paternal() +"|"+ var.maternal());
         // if the variant is an MNP or SNP, break it dooooownnn
 
         boolean noSplit = false;
@@ -365,6 +323,9 @@ public class VCFcompare extends VarSimTool {
         phasing information if not required to consider it.
 
          */
+        Variant.Builder template = new Variant.Builder().chr(variant.getChr()).
+                isPhased(true).varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("");
+
         if ( variant.getType(variant.getGoodMaternal()) == VariantType.Translocation_Duplication ||
                 variant.getType(variant.getGoodMaternal()) == VariantType.Interspersed_Duplication ||
                     variant.getType(variant.getGoodPaternal()) == VariantType.Translocation_Duplication ||
@@ -414,9 +375,8 @@ public class VCFcompare extends VarSimTool {
                     however, here for a breakend, we need to shift it back
                     ******************
                     */
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos() - 1).referenceAlleleLength(0).
-                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(variant.getPos() - 1).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).build());
 
                     //right-right
                     Alt alt2 = new Alt();
@@ -424,9 +384,8 @@ public class VCFcompare extends VarSimTool {
                             isInversed ? variant.getPos2(parentIndex) : variant.getEnd2(parentIndex), false, isInversed));
                     //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
                     //after the shifting in vcf parsing, pos points to the base after breakpoint
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos()).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(variant.getPos()).
+                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
                 //the deletion will be delt with as other variant types (type match + interval overlap)
@@ -473,9 +432,8 @@ public class VCFcompare extends VarSimTool {
                     however, here for a breakend, we need to shift it back
                     ******************
                     */
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(variant.getPos() - 1).referenceAlleleLength(0).
-                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(variant.getPos() - 1).referenceAlleleLength(0).
+                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
                 //the deletion will be delt with as other variant types (type match + interval overlap)
@@ -567,9 +525,8 @@ public class VCFcompare extends VarSimTool {
                     byte[] phase = {1, 1};
                     Alt alt = new Alt();
                     alt.setSeq(new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]));
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(1).
-                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
+                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).build());
                 } else if (alleleSpecificRelativePosition[0] < 0 && alleleSpecificRelativePosition[1] >= 0 &&
                         alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // one deleted, hence the other is homozygous
@@ -577,9 +534,8 @@ public class VCFcompare extends VarSimTool {
                     byte[] phase = {1, 1};
                     Alt alt = new Alt();
                     alt.setSeq(new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]]));
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(1).
-                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
+                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).build());
                 } else if (alleleSpecificRelativePosition[0] >= 0 && alleleSpecificRelativePosition[1] < 0 &&
                            alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] == referenceAlleleSequence[relativePosition]) {
                     // ref call with del
@@ -613,9 +569,8 @@ public class VCFcompare extends VarSimTool {
                     byte[] phase = {1, 1};
                     Alt alt = new Alt();
                     alt.setSeq(new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]));
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(1).
-                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
+                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).build());
                 } else if (alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]] != referenceAlleleSequence[relativePosition] &&
                         alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]] != referenceAlleleSequence[relativePosition]) {
                     // het but both alt
@@ -626,16 +581,11 @@ public class VCFcompare extends VarSimTool {
                       ^  the scenario this if statement deals with
                     */
                     byte[] phase = {1, 2};
-                    /*variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                            new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]),
-                             new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]])},
-                            phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
                     Alt[] alts = new Alt[2];
                     alts[0].setSeq(new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]));
                     alts[1].setSeq(new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]]));
-                    variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(1).
-                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(alts).phase(phase).isPhased(true).
-                            varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                    variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
+                            ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(alts).phase(phase).build());
                 } else {
                     // het with one ref
                   /*
@@ -650,11 +600,8 @@ public class VCFcompare extends VarSimTool {
                             phase[a] = 1;
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]]));
-                            /*variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceAlleleSequence[relativePosition]},
-                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[a][alleleSpecificRelativePosition[a]])}, phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(1).
-                                    ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                            variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
+                                    ref(new byte[]{referenceAlleleSequence[relativePosition]}).alts(new Alt[]{alt}).phase(phase).build());
                         }
                     }
                 }
@@ -684,15 +631,13 @@ public class VCFcompare extends VarSimTool {
                         if (end) {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference)));
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + referenceSequence.length).referenceAlleleLength(0).
-                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                            variantList.add(template.pos(currentPosition + referenceSequence.length).referenceAlleleLength(0).
+                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                         } else {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference)));
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).referenceAlleleLength(0).
-                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                            variantList.add(template.pos(currentPosition).referenceAlleleLength(0).
+                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
                         }
                     } else if (alleleLengthDifference < 0) {
                         // deletion
@@ -701,23 +646,17 @@ public class VCFcompare extends VarSimTool {
                         if (end) {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq());
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition + alternativeAlleleSequence.length).
+                            variantList.add(template.pos(currentPosition + alternativeAlleleSequence.length).
                                     referenceAlleleLength(-alleleLengthDifference).
                                     ref(Arrays.copyOfRange(referenceSequence, alternativeAlleleSequence.length, alternativeAlleleSequence.length - alleleLengthDifference)).
-                                    alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
+                                    alts(new Alt[]{alt}).phase(phase).build());
                         } else {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq());
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).
+                            variantList.add(template.pos(currentPosition).
                                     referenceAlleleLength(-alleleLengthDifference).
                                     ref(Arrays.copyOfRange(referenceSequence, 0, -alleleLengthDifference)).
-                                    alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                            /*variantList.add(new Variant(variant.getChr(), currentPosition, -alleleLengthDifference,
-                                    Arrays.copyOfRange(referenceSequence, 0, -alleleLengthDifference),
-                                    new FlexSeq[]{new FlexSeq()},
-                                    phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
+                                    alts(new Alt[]{alt}).phase(phase).build());
                         }
                     }
 
@@ -739,12 +678,9 @@ public class VCFcompare extends VarSimTool {
 
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(alternativeAlleleSequence[idx]));
-                            variantList.add(new Variant.Builder().chr(variant.getChr()).pos(currentPosition).
+                            variantList.add(template.pos(currentPosition).
                                     referenceAlleleLength(1).ref(new byte[]{referenceSequence[i]}).
-                                    alts(new Alt[]{alt}).phase(phase).isPhased(true).
-                                    varId(variant.getVariantId()).filter(VCFparser.DEFAULT_FILTER).refDeleted("").build());
-                            /*variantList.add(new Variant(variant.getChr(), currentPosition, 1, new byte[]{referenceSequence[i]},
-                                    new FlexSeq[]{new FlexSeq(alternativeAlleleSequence[idx])}, phase, true, variant.getVariantId(), VCFparser.DEFAULT_FILTER, ""));*/
+                                    alts(new Alt[]{alt}).phase(phase).build());
                         }
 
                         currentPosition++;
@@ -786,9 +722,7 @@ public class VCFcompare extends VarSimTool {
         // check if the file exists
         try {
             File f = new File(bedFilename);
-            if (f.exists()) {
-                bedExists = true;
-            }
+            bedExists = f.exists();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -889,22 +823,14 @@ public class VCFcompare extends VarSimTool {
         // store true variants as canonical ones, but remember original form
         while (trueVcfParser.hasMoreInput()) {
             Variant trueVariant = trueVcfParser.parseLine();
-            if (trueVariant == null) {
+            if (trueVariant == null ||
+                (!trueVariant.getGenotypes().isNonRef()) ||
+                (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName()))) {
                 log.info("skip line");
                 continue;
             }
 
-            Genotypes geno = trueVariant.getGenotypes();
-
-            if (!geno.isNonRef()) {
-                continue;
-            }
-
             VariantOverallType trueVariantOriginalType = trueVariant.getType();
-
-            if (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName())) {
-                continue;
-            }
 
             if (trueVariant.getTraid() != null) {
                 String currentTraid = trueVariant.getTraid();
@@ -918,7 +844,6 @@ public class VCFcompare extends VarSimTool {
                     continue;
                 }
             }
-
             // determine max variant region
             // when comparing genotypes, we need to individually compare
             // to make sure they really overlap
@@ -926,17 +851,13 @@ public class VCFcompare extends VarSimTool {
             //TODO: remove constructor here (because another copy will be created inside canonicalizeVariant
             List<Variant> canonicalVariantList = canonicalizeVariant(new Variant(trueVariant));
 
-            int totalLength = 0;
-            double maxLength = 0;
+            int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
+            int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
 
             // add to interval tree
             for (Variant currentVariant : canonicalVariantList) {
 
                 ChrString chr = currentVariant.getChr();
-                int currentLength = currentVariant.maxLen();
-                maxLength = Math.max(maxLength, currentLength);
-
-                totalLength += currentLength;
                 SimpleInterval1D currentVariantInterval = null;
                 try {
                     currentVariantInterval = currentVariant.getGenotypeUnionVariantInterval();
@@ -954,7 +875,7 @@ public class VCFcompare extends VarSimTool {
                 numAddedSplitVariant++;
             }
 
-            if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio && canonicalVariantList.size() > 1) {
+            if (totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength && canonicalVariantList.size() > 1) {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant currentVariant : canonicalVariantList) {
@@ -984,23 +905,13 @@ public class VCFcompare extends VarSimTool {
         int[] fullValidatedCount = new int[numReadOriginalVariant];
 
         // generate the output files
-        PrintWriter tpWriter = null;
-        PrintWriter unknownTpWriter = null;
-        PrintWriter fpWriter = null;
-        PrintWriter unknownFpWriter = null;
-        PrintWriter fnWriter = null;
-        PrintWriter jsonWriter = null;
-        try {
-            tpWriter = new PrintWriter(outPrefix + "_TP.vcf", "UTF-8");
-            unknownTpWriter = new PrintWriter(outPrefix + "_unknown_TP.vcf", "UTF-8");
-            fpWriter = new PrintWriter(outPrefix + "_FP.vcf", "UTF-8");
-            unknownFpWriter = new PrintWriter(outPrefix + "_unknown_FP.vcf", "UTF-8");
-            fnWriter = new PrintWriter(outPrefix + "_FN.vcf", "UTF-8");
-            jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        try (
+            PrintWriter tpWriter = TP_WRITER.getWriter(outPrefix);
+            PrintWriter unknownTpWriter = UNKNOWN_TP_WRITER.getWriter(outPrefix);
+            PrintWriter fpWriter = FP_WRITER.getWriter(outPrefix);
+            PrintWriter unknownFpWriter = UNKNOWN_FP_WRITER.getWriter(outPrefix);
+            PrintWriter fnWriter = FN_WRITER.getWriter(outPrefix);
+            PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
 
 
         // for this case we add to false positives if the variant is not validated.
@@ -1019,17 +930,11 @@ public class VCFcompare extends VarSimTool {
                 Variant variant = newParser.parseLine();
 
                 //TODO: wrap variant comparison into a method for easier reading
-                if (variant == null) {
-                    // System.err.println("Bad variant or not a variant line");
+                if (variant == null ||
+                   (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName()))) {
+                    log.info("skip line");
                     continue;
                 }
-
-                Genotypes geno;
-
-                if (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName())) {
-                    continue;
-                }
-
 
                 boolean skipFP = false;
 
@@ -1065,34 +970,26 @@ public class VCFcompare extends VarSimTool {
                 // if called as complex variant convert to indel+snps
                 List<Variant> canonicalVariantList = canonicalizeVariant(variant);
 
-                double totalLength = 0;
+                int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
                 double validatedLength = 0;
-                double maxLength = 0;
-
-                for (Variant currentVariant : canonicalVariantList) {
-                    totalLength += currentVariant.maxLen();
-                    maxLength = Math.max(maxLength, currentVariant.maxLen());
-                }
+                int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
 
                 // split up variants that are basically one big variant and one small one
-                boolean computeAsSplit = false;
-                if (totalLength >= Constant.SVLEN && maxLength / totalLength >= overlapRatio &&
-                    canonicalVariantList.size() > 1) {
-                    //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
-                    //is longer than certain proportion of sum of lengths of all canonicalized variants.
-                    computeAsSplit = true;
-                }
+                //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
+                //is longer than certain proportion of sum of lengths of all canonicalized variants.
+                boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
+                    canonicalVariantList.size() > 1;
 
                 for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
-                    geno = currentVariant.getGenotypes();
+                    Genotypes geno = currentVariant.getGenotypes();
                     //note here ResultComparator is created for each canonical variant
                     ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
 
                     if (currentVariant.isHom()) {
                         int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
                         final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
-                        if (dualIdx.splitVariantIndex >= 0) {
+                        if (dualIdx.isSplitVariantValid()) {
                             // validated
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
@@ -1101,19 +998,9 @@ public class VCFcompare extends VarSimTool {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
-                                if (variant.getCompositions() == null) {
-                                    fpWriter.println(variant);
-                                } else {
-                                  for (Variant c : variant.getCompositions())
-                                    fpWriter.println(c);
-                                }
+                                variant.output(fpWriter);
                             } else {
-                                if (variant.getCompositions() == null) {
-                                    unknownFpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        unknownFpWriter.println(c);
-                                }
+                                variant.output(unknownFpWriter);
                             }
                         }
 
@@ -1135,7 +1022,7 @@ public class VCFcompare extends VarSimTool {
 
                         final DualIdx dualIdx = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
 
-                        if (dualIdx.splitVariantIndex >= 0) {
+                        if (dualIdx.isSplitVariantValid()) {
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
@@ -1146,19 +1033,9 @@ public class VCFcompare extends VarSimTool {
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
                                     log.warn("SNP with bad length: " + currentVariant);
                                 }
-                                if (variant.getCompositions() == null) {
-                                    fpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        fpWriter.println(c);
-                                }
+                                variant.output(fpWriter);
                             } else {
-                                if (variant.getCompositions() == null) {
-                                    unknownFpWriter.println(variant);
-                                } else {
-                                    for (Variant c : variant.getCompositions())
-                                        unknownFpWriter.println(c);
-                                }
+                                variant.output(unknownFpWriter);
                             }
                         }
                     }
@@ -1172,21 +1049,9 @@ public class VCFcompare extends VarSimTool {
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
                             log.warn("SNP with bad length: " + variant);
                         }
-                        if (variant.getCompositions() == null) {
-                            fpWriter.println(variant);
-                        } else {
-                            for (Variant c : variant.getCompositions()) {
-                                fpWriter.println(c);
-                            }
-                        }
+                        variant.output(fpWriter);
                     } else {
-                        if (variant.getCompositions() == null) {
-                            unknownFpWriter.println(variant);
-                        } else {
-                            for (Variant c : variant.getCompositions()) {
-                                unknownFpWriter.println(c);
-                            }
-                        }
+                        variant.output(unknownFpWriter);
                     }
                 }
 
@@ -1221,30 +1086,15 @@ public class VCFcompare extends VarSimTool {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
-                    if (var.getCompositions() == null) {
-                        tpWriter.println(var);
-                    } else {
-                        for (Variant c : var.getCompositions())
-                            tpWriter.println(c);
-                    }
+                    var.output(tpWriter);
                 } else {
-                    if (var.getCompositions() == null) {
-                        fnWriter.println(var);
-                    } else {
-                        for (Variant c : var.getCompositions())
-                            fnWriter.println(c);
-                    }
+                    var.output(fnWriter);
                 }
 
                 outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
                 validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
             } else {
-                if (var.getCompositions() == null) {
-                    unknownTpWriter.println(var);
-                } else {
-                    for (Variant c : var.getCompositions())
-                        unknownTpWriter.println(c);
-                }
+                var.output(unknownTpWriter);
             }
             numRead2++;
         }
@@ -1287,15 +1137,9 @@ public class VCFcompare extends VarSimTool {
             }
         }
 
-        try {
-            tpWriter.close();
-            unknownTpWriter.close();
-            fpWriter.close();
-            unknownFpWriter.close();
-            fnWriter.close();
-            jsonWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
         // Check the validity
@@ -1398,6 +1242,12 @@ public class VCFcompare extends VarSimTool {
             wholeVariantIndex = -1;
         }
 
+        public boolean isSplitVariantValid() {
+            return splitVariantIndex >= 0;
+        }
+        public boolean isWholeVariantValid() {
+            return wholeVariantIndex >= 0;
+        }
         public boolean equals(Object obj) {
             if (obj == this)
                 return true;
@@ -1434,15 +1284,13 @@ public class VCFcompare extends VarSimTool {
         // Results to store
         // this stores the indexes of the true variants matched
         List<DualIdx> homozygousMatches = new ArrayList<>();
-        List<List<DualIdx>> heterozygousMatches = new ArrayList<>(2); // matches either parent
+        List<List<DualIdx>> heterozygousMatches = Arrays.asList(new ArrayList<DualIdx>(), new ArrayList<DualIdx>()); // matches either parent
 
         public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
             this.trueVariantIntervalTree = trueVariantIntervalTree;
             this.overlapRatio = overlapRatio;
             this.wiggle = wiggle;
 
-            heterozygousMatches.add(new ArrayList<DualIdx>());
-            heterozygousMatches.add(new ArrayList<DualIdx>());
             overlapComplex = false;
             ignoreInsertionLength = ignoreInsLen;
         }
@@ -1452,10 +1300,7 @@ public class VCFcompare extends VarSimTool {
          * @return
          */
         public DualIdx isHomMatch() {
-            if (homozygousMatches.size() > 0) {
-                return homozygousMatches.get(0);
-            }
-            return new DualIdx();
+            return homozygousMatches.isEmpty() ? new DualIdx() : homozygousMatches.get(0);
         }
 
         /**
@@ -1466,7 +1311,7 @@ public class VCFcompare extends VarSimTool {
             List<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
             temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
             //if there is a match in intersection, return the first one from the intersection
-            if (temp.size() > 0) {
+            if (!temp.isEmpty()) {
                 return temp.get(0);
               /*
               if no match in intersection, return the first one from the larger list (the genotype
@@ -1481,7 +1326,7 @@ public class VCFcompare extends VarSimTool {
               1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
 
                */
-            } else if (heterozygousMatches.get(0).size() > 0 || heterozygousMatches.get(1).size() > 0) {
+            } else if (heterozygousMatches.stream().anyMatch(l -> !l.isEmpty())) {
                 if (heterozygousMatches.get(0).size() > heterozygousMatches.get(1).size()) {
                     return heterozygousMatches.get(0).get(0);
                 } else {
@@ -1497,11 +1342,11 @@ public class VCFcompare extends VarSimTool {
          */
         public DualIdx isMatch() {
             DualIdx idx = isHomMatch();
-            if (idx.splitVariantIndex >= 0) {
+            if (idx.isSplitVariantValid()) {
                 return idx;
             }
             idx = isHetMatch();
-            if (idx.splitVariantIndex >= 0) {
+            if (idx.isSplitVariantValid()) {
                 return idx;
             }
             return idx;
@@ -1518,16 +1363,10 @@ public class VCFcompare extends VarSimTool {
          * @return The maximum length of all true variants
          */
         public int compareVariant(Variant variant, int genotype, BitSet validated) {
-            double overlapRatio = this.overlapRatio;
-            // consider type to change overlap percent
+            //TODO: consider type to change overlap percent
             VariantType type = variant.getType(genotype);
             ChrString chr = variant.getChr();
-            SimpleInterval1D intervalForCompare;
-            if (type == VariantType.Insertion && ignoreInsertionLength) {
-                intervalForCompare = new SimpleInterval1D(variant.getPos(), variant.getPos());
-            } else {
-                intervalForCompare = variant.getVariantInterval(genotype);
-            }
+            SimpleInterval1D intervalForCompare = variant.getVariantInterval(genotype, ignoreInsertionLength);
 
             int maxTrueVarianLength = 0;
 
@@ -1537,67 +1376,59 @@ public class VCFcompare extends VarSimTool {
                 // require SNP content to match
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompare);
 
+                if (overlaps == null) {
+                    // nothing found
+                    return maxTrueVarianLength;
+                }
+
                 byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSequence()[0];
 
                 int numberOfSnpMatches = 0;
-                if (overlaps != null) {
-                    for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
-                        Variant trueVariant = trueVariantInterval.getContent();
-                        boolean hasSnp = false;
-                        int splitVariantIndex = trueVariant.splitVariantIndex;
-                        int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                    Variant trueVariant = trueVariantInterval.getContent();
+                    boolean hasSnp = false;
+                    int splitVariantIndex = trueVariant.splitVariantIndex;
+                    int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
 
-                        if (trueVariant.originalType == VariantOverallType.Complex) {
-                            //System.err.println("Overlap complex SNP!");
-                            overlapComplex = true;
-                        }
+                    if (validated.get(splitVariantIndex)) {
+                        // skip ones already validated
+                        continue;
+                    }
 
-                        if (validated.get(splitVariantIndex)) {
-                            // skip ones already validated
-                            continue;
-                        }
-
-                        // check genotype
-                        if (trueVariant.isHom()) {
-                            // position is correct, check genotype
-                            if (trueVariant.getType(trueVariant.getGoodPaternal()) == VariantType.SNP
+                    // check genotype
+                    for (int parent = 0; parent < 2; parent++) {
+                        int allele = trueVariant.getAllele(parent);
+                        //true variant is heterozygous, so only one allele has non-reference sequence
+                        if (trueVariant.isHom() || allele > 0) {
+                            if (trueVariant.getType(allele) == VariantType.SNP
                                     && variant.getPos() == trueVariant.getPos()) {
-                                if (alternativeAlleleFirstBase == trueVariant.getAlt(trueVariant.getGoodPaternal()).getSequence()[0]) {
-                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
+                                    if (trueVariant.isHom())
+                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                    else
+                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                                 }
                                 hasSnp = true;
                             }
-                        } else {
-                            for (int parent = 0; parent < 2; parent++) {
-                                int allele = trueVariant.getAllele(parent);
-                                //true variant is heterozygous, so only one allele has non-reference sequence
-                                if (allele > 0) {
-                                    if (trueVariant.getType(allele) == VariantType.SNP
-                                            && variant.getPos() == trueVariant.getPos()) {
-                                        if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
-                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        }
-                                        hasSnp = true;
-                                    }
-                                }
-                            }
                         }
-
-                        if (hasSnp) {
-                            numberOfSnpMatches++;
-                            maxTrueVarianLength = 1;
-                        }
+                        if (trueVariant.isHom())
+                            break;
                     }
 
-                    if (numberOfSnpMatches > 1) {
-                        log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
+                    if (hasSnp) {
+                        numberOfSnpMatches++;
+                        maxTrueVarianLength = 1;
                     }
+                }
+
+                if (numberOfSnpMatches > 1) {
+                    log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
                 }
             } else {
                 // Non-SNPs
                 SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
-
 
                 if (overlaps == null) {
                     // nothing found
@@ -1608,83 +1439,41 @@ public class VCFcompare extends VarSimTool {
                     Variant trueVariant = trueVariantInterval.getContent();
                     int splitVariantIndex = trueVariant.splitVariantIndex;
                     int wholeVariantIndex = trueVariant.wholeVariantIndex;
-
-                    if (trueVariant.originalType == VariantOverallType.Complex) {
-                        overlapComplex = true;
-                    }
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
 
                     if (validated.get(splitVariantIndex)) {
                         // skip ones already validated
-                        //System.err.println("Skip..." + splitVariantIndex);
                         continue;
                     }
 
                     //all genotypes in the overlapping true variant will be checked
                     for (int parent = 0; parent < 2; parent++) {
-                        if (trueVariant.isHom() && parent == 1) {
-                            break;
-                        }
-
                         int allele = trueVariant.getAllele(parent);
 
-                        if (allele == 0) {
-                            // reference allele
+                        if (allele == 0 || // reference allele
+                            type != trueVariant.getType(allele)) { // need type to be the same
                             continue;
                         }
 
-                        if (type != trueVariant.getType(allele)) {
-                            // need type to be the same
-                            continue;
-                        }
-
-                        boolean matched = false;
-
-                        if (type == VariantType.Insertion && ignoreInsertionLength) {
-                            // this is the case where we want to ignore insertion lengths when comparing
-                            // just do a check of the start position
-
-                            if (Math.abs(trueVariant.getPos() - variant.getPos()) <= wiggle) {
-                                // Matches!
-                                if (trueVariant.isHom()) {
-                                    homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                } else {
-                                    heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                }
-                                matched = true;
-                            }
-                        } else {
-                            // this is the normal case
-                            // check if the variant interval matches
-                            if (intervalForCompare.intersects(trueVariant.getVariantInterval(allele), overlapRatio, wiggle)) {
-                                Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
-                                Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
-                                if (trueVariant.getType(allele) != VariantType.Breakend ||
-                                        Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle)) {
-                                    // it matches an allele!
-                                    // now check alternate allele length
-                                    int alternativeAlleleLength = variant.getAlt(genotype).length(); // TODO ignore copy number for now
-                                    int trueAlternativeAllele = trueVariant.getAlt(allele).length();
-                                    double ratio = (alternativeAlleleLength > 0) ? (trueAlternativeAllele / (double) alternativeAlleleLength) : 1.0;
-                                    double minRatio = Math.min(ratio, 1 / ratio);
-                                    if (minRatio >= overlapRatio || Math.abs(alternativeAlleleLength - trueAlternativeAllele) < wiggle) {
-                                        // yay, it is a match!
-                                        if (trueVariant.isHom()) {
-                                            homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        } else {
-                                            heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
-                                        }
-                                        matched = true;
-                                    }
-                                }
-                            }
-                        }
+                        Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
+                        Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
+                        boolean overlap = trueVariant.getVariantInterval(allele, ignoreInsertionLength).
+                                intersects(intervalForCompare, overlapRatio, wiggle);
+                        boolean breakendMatch =  trueVariant.getType(allele) == VariantType.Breakend &&
+                                Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle);
+                        boolean matched = trueVariant.getType(allele) == VariantType.Breakend ? breakendMatch : overlap;
 
                         if (matched) {
-                            int len = trueVariant.maxLen(allele);
-                            if (len > maxTrueVarianLength) {
-                                maxTrueVarianLength = len;
+                            if (trueVariant.isHom()) {
+                                homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                            } else {
+                                heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
                             }
+                            maxTrueVarianLength = Math.max(trueVariant.maxLen(allele), maxTrueVarianLength);
                         }
+                        //for homozygous variants, we only check the first allele
+                        if (trueVariant.isHom())
+                            break;
                     }
                 }
 
