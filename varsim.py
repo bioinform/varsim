@@ -624,7 +624,10 @@ if __name__ == "__main__":
                 logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
         else:
             # liftover the read map files
-            read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed"))))
+            read_map_files = list(glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed")))
+            merged_raw_readmap = os.path.join(args.out_dir, "longislnd_sim", "merged_readmap.bed")
+            concatenate_files(read_map_files, merged_raw_readmap)
+            read_maps = "-longislnd %s" % merged_raw_readmap 
             read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
             read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
