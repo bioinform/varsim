@@ -14,6 +14,7 @@
     <!--varsim_data-->
 
 
+
     </script>
 
     <!-- Bootstrap core CSS -->
@@ -924,7 +925,7 @@
                             .style("visibility", "visible");
                     } else {
                         legend_arr[idx][1]
-                            .text('TP/P: ' + best_points[idx].y_val[1] + ' / ' + best_points[idx].P + ' (' + (best_points[idx].y_val[0] * 100).toFixed(2) + '%)')
+                            .text('TP/P: ' + best_points[idx].y_val[1] + ' / ' + best_points[idx].T + ' (' + (best_points[idx].y_val[0] * 100).toFixed(2) + '%)')
                             .style("visibility", "visible");
                     }
 
@@ -1245,6 +1246,7 @@
             redraw_plots(stats_data, 'stats');
             show_id('stats_plot');
 		}
+
 
 
 </script>

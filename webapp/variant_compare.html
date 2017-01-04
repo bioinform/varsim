@@ -74,20 +74,13 @@
                 </li>
 
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Summary) <span
-                            class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu" id="sum_types_menu">
-
-                    </ul>
-                </li>
-
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Detail) <span
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types<span
                             class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu" id="types_menu">
 
                     </ul>
                 </li>
+
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
@@ -150,7 +143,9 @@
                 <li><b>Insertion</b> &#8212; Simple insertion.</li>
                 <li><b>Deletion</b> &#8212; Simple deletion.</li>
                 <li><b>Inversion</b> &#8212; Simple inversion of reference sequence.</li>
-                <li><b>Tandem_Duplication</b> &#8212; Tandem duplication or other type of duplication</li>
+                <li><b>TandemDup</b> &#8212; Tandem duplication or other type of duplication</li>
+		<li><b>InterDup</b> &#8212; Interspersed duplication (copy-and-paste translocation included)</li>
+		<li><b>Translocation</b> &#8212; Cut-and-paste translocation</li>
                 <li><b>Complex</b> &#8212; All other types of variants, including MNPs</li>
 
             </ul>
@@ -181,10 +176,6 @@
         </div>
     </div>
 
-    <div id="sum_types_var">
-
-    </div>
-
     <div id="types_var">
 
     </div>
@@ -202,8 +193,8 @@
 
 <script>
         // constants
-        var all_height = 780;
-        var all_width = 1000;
+        var all_height = 1560;
+        var all_width = 1300;
         var tool_tip_height = 200;
         var charts_y_start = tool_tip_height;
         var ind_chart_height = 150;
@@ -216,8 +207,8 @@
         var legend_y = 5;
         var legend_x_margin = 20;
         var legend_y_margin = 20;
-        var legend_labels = [[['TP', 'TPR'], ['FP', 'PPV'], ['True', '']], [['TP', 'F1'], ['Called', ''], ['True', '']]];
-        var legend_offsets = [30, 200, 350];
+        var legend_labels = [['TP', 'TPR'], ['FP', 'PPV'], ['TP', 'F1'], ['Called', ''], ['True', '']];
+        var legend_offsets = [30, 200, 350, 500, 650];
 		var sv_lim = 100;
 
          // style constants
@@ -252,7 +243,6 @@
             hide_id('about');
             hide_id('help');
             hide_id('types_var');
-            hide_id('sum_types_var');
         }
 
          // processing functions
@@ -432,20 +422,14 @@
             return data_arr;
         }
 
-        function get_legend_text(chart_idx, leg_idx, out_data, idx) {
+        function get_legend_text(chart_idx, out_data, idx) {
 
-            if (leg_idx == 0) {
-                if (chart_idx != 2) {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(2) + "%)";
-                } else {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1];
-                }
+            if (chart_idx < 2) {
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(2) + "%)";
+	    } else if (chart_idx < 3) {
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[chart_idx][1] + ": " + (out_data[idx][0]).toFixed(4) + ")";
             } else {
-                if (chart_idx < 1) {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (out_data[idx][0]).toFixed(4) + ")";
-                } else {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1];
-                }
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1];
             }
 
             return legend_text;
@@ -458,7 +442,7 @@
          * domain is actually a range..
          */
         function draw_variant_line_range(parent, id, x_pos, y_pos, height, width, data, type, chart_idx,
-            str_label, color_arr, proc_func, domain, lower, upper, leg_idx) {
+            str_label, color_arr, proc_func, domain, lower, upper) {
             var x = d3.scale.ordinal()
                 .rangeRoundBands([x_pos, x_pos + width], .1, 0);
 
@@ -614,7 +598,7 @@
                     var idx = 0;
                     for (var filename in data) {
 
-                        var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx], idx);
+                        var legend_text = get_legend_text(chart_idx, out_data[bin_idx], idx);
 
                         parent.append("text")
                             .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
@@ -640,7 +624,7 @@
                 var idx = 0;
                 for (var filename in data) {
 
-                    var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx + 1], idx);
+                    var legend_text = get_legend_text(chart_idx, out_data[bin_idx + 1], idx);
 
                     parent.append("text")
                         .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
@@ -661,7 +645,7 @@
         /**
          * Draws the bar line chart
          */
-        function draw_line_bar(parent, id_str, chart_idx, x, y, height, width, domain, data_arr, color_arr, leg_idx) {
+        function draw_line_bar(parent, id_str, chart_idx, x, y, height, width, domain, data_arr, color_arr) {
             var num_vals = data_arr.length;
             var line_width = width / num_vals;
 
@@ -712,7 +696,7 @@
 
             // draw the popover text
             for (var idx = 0; idx < num_vals; idx++) {
-                var legend_text = get_legend_text(chart_idx, leg_idx, data_arr, idx);
+                var legend_text = get_legend_text(chart_idx, data_arr, idx);
 
                 parent.append("text")
                     .attr('id', "pop_" + id_str)
@@ -802,7 +786,7 @@
         /**
          * Draws one row of the chart with small variants and SVs
          */
-        function draw_char_row(parent, id, label_str, big_data, type, chart_idx, max_chart_idx, color_arr, proc_func, leg_idx, draw_x, log_range, y_percent) {
+        function draw_char_row(parent, id, label_str, big_data, type, chart_idx, max_chart_idx, color_arr, proc_func, draw_x, log_range, y_percent) {
             var chart_y_idx_start = charts_y_start + ((ind_chart_height + plot_y_gap) * chart_idx);
             var x_axis_y_bottom = charts_y_start + ((ind_chart_height + plot_y_gap) * max_chart_idx) - 15;
             var x_axis_y = charts_y_start + ((ind_chart_height + plot_y_gap) * (chart_idx + 1)) - 15;
@@ -826,7 +810,7 @@
 
             var data_arr = compute_data_arr(big_data, type, get_sum_count, proc_func);
             draw_line_bar(parent, id + '_' + type + "_all_c" + chart_idx, chart_idx, left_margin + 20,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
 
             // draw the small variants (also draw tooltip)
             // when drawing the small variants, also record the label
@@ -836,7 +820,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1, leg_idx);
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -848,7 +832,7 @@
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
 
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 110 + 20, x_axis_y_bottom, 40, ["All Small"], true);
@@ -862,7 +846,7 @@
 
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000, leg_idx);
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000);
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
             } else {
@@ -873,7 +857,7 @@
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
 
             if (draw_x) {
                 draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y_bottom, 40, ["All SV"], true);
@@ -913,7 +897,8 @@
          *  id -- eg. canon
          *  description -- eg. canonical
          */
-        function redraw_plots(all_data, id, description, draw_ppv) {
+        function redraw_plots(all_data) {
+	    var id = "types";
             clear_plots_id(id);
             var body = d3.selectAll("body");
 
@@ -959,41 +944,25 @@
                     .attr("font-size", "24px")
                     .attr("fill", "black");
 
-                // draw description
-                parent.append('text')
-                    .attr("x", 10)
-                    .attr("y", 60)
-                    .text(description)
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "18px")
-                    .attr("fill", "#626262");
-
 
                 // the index of chart we are drawing
                 var chart_idx = 0;
-                var max_chart_idx = 0;
+                var max_chart_idx = 5;
 
-                if (draw_ppv) {
-                    max_chart_idx = 3;
-                    // draw TP
-                    draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx, color_arr, compute_tpr, 0, false, false, true);
+                // draw TP
+                draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx/2, color_arr, compute_tpr, false, false, true);
 
-                    // draw FP
-                    draw_char_row(parent, id, "Precision", all_data, type, 1, max_chart_idx, color_arr, compute_ppv, 0, false, false, true);
+                // draw FP
+                draw_char_row(parent, id, "Precision", all_data, type, 1, max_chart_idx/2, color_arr, compute_ppv, false, false, true);
 
-                    // draw T
-                    draw_char_row(parent, id, "Number True", all_data, type, 2, max_chart_idx, color_arr, compute_log_true, 0, true, true, false);
-                } else {
-                    max_chart_idx = 3;
-                    // draw F1
-                    draw_char_row(parent, id, "F1 Score", all_data, type, 0, max_chart_idx, color_arr, compute_f1, 1, false, false, true);
+                // draw F1
+                draw_char_row(parent, id, "F1 Score", all_data, type, 2, max_chart_idx, color_arr, compute_f1, false, false, true);
 
-                    // draw P
-                    draw_char_row(parent, id, "Number Called", all_data, type, 1, max_chart_idx, color_arr, compute_log_positive, 1, false, true, false);
+                // draw P
+                draw_char_row(parent, id, "Number Called", all_data, type, 3, max_chart_idx, color_arr, compute_log_positive, false, true, false);
 
-                    // draw T
-                    draw_char_row(parent, id, "Number True", all_data, type, 2, max_chart_idx, color_arr, compute_log_true, 1, true, true, false);
-                }
+                // draw T
+                draw_char_row(parent, id, "Number True", all_data, type, 4, max_chart_idx, color_arr, compute_log_true, true, true, false);
 
                 // draw legend/popover
                 parent.append("rect")
@@ -1001,7 +970,7 @@
                     .attr("rx", 20)
                     .attr("ry", 20)
                     .attr("x", legend_x)
-                    .attr("width", 700)
+                    .attr("width", 1000)
                     .attr("y", legend_y)
                     .attr("height", tool_tip_height - 15);
                 draw_legend(parent, legend_x + legend_x_margin, legend_y + legend_y_margin, all_data, color_arr);
@@ -1167,9 +1136,8 @@
                         if (last_one) {
                             // draw variant types
                             hide_all();
-                            redraw_plots(types_data, 'types', 'Detail', true);
-                            redraw_plots(types_data, 'sum_types', 'Summary', false);
-                            show_id('sum_types_var');
+                            redraw_plots(types_data);
+                            show_id('types_var');
 
                             // draw all variants (but keep hidden)
                         }
@@ -1187,11 +1155,9 @@
         function reset_all_plots() {
             document.getElementById('file_name_list').innerHTML = "";
             document.getElementById('types_var').innerHTML = "";
-            document.getElementById('sum_types_var').innerHTML = "";
             resetFormElement($('#files'));
             types_data = {};
             $("#types_menu").empty();
-            $("#sum_types_menu").empty();
         }
 
         function resetFormElement(e) {
@@ -1221,9 +1187,8 @@
                         num_loaded++;
                         if (num_loaded == num_total) {
                             hide_all();
-                            redraw_plots(types_data, 'types', 'Detail', true);
-                            redraw_plots(types_data, 'sum_types', 'Summary', false);
-                            show_id('sum_types_var');
+                            redraw_plots(types_data);
+                            show_id('types_var');
                         }
                     }
                 })(i, demo_files[i]))
@@ -1248,9 +1213,8 @@
 			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
             process_json(varsim_data, filename, false)
             hide_all();
-            redraw_plots(types_data, 'types', 'Detail', true);
-            redraw_plots(types_data, 'sum_types', 'Summary', false);
-            show_id('sum_types_var');
+            redraw_plots(types_data);
+            show_id('types_var');
             
 		}
 

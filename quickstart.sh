@@ -2,16 +2,18 @@
 
 set -x
 
+b37_source="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz"
+dbsnp_source="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b147_GRCh37p13/VCF/All_20160601.vcf.gz"
+
 # Download varsim
-wget https://github.com/bioinform/varsim/releases/download/v0.5.0/varsim-0.5.0.tar.gz
-tar xfz varsim-0.5.0.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz
+tar xfz varsim-0.6.3.tar.gz
 
 # Download reference and variant databases 
-wget http://goo.gl/lgT18V
+wget $b37_source -O - | gunzip -c > hs37d5.fa
 wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
 wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
-wget http://goo.gl/NUG0dy
-gunzip hs37d5.fa.gz
+wget $dbsnp_source -O All.vcf.gz
 
 # Download samtools and index reference
 mkdir samtools

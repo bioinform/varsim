@@ -1,6 +1,12 @@
 package com.bina.varsim;
 
 import com.bina.varsim.fastqLiftover.FastqLiftOver;
+import com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver;
+import com.bina.varsim.tools.VCFstats;
+import com.bina.varsim.tools.evaluation.JSONInserter;
+import com.bina.varsim.tools.evaluation.SAMcompare;
+import com.bina.varsim.tools.evaluation.VCFcompare;
+import com.bina.varsim.tools.simulation.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -18,10 +24,14 @@ import java.util.Arrays;
 public class VarSim {
     private final static Logger log = Logger.getLogger(VarSim.class.getName());
 
-    String VERSION = "VarSim " + getClass().getPackage().getImplementationVersion();
+    final String VERSION = getClass().getPackage().getImplementationVersion();
 
-    public void run(String[] args) throws IOException {
-        String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
+    public static void main(String[] args) throws IOException {
+        new VarSim().run(args);
+    }
+
+    private void printUsage() {
+        final String usage = "java -jar VarSim.jar <tool> <tool_args>... \n"
                 + "      --= Simulation =-- \n"
                 + "       randvcf2vcf    -- Randomly samples variants from a VCF file\n"
                 + "       randdgv2vcf    -- Randomly samples variants from a DGV database file\n"
@@ -33,54 +43,74 @@ public class VarSim {
                 + "       vcf2diploid    -- Enhanced version of vcf2diploid from alleleseq \n"
                 + "       fastq_liftover -- Lifts over simulated FASTQ files to reference coordinates \n"
                 + "\n";
-        if (args.length == 0) {
-            System.err.println(VERSION);
-            System.err.println(usage);
-            System.exit(1);
-        }
 
+        System.err.println(VarSim.class.getSimpleName() + " " + VERSION);
+        System.err.println(usage);
+    }
+
+    void runVarSimTool(final VarSimToolNamespace tool, final String[] args) throws IOException {
         String[] pass_args = Arrays.copyOfRange(args, 1, args.length);
 
-        switch (args[0]) {
-            case "vcf2diploid":
-                new VCF2diploid().run(pass_args);
+        final String command = tool.command;
+        final String description = tool.description;
+
+        switch (tool) {
+            case VCF2Diploid:
+                new VCF2diploid(command, description).run(pass_args);
                 break;
-            case "randvcf2vcf":
-                new RandVCF2VCF().run(pass_args);
+            case RandVCF2VCF:
+                new RandVCF2VCF(command, description).run(pass_args);
                 break;
-            case "randdgv2vcf":
-                new RandDGV2VCF().run(pass_args);
+            case RandDGV2VCF:
+                new RandDGV2VCF(command, description).run(pass_args);
                 break;
-            case "vcfstats":
-                new VCFstats().run(pass_args);
+            case VCFStats:
+                new VCFstats(command, description).run(pass_args);
                 break;
-            case "vcfcompare":
-                new VCFcompare().run(pass_args);
+            case VCFCompare:
+                new VCFcompare(command, description).run(pass_args);
                 break;
-            case "samcompare":
-                new SAMcompare().run(pass_args);
+            case SAMCompare:
+                new SAMcompare(command, description).run(pass_args);
                 break;
-            case "randbed2vcf":
-                new RandBED2VCF().run(pass_args);
+            case RandBED2VCF:
+                new RandBED2VCF(command, description).run(pass_args);
                 break;
-            case "fastq_liftover":
-                new FastqLiftOver().run(pass_args);
+            case FastqLiftover:
+                new FastqLiftOver(command, description).run(pass_args);
                 break;
-            case "json_inserter":
-                new JSONInserter().run(pass_args);
+            case JSONInserter:
+                new JSONInserter(command, description).run(pass_args);
+                break;
+            case LongISLNDLiftover:
+                new LongISLNDReadMapLiftOver(command, description).run(pass_args);
+                break;
+            case RandSequenceVCF:
+                new RandSequenceVCF(command, description).run(pass_args);
+                break;
+            case Help:
+                printUsage();
+                break;
+            case Version:
+                System.out.println(VERSION);
                 break;
             default:
                 log.error("Unknown tool: " + args[0]);
-                System.err.println(usage);
                 System.exit(1);
                 break;
         }
-
     }
 
-    public static void main(String[] args) throws IOException {
-        VarSim runner = new VarSim();
-        runner.run(args);
-    }
 
+    public void run(String[] args) throws IOException {
+        if (args.length == 0) {
+            printUsage();
+            System.exit(1);
+        }
+
+        final VarSimToolNamespace varSimToolName = VarSimToolNamespace.fromName(args[0]);
+        runVarSimTool(varSimToolName, args);
+
+        return;
+    }
 }

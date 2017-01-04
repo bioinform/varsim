@@ -1,0 +1,23 @@
+##fileformat=VCFv4.3
+##reference=src/test/resources/TranslocationTest/BalancedNonReciprocalTranslocationTest/balancedNonReciprocalTranslocationIntrachromosomalWithInversion/reference.fa
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
+##INFO=<ID=END2,Number=1,Type=Integer,Description="1-based end position of source sequence">
+##INFO=<ID=END,Number=1,Type=Integer,Description="1-based end position of variant">
+##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome of source sequence">
+##INFO=<ID=ISINV,Number=1,Type=Flag,Description="whether a duplication is inverted">
+##INFO=<ID=TRAID,Number=1,Type=String,Description="translocation ID">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype.">
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DEL:TRA,Description="Deletion in translocation">
+##ALT=<ID=DUP,Description="Duplication">
+##ALT=<ID=DUP:TANDEM,Description="Tandem Duplication">
+##ALT=<ID=DUP:ISP,Description="Interspersed duplication">
+##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
+##ALT=<ID=INS,Description="Insertion of novel sequence">
+##ALT=<ID=INV,Description="Inversion">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
+1	1	.	A	<DUP:TRA>	.	PASS	SVTYPE=DUP;TRAID=1;SVLEN=3;CHR2=1;POS2=9;END2=11;ISINV	GT	0|1
+1	8	.	G	<DEL:TRA>	.	PASS	SVTYPE=DEL;TRAID=1;SVLEN=-3	GT	0|1
