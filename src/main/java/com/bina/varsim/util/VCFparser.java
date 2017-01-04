@@ -273,7 +273,7 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         if (isPassFilterRequired && !(FILTER.contains("PASS") || FILTER.equals(DEFAULT_FILTER))) {
-            //log.warn("not pass line" + line);
+            log.warn("line is filtered out: " + line);
             return null; // Filtered out
         }
         // parse the phased or unphased genotype
@@ -295,8 +295,8 @@ public class VCFparser extends GzFileParser<Variant> {
             if (isCopyNumberPhased != isGenotypePhased) {
                 // TODO maybe don't throw error, this is not standard format
                 // anyways
-                log.error("Inconsistent copy number:");
-                log.error(line);
+                log.warn("Inconsistent copy number:");
+                log.warn("line: " + line);
                 return null;
             }
         }
@@ -538,8 +538,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 if (REF.length() == 1 && alts[i].length() == 1) {
                     // SNP
                 } else if (REF.length() == 0 || alts[i].length() == 0) {
-                    log.warn("Skipping invalid record:");
-                    log.warn(line);
+                    log.warn("Skipping invalid record:" + line);
                     return null;
                 }
             }
@@ -646,8 +645,8 @@ public class VCFparser extends GzFileParser<Variant> {
         } else {
           // breakend
           log.warn("breakend is not handled directly now: " + line);
+          return null;
       }
-        return null;
     }
 
     public Variant parseLine() {
@@ -666,7 +665,8 @@ public class VCFparser extends GzFileParser<Variant> {
             return processLine(line);
         } catch (Exception e) {
             //TODO: right now just be lazy, die on any error
-            log.error(e.getMessage() + "\n" + line);
+            log.fatal(e.getMessage() + "\n" + line);
+            e.printStackTrace();
             System.exit(255);
         }
         return null;
