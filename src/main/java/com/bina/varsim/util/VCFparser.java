@@ -661,15 +661,22 @@ public class VCFparser extends GzFileParser<Variant> {
             return null;
         }
 
+        Variant variant = null;
+
         try {
-            return processLine(line);
+            variant = processLine(line);
         } catch (Exception e) {
             //TODO: right now just be lazy, die on any error
             log.fatal(e.getMessage() + "\n" + line);
             e.printStackTrace();
             System.exit(255);
         }
-        return null;
+
+        if (variant == null && !line.startsWith("#")) {
+            log.warn("Returned null variant for line " + line);
+        }
+
+        return variant;
     }
 
     /**

@@ -23,6 +23,16 @@ DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
+def get_loglevel(string):
+    if string == "info":
+        return logging.INFO
+    if string == "warn":
+        return logging.WARN
+    if string == "debug":
+        return logging.DEBUG
+    return logging.INFO
+
+
 def convertCN(filenames, operation):
     """
     convert '2/1'-like copy number to a single number(e.g. 2)
@@ -257,6 +267,8 @@ if __name__ == "__main__":
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
+    main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
+    main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
     pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true",
@@ -346,7 +358,11 @@ if __name__ == "__main__":
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
-    logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
+    loglevel = get_loglevel(args.loglevel)
+    if not args.log_to_stderr:
+        logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=loglevel, format=FORMAT)
+    else:
+        logging.basicConfig(level=loglevel, format=FORMAT)
     logger = logging.getLogger(__name__)
 
     check_java()
@@ -360,7 +376,6 @@ if __name__ == "__main__":
     t_s = time.time()
 
     args.vcfs = map(os.path.realpath, args.vcfs)
-    makedirs(map(lambda x: os.path.join(args.out_dir, "filled_in", str(x)), range(len(args.vcfs))))
     in_vcfs = []
     for i, vcf in enumerate(args.vcfs):
         tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
@@ -625,7 +640,10 @@ if __name__ == "__main__":
                 logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
         else:
             # liftover the read map files
-            read_maps = " ".join(map(lambda x: "-longislnd " + x, glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed"))))
+            read_map_files = list(glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed")))
+            merged_raw_readmap = os.path.join(args.out_dir, "longislnd_sim", "merged_readmap.bed")
+            concatenate_files(read_map_files, merged_raw_readmap)
+            read_maps = "-longislnd %s" % merged_raw_readmap 
             read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
             read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
