@@ -23,6 +23,16 @@ DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
+def get_loglevel(string):
+    if string == "info":
+        return logging.INFO
+    if string == "warn":
+        return logging.WARN
+    if string == "debug":
+        return logging.DEBUG
+    return logging.INFO
+
+
 def convertCN(filenames, operation):
     """
     convert '2/1'-like copy number to a single number(e.g. 2)
@@ -257,6 +267,8 @@ if __name__ == "__main__":
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
+    main_parser.add_argument('--log_to_file', action='store_true', help='Output log to log_dir/varsim.log')
+    main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
     pipeline_control_group.add_argument("--disable_rand_vcf", action="store_true",
@@ -346,7 +358,11 @@ if __name__ == "__main__":
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
-    logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
+    loglevel = get_loglevel(args.loglevel)
+    if args.log_to_file:
+        logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=loglevel, format=FORMAT)
+    else:
+        logging.basicConfig(level=loglevel, format=FORMAT)
     logger = logging.getLogger(__name__)
 
     check_java()
