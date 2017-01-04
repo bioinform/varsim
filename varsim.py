@@ -267,7 +267,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
-    main_parser.add_argument('--log_to_file', action='store_true', help='Output log to log_dir/varsim.log')
+    main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     pipeline_control_group = main_parser.add_argument_group("Pipeline control options. Disable parts of the pipeline.")
@@ -359,7 +359,7 @@ if __name__ == "__main__":
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     loglevel = get_loglevel(args.loglevel)
-    if args.log_to_file:
+    if not args.log_to_stderr:
         logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=loglevel, format=FORMAT)
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
