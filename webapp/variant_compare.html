@@ -13,7 +13,6 @@
     <script>
     <!--varsim_data-->
 
-
     </script>
 
     <!-- Bootstrap core CSS -->
@@ -75,20 +74,13 @@
                 </li>
 
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Summary) <span
-                            class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu" id="sum_types_menu">
-
-                    </ul>
-                </li>
-
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types (Detail) <span
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Variant types<span
                             class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu" id="types_menu">
 
                     </ul>
                 </li>
+
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
@@ -151,7 +143,9 @@
                 <li><b>Insertion</b> &#8212; Simple insertion.</li>
                 <li><b>Deletion</b> &#8212; Simple deletion.</li>
                 <li><b>Inversion</b> &#8212; Simple inversion of reference sequence.</li>
-                <li><b>Tandem_Duplication</b> &#8212; Tandem duplication or other type of duplication</li>
+                <li><b>TandemDup</b> &#8212; Tandem duplication or other type of duplication</li>
+		<li><b>InterDup</b> &#8212; Interspersed duplication (copy-and-paste translocation included)</li>
+		<li><b>Translocation</b> &#8212; Cut-and-paste translocation</li>
                 <li><b>Complex</b> &#8212; All other types of variants, including MNPs</li>
 
             </ul>
@@ -182,10 +176,6 @@
         </div>
     </div>
 
-    <div id="sum_types_var">
-
-    </div>
-
     <div id="types_var">
 
     </div>
@@ -203,8 +193,8 @@
 
 <script>
         // constants
-        var all_height = 780;
-        var all_width = 1200;
+        var all_height = 1560;
+        var all_width = 1300;
         var tool_tip_height = 200;
         var charts_y_start = tool_tip_height;
         var ind_chart_height = 150;
@@ -217,8 +207,8 @@
         var legend_y = 5;
         var legend_x_margin = 20;
         var legend_y_margin = 20;
-        var legend_labels = [[['TP', 'TPR'], ['FP', 'PPV'], ['True', ''], ['','SPC']], [['TP', 'F1'], ['Called', ''], ['True', '']]];
-        var legend_offsets = [30, 200, 350, 470];
+        var legend_labels = [['TP', 'TPR'], ['FP', 'PPV'], ['TP', 'F1'], ['Called', ''], ['True', '']];
+        var legend_offsets = [30, 200, 350, 500, 650];
 		var sv_lim = 100;
 
          // style constants
@@ -253,7 +243,6 @@
             hide_id('about');
             hide_id('help');
             hide_id('types_var');
-            hide_id('sum_types_var');
         }
 
          // processing functions
@@ -310,14 +299,6 @@
                 return [NaN, obj._T];
             }
             return [Math.log(obj._T) / Math.log(10), obj._T];
-        }
-        
-        function compute_spc(obj) {
-            if (obj == null) {
-                return [NaN, NaN];
-            }
-            
-            return [obj.spc, obj.spc];
         }
 
         function compute_log_positive(obj) {
@@ -404,10 +385,6 @@
         function get_sum_count(obj) {
             return obj.sum_count;
         }
-        
-        function get_base_sum_count(obj) {
-            return obj.sum_per_base_count;
-        }
 
          // the range is inclusive
          // it returns things with any overlap in range
@@ -432,7 +409,9 @@
 
         function compute_data_arr(data, type, get_func, proc_func) {
             var data_arr = [];
+            var legend_text = "";
             for (var filename in data) {
+
                 if (data[filename].hasOwnProperty(type)) {
                     var contents = data[filename][type];
                     data_arr.push(proc_func(get_func(contents)));
@@ -443,22 +422,14 @@
             return data_arr;
         }
 
-        function get_legend_text(chart_idx, leg_idx, out_data, idx) {
+        function get_legend_text(chart_idx, out_data, idx) {
 
-            if (leg_idx == 0) {
-                if (chart_idx < 2) {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(2) + "%)";
-                } else if (chart_idx == 2){
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1];
-                } else {
-                    legend_text = " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(6) + "%)";
-                }
+            if (chart_idx < 2) {
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[chart_idx][1] + ": " + (100 * out_data[idx][0]).toFixed(2) + "%)";
+	    } else if (chart_idx < 3) {
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[chart_idx][1] + ": " + (out_data[idx][0]).toFixed(4) + ")";
             } else {
-                if (chart_idx < 1) {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1] + " (" + legend_labels[leg_idx][chart_idx][1] + ": " + (out_data[idx][0]).toFixed(4) + ")";
-                } else {
-                    legend_text = legend_labels[leg_idx][chart_idx][0] + ": " + out_data[idx][1];
-                }
+                legend_text = legend_labels[chart_idx][0] + ": " + out_data[idx][1];
             }
 
             return legend_text;
@@ -471,7 +442,7 @@
          * domain is actually a range..
          */
         function draw_variant_line_range(parent, id, x_pos, y_pos, height, width, data, type, chart_idx,
-            str_label, color_arr, proc_func, domain, lower, upper, leg_idx, no_plot) {
+            str_label, color_arr, proc_func, domain, lower, upper) {
             var x = d3.scale.ordinal()
                 .rangeRoundBands([x_pos, x_pos + width], .1, 0);
 
@@ -531,6 +502,8 @@
             var num_bins = out_data.length;
             var bin_width = x.rangeBand();
 
+            //console.log("num_bins: " + num_bins);
+
             for (var bin_idx = 0; bin_idx < (num_bins - 1); bin_idx++) {
                 var x1 = x(xlabels[bin_idx]) + bin_width / 2;
                 var x2 = x(xlabels[bin_idx + 1]) + bin_width / 2;
@@ -539,112 +512,119 @@
                 var next_bin_data = out_data[bin_idx + 1];
 
                 // draw the background
-                if(!no_plot){
-                    if (bin_idx == 0) {
-                        parent.append("rect")
-                            .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
-                            .attr("style", line_back_style)
-                            .attr("x", x(xlabels[bin_idx]))
-                            .attr("width", bin_width)
-                            .attr("y", y_pos)
-                            .attr("height", height);
-                    }
+                if (bin_idx == 0) {
                     parent.append("rect")
-                        .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                        .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
                         .attr("style", line_back_style)
-                        .attr("x", x(xlabels[bin_idx + 1]))
-                        .attr("width", bin_width)
-                        .attr("y", y_pos)
-                        .attr("height", height);
-  
-                    for (var val_idx = 0; val_idx < bin_data.length; val_idx++) {
-                        var both_good = true;
-                        var y1 = NaN;
-                        var y2 = NaN;
-                        if (!isNaN(bin_data[val_idx][0])) {
-                            y1 = y_pos + height * (1 - ((bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
-                        } else {
-                            both_good = false;
-                        }
-    
-                        if (!isNaN(next_bin_data[val_idx][0])) {
-                            y2 = y_pos + height * (1 - ((next_bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
-                        } else {
-                            both_good = false;
-                        }
-    
-                        // plot the points
-    
-                        // if good plot the line
-                        if (both_good) {
-                            parent.append("line")
-                                .attr("x1", x1)
-                                .attr("x2", x2)
-                                .attr("y1", y1)
-                                .attr("y2", y2)
-                                .attr("style", "stroke-opacity: 0.8; stroke: " + color_arr[val_idx] + "; stroke-width: 1.5;");
-                        }
-    
-    
-                        if (bin_idx == 0 && !isNaN(bin_data[val_idx][0])) {
-                            parent.append("path")
-                                .attr("transform", function (d) {
-                                    return "translate(" + x1 + "," + y1 + ")";
-                                })
-                            .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
-                                .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
-    
-                        }
-                        if (!isNaN(next_bin_data[val_idx][0])) {
-                            parent.append("path")
-                                .attr("transform", function (d) {
-                                    return "translate(" + x2 + "," + y2 + ")";
-                                })
-                            .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
-                                .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
-                        }
-                    }
-    
-                    // draw the foreground
-                    if (bin_idx == 0) {
-                        parent.append("rect")
-                            .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
-                            .attr("style", front_style)
-                            .attr("x", x(xlabels[bin_idx]))
-                            .attr("width", bin_width)
-                            .attr("y", y_pos)
-                            .attr("height", height);
-    
-                        // draw the popover text
-                        var idx = 0;
-                        for (var filename in data) {
-    
-                            var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx], idx);
-    
-                            parent.append("text")
-                                .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
-                                .attr("x", legend_x + legend_x_margin + legend_offsets[chart_idx] + 211)
-                                .attr("y", (legend_y + legend_y_margin + (idx * 15) + 5))
-                                .text(legend_text)
-                                .attr("font-family", "sans-serif")
-                                .attr("font-size", "12px")
-                                .attr("fill", "black")
-                                .style("display", "none");
-                            idx++;
-                        }
-    
-                    }
-                    parent.append("rect")
-                        .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
-                        .attr("style", front_style)
-                        .attr("x", x(xlabels[bin_idx + 1]))
+                        .attr("x", x(xlabels[bin_idx]))
                         .attr("width", bin_width)
                         .attr("y", y_pos)
                         .attr("height", height);
                 }
+                parent.append("rect")
+                    .attr("id", "line_back_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                    .attr("style", line_back_style)
+                    .attr("x", x(xlabels[bin_idx + 1]))
+                    .attr("width", bin_width)
+                    .attr("y", y_pos)
+                    .attr("height", height);
+
+
+
+                for (var val_idx = 0; val_idx < bin_data.length; val_idx++) {
+                    var both_good = true;
+                    var y1 = NaN;
+                    var y2 = NaN;
+                    if (!isNaN(bin_data[val_idx][0])) {
+                        y1 = y_pos + height * (1 - ((bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
+                    } else {
+                        both_good = false;
+                    }
+
+                    if (!isNaN(next_bin_data[val_idx][0])) {
+                        y2 = y_pos + height * (1 - ((next_bin_data[val_idx][0] - domain[0]) / (domain[1] - domain[0])));
+                    } else {
+                        both_good = false;
+                    }
+
+                    // plot the points
+
+                    // if good plot the line
+                    if (both_good) {
+                        parent.append("line")
+                            .attr("x1", x1)
+                            .attr("x2", x2)
+                            .attr("y1", y1)
+                            .attr("y2", y2)
+                            .attr("style", "stroke-opacity: 0.8; stroke: " + color_arr[val_idx] + "; stroke-width: 1.5;");
+                    }
+
+
+                    if (bin_idx == 0 && !isNaN(bin_data[val_idx][0])) {
+                        parent.append("path")
+                            .attr("transform", function (d) {
+                                return "translate(" + x1 + "," + y1 + ")";
+                            })
+                        //.attr("d", d3.svg.symbol().type('cross').size(32))
+                        //.attr("style", "fill: " + color_arr[val_idx] + ";")
+                        .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
+                            .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
+
+                    }
+                    if (!isNaN(next_bin_data[val_idx][0])) {
+                        parent.append("path")
+                            .attr("transform", function (d) {
+                                return "translate(" + x2 + "," + y2 + ")";
+                            })
+                        //.attr("d", d3.svg.symbol().type('cross').size(32))
+                        //.attr("style", "fill: " + color_arr[val_idx] + ";");
+                        .attr("d", "M0,0 L2,2 M0,0 L2,-2 M0,0 L-2,2 M0,0 L-2,-2")
+                            .attr("style", "stroke-width:1;stroke:" + color_arr[val_idx] + ";");
+                    }
+                }
+
+                // draw the foreground
+                if (bin_idx == 0) {
+                    parent.append("rect")
+                        .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
+                        .attr("style", front_style)
+                        .attr("x", x(xlabels[bin_idx]))
+                        .attr("width", bin_width)
+                        .attr("y", y_pos)
+                        .attr("height", height);
+
+                    // draw the popover text
+
+                    var idx = 0;
+                    for (var filename in data) {
+
+                        var legend_text = get_legend_text(chart_idx, out_data[bin_idx], idx);
+
+                        parent.append("text")
+                            .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + bin_idx + "_" + chart_idx)
+                            .attr("x", legend_x + legend_x_margin + legend_offsets[chart_idx] + 211)
+                            .attr("y", (legend_y + legend_y_margin + (idx * 15) + 5))
+                            .text(legend_text)
+                            .attr("font-family", "sans-serif")
+                            .attr("font-size", "12px")
+                            .attr("fill", "black")
+                            .style("display", "none");
+                        idx++;
+                    }
+
+                }
+                parent.append("rect")
+                    .attr("id", "line_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
+                    .attr("style", front_style)
+                    .attr("x", x(xlabels[bin_idx + 1]))
+                    .attr("width", bin_width)
+                    .attr("y", y_pos)
+                    .attr("height", height);
+
                 var idx = 0;
                 for (var filename in data) {
-                    var legend_text = get_legend_text(chart_idx, leg_idx, out_data[bin_idx + 1], idx);
+
+                    var legend_text = get_legend_text(chart_idx, out_data[bin_idx + 1], idx);
 
                     parent.append("text")
                         .attr('id', "pop_" + id + "_" + type + "_" + str_label + "_b" + (bin_idx + 1) + "_" + chart_idx)
@@ -665,59 +645,58 @@
         /**
          * Draws the bar line chart
          */
-        function draw_line_bar(parent, id_str, chart_idx, x, y, height, width, domain, data_arr, color_arr, leg_idx, no_plot) {
+        function draw_line_bar(parent, id_str, chart_idx, x, y, height, width, domain, data_arr, color_arr) {
             var num_vals = data_arr.length;
-            if(!no_plot){
-                var line_width = width / num_vals;
-    
-                parent.append("rect")
-                    .attr("id", "back_" + id_str)
-                    .attr("style", bar_back_style)
-                    .attr("x", x)
-                    .attr("width", width)
-                    .attr("y", y)
-                    .attr("height", height);
-    
-                for (var idx = 0; idx < num_vals; idx++) {
-                    if (isNaN(data_arr[idx][0])) {
-                        continue;
-                    }
-    
-                    var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
-    
-                    parent.append("line")
-                        .attr("x1", x)
-                        .attr("x2", x + width)
-                        .attr("y1", y + data_y)
-                        .attr("y2", y + data_y)
-                        .attr("style", "stroke-opacity: 0.1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
+            var line_width = width / num_vals;
+
+            parent.append("rect")
+                .attr("id", "back_" + id_str)
+                .attr("style", bar_back_style)
+                .attr("x", x)
+                .attr("width", width)
+                .attr("y", y)
+                .attr("height", height);
+
+            for (var idx = 0; idx < num_vals; idx++) {
+                if (isNaN(data_arr[idx][0])) {
+                    continue;
                 }
-    
-                for (var idx = 0; idx < num_vals; idx++) {
-                    if (isNaN(data_arr[idx][0])) {
-                        continue;
-                    }
-    
-                    var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
-                    parent.append("line")
-                        .attr("x1", x + (idx * line_width))
-                        .attr("x2", x + ((idx + 1) * line_width))
-                        .attr("y1", y + data_y)
-                        .attr("y2", y + data_y)
-                        .attr("style", "stroke-opacity: 1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
-                }
-    
-                parent.append("rect")
-                    .attr("id", id_str)
-                    .attr("style", front_style)
-                    .attr("x", x)
-                    .attr("width", width)
-                    .attr("y", y)
-                    .attr("height", height);
+
+                var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
+
+                parent.append("line")
+                    .attr("x1", x)
+                    .attr("x2", x + width)
+                    .attr("y1", y + data_y)
+                    .attr("y2", y + data_y)
+                    .attr("style", "stroke-opacity: 0.1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
             }
+
+            for (var idx = 0; idx < num_vals; idx++) {
+                if (isNaN(data_arr[idx][0])) {
+                    continue;
+                }
+
+                var data_y = height * (1 - ((data_arr[idx][0] - domain[0]) / (domain[1] - domain[0])));
+                parent.append("line")
+                    .attr("x1", x + (idx * line_width))
+                    .attr("x2", x + ((idx + 1) * line_width))
+                    .attr("y1", y + data_y)
+                    .attr("y2", y + data_y)
+                    .attr("style", "stroke-opacity: 1; stroke: " + color_arr[idx] + "; stroke-width: 3;");
+            }
+
+            parent.append("rect")
+                .attr("id", id_str)
+                .attr("style", front_style)
+                .attr("x", x)
+                .attr("width", width)
+                .attr("y", y)
+                .attr("height", height);
+
             // draw the popover text
             for (var idx = 0; idx < num_vals; idx++) {
-                var legend_text = get_legend_text(chart_idx, leg_idx, data_arr, idx);
+                var legend_text = get_legend_text(chart_idx, data_arr, idx);
 
                 parent.append("text")
                     .attr('id', "pop_" + id_str)
@@ -729,6 +708,8 @@
                     .attr("fill", "black")
                     .style("display", "none");
             }
+
+
         }
 
 
@@ -805,7 +786,7 @@
         /**
          * Draws one row of the chart with small variants and SVs
          */
-        function draw_char_row(parent, id, label_str, big_data, type, chart_idx, max_chart_idx, color_arr, all_get_func, proc_func, leg_idx, draw_x, log_range, y_percent, no_plot) {
+        function draw_char_row(parent, id, label_str, big_data, type, chart_idx, max_chart_idx, color_arr, proc_func, draw_x, log_range, y_percent) {
             var chart_y_idx_start = charts_y_start + ((ind_chart_height + plot_y_gap) * chart_idx);
             var x_axis_y_bottom = charts_y_start + ((ind_chart_height + plot_y_gap) * max_chart_idx) - 15;
             var x_axis_y = charts_y_start + ((ind_chart_height + plot_y_gap) * (chart_idx + 1)) - 15;
@@ -813,37 +794,37 @@
             // define the axis range
             var data_range = compute_range(big_data, type, proc_func, log_range);
 
-            var data_arr = compute_data_arr(big_data, type, all_get_func, proc_func);
-            
-            if(!no_plot){
-                // draw the y axis
-                draw_y_axis(parent, left_margin, chart_y_idx_start,
-                    ind_chart_height, data_range, label_str, log_range);
-                // draw the x axis
-                if (draw_x) {
-                    draw_x_axis(parent, left_margin + 20, x_axis_y_bottom, 40, ["All"], true);
-                } else {
-                    draw_x_axis(parent, left_margin + 20, x_axis_y, 40, ["All"], false);
-                }
+            // draw the y axis
 
-                // draw y and x axis
-                draw_y_axis(parent, left_margin + 110, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
+            draw_y_axis(parent, left_margin, chart_y_idx_start,
+                ind_chart_height, data_range, label_str, log_range);
+
+            // draw the x axis
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 20, x_axis_y_bottom, 40, ["All"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 20, x_axis_y, 40, ["All"], false);
             }
 
-            // draw the total values
+            // draw the total values (also draw tooltip)
+
+            var data_arr = compute_data_arr(big_data, type, get_sum_count, proc_func);
             draw_line_bar(parent, id + '_' + type + "_all_c" + chart_idx, chart_idx, left_margin + 20,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx, no_plot);
-            
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
+
+            // draw the small variants (also draw tooltip)
+            // when drawing the small variants, also record the label
+
+            // draw y and x axis
+            draw_y_axis(parent, left_margin + 110, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
+
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1, leg_idx, no_plot);
-            
-            if(!no_plot){
-                if (draw_x) {
-                    draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
-                } else {
-                    draw_x_axis(parent, left_margin + 170, x_axis_y, plot_width, xlabels, false)
-                }
+                big_data, type, chart_idx, "small", color_arr, proc_func, data_range, 0, sv_lim-1);
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 170, x_axis_y_bottom, plot_width, xlabels, true)
+            } else {
+                draw_x_axis(parent, left_margin + 170, x_axis_y, plot_width, xlabels, false)
             }
 
             var data_arr = compute_data_arr(big_data, type, function (obj) {
@@ -851,47 +832,37 @@
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_small_c" + chart_idx, chart_idx, left_margin + 130,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx, no_plot);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
 
-            if(!no_plot){
-                if (draw_x) {
-                    draw_x_axis(parent, left_margin + 110 + 20, x_axis_y_bottom, 40, ["All Small"], true);
-                } else {
-                    draw_x_axis(parent, left_margin + 110 + 20, x_axis_y, 40, ["All Small"], false);
-                }
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 110 + 20, x_axis_y_bottom, 40, ["All Small"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 110 + 20, x_axis_y, 40, ["All Small"], false);
             }
 
 
             // draw the SVs (also draw tooltip)
-            if(!no_plot){
-                draw_y_axis(parent, left_margin + 110 + sv_x_start, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
-            }
-            
+            draw_y_axis(parent, left_margin + 110 + sv_x_start, chart_y_idx_start, ind_chart_height, data_range, label_str, log_range);
+
             var xlabels = draw_variant_line_range(parent, id, left_margin + 170 + sv_x_start,
                 chart_y_idx_start, ind_chart_height, plot_width,
-                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000, leg_idx, no_plot);
-                
-            if(!no_plot){
-                if (draw_x) {
-                    draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
-                } else {
-                    draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y, plot_width, xlabels, false)
-                }
+                big_data, type, chart_idx, "sv", color_arr, proc_func, data_range, sv_lim, 2000000);
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y_bottom, plot_width, xlabels, true)
+            } else {
+                draw_x_axis(parent, left_margin + 170 + sv_x_start, x_axis_y, plot_width, xlabels, false)
             }
-            
             var data_arr = compute_data_arr(big_data, type, function (obj) {
                 return get_range_sum_count(obj, sv_lim, 2000000)
             }, proc_func);
 
             draw_line_bar(parent, id + '_' + type + "_sv_c" + chart_idx, chart_idx, left_margin + 130 + sv_x_start,
-                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr, leg_idx, no_plot);
+                chart_y_idx_start, ind_chart_height, 40, data_range, data_arr, color_arr);
 
-            if(!no_plot){
-                if (draw_x) {
-                    draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y_bottom, 40, ["All SV"], true);
-                } else {
-                    draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y, 40, ["All SV"], false);
-                }
+            if (draw_x) {
+                draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y_bottom, 40, ["All SV"], true);
+            } else {
+                draw_x_axis(parent, left_margin + 110 + sv_x_start + 20, x_axis_y, 40, ["All SV"], false);
             }
         }
 
@@ -926,7 +897,8 @@
          *  id -- eg. canon
          *  description -- eg. canonical
          */
-        function redraw_plots(all_data, id, description, draw_ppv) {
+        function redraw_plots(all_data) {
+	    var id = "types";
             clear_plots_id(id);
             var body = d3.selectAll("body");
 
@@ -972,44 +944,25 @@
                     .attr("font-size", "24px")
                     .attr("fill", "black");
 
-                // draw description
-                parent.append('text')
-                    .attr("x", 10)
-                    .attr("y", 60)
-                    .text(description)
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "18px")
-                    .attr("fill", "#626262");
-
 
                 // the index of chart we are drawing
                 var chart_idx = 0;
-                var max_chart_idx = 0;
+                var max_chart_idx = 5;
 
-                if (draw_ppv) {
-                    max_chart_idx = 3;
-                    // draw TP
-                    draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx, color_arr, get_sum_count, compute_tpr, 0, false, false, true, false);
+                // draw TP
+                draw_char_row(parent, id, "Sensitivity", all_data, type, 0, max_chart_idx/2, color_arr, compute_tpr, false, false, true);
 
-                    // draw FP
-                    draw_char_row(parent, id, "Precision", all_data, type, 1, max_chart_idx, color_arr, get_sum_count, compute_ppv, 0, false, false, true, false);
+                // draw FP
+                draw_char_row(parent, id, "Precision", all_data, type, 1, max_chart_idx/2, color_arr, compute_ppv, false, false, true);
 
-                    // draw T
-                    draw_char_row(parent, id, "Number True", all_data, type, 2, max_chart_idx, color_arr, get_sum_count, compute_log_true, 0, true, true, false, false);
-                    
-                    // draw SPC
-                    draw_char_row(parent, id, "Specificity", all_data, type, 3, max_chart_idx, color_arr, get_base_sum_count, compute_spc, 0, true, false, true, true);
-                } else {
-                    max_chart_idx = 3;
-                    // draw F1
-                    draw_char_row(parent, id, "F1 Score", all_data, type, 0, max_chart_idx, color_arr, get_sum_count, compute_f1, 1, false, false, true, false);
+                // draw F1
+                draw_char_row(parent, id, "F1 Score", all_data, type, 2, max_chart_idx, color_arr, compute_f1, false, false, true);
 
-                    // draw P
-                    draw_char_row(parent, id, "Number Called", all_data, type, 1, max_chart_idx, color_arr, get_sum_count, compute_log_positive, 1, false, true, false, false);
+                // draw P
+                draw_char_row(parent, id, "Number Called", all_data, type, 3, max_chart_idx, color_arr, compute_log_positive, false, true, false);
 
-                    // draw T
-                    draw_char_row(parent, id, "Number True", all_data, type, 2, max_chart_idx, color_arr, get_sum_count, compute_log_true, 1, true, true, false, false);
-                }
+                // draw T
+                draw_char_row(parent, id, "Number True", all_data, type, 4, max_chart_idx, color_arr, compute_log_true, true, true, false);
 
                 // draw legend/popover
                 parent.append("rect")
@@ -1017,7 +970,7 @@
                     .attr("rx", 20)
                     .attr("ry", 20)
                     .attr("x", legend_x)
-                    .attr("width", 860)
+                    .attr("width", 1000)
                     .attr("y", legend_y)
                     .attr("height", tool_tip_height - 15);
                 draw_legend(parent, legend_x + legend_x_margin, legend_y + legend_y_margin, all_data, color_arr);
@@ -1183,9 +1136,8 @@
                         if (last_one) {
                             // draw variant types
                             hide_all();
-                            redraw_plots(types_data, 'types', 'Detail', true);
-                            redraw_plots(types_data, 'sum_types', 'Summary', false);
-                            show_id('sum_types_var');
+                            redraw_plots(types_data);
+                            show_id('types_var');
 
                             // draw all variants (but keep hidden)
                         }
@@ -1203,11 +1155,9 @@
         function reset_all_plots() {
             document.getElementById('file_name_list').innerHTML = "";
             document.getElementById('types_var').innerHTML = "";
-            document.getElementById('sum_types_var').innerHTML = "";
             resetFormElement($('#files'));
             types_data = {};
             $("#types_menu").empty();
-            $("#sum_types_menu").empty();
         }
 
         function resetFormElement(e) {
@@ -1237,9 +1187,8 @@
                         num_loaded++;
                         if (num_loaded == num_total) {
                             hide_all();
-                            redraw_plots(types_data, 'types', 'Detail', true);
-                            redraw_plots(types_data, 'sum_types', 'Summary', false);
-                            show_id('sum_types_var');
+                            redraw_plots(types_data);
+                            show_id('types_var');
                         }
                     }
                 })(i, demo_files[i]))
@@ -1259,17 +1208,15 @@
         scroll_to('parameters');
         
         // check for existence of varsim_data
-		if(typeof varsim_data != "undefined"){
+		if(typeof varsim_data != undefined){
 			// load the data if the variable exists
 			var filename = {"name": location.pathname.substring(location.pathname.lastIndexOf("/") + 1)};
             process_json(varsim_data, filename, false)
             hide_all();
-            redraw_plots(types_data, 'types', 'Detail', true);
-            redraw_plots(types_data, 'sum_types', 'Summary', false);
-            show_id('sum_types_var');
+            redraw_plots(types_data);
+            show_id('types_var');
             
 		}
-
 
 </script>
 </body>
