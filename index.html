@@ -175,13 +175,17 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
     <h2>Download VarSim</h2>
 
     <p>Latest pre-built version: <a
-            href="https://github.com/bioinform/varsim/releases/download/v0.5.1/varsim-0.5.1.tar.gz"
-            onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases/download/v0.5.1/varsim-0.5.1.tar.gz'); return false;">https://github.com/bioinform/varsim/releases/download/v0.5.1/varsim-0.5.1.tar.gz</a>
+            href="https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz"
+            onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz'); return false;">https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz</a>
     </p>
 
     <p>For source code, see "releases". <a href="https://github.com/bioinform/varsim/releases"
                                            onclick="trackOutboundLink('https://github.com/bioinform/varsim/releases'); return false;">https://github.com/bioinform/varsim/releases</a>
     </p>
+
+    <h2>VarSim on PrecisionFDA</h2>
+
+    <p>VarSim is also available as an app on the <a href="https://precision.fda.gov/" onclick="trackOutboundLink('https://precision.fda.gov/'); return false;">PrecisionFDA</a> portal. If you have an account, please check out this <a href="https://precision.fda.gov/notes/15-varsim-app" onclick="trackOutboundLink('https://precision.fda.gov/notes/15-varsim-app'); return false;">note</a></p>
 
 
     <h2>System Requirements</h2>
@@ -193,7 +197,7 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
         <li>Enough free disk space to store twice the number of reads generated</li>
         <li>ART or dwgsim installed</li>
         <li>Python 2.7 with argparse package</li>
-        <li>Java JRE 7 or higher</li>
+        <li>Java JRE 8 or higher</li>
         <li>Currently only supports human genome simulation</li>
     </ul>
     </p>
@@ -233,8 +237,8 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
     Download varsim to <code>varsim_run</code>
 
 <pre>
-wget https://github.com/bioinform/varsim/releases/download/v0.5.1/varsim-0.5.1.tar.gz
-tar xfz varsim-0.5.1.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz
+tar xfz varsim-0.6.3.tar.gz
 </pre>
 
     <p>
@@ -242,13 +246,13 @@ tar xfz varsim-0.5.1.tar.gz
     </p>
 
     <ol>
-        <li>Reference genome in FASTA format <a href='http://goo.gl/lgT18V'>[hs37d5.fa.gz]</a></li>
+        <li>Reference genome in FASTA format <a href='ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz'>[hs37d5.fa.gz]</a></li>
         <li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a>
         </li>
         <li>DGV annotations <a
                 href='http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt'>[GRCh37_hg19_supportingvariants_2013-07-23.txt]</a>
         </li>
-        <li>dbSNP 141 file <a href='http://goo.gl/NUG0dy'>[All.vcf.gz]</a></li>
+        <li>dbSNP 141 file <a href='ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b147_GRCh37p13/VCF/All_20160601.vcf.gz'>[All.vcf.gz]</a></li>
         <li>(optional) Extra variants to include in simulation variants.vcf</li>
     </ol>
 
@@ -310,7 +314,7 @@ cd ..
 - VarSim.jar
 - varsim.py
 - varsim_somatic.py
-- varsim-0.5.1.tar.gz
+- varsim-0.6.3.tar.gz
 </pre>
 
     <p>
