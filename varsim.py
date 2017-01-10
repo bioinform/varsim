@@ -16,7 +16,7 @@ from distutils.version import LooseVersion
 from multiprocessing import Process
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 
-VERSION = "0.6"
+VERSION = "0.7.1"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
