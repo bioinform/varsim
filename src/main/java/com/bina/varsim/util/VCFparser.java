@@ -589,13 +589,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
                     //what does clipLength represent?
                     int clipLength = 0;
-                    for (int j = 0; j < alternativeAlleleLength; j++) {
-
-                        // make sure there is at least something in ref
-                        if (referenceAlleleLength <= j) {
-                            clipLength = j;
-                            break;
-                        }
+                    for (int j = 0; j < Math.min(alternativeAlleleLength, referenceAlleleLength); j++) {
                         //this is based on the assumption that all characters are ASCII characters
                         if (REF.charAt(referenceAlleleLength - j - 1) != alts[i].byteAt(alternativeAlleleLength - j - 1)) {
                             clipLength = j;
@@ -604,9 +598,7 @@ public class VCFparser extends GzFileParser<Variant> {
                         clipLength = j + 1;
                     }
 
-                    if (minClipLength > clipLength) {
-                        minClipLength = clipLength;
-                    }
+                    minClipLength = Math.min(clipLength, minClipLength);
                 }
 
                 /*

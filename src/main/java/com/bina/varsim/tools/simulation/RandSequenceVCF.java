@@ -3,6 +3,7 @@ package com.bina.varsim.tools.simulation;
 import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.types.variant.Variant;
+import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.VCFparser;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
@@ -24,6 +25,9 @@ public class RandSequenceVCF extends RandVCFgenerator {
     @Option(name = "-out_vcf", usage = "Output VCF to generate")
     File outFile = null;
 
+    @Option(name = "-ref", usage = "Reference FASTA", required = true)
+    File ref = null;
+
     public RandSequenceVCF(final String command, final String description) {
         super(command, description);
     }
@@ -36,6 +40,8 @@ public class RandSequenceVCF extends RandVCFgenerator {
         if (!parseArguments(args)) {
             return;
         }
+
+        final SimpleReference reference = new SimpleReference(ref.getPath());
 
         rand = new Random(seed);
 
@@ -50,6 +56,8 @@ public class RandSequenceVCF extends RandVCFgenerator {
             if (var == null) {
                 continue;
             }
+            var.calculateExtraBase(reference.getSequence(var.getChr()));
+
             final Genotypes geno = var.getGenotypes();
             fillInSeq(var, samplingSequence, geno.geno[0]);
             fillInSeq(var, samplingSequence, geno.geno[1]);
