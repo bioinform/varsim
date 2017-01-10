@@ -272,7 +272,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
-    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + version)
+    main_parser.add_argument('--version', action='version', version=version)
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 

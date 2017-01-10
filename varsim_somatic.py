@@ -51,7 +51,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
-    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + get_version())
+    main_parser.add_argument('--version', action='version', version=get_version())
 
 
     input_vcf_group = main_parser.add_argument_group("Input VCFs options")
