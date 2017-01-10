@@ -46,7 +46,7 @@ regions_intervaltree = defaultdict(IntervalTree)
 contigs = []
 with open(os.path.join(outdir, "ref.fa"), "w") as out_fasta:
   first = True
-  for region_index, region in enumerate(regions_bedtool):
+  for region_index, region in enumerate(regions_bedtool, start=1):
     sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start, end=region.end)
     region_name = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end) )
     if first:
@@ -72,7 +72,7 @@ for invcf in invcfs:
 
   tabix_vcf = pysam.TabixFile(invcf, parser=pysam.asVCF())
   info_warned = False
-  for region_index, region in enumerate(regions_bedtool):
+  for region_index, region in enumerate(regions_bedtool, start=1):
     records = None
     try: records = tabix_vcf.fetch(reference=str(region.chrom), start=region.start, end=region.end)
     except ValueError: logger.error("Failed to retrieve %s from %s" % (str(region).strip(), invcf))
