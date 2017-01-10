@@ -6,8 +6,8 @@ b37_source="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_
 dbsnp_source="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b147_GRCh37p13/VCF/All_20160601.vcf.gz"
 
 # Download varsim
-wget https://github.com/bioinform/varsim/releases/download/v0.6.3/varsim-0.6.3.tar.gz
-tar xfz varsim-0.6.3.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v0.7.1/varsim-0.7.1.tar.gz
+tar xfz varsim-0.7.1.tar.gz
 
 # Download reference and variant databases 
 wget $b37_source -O - | gunzip -c > hs37d5.fa
