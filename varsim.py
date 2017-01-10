@@ -226,7 +226,7 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_i
 
 
 def get_version():
-    return subprocess.check_output("java -jar VarSim.jar -version", shell=True).strip()
+    return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
 
 if __name__ == "__main__":
