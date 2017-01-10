@@ -63,7 +63,6 @@ public class Variant implements Comparable<Variant>{
 
     /**
      * whether have flag ISINV?
-     * @param idx
      * @return
      */
     public boolean isInversed() {
@@ -978,11 +977,17 @@ public class Variant implements Comparable<Variant>{
     }
 
     public void calculateExtraBase(final Sequence refSeq) {
+        if (refDeleted.length() > 0) {
+            return;
+        }
         for (final Alt alt : alts) {
             if (alt.isSeq() && alt.length() == 0 && getPos() + referenceAlleleLength < refSeq.length()) {
                 //why extrabase is only 1-bp long?
                 extraBase = String.valueOf((char) refSeq.byteAt(getPos() + referenceAlleleLength));
             }
+        }
+        if (ref.length == 0) {
+            extraBase = String.valueOf((char) refSeq.byteAt(getPos()));
         }
     }
 

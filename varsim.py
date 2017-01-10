@@ -16,7 +16,6 @@ from distutils.version import LooseVersion
 from multiprocessing import Process
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 
-VERSION = "0.7.1"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
@@ -178,13 +177,15 @@ def check_executable(fpath):
         sys.exit(os.EX_NOINPUT)
 
 
-def fill_missing_sequences(vcf, seq_file, work_dir, log_dir):
+def fill_missing_sequences(vcf, seq_file, reference, work_dir, log_dir):
     logger = logging.getLogger(fill_missing_sequences.__name__)
 
     out_vcf = os.path.join(work_dir, os.path.basename(vcf))
+    if out_vcf.endswith(".gz"):
+        out_vcf = out_vcf[:-3]
     out_log = os.path.join(log_dir, "%s_fill_missing.log" % (os.path.basename(vcf)))
 
-    command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf]
+    command = ["java", "-Xmx10g", "-Xms10g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
     with open(out_log, "w") as log_fd:
         logger.info("Running command " + " ".join(command))
         subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
@@ -224,7 +225,12 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_i
     return p_rand_vcf
 
 
+def get_version():
+    return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
+
+
 if __name__ == "__main__":
+    check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -266,7 +272,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
-    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
+    main_parser.add_argument('--version', action='version', version=get_version())
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
@@ -365,8 +371,6 @@ if __name__ == "__main__":
         logging.basicConfig(level=loglevel, format=FORMAT)
     logger = logging.getLogger(__name__)
 
-    check_java()
-
     # Make sure we can actually execute the executable
     if not args.disable_sim:
         check_executable(args.simulator_executable.name)
@@ -380,7 +384,7 @@ if __name__ == "__main__":
     for i, vcf in enumerate(args.vcfs):
         tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
         makedirs([tool_work_dir])
-        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), tool_work_dir, tool_work_dir))
+        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), args.reference.name, tool_work_dir, tool_work_dir))
     args.vcfs = map(os.path.realpath, in_vcfs)
 
     open_fds = []

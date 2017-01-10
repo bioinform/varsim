@@ -8,12 +8,13 @@ import sys
 import subprocess
 import logging
 import time
-from varsim import VERSION, MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
-from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf
+from varsim import MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
+from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf, get_version
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
 
 if __name__ == "__main__":
+    check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
-    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
+    main_parser.add_argument('--version', action='version', version=get_version())
 
 
     input_vcf_group = main_parser.add_argument_group("Input VCFs options")
@@ -102,8 +103,6 @@ if __name__ == "__main__":
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
     logger = logging.getLogger(__name__)
-
-    check_java()
 
     if not args.disable_sim:
         if not args.simulator_executable:
