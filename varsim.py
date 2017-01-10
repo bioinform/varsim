@@ -16,7 +16,6 @@ from distutils.version import LooseVersion
 from multiprocessing import Process
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 
-VERSION = "0.7.1"
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
@@ -224,7 +223,14 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_i
     return p_rand_vcf
 
 
+def get_version():
+    return subprocess.check_output("java -jar VarSim.jar -version", shell=True).strip()
+
+
 if __name__ == "__main__":
+    check_java()
+
+    version = get_version()
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -266,7 +272,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
-    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + VERSION)
+    main_parser.add_argument('--version', action='version', version='VarSim: %(prog)s ' + version)
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
@@ -364,8 +370,6 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
     logger = logging.getLogger(__name__)
-
-    check_java()
 
     # Make sure we can actually execute the executable
     if not args.disable_sim:
