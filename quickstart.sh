@@ -4,11 +4,12 @@ set -x
 
 b37_source="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz"
 dbsnp_source="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b147_GRCh37p13/VCF/All_20160601.vcf.gz"
+varsim_version="0.7.1"
+samtools_version="1.3.1"
 
 # Download varsim
-version=$(java -jar VarSim.jar -version)
-wget https://github.com/bioinform/varsim/releases/download/v$version/varsim-$version.tar.gz
-tar xfz varsim-$version.tar.gz
+wget https://github.com/bioinform/varsim/releases/download/v$varsim_version/varsim-$varsim_version.tar.gz
+tar xfz varsim-$varsim_version.tar.gz
 
 # Download reference and variant databases 
 wget $b37_source -O - | gunzip -c > hs37d5.fa
@@ -16,13 +17,19 @@ wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
 wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
 wget $dbsnp_source -O All.vcf.gz
 
+# Download samtools and install ART simulator
+mkdir -pv samtools ART
+
 # Download samtools and index reference
 mkdir samtools
+pushd .
 cd samtools
-wget http://sourceforge.net/projects/samtools/files/samtools/1.0/samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
-tar xfj samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
-cd ..
-samtools/samtools-bcftools-htslib-1.0_x64-linux/bin/samtools faidx hs37d5.fa
+wget https://github.com/samtools/samtools/releases/download/$samtools_version/samtools-$version.tar.bz2 
+tar xfj samtools-$samtools_version.tar.bz2
+cd samtools-$samtools_version && make
+popd
+
+samtools/samtools-$samtools_version/samtools faidx hs37d5.fa
 
 # Download ART
 mkdir ART
