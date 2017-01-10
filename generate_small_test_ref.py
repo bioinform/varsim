@@ -26,6 +26,7 @@ parser.add_argument("--regions", help="Regions BED", required=True)
 parser.add_argument("--vcfs", nargs="+", required=True, default=[])
 parser.add_argument("--outdir", required=True)
 parser.add_argument("--flank", type=uint, default=0, help="ignore variants this close to the edges of a region")
+parser.add_argument("--short_contig_names", action="store_true", help="Generate short contig names instead of the chr_start_end naming")
 
 args = parser.parse_args()
 
@@ -45,9 +46,9 @@ regions_intervaltree = defaultdict(IntervalTree)
 contigs = []
 with open(os.path.join(outdir, "ref.fa"), "w") as out_fasta:
   first = True
-  for region in regions_bedtool:
+  for region_index, region in enumerate(regions_bedtool):
     sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start, end=region.end)
-    region_name = "%s_%d_%d" % (str(region.chrom), region.start, region.end)
+    region_name = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end) )
     if first:
       out_fasta.write(">{}\n{}".format(region_name, sequence))
       first = False
@@ -71,14 +72,14 @@ for invcf in invcfs:
 
   tabix_vcf = pysam.TabixFile(invcf, parser=pysam.asVCF())
   info_warned = False
-  for region in regions_bedtool:
+  for region_index, region in enumerate(regions_bedtool):
     records = None
     try: records = tabix_vcf.fetch(reference=str(region.chrom), start=region.start, end=region.end)
     except ValueError: logger.error("Failed to retrieve %s from %s" % (str(region).strip(), invcf))
     if records is None: continue
     for record in records:
       if record.pos <= region.start + args.flank or record.pos + len(record.ref) + args.flank - 1 >= region.end: continue
-      record.contig = "%s_%d_%d" % (str(region.chrom), region.start, region.end)
+      record.contig = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
       # record.pos seems to be zero-based, at least in the infinite wisdom of my version of pysam
       record.pos = record.pos - region.start
       fmt = "GT" if len(record) else None
