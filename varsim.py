@@ -181,6 +181,8 @@ def fill_missing_sequences(vcf, seq_file, work_dir, log_dir):
     logger = logging.getLogger(fill_missing_sequences.__name__)
 
     out_vcf = os.path.join(work_dir, os.path.basename(vcf))
+    if out_vcf.endswith(".gz"):
+        out_vcf = out_vcf[:-3]
     out_log = os.path.join(log_dir, "%s_fill_missing.log" % (os.path.basename(vcf)))
 
     command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf]
