@@ -984,6 +984,7 @@ public class Variant implements Comparable<Variant>{
             if (alt.isSeq() && alt.length() == 0 && getPos() + referenceAlleleLength < refSeq.length()) {
                 //why extrabase is only 1-bp long?
                 extraBase = String.valueOf((char) refSeq.byteAt(getPos() + referenceAlleleLength));
+                return;
             }
         }
         if (ref.length == 0) {
