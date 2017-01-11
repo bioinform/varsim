@@ -74,4 +74,14 @@ public class VCFparserTest {
     public void SymbolicAlleleMixWithNonSymbolicAlleleTest() throws IOException {
         parser.processLine("1	3	.	T	<DUP:TANDEM>,TTTT	.	PASS	SVTYPE=DUP;SVLEN=4,4	GT:CN	1|2:2|3");
     }
+    @Test
+    public void addExtraBaseForInsertion() throws UnexpectedException {
+        Variant v = parser.processLine("1	3	.	T	TTTT	.	PASS	SVLEN=3	GT:CN	0|1:2|3");
+        assertTrue(v.toString().equals("1	3	.	T	TTTT	.	PASS	SVLEN=3	GT	0|1"));
+    }
+    @Test
+    public void addExtraBaseForDeletion() throws UnexpectedException {
+        Variant v = parser.processLine("1	3	.	TTTT	T	.	PASS	SVLEN=-3	GT:CN	0|1:2|3");
+        assertTrue(v.toString().equals("1	3	.	TTTT	T	.	PASS	SVTYPE=DEL;SVLEN=-3	GT	0|1"));
+    }
 }
