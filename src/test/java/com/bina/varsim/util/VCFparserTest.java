@@ -84,4 +84,10 @@ public class VCFparserTest {
         Variant v = parser.processLine("1	3	.	TTTT	T	.	PASS	SVLEN=-3	GT:CN	0|1:2|3");
         assertTrue(v.toString().equals("1	3	.	TTTT	T	.	PASS	SVTYPE=DEL;SVLEN=-3	GT	0|1"));
     }
+    @Test
+    public void vcfinfoTestDefaultBoolean() throws UnexpectedException {
+        //for unrecognized flags, return boolen type
+        Variant	v	=	parser.processLine("1	111	rs770821123	C	A	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
+        assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	SVLEN=1	GT	1|1"));
+    }
 }

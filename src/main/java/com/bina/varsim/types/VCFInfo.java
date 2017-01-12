@@ -3,6 +3,7 @@ package com.bina.varsim.types;
 import java.rmi.UnexpectedException;
 import java.util.*;
 import java.util.concurrent.Exchanger;
+import java.util.function.BooleanSupplier;
 
 /**
  * Created by guoy28 on 10/5/16.
@@ -27,7 +28,7 @@ public class VCFInfo {
                 this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0]));
+                this.info2Value.put(keyAndValue[0], new VCFInfoElement(Boolean.class));
             }
         }
     }
@@ -72,6 +73,9 @@ public class VCFInfo {
          */
         public VCFInfoElement(final String id) {
             this.type = getType(id);
+            this.value = type.cast(true);
+        }
+        public VCFInfoElement(final Class<T> type) {
             this.value = type.cast(true);
         }
 
