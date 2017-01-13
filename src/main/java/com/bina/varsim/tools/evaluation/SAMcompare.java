@@ -23,8 +23,6 @@ import htsjdk.samtools.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.File;
@@ -42,17 +40,17 @@ public class SAMcompare extends VarSimTool {
     @Option(name = "-mapq_cutoff", usage = "Mapping quality cutoff [" + MAPQ_CUTOFF + "]")
     int mapqCutoff = MAPQ_CUTOFF;
     @Option(name = "-prefix", usage = "Prefix for output file [Required]", metaVar = "file", required = true)
-    String out_prefix;
+    String outPrefix;
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
-    String bed_filename = "";
+    String bedFilename = "";
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
-    File html_file = null;
+    File htmlFile = null;
     @Option(name = "-read_map", usage = "Read MAP file [Optional]", metaVar = "ReadMap_file")
     File readMapFile = null;
     @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
     @Argument(usage = "One or more BAM files, header coming from the first file", metaVar = "bam_files ...", required = true)
-    private List<String> bam_filename = new ArrayList<>();
+    private List<String> bamFilenames = new ArrayList<>();
 
     public SAMcompare(final String command, final String description) {
         super(command, description);
@@ -79,13 +77,13 @@ public class SAMcompare extends VarSimTool {
             return;
         }
 
-        final BedFile intersector = (bed_filename != null && new File(bed_filename).isFile()) ? new BedFile(bed_filename) : null;
+        final BedFile intersector = (bedFilename != null && new File(bedFilename).isFile()) ? new BedFile(bedFilename) : null;
 
-        output_class output_blob = new output_class();
+        OutputClass outputBlob = new OutputClass();
 
         // TODO think about better way to deal with multiple bams
-        output_blob.setParams(new CompareParams(bam_filename.get(0).substring(0, Math.min(64, bam_filename.get(0).length())), wiggle, bed_filename));
-        output_blob.setStats(new MapRatioRecordSum());
+        outputBlob.setParams(new CompareParams(bamFilenames.get(0).substring(0, Math.min(64, bamFilenames.get(0).length())), wiggle, bedFilename));
+        outputBlob.setStats(new MapRatioRecordSum());
 
         // generate the output files
         PrintWriter jsonWriter = null;
@@ -93,7 +91,7 @@ public class SAMcompare extends VarSimTool {
         final Map<BlockType, SAMFileWriter> fpWriters = new HashMap<>();
         //TODO: put file open into try()
         try {
-            jsonWriter = new PrintWriter(out_prefix + "_report.json", "UTF-8");
+            jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -108,11 +106,11 @@ public class SAMcompare extends VarSimTool {
                                 SamReaderFactory.Option.VALIDATE_CRC_CHECKSUMS)
                         .validationStringency(ValidationStringency.LENIENT);
 
-        final SAMFileWriter tumFPWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_TUM_FP.bam"));
-        final SAMFileWriter fpWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_FP.bam"));
+        final SAMFileWriter tumFPWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bamFilenames.get(0))), false, new File(outPrefix + "_TUM_FP.bam"));
+        final SAMFileWriter fpWriter = writerFactory.makeBAMWriter(factory.getFileHeader(new File(bamFilenames.get(0))), false, new File(outPrefix + "_FP.bam"));
         for (final BlockType blockType : BlockType.values()) {
             if (blockType != BlockType.UNKNOWN) {
-                fpWriters.put(blockType, writerFactory.makeBAMWriter(factory.getFileHeader(new File(bam_filename.get(0))), false, new File(out_prefix + "_" + blockType.getShortName() + "_FP.bam")));
+                fpWriters.put(blockType, writerFactory.makeBAMWriter(factory.getFileHeader(new File(bamFilenames.get(0))), false, new File(outPrefix + "_" + blockType.getShortName() + "_FP.bam")));
             }
         }
 
@@ -125,7 +123,7 @@ public class SAMcompare extends VarSimTool {
         }
 
         int numReads = 0;
-        for (String filename : bam_filename) {
+        for (String filename : bamFilenames) {
             log.info("Reading file: " + filename);
             final SamReader reader = factory.open(new File(filename));
             try {
@@ -148,62 +146,62 @@ public class SAMcompare extends VarSimTool {
                     // TODO need to check for errors here
                     int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
                     log.trace("Getting true locations for read " + name);
-                    final Collection<GenomeLocation> true_locs = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
+                    final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
                     //TODO simplify logic here
                     if (!(intersector == null)) {
-                        boolean contained_in_bed = false;
-                        for (GenomeLocation loc : true_locs) {
+                        boolean isContainedInBed = false;
+                        for (GenomeLocation loc : trueLoci) {
                             if (intersector.contains(new ChrString(loc.chromosome), loc.location
                                     //TODO should we change this to alignment length?
                                     , loc.location + rec.getReadLength() - 1)) {
-                                contained_in_bed = true;
+                                isContainedInBed = true;
                             }
                         }
-                        if (!contained_in_bed) {
+                        if (!isContainedInBed) {
                             // skip this read
                             continue;
                         }
                     }
 
-                    boolean true_unmapped;
+                    boolean isTrueUnmapped;
 
                     //TODO: create enum and replace HashSet with EnumSet
                     Set<String> features = new HashSet<>(4);
                     features.add("All");
 
                     // determine if the read really should be unmapped
-                    true_unmapped = true;
-                    if (!true_locs.isEmpty()) {
+                    isTrueUnmapped = true;
+                    if (!trueLoci.isEmpty()) {
                         // get types of genome features
                         // if only insertions and deletions then it is also unmapped
-                        for (GenomeLocation loc : true_locs) {
+                        for (GenomeLocation loc : trueLoci) {
                             final BlockType feat = loc.feature;
                             features.add(feat.getLongName());
 
                             // TODO check this with marghoob
-                            true_unmapped &= !feat.isMappable();
+                            isTrueUnmapped &= !feat.isMappable();
                         }
                     }
 
-                    if (true_unmapped) {
+                    if (isTrueUnmapped) {
                         features.add("True_Unmapped");
                     } else {
-                        output_blob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
+                        outputBlob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
                     }
 
 
                     boolean unmapped = rec.getReadUnmappedFlag();
                     //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
-                    int mapping_quality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
+                    int mappingQuality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
                     final StatsNamespace validationStatus;
                     if (unmapped) {
-                        validationStatus = true_unmapped ? StatsNamespace.TN : StatsNamespace.FN;
+                        validationStatus = isTrueUnmapped ? StatsNamespace.TN : StatsNamespace.FN;
                     } else {
                         // check if the it mapped to the correct location
                         boolean closeAln = false;
-                        if (true_unmapped) {
-                            if (mapping_quality > mapqCutoff) {
+                        if (isTrueUnmapped) {
+                            if (mappingQuality > mapqCutoff) {
                                 tumFPWriter.addAlignment(rec);
                             }
                         } else {
@@ -212,12 +210,12 @@ public class SAMcompare extends VarSimTool {
 
                             //if a read can be mapped to one of possible loci
                             //then we consider it as mapped
-                            for (GenomeLocation loc : true_locs) {
+                            for (GenomeLocation loc : trueLoci) {
                                 closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
                             }
 
                             if (!closeAln) {
-                                if (mapping_quality > mapqCutoff) {
+                                if (mappingQuality > mapqCutoff) {
                                     //got another false positive
                                     fpWriter.addAlignment(rec);
                                     for (final BlockType blockType : BlockType.values()) {
@@ -231,7 +229,7 @@ public class SAMcompare extends VarSimTool {
                         }
                         validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
-                    output_blob.getStats().incStat(features, mapping_quality, validationStatus);
+                    outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
                 }
 
             } finally {
@@ -248,7 +246,7 @@ public class SAMcompare extends VarSimTool {
 
         // output the statistics
         System.err.println("Statistics for all reads");
-        System.err.println(output_blob.getStats());
+        System.err.println(outputBlob.getStats());
 
         // output a JSON object
         ObjectMapper mapper = new ObjectMapper();
@@ -256,16 +254,16 @@ public class SAMcompare extends VarSimTool {
 
         String jsonStr = "";
         try {
-            jsonStr = mapper.writeValueAsString(output_blob);
+            jsonStr = mapper.writeValueAsString(outputBlob);
             jsonWriter.print(jsonStr);
         } catch (Exception e) {
             e.printStackTrace();
         }
         jsonWriter.close();
 
-        if (html_file != null) {
+        if (htmlFile != null) {
             try {
-                FileUtils.writeStringToFile(new File(out_prefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(html_file), jsonStr));
+                FileUtils.writeStringToFile(new File(outPrefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(htmlFile), jsonStr));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -283,16 +281,16 @@ public class SAMcompare extends VarSimTool {
     /**
      * This class is for outputting as a JSON
      */
-    private static class output_class {
+    private static class OutputClass {
         CompareParams params;
         MapRatioRecordSum stats;
 
-        output_class(CompareParams params, MapRatioRecordSum stats) {
+        OutputClass(CompareParams params, MapRatioRecordSum stats) {
             this.params = params;
             this.stats = stats;
         }
 
-        output_class() {
+        OutputClass() {
         }
 
         public MapRatioRecordSum getStats() {
@@ -318,20 +316,20 @@ public class SAMcompare extends VarSimTool {
     class CompareParams {
         String bam_filename;
         int wiggle;
-        String bed_filename;
+        String bedFilename;
 
-        CompareParams(String bam_filename, int wiggle, String bed_filename) {
-            this.bam_filename = bam_filename;
+        CompareParams(String bamFilename, int wiggle, String bedFilename) {
+            this.bam_filename = bamFilename;
             this.wiggle = wiggle;
-            this.bed_filename = bed_filename;
+            this.bedFilename = bedFilename;
         }
 
         public String getBam_filename() {
             return bam_filename;
         }
 
-        public void setBam_filename(String bam_filename) {
-            this.bam_filename = bam_filename;
+        public void setBam_filename(String bamFilename) {
+            this.bam_filename = bamFilename;
         }
 
         public int getWiggle() {
@@ -342,12 +340,12 @@ public class SAMcompare extends VarSimTool {
             this.wiggle = wiggle;
         }
 
-        public String getBed_filename() {
-            return bed_filename;
+        public String getBedFilename() {
+            return bedFilename;
         }
 
-        public void setBed_filename(String bed_filename) {
-            this.bed_filename = bed_filename;
+        public void setBedFilename(String bedFilename) {
+            this.bedFilename = bedFilename;
         }
     }
 
