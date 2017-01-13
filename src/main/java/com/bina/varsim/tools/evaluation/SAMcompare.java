@@ -243,6 +243,11 @@ public class SAMcompare extends VarSimTool {
             if (htmlFile != null) {
                 FileUtils.writeStringToFile(new File(outPrefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(htmlFile), jsonStr));
             }
+            for (final BlockType blockType : BlockType.values()) {
+                if (blockType != BlockType.UNKNOWN) {
+                    fpWriters.get(blockType).close();
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
