@@ -18,6 +18,7 @@ import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.util.ReadMap;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.*;
 import org.apache.commons.io.FileUtils;
@@ -108,132 +109,117 @@ public class SAMcompare extends VarSimTool {
                 }
             }
 
-            ReadMap readMap = null;
-            try {
-                readMap = readMapFile != null ? new ReadMap(readMapFile) : null;
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
+            ReadMap readMap = readMapFile != null ? new ReadMap(readMapFile) : null;
 
             int numReads = 0;
             for (String filename : bamFilenames) {
                 log.info("Reading file: " + filename);
                 final SamReader reader = factory.open(new File(filename));
-                try {
-                    for (SAMRecord rec : reader) {
+                for (SAMRecord rec : reader) {
 
-                        // TODO this will need to change when we start considering supplementary alignements
-                        if (!useNonPrimary && (rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag())) {
+                    // TODO this will need to change when we start considering supplementary alignements
+                    if (!useNonPrimary && (rec.getNotPrimaryAlignmentFlag() || rec.getSupplementaryAlignmentFlag())) {
+                        continue;
+                    }
+
+                    numReads++;
+
+                    if (numReads % 100000 == 0) {
+                        log.info("Read " + numReads + " records ...");
+                    }
+
+                    String name = rec.getReadName();
+
+                    // parse the name
+                    // TODO need to check for errors here
+                    int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
+                    log.trace("Getting true locations for read " + name);
+                    final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
+
+                    //TODO simplify logic here
+                    if (!(intersector == null)) {
+                        boolean isContainedInBed = false;
+                        for (GenomeLocation loc : trueLoci) {
+                            if (intersector.contains(new ChrString(loc.chromosome), loc.location
+                                    //TODO should we change this to alignment length?
+                                    , loc.location + rec.getReadLength() - 1)) {
+                                isContainedInBed = true;
+                            }
+                        }
+                        if (!isContainedInBed) {
+                            // skip this read
                             continue;
                         }
+                    }
 
-                        numReads++;
+                    boolean isTrueUnmapped;
 
-                        if (numReads % 100000 == 0) {
-                            log.info("Read " + numReads + " records ...");
+                    //TODO: create enum and replace HashSet with EnumSet
+                    Set<String> features = new HashSet<>(4);
+                    features.add("All");
+
+                    // determine if the read really should be unmapped
+                    isTrueUnmapped = true;
+                    if (!trueLoci.isEmpty()) {
+                        // get types of genome features
+                        // if only insertions and deletions then it is also unmapped
+                        for (GenomeLocation loc : trueLoci) {
+                            final BlockType feat = loc.feature;
+                            features.add(feat.getLongName());
+
+                            // TODO check this with marghoob
+                            isTrueUnmapped &= !feat.isMappable();
                         }
+                    }
 
-                        String name = rec.getReadName();
+                    if (isTrueUnmapped) {
+                        features.add("True_Unmapped");
+                    } else {
+                        outputBlob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
+                    }
 
-                        // parse the name
-                        // TODO need to check for errors here
-                        int pair_idx = rec.getReadPairedFlag() ? getPairIdx(rec.getFirstOfPairFlag()): 0;
-                        log.trace("Getting true locations for read " + name);
-                        final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
-                        //TODO simplify logic here
-                        if (!(intersector == null)) {
-                            boolean isContainedInBed = false;
-                            for (GenomeLocation loc : trueLoci) {
-                                if (intersector.contains(new ChrString(loc.chromosome), loc.location
-                                        //TODO should we change this to alignment length?
-                                        , loc.location + rec.getReadLength() - 1)) {
-                                    isContainedInBed = true;
-                                }
-                            }
-                            if (!isContainedInBed) {
-                                // skip this read
-                                continue;
-                            }
-                        }
-
-                        boolean isTrueUnmapped;
-
-                        //TODO: create enum and replace HashSet with EnumSet
-                        Set<String> features = new HashSet<>(4);
-                        features.add("All");
-
-                        // determine if the read really should be unmapped
-                        isTrueUnmapped = true;
-                        if (!trueLoci.isEmpty()) {
-                            // get types of genome features
-                            // if only insertions and deletions then it is also unmapped
-                            for (GenomeLocation loc : trueLoci) {
-                                final BlockType feat = loc.feature;
-                                features.add(feat.getLongName());
-
-                                // TODO check this with marghoob
-                                isTrueUnmapped &= !feat.isMappable();
-                            }
-                        }
-
+                    boolean unmapped = rec.getReadUnmappedFlag();
+                    //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
+                    int mappingQuality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
+                    final StatsNamespace validationStatus;
+                    if (unmapped) {
+                        validationStatus = isTrueUnmapped ? StatsNamespace.TN : StatsNamespace.FN;
+                    } else {
+                        // check if the it mapped to the correct location
+                        boolean closeAln = false;
                         if (isTrueUnmapped) {
-                            features.add("True_Unmapped");
+                            if (mappingQuality > mapqCutoff) {
+                                tumFPWriter.addAlignment(rec);
+                            }
                         } else {
-                            outputBlob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
-                        }
+                            // Use unclipped location since the true locations are also unclipped
+                            final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
 
+                            //if a read can be mapped to one of possible loci
+                            //then we consider it as mapped
+                            for (GenomeLocation loc : trueLoci) {
+                                closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
+                            }
 
-                        boolean unmapped = rec.getReadUnmappedFlag();
-                        //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
-                        int mappingQuality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
-                        final StatsNamespace validationStatus;
-                        if (unmapped) {
-                            validationStatus = isTrueUnmapped ? StatsNamespace.TN : StatsNamespace.FN;
-                        } else {
-                            // check if the it mapped to the correct location
-                            boolean closeAln = false;
-                            if (isTrueUnmapped) {
+                            if (!closeAln) {
                                 if (mappingQuality > mapqCutoff) {
-                                    tumFPWriter.addAlignment(rec);
-                                }
-                            } else {
-                                // Use unclipped location since the true locations are also unclipped
-                                final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
-
-                                //if a read can be mapped to one of possible loci
-                                //then we consider it as mapped
-                                for (GenomeLocation loc : trueLoci) {
-                                    closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
-                                }
-
-                                if (!closeAln) {
-                                    if (mappingQuality > mapqCutoff) {
-                                        //got another false positive
-                                        fpWriter.addAlignment(rec);
-                                        for (final BlockType blockType : BlockType.values()) {
-                                            if (fpWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
-                                                //categorize false positive alignments
-                                                fpWriters.get(blockType).addAlignment(rec);
-                                            }
+                                    //got another false positive
+                                    fpWriter.addAlignment(rec);
+                                    for (final BlockType blockType : BlockType.values()) {
+                                        if (fpWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
+                                            //categorize false positive alignments
+                                            fpWriters.get(blockType).addAlignment(rec);
                                         }
                                     }
                                 }
                             }
-                            validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                         }
-                        outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
+                        validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
-
-                } finally {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
                 }
-
+                reader.close();
             }
 
             log.info("Number of reads read: " + numReads);
@@ -249,19 +235,15 @@ public class SAMcompare extends VarSimTool {
             String jsonStr = "";
             try {
                 jsonStr = mapper.writeValueAsString(outputBlob);
-                jsonWriter.print(jsonStr);
-            } catch (Exception e) {
+            } catch (JsonProcessingException e) {
                 e.printStackTrace();
                 System.exit(1);
             }
+            jsonWriter.print(jsonStr);
             if (htmlFile != null) {
-                try {
-                    FileUtils.writeStringToFile(new File(outPrefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(htmlFile), jsonStr));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                FileUtils.writeStringToFile(new File(outPrefix + "_aligncomp.html"), JSONInserter.insertJSON(FileUtils.readFileToString(htmlFile), jsonStr));
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
