@@ -88,7 +88,7 @@ public class SAMcompare extends VarSimTool {
         // generate the output files
         PrintWriter jsonWriter = null;
         //TODO: use enum map
-        final Map<BlockType, SAMFileWriter> fpWriters = new HashMap<>();
+        final Map<BlockType, SAMFileWriter> fpWriters = new EnumMap<>(BlockType.class);
         //TODO: put file open into try()
         try {
             jsonWriter = new PrintWriter(outPrefix + "_report.json", "UTF-8");
