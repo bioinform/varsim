@@ -51,7 +51,7 @@ public class SAMcompare extends VarSimTool {
     File readMapFile = null;
     @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
-    @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
+    @Argument(usage = "One or more BAM files, header coming from the first file", metaVar = "bam_files ...", required = true)
     private List<String> bam_filename = new ArrayList<>();
 
     public SAMcompare(final String command, final String description) {
@@ -70,7 +70,7 @@ public class SAMcompare extends VarSimTool {
      * @return return 0 for first, 1 for not first
      */
     private int getPairIdx(boolean isFirst) {
-      return isFirst? 0:1;
+        return isFirst? 0:1;
     }
 
 
@@ -89,7 +89,9 @@ public class SAMcompare extends VarSimTool {
 
         // generate the output files
         PrintWriter jsonWriter = null;
+        //TODO: use enum map
         final Map<BlockType, SAMFileWriter> fpWriters = new HashMap<>();
+        //TODO: put file open into try()
         try {
             jsonWriter = new PrintWriter(out_prefix + "_report.json", "UTF-8");
         } catch (Exception e) {
@@ -148,10 +150,12 @@ public class SAMcompare extends VarSimTool {
                     log.trace("Getting true locations for read " + name);
                     final Collection<GenomeLocation> true_locs = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
+                    //TODO simplify logic here
                     if (!(intersector == null)) {
                         boolean contained_in_bed = false;
                         for (GenomeLocation loc : true_locs) {
                             if (intersector.contains(new ChrString(loc.chromosome), loc.location
+                                    //TODO should we change this to alignment length?
                                     , loc.location + rec.getReadLength() - 1)) {
                                 contained_in_bed = true;
                             }
@@ -164,6 +168,7 @@ public class SAMcompare extends VarSimTool {
 
                     boolean true_unmapped;
 
+                    //TODO: create enum and replace HashSet with EnumSet
                     Set<String> features = new HashSet<>(4);
                     features.add("All");
 
@@ -189,6 +194,7 @@ public class SAMcompare extends VarSimTool {
 
 
                     boolean unmapped = rec.getReadUnmappedFlag();
+                    //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
                     int mapping_quality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
                     final StatsNamespace validationStatus;
                     if (unmapped) {
@@ -204,15 +210,19 @@ public class SAMcompare extends VarSimTool {
                             // Use unclipped location since the true locations are also unclipped
                             final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
 
+                            //if a read can be mapped to one of possible loci
+                            //then we consider it as mapped
                             for (GenomeLocation loc : true_locs) {
                                 closeAln |= loc.feature.isMappable() && loc.isClose(mappedLocation, wiggle);
                             }
 
                             if (!closeAln) {
                                 if (mapping_quality > mapqCutoff) {
+                                    //got another false positive
                                     fpWriter.addAlignment(rec);
                                     for (final BlockType blockType : BlockType.values()) {
                                         if (fpWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
+                                          //categorize false positive alignments
                                             fpWriters.get(blockType).addAlignment(rec);
                                         }
                                     }
