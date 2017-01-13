@@ -248,6 +248,7 @@ public class SAMcompare extends VarSimTool {
                     fpWriters.get(blockType).close();
                 }
             }
+            fpWriters.values().stream().forEach(SAMFileWriter::close);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
