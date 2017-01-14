@@ -1,45 +1,46 @@
 package com.bina.varsim.fastqLiftover.types;
 
+import com.bina.varsim.types.ChrString;
 import htsjdk.tribble.annotation.Strand;
 
 public class GenomeLocation implements Comparable<GenomeLocation> {
     protected static final String SEPARATOR = "-";
 
-    public String chromosome;
+    public ChrString chromosome;
     public int location = 0;
     public int direction = 0;
     public MapBlock.BlockType feature;
 
     public GenomeLocation(final String locationString) {
         final String fields[] = locationString.split(SEPARATOR, -1);
-        this.chromosome = fields[0];
+        this.chromosome = new ChrString(fields[0]);
         this.location = "".equals(fields[1]) ? 0 : Integer.parseInt(fields[1]);
         this.feature = MapBlock.BlockType.fromName(fields[2]);
         this.direction = (fields.length > 3) ? 1 : 0;
     }
 
-    public GenomeLocation(final String chromosome, final int location) {
+    public GenomeLocation(final ChrString chromosome, final int location) {
         this.chromosome = chromosome;
         this.location = location;
         this.direction = 0;
         this.feature = MapBlock.BlockType.SEQ;
     }
 
-    public GenomeLocation(final String chromosome, final int location, final int direction) {
+    public GenomeLocation(final ChrString chromosome, final int location, final int direction) {
         this.chromosome = chromosome;
         this.location = location;
         this.direction = direction;
         this.feature = MapBlock.BlockType.SEQ;
     }
 
-    public GenomeLocation(final String chromosome, final int location, final Strand strand, final MapBlock.BlockType feature) {
+    public GenomeLocation(final ChrString chromosome, final int location, final Strand strand, final MapBlock.BlockType feature) {
         this.chromosome = chromosome;
         this.location = location;
         direction = (strand == Strand.POSITIVE) ? 0 : 1;
         this.feature = feature;
     }
 
-    public boolean isClose(final String chromosome, final int location, final int wiggle) {
+    public boolean isClose(final ChrString chromosome, final int location, final int wiggle) {
         return this.chromosome.equals(chromosome) && Math.abs(this.location - location) <= wiggle;
     }
 

@@ -1,6 +1,7 @@
 package com.bina.varsim.fastqLiftover.types;
 
 import com.bina.varsim.fastqLiftover.readers.MapFileReader;
+import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.ReadMapBlock;
 import com.bina.varsim.types.ReadMapRecord;
 import htsjdk.tribble.annotation.Strand;
@@ -13,7 +14,7 @@ import java.util.*;
 public class MapBlocks {
     public final static Logger log = Logger.getLogger(MapBlocks.class.getName());
     public final static int MIN_LENGTH_INTERVAL = 10;
-    public Map<String, NavigableSet<MapBlock>> chrBlocks;
+    public Map<ChrString, NavigableSet<MapBlock>> chrBlocks;
 
     public MapBlocks(final File mapFile) throws IOException, IllegalArgumentException {
         MapFileReader mfr = new MapFileReader(mapFile);
@@ -21,7 +22,7 @@ public class MapBlocks {
         MapBlock mapBlock;
         chrBlocks = new HashMap<>();
         while ((mapBlock = mfr.getNext()) != null) {
-            final String chromosome = mapBlock.srcLoc.chromosome;
+            final ChrString chromosome = mapBlock.srcLoc.chromosome;
             if (!chrBlocks.containsKey(chromosome)) {
                 chrBlocks.put(chromosome, new TreeSet<MapBlock>());
             }
@@ -30,7 +31,7 @@ public class MapBlocks {
     }
 
     // Half-open interval
-    public List<GenomeLocation> liftOverInterval(final String chromosome, final int start, final int end, final int direction) {
+    public List<GenomeLocation> liftOverInterval(final ChrString chromosome, final int start, final int end, final int direction) {
         final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
         final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end - 1));
 
@@ -92,7 +93,7 @@ public class MapBlocks {
     public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval, final int minIntervalLength) {
         final Collection<ReadMapBlock> readMapBlocks = new ArrayList<>();
 
-        final String chromosome = interval.chromosome;
+        final ChrString chromosome = interval.chromosome;
         final int start = interval.start;
         final int end = interval.end;
 

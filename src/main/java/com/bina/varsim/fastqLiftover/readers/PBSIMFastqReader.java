@@ -4,6 +4,7 @@ import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MafRecord;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
+import com.bina.varsim.types.ChrString;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 
@@ -67,18 +68,18 @@ public class PBSIMFastqReader implements PairedFastqReader {
     }
 
     static private class Idx2Chr {
-        private final ArrayList<String> data_;
+        private final ArrayList<ChrString> data_;
 
         public Idx2Chr(final BufferedReader br) throws IOException {
-            ArrayList<String> tmp = new ArrayList<String>(5);
+            ArrayList<ChrString> tmp = new ArrayList<>(5);
             tmp.add(null); // index-0 should not be used, make it break
             for (String buffer = br.readLine(); buffer != null; buffer = br.readLine()) {
-                tmp.add(buffer.substring(1));
+                tmp.add(new ChrString(buffer.substring(1)));
             }
             data_ = tmp;
         }
 
-        String get(int index) {
+        ChrString get(int index) {
             return data_.get(index);
         }
     }

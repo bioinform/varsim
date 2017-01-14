@@ -140,7 +140,7 @@ public class SAMcompare extends VarSimTool {
                     if (!(intersector == null)) {
                         boolean isContainedInBed = false;
                         for (GenomeLocation loc : trueLoci) {
-                            if (intersector.contains(new ChrString(loc.chromosome), loc.location
+                            if (intersector.contains(loc.chromosome, loc.location
                                     //TODO should we change this to alignment length?
                                     , loc.location + rec.getReadLength() - 1)) {
                                 isContainedInBed = true;
@@ -194,7 +194,7 @@ public class SAMcompare extends VarSimTool {
                             }
                         } else {
                             // Use unclipped location since the true locations are also unclipped
-                            final GenomeLocation mappedLocation = new GenomeLocation(rec.getReferenceName(), rec.getUnclippedStart());
+                            final GenomeLocation mappedLocation = new GenomeLocation(new ChrString(rec.getReferenceName()), rec.getUnclippedStart());
 
                             //if a read can be mapped to one of possible loci
                             //then we consider it as mapped

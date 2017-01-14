@@ -1,5 +1,6 @@
 package com.bina.varsim.fastqLiftover.types;
 
+import com.bina.varsim.types.ChrString;
 import com.google.common.base.Joiner;
 import htsjdk.tribble.annotation.Strand;
 
@@ -7,7 +8,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
     public static final String SEPARATOR = ",";
     private static final Joiner joiner = Joiner.on(SEPARATOR).skipNulls();
 
-    protected String chromosome;
+    protected ChrString chromosome;
     protected int start = -1;
     protected int end = -1;
     protected Strand strand = Strand.NONE;
@@ -18,7 +19,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
 
     public GenomeInterval(final String intervalString) {
         final String fields[] = intervalString.split(SEPARATOR, -1);
-        chromosome = fields[0];
+        chromosome = new ChrString(fields[0]);
         start = Integer.parseInt(fields[1]);
         end = Integer.parseInt(fields[2]);
         strand = Strand.valueOf(fields[3]);
@@ -26,14 +27,14 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
     }
 
     public GenomeInterval(final String fields[]) {
-        chromosome = fields[0];
+        chromosome = new ChrString(fields[0]);
         start = Integer.parseInt(fields[1]);
         end = Integer.parseInt(fields[2]);
         strand = Strand.valueOf(fields[3]);
         feature = MapBlock.BlockType.valueOf(fields[4]);
     }
 
-    public GenomeInterval(final String chromosome, final int start, final int end, final Strand strand, final MapBlock.BlockType feature) {
+    public GenomeInterval(final ChrString chromosome, final int start, final int end, final Strand strand, final MapBlock.BlockType feature) {
         this.chromosome = chromosome;
         this.start = start;
         this.end = end;
@@ -41,7 +42,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
         this.feature = feature;
     }
 
-    public GenomeInterval(final String chromosome, final int start, final int end, final MapBlock.BlockType feature) {
+    public GenomeInterval(final ChrString chromosome, final int start, final int end, final MapBlock.BlockType feature) {
         this.chromosome = chromosome;
         this.start = start;
         this.end = end;
@@ -60,6 +61,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
         return Integer.compare(end, rhs.end);
     }
 
+    @Override
     public String toString() {
         return joiner.join(chromosome, start, end, strand.name(), feature.name());
     }
@@ -72,7 +74,7 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
         return chromosome.equals(rhs.chromosome) && start == rhs.start && end == rhs.end && strand == rhs.strand && feature == rhs.feature;
     }
 
-    public String getChromosome() {
+    public ChrString getChromosome() {
         return chromosome;
     }
 

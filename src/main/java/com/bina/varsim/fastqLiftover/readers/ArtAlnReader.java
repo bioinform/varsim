@@ -1,6 +1,7 @@
 package com.bina.varsim.fastqLiftover.readers;
 
 import com.bina.varsim.fastqLiftover.types.ArtAlnRecord;
+import com.bina.varsim.types.ChrString;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class ArtAlnReader {
         final String[] alnFields = splitterPattern.split(currentLine.trim().substring(1));
         int direction = (alnFields[3].equals("-")) ? 1 : 0;
         final int refLength = refAln.replace("-", "").length();
-        ArtAlnRecord record = new ArtAlnRecord(alnFields[0], Integer.parseInt(alnFields[2]) + 1, direction, alnFields[1], refLength);
+        ArtAlnRecord record = new ArtAlnRecord(new ChrString(alnFields[0]), Integer.parseInt(alnFields[2]) + 1, direction, alnFields[1], refLength);
         if (record.direction == 1) {
             final int chromosomeLength = chromosomeLengths.get(record.chromosome);
             record.location = chromosomeLength - (record.location - 1) + 1 - refLength;

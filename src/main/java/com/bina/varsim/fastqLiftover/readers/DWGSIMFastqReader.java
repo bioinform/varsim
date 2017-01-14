@@ -2,6 +2,7 @@ package com.bina.varsim.fastqLiftover.readers;
 
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
+import com.bina.varsim.types.ChrString;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -45,8 +46,8 @@ public class DWGSIMFastqReader {
         final int direction1 = Integer.parseInt(nameFields[nameFields.length - 12]);
         final int start2 = Integer.parseInt(nameFields[nameFields.length - 13]);
         final int start1 = Integer.parseInt(nameFields[nameFields.length - 14]);
-        final String chromosome1 = joiner.join(Arrays.copyOfRange(nameFields, 0, nameFields.length - 14));
-        final String chromosome2 = chromosome1; // Marghoob was there a reason for this?
+        final ChrString chromosome1 = new ChrString(joiner.join(Arrays.copyOfRange(nameFields, 0, nameFields.length - 14)));
+        final ChrString chromosome2 = chromosome1; // Marghoob was there a reason for this?
 
         read.locs1.add(new GenomeLocation(chromosome1, start1, direction1));
         read.locs2.add(new GenomeLocation(chromosome2, start2, direction2));

@@ -3,6 +3,7 @@ package com.bina.varsim.readers.longislnd;
 import com.bina.varsim.fastqLiftover.types.GenomeInterval;
 import com.bina.varsim.fastqLiftover.types.MapBlock;
 import com.bina.varsim.fastqLiftover.types.MapBlocks;
+import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.ReadMapBlock;
 import com.bina.varsim.types.ReadMapRecord;
 import htsjdk.tribble.annotation.Strand;
@@ -13,7 +14,7 @@ import java.util.Collections;
 
 
 public class LongISLNDReadMapRecord {
-    final protected String chromosome;
+    final protected ChrString chromosome;
 
     final protected int start;
 
@@ -24,14 +25,14 @@ public class LongISLNDReadMapRecord {
     final protected Strand strand;
 
     LongISLNDReadMapRecord(final BEDFeature bedFeature) {
-        chromosome = bedFeature.getContig();
+        chromosome = new ChrString(bedFeature.getContig());
         start = bedFeature.getStart();
         end = bedFeature.getEnd();
         readName = bedFeature.getName();
         strand = bedFeature.getStrand();
     }
 
-    public String getChromosome() {
+    public ChrString getChromosome() {
         return chromosome;
     }
 
