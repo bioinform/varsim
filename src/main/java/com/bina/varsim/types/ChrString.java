@@ -35,7 +35,7 @@ public class ChrString implements Comparable<ChrString>{
      */
     public static ChrString[] string2ChrString(final String[] s) {
         if (s == null) {
-            return null;
+            return new ChrString[0];
         }
         ChrString[] chrStrings = new ChrString[s.length];
         for (int i = 0; i < s.length; i++) {
