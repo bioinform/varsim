@@ -3,6 +3,8 @@ package com.bina.varsim.tools.evaluation;
 /**
  * Read in SAM file with appropriately formatted read names and output accuracy statistics
  *
+ * truth alignment can also be supplied via a read map file
+ *
  * @author johnmu
  */
 
@@ -53,18 +55,25 @@ public class SAMcompare extends VarSimTool {
     @Argument(usage = "One or more BAM files, header coming from the first file", metaVar = "bam_files ...", required = true)
     private List<String> bamFilenames = new ArrayList<>();
 
+    /**
+     * wrapper for actual execution code
+     * @param command placeholder
+     * @param description program information
+     */
     public SAMcompare(final String command, final String description) {
         super(command, description);
     }
 
     /**
-     * @param args
+     * calls the execution code with command line arguments
+     * @param args command line options
      */
     public static void main(String[] args) {
         new SAMcompare("", VarSimToolNamespace.SAMCompare.description).run(args);
     }
 
     /**
+     * returns index of read in a pair
      * @param isFirst is it the first read in a pair
      * @return return 0 for first, 1 for not first
      */
@@ -73,6 +82,18 @@ public class SAMcompare extends VarSimTool {
     }
 
 
+    /**
+     * main execution code block
+     * expects alignments in SAM/BAM format
+     * read in alignment line by line, filter by
+     * alignment quality and mapping location
+     * determine if an alignment is false positive
+     * or not.
+     * outputs false positive alignments by type of sequence changes in
+     * the perturbed genome and a statistical report in json format
+     *
+     * @param args command line arguments
+     */
     public void run(String[] args) {
         if (!parseArguments(args)) {
             return;
@@ -263,11 +284,19 @@ public class SAMcompare extends VarSimTool {
         CompareParams params;
         MapRatioRecordSum stats;
 
+        /**
+         * store parameters and statistics
+         * @param params
+         * @param stats
+         */
         OutputClass(CompareParams params, MapRatioRecordSum stats) {
             this.params = params;
             this.stats = stats;
         }
 
+        /**
+         * initialize empty output object
+         */
         OutputClass() {
         }
 
