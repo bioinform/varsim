@@ -61,8 +61,9 @@ public class SAMCompareTest {
     if (isLongRead) {
       args = new String[]{
               "-prefix", Paths.get(wd.getCanonicalPath(),"test").toString(),
-              bam,
-              readmap
+              "-read_map",
+              readmap,
+              bam
       };
     } else {
       args = new String[]{
@@ -80,8 +81,34 @@ public class SAMCompareTest {
     assertTrue(FileUtils.contentEquals(outputInversionFalsePositive.toFile(), new File(expectedInversionFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputFalsePositive.toFile(), new File(expectedFalsePositive)));
   }
+
+  /***************Short read test***************/
+  /**
+   * make sure the original behavior is not altered
+   * @throws IOException
+   */
   @Test
   public void firstSAMCompareShortReadTest() throws IOException{
    universalTestMethodShortRead("src/test/resources/samcompareTests/first_samcompare_short_read_test");
+  }
+
+  /**
+   * there should be one false positive for insertion
+   * @throws IOException
+   */
+  @Test
+  public void oneFalsePositiveSAMCompareShortReadTest() throws IOException{
+    universalTestMethodShortRead("src/test/resources/samcompareTests/short_read_test_one_false_positive",new String[]{"-wig","5"});
+  }
+
+
+  /***************Long read test***************/
+  /**
+   * make sure the original behavior is not altered
+   * @throws IOException
+   */
+  @Test
+  public void firstSAMCompareLongReadTest() throws IOException {
+    universalTestMethodLongRead("src/test/resources/samcompareTests/first_samcompare_long_read_test");
   }
 }
