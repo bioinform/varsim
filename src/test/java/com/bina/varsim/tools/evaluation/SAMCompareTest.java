@@ -82,6 +82,7 @@ public class SAMCompareTest {
     assertTrue(FileUtils.contentEquals(outputFalsePositive.toFile(), new File(expectedFalsePositive)));
   }
 
+  /***************Short read test***************/
   /**
    * make sure the original behavior is not altered
    * @throws IOException
@@ -90,6 +91,18 @@ public class SAMCompareTest {
   public void firstSAMCompareShortReadTest() throws IOException{
    universalTestMethodShortRead("src/test/resources/samcompareTests/first_samcompare_short_read_test");
   }
+
+  /**
+   * there should be one false positive for insertion
+   * @throws IOException
+   */
+  @Test
+  public void oneFalsePositiveSAMCompareShortReadTest() throws IOException{
+    universalTestMethodShortRead("src/test/resources/samcompareTests/short_read_test_one_false_positive",new String[]{"-wig","5"});
+  }
+
+
+  /***************Long read test***************/
   /**
    * make sure the original behavior is not altered
    * @throws IOException
