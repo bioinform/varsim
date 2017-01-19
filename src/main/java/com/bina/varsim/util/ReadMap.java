@@ -19,8 +19,8 @@ public class ReadMap extends GzFileParser<ReadMapRecord>{
     protected Map<String, ReadMapRecord> readMap = new HashMap<>();
 
     public ReadMap(final File file) throws IOException {
-        log.info("Loading read alignment map from " + file.getName());
-        bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(file.getName())));
+        log.info("Loading read alignment map from " + file);
+        bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(file)));
         while (hasMoreInput()) {
             readLine();
             log.trace("Parsing line " + line);

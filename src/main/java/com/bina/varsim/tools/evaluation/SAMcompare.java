@@ -52,7 +52,7 @@ public class SAMcompare extends VarSimTool {
     @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
     @Argument(usage = "One or more BAM files", metaVar = "bam_files ...", required = true)
-    private ArrayList<String> bam_filename = new ArrayList<>();
+    private List<String> bam_filename = new ArrayList<>();
 
     public SAMcompare(final String command, final String description) {
         super(command, description);
@@ -66,15 +66,11 @@ public class SAMcompare extends VarSimTool {
     }
 
     /**
-     * @param is_first is it the first read in a pair
+     * @param isFirst is it the first read in a pair
      * @return return 0 for first, 1 for not first
      */
-    private int getPairIdx(boolean is_first) {
-        if (is_first) {
-            return 0;
-        } else {
-            return 1;
-        }
+    private int getPairIdx(boolean isFirst) {
+      return isFirst? 0:1;
     }
 
 
