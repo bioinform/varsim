@@ -38,7 +38,7 @@ public class SAMCompareTest {
   public void universalTestMethod(String directory, String[] additionalArgs, boolean isLongRead) throws IOException {
     File wd = tmpFolder.newFolder("tmp");
     String bam = new File(directory, "input.bam").toString();
-    String readmap = new File(directory, "input.map").toString();
+    String readmap = new File(directory, "input.map.gz").toString();
 
     String expectedDeletionFalsePositive = new File(directory, "test_D_FP.bam").toString();
     String expectedInsertionFalsePositive = new File(directory, "test_I_FP.bam").toString();

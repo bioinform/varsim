@@ -71,10 +71,6 @@ public class VCFInfo {
         /**
          * store id as a boolean field
          */
-        public VCFInfoElement(final String id) {
-            this.type = getType(id);
-            this.value = type.cast(true);
-        }
         public VCFInfoElement(final Class<T> type) {
             this.value = type.cast(true);
         }
@@ -109,8 +105,6 @@ public class VCFInfo {
             return int[].class;
         } else if (infoID.equals("SVTYPE") || infoID.equals("CHR2") || infoID.equals("TRAID")) {
             return String[].class;
-        } else if (infoID.equals("ISINV")) {
-            return Boolean.class;
         } else {
             //unrecognized INFO ID, return String for now
             return String[].class;
