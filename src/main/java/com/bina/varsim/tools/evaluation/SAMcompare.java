@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
@@ -158,7 +159,7 @@ public class SAMcompare extends VarSimTool {
                     final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
                     //TODO simplify logic here
-                    if (!(intersector == null)) {
+                    if (intersector != null) {
                         boolean isContainedInBed = false;
                         for (GenomeLocation loc : trueLoci) {
                             if (intersector.contains(loc.chromosome, loc.location
@@ -176,8 +177,8 @@ public class SAMcompare extends VarSimTool {
                     boolean isTrueUnmapped;
 
                     //TODO: create enum and replace HashSet with EnumSet
-                    Set<String> features = new HashSet<>(4);
-                    features.add("All");
+                    Set<EventTypesForStats> features = EnumSet.noneOf(EventTypesForStats.class);
+                    features.add(EventTypesForStats.All);
 
                     // determine if the read really should be unmapped
                     isTrueUnmapped = true;
@@ -186,7 +187,7 @@ public class SAMcompare extends VarSimTool {
                         // if only insertions and deletions then it is also unmapped
                         for (GenomeLocation loc : trueLoci) {
                             final BlockType feat = loc.feature;
-                            features.add(feat.getLongName());
+                            features.add(EventTypesForStats.valueOf(feat.getLongName()));
 
                             // TODO check this with marghoob
                             isTrueUnmapped &= !feat.isMappable();
@@ -194,9 +195,9 @@ public class SAMcompare extends VarSimTool {
                     }
 
                     if (isTrueUnmapped) {
-                        features.add("True_Unmapped");
+                        features.add(EventTypesForStats.True_Unmapped);
                     } else {
-                        outputBlob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
+                        outputBlob.getStats().incStat(features.stream().map(e -> e.toString()).collect(Collectors.toSet()),-1, StatsNamespace.T); // records the mappable reads
                     }
 
 
@@ -228,7 +229,7 @@ public class SAMcompare extends VarSimTool {
                                     //got another false positive
                                     fpWriter.addAlignment(rec);
                                     for (final BlockType blockType : BlockType.values()) {
-                                        if (fpWriters.containsKey(blockType) && features.contains(blockType.getLongName())) {
+                                        if (fpWriters.containsKey(blockType) && features.contains(EventTypesForStats.valueOf(blockType.getLongName()))) {
                                             //categorize false positive alignments
                                             fpWriters.get(blockType).addAlignment(rec);
                                         }
@@ -238,7 +239,7 @@ public class SAMcompare extends VarSimTool {
                         }
                         validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
-                    outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
+                    outputBlob.getStats().incStat(features.stream().map(e->e.toString()).collect(Collectors.toSet()), mappingQuality, validationStatus);
                 }
                 reader.close();
             }
@@ -354,6 +355,16 @@ public class SAMcompare extends VarSimTool {
         public void setBedFilename(String bedFilename) {
             this.bedFilename = bedFilename;
         }
+    }
+
+    private enum EventTypesForStats {
+        All, True_Unmapped,
+        Sequence,
+        Insertion,
+        Deletion,
+        Inversion,
+        Tandem_Duplication,
+        Unknown;
     }
 
 }
