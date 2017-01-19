@@ -17,6 +17,7 @@ import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.stats.MapRatioRecordSum;
+import com.bina.varsim.types.stats.MapRatioRecordSum.EventTypesForStats;
 import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.util.ReadMap;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -197,7 +198,7 @@ public class SAMcompare extends VarSimTool {
                     if (isTrueUnmapped) {
                         features.add(EventTypesForStats.True_Unmapped);
                     } else {
-                        outputBlob.getStats().incStat(features.stream().map(e -> e.toString()).collect(Collectors.toSet()),-1, StatsNamespace.T); // records the mappable reads
+                        outputBlob.getStats().incStat(features, -1, StatsNamespace.T); // records the mappable reads
                     }
 
 
@@ -239,7 +240,7 @@ public class SAMcompare extends VarSimTool {
                         }
                         validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
-                    outputBlob.getStats().incStat(features.stream().map(e->e.toString()).collect(Collectors.toSet()), mappingQuality, validationStatus);
+                    outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
                 }
                 reader.close();
             }
@@ -357,14 +358,5 @@ public class SAMcompare extends VarSimTool {
         }
     }
 
-    private enum EventTypesForStats {
-        All, True_Unmapped,
-        Sequence,
-        Insertion,
-        Deletion,
-        Inversion,
-        Tandem_Duplication,
-        Unknown;
-    }
 
 }
