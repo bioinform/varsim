@@ -11,6 +11,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PBSIMFastqReader implements PairedFastqReader {
 
@@ -68,7 +69,7 @@ public class PBSIMFastqReader implements PairedFastqReader {
     }
 
     static private class Idx2Chr {
-        private final ArrayList<ChrString> data_;
+        private final List<ChrString> data_;
 
         public Idx2Chr(final BufferedReader br) throws IOException {
             ArrayList<ChrString> tmp = new ArrayList<>(5);
