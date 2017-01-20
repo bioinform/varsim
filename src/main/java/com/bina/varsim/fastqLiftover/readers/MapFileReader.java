@@ -1,6 +1,7 @@
 package com.bina.varsim.fastqLiftover.readers;
 
 import com.bina.varsim.fastqLiftover.types.MapBlock;
+import com.bina.varsim.types.ChrString;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +18,9 @@ public class MapFileReader {
         MapBlock mapBlock = null;
         if (scanner.hasNext()) {
             final int size = scanner.nextInt();
-            final String srcChr = scanner.next();
+            final ChrString srcChr = new ChrString(scanner.next());
             final int srcLocation = scanner.nextInt();
-            final String dstChr = scanner.next();
+            final ChrString dstChr = new ChrString(scanner.next());
             final int dstLocation = scanner.nextInt();
             final String direction = scanner.next();
             final String featureType = scanner.next();

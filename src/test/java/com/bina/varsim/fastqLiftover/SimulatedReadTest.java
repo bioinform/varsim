@@ -2,6 +2,7 @@ package com.bina.varsim.fastqLiftover;
 
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.SimulatedRead;
+import com.bina.varsim.types.ChrString;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -52,17 +53,17 @@ public class SimulatedReadTest
         final SimulatedRead testRead = new SimulatedRead(readName);
 
         assertEquals(2, testRead.locs1.size());
-        assertEquals(new GenomeLocation("1", 223167089, 1), testRead.locs1.get(0));
-        assertEquals(new GenomeLocation("1", 223167099, 0), testRead.locs1.get(1));
+        assertEquals(new GenomeLocation(new ChrString("1"), 223167089, 1), testRead.locs1.get(0));
+        assertEquals(new GenomeLocation(new ChrString("1"), 223167099, 0), testRead.locs1.get(1));
 
         assertEquals(1, testRead.locs2.size());
-        assertEquals(new GenomeLocation("1", 223167425, 1), testRead.locs2.get(0));
+        assertEquals(new GenomeLocation(new ChrString("1"), 223167425, 1), testRead.locs2.get(0));
 
         assertEquals(1, testRead.origLocs1.size());
-        assertEquals(new GenomeLocation("1_paternal", 223817897, 0), testRead.origLocs1.get(0));
+        assertEquals(new GenomeLocation(new ChrString("1_paternal"), 223817897, 0), testRead.origLocs1.get(0));
 
         assertEquals(1, testRead.origLocs2.size());
-        assertEquals(new GenomeLocation("1_paternal", 223818223, 1), testRead.origLocs2.get(0));
+        assertEquals(new GenomeLocation(new ChrString("1_paternal"), 223818223, 1), testRead.origLocs2.get(0));
 
         assertEquals(0, testRead.random1);
         assertEquals(0, testRead.random2);

@@ -1,9 +1,6 @@
 package com.bina.varsim.types.stats;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * This maps variant type to a ratiorecordsum
@@ -11,15 +8,15 @@ import java.util.TreeMap;
 public class MapRatioRecordSum {
 
     // use tree map so that the JSON is ordered...
-    private TreeMap<String, RatioRecordSum> data;
+    private Map<EventTypesForStats, RatioRecordSum> data;
     private RatioRecordSum all_data; // this records regardless of type
 
     public MapRatioRecordSum() {
-        data = new TreeMap<>();
+        data = new EnumMap<>(EventTypesForStats.class);
         all_data = new RatioRecordSum();
     }
 
-    public void incStat(final Set<String> a, final int val, final StatsNamespace stat) {
+    public void incStat(final Set<EventTypesForStats> a, final int val, final StatsNamespace stat) {
         switch(stat) {
             case TP:
                 incTP(a, val);
@@ -40,8 +37,8 @@ public class MapRatioRecordSum {
         }
     }
 
-    public void incTP(Set<String> a, int val) {
-        for (String key : a) {
+    public void incTP(Set<EventTypesForStats> a, int val) {
+        for (EventTypesForStats key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
                 count.incTP(val);
@@ -55,8 +52,8 @@ public class MapRatioRecordSum {
         all_data.incTP(val);
     }
 
-    public void incTN(Set<String> a, int val) {
-        for (String key : a) {
+    public void incTN(Set<EventTypesForStats> a, int val) {
+        for (EventTypesForStats key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
                 count.incTN(val);
@@ -70,8 +67,8 @@ public class MapRatioRecordSum {
         all_data.incTN(val);
     }
 
-    public void incFP(Set<String> a, int val) {
-        for (String key : a) {
+    public void incFP(Set<EventTypesForStats> a, int val) {
+        for (EventTypesForStats key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
                 count.incFP(val);
@@ -85,8 +82,8 @@ public class MapRatioRecordSum {
         all_data.incFP(val);
     }
 
-    public void incFN(Set<String> a, int val) {
-        for (String key : a) {
+    public void incFN(Set<EventTypesForStats> a, int val) {
+        for (EventTypesForStats key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
                 count.incFN(val);
@@ -100,8 +97,8 @@ public class MapRatioRecordSum {
         all_data.incFN(val);
     }
 
-    public void incT(Set<String> a) {
-        for (String key : a) {
+    public void incT(Set<EventTypesForStats> a) {
+        for (EventTypesForStats key : a) {
             RatioRecordSum count = data.get(key);
             if (count != null) {
                 count.incT();
@@ -115,11 +112,11 @@ public class MapRatioRecordSum {
         all_data.incT();
     }
 
-    public TreeMap<String, RatioRecordSum> getData() {
+    public Map<EventTypesForStats, RatioRecordSum> getData() {
         return data;
     }
 
-    public void setData(TreeMap<String, RatioRecordSum> data) {
+    public void setData(Map<EventTypesForStats, RatioRecordSum> data) {
         this.data = data;
     }
 
@@ -139,7 +136,7 @@ public class MapRatioRecordSum {
         sb.append("---------\n");
 
         // Output for each variant type
-        for (Map.Entry<String, RatioRecordSum> entry : data.entrySet()) {
+        for (Map.Entry<EventTypesForStats, RatioRecordSum> entry : data.entrySet()) {
             sb.append(entry.getKey());
             sb.append('\n');
             sb.append(entry.getValue());
@@ -149,6 +146,15 @@ public class MapRatioRecordSum {
         sb.append("---------\n");
 
         return sb.toString();
+    }
+    public enum EventTypesForStats {
+        All, True_Unmapped,
+        Sequence,
+        Insertion,
+        Deletion,
+        Inversion,
+        Tandem_Duplication,
+        Unknown;
     }
 
 }

@@ -3,6 +3,7 @@ package com.bina.varsim.fastqLiftover;
 import com.bina.varsim.fastqLiftover.types.GenomeInterval;
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock;
+import com.bina.varsim.types.ChrString;
 import htsjdk.tribble.annotation.Strand;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -33,7 +34,7 @@ public class GenomeIntervalTest
         final String intervalString = "1,100,200,POSITIVE,INV,";
         final GenomeInterval genomeInterval = new GenomeInterval(intervalString);
 
-        assertEquals("1", genomeInterval.getChromosome());
+        assertEquals(new ChrString("1"), genomeInterval.getChromosome());
         assertEquals(100, genomeInterval.getStart());
         assertEquals(200, genomeInterval.getEnd());
         assertEquals(Strand.POSITIVE, genomeInterval.getStrand());

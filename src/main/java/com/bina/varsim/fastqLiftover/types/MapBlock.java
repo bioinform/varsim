@@ -1,5 +1,7 @@
 package com.bina.varsim.fastqLiftover.types;
 
+import com.bina.varsim.types.ChrString;
+
 public class MapBlock implements Comparable<MapBlock> {
     public int size;
     public GenomeLocation srcLoc;
@@ -8,7 +10,7 @@ public class MapBlock implements Comparable<MapBlock> {
     public int direction;
     public String name;
 
-    public MapBlock(final int size, final String srcChr, final int srcLocation, final String dstChr, final int dstLocation, final String direction, final String featureType, final String name) {
+    public MapBlock(final int size, final ChrString srcChr, final int srcLocation, final ChrString dstChr, final int dstLocation, final String direction, final String featureType, final String name) {
         this.size = size;
         srcLoc = new GenomeLocation(srcChr, srcLocation);
         dstLoc = new GenomeLocation(dstChr, dstLocation);
@@ -20,7 +22,7 @@ public class MapBlock implements Comparable<MapBlock> {
     public MapBlock(final GenomeLocation srcLoc) {
         size = 0;
         this.srcLoc = srcLoc;
-        this.dstLoc = new GenomeLocation("", 0);
+        this.dstLoc = new GenomeLocation(new ChrString(""), 0);
         this.blockType = BlockType.UNKNOWN;
         this.direction = 0;
     }

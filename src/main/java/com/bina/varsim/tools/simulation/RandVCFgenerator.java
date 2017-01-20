@@ -35,7 +35,7 @@ abstract public class RandVCFgenerator extends VarSimTool {
      * @return Sequence file as a byte array
      */
     byte[] fileToByteArray(final File file) {
-        byte[] array = null;
+        byte[] array = new byte[0];
 
         try {
             FileReader fileReader = new FileReader(file);

@@ -2,6 +2,7 @@ package com.bina.varsim.fastqLiftover;
 
 import com.bina.varsim.fastqLiftover.types.GenomeLocation;
 import com.bina.varsim.fastqLiftover.types.MapBlock;
+import com.bina.varsim.types.ChrString;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -31,7 +32,7 @@ public class GenomeLocationTest
         final String locationString = "1-100-INV-";
         final GenomeLocation genomeLocation = new GenomeLocation(locationString);
 
-        assertEquals("1", genomeLocation.chromosome);
+        assertEquals(new ChrString("1"), genomeLocation.chromosome);
         assertEquals(100, genomeLocation.location);
         assertEquals(MapBlock.BlockType.INV, genomeLocation.feature);
         assertEquals(1, genomeLocation.direction);
