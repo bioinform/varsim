@@ -582,6 +582,8 @@ public class VCFcompare extends VarSimTool {
                     */
                     byte[] phase = {1, 2};
                     Alt[] alts = new Alt[2];
+                    alts[0] = new Alt();
+                    alts[1] = new Alt();
                     alts[0].setSeq(new FlexSeq(alternativeAlleleSequence[0][alleleSpecificRelativePosition[0]]));
                     alts[1].setSeq(new FlexSeq(alternativeAlleleSequence[1][alleleSpecificRelativePosition[1]]));
                     variantList.add(template.pos(currentPosition).referenceAlleleLength(1).
@@ -1451,7 +1453,9 @@ public class VCFcompare extends VarSimTool {
                         int allele = trueVariant.getAllele(parent);
 
                         if (allele == 0 || // reference allele
-                            type != trueVariant.getType(allele)) { // need type to be the same
+                            type != trueVariant.getType(allele) ||
+                                variant.getAlt(allele) == null ||
+                                trueVariant.getAlt(allele) == null) { // need type to be the same
                             continue;
                         }
 

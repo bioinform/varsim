@@ -283,6 +283,9 @@ public final class Alt {
      * @return
      */
     public static boolean looseEquals(Breakend a, Breakend b, double overlapRatio, int wiggle) {
+              if (a == null || b == null) {
+                return false;
+              }
               return a.getChr().equals(b.getChr()) &&
                       a.isForward() == b.isForward() &&
                       a.isLeft() == b.isLeft() &&
