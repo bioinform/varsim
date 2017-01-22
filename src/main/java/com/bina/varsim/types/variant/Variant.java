@@ -862,7 +862,7 @@ public class Variant implements Comparable<Variant>{
     }
 
 
-    /*
+    /**
     Tests if all of the alternate alleles with sequence are ACTGN
      */
     public boolean isAltACTGN() {
@@ -876,7 +876,7 @@ public class Variant implements Comparable<Variant>{
         return true;
     }
 
-    /*
+    /**
     Returns true if the variant is homozygous
      */
     public boolean isHom() {

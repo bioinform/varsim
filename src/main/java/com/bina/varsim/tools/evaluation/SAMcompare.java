@@ -235,8 +235,8 @@ public class SAMcompare extends VarSimTool {
             log.info("Number of reads read: " + numReads);
 
             // output the statistics
-            System.err.println("Statistics for all reads");
-            System.err.println(outputBlob.getStats());
+            log.info("Statistics for all reads");
+            log.info(outputBlob.getStats());
 
             // output a JSON object
             ObjectMapper mapper = new ObjectMapper();

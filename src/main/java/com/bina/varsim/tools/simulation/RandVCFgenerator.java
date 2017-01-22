@@ -143,13 +143,7 @@ abstract public class RandVCFgenerator extends VarSimTool {
     public void outputVcfRecord(BufferedWriter bw, Variant var, int geno0, int geno1)
             throws IOException {
 
-        // ignore ACTGN
-        String ref = var.getReferenceString().toUpperCase();
-        String alt = var.alternativeAlleleString().toUpperCase();
-
-        if (!ref.matches("[ACTGN]*") || (!var.isAltACTGN())) {
-            return; // don't output if it is not ACTGN
-        }
+        //skip checking because it does not apparently harm to output nonATCGN ref and alt alleles
         bw.write(var.toString(geno0, geno1));
         bw.newLine();
     }

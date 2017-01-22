@@ -8,7 +8,7 @@ import java.util.*;
 public class MapRatioRecordSum {
 
     // use tree map so that the JSON is ordered...
-    private EnumMap<EventTypesForStats, RatioRecordSum> data;
+    private Map<EventTypesForStats, RatioRecordSum> data;
     private RatioRecordSum all_data; // this records regardless of type
 
     public MapRatioRecordSum() {
@@ -112,11 +112,11 @@ public class MapRatioRecordSum {
         all_data.incT();
     }
 
-    public EnumMap<EventTypesForStats, RatioRecordSum> getData() {
+    public Map<EventTypesForStats, RatioRecordSum> getData() {
         return data;
     }
 
-    public void setData(EnumMap<EventTypesForStats, RatioRecordSum> data) {
+    public void setData(Map<EventTypesForStats, RatioRecordSum> data) {
         this.data = data;
     }
 
