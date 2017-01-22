@@ -101,8 +101,6 @@ public class SAMcompare extends VarSimTool {
             return;
         }
 
-        final BedFile intersector = (bedFilename != null && new File(bedFilename).isFile()) ? new BedFile(bedFilename) : null;
-
         OutputClass outputBlob = new OutputClass();
 
         // TODO think about better way to deal with multiple bams
@@ -133,6 +131,7 @@ public class SAMcompare extends VarSimTool {
             }
 
             ReadMap readMap = readMapFile != null ? new ReadMap(readMapFile) : null;
+            final BedFile intersector = (bedFilename != null && new File(bedFilename).isFile()) ? new BedFile(bedFilename) : null;
 
             int numReads = 0;
             for (String filename : bamFilenames) {
@@ -159,22 +158,10 @@ public class SAMcompare extends VarSimTool {
                     log.trace("Getting true locations for read " + name);
                     final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
-                    //TODO simplify logic here
-                    if (intersector != null) {
-                        boolean isContainedInBed = false;
-                        for (GenomeLocation loc : trueLoci) {
-                            if (intersector.contains(loc.chromosome, loc.location
-                                    //TODO should we change this to alignment length?
-                                    , loc.location + rec.getReadLength() - 1)) {
-                                isContainedInBed = true;
-                            }
-                        }
-                        if (!isContainedInBed) {
-                            // skip this read
-                            continue;
-                        }
+                    if (!isContainedInBed(intersector, trueLoci, rec)) {
+                        // skip this read
+                        continue;
                     }
-
                     boolean isTrueUnmapped;
 
                     //TODO: create enum and replace HashSet with EnumSet
@@ -358,5 +345,26 @@ public class SAMcompare extends VarSimTool {
         }
     }
 
-
+    /**
+     * check if a read is supposed to be aligned in the user-supplied BED region
+     * @param intersector BED-file object
+     * @param trueLoci collection of true alignment loci
+     * @param rec one alignment in SAM
+     * @return
+     */
+    private boolean isContainedInBed(BedFile intersector, Collection<GenomeLocation> trueLoci, SAMRecord rec) {
+        if (intersector == null) {
+            return true;
+        }
+        boolean isContainedInBed = false;
+        for (GenomeLocation loc : trueLoci) {
+            if (intersector.contains(loc.chromosome, loc.location
+                    //here we should have used the true alignment length
+                    //however that is difficult to know unless we have a perfect BAM
+                    , loc.location + rec.getReadLength() - 1)) {
+                isContainedInBed = true;
+            }
+        }
+        return isContainedInBed;
+    }
 }
