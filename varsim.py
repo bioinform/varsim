@@ -120,7 +120,7 @@ def monitor_multiprocesses(processes, logger):
         else:
             logger.info("Process with pid %d finished successfully" % p.pid)
     if not is_success:
-        raise Exception('One process aborted.');
+        raise Exception('One process aborted. Please check log for details.');
 
 
 
