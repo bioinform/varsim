@@ -5,6 +5,7 @@ import com.bina.varsim.types.ChrString;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -13,15 +14,12 @@ import java.util.regex.Pattern;
 public class ArtAlnReader {
     private final static Logger log = Logger.getLogger(ArtAlnReader.class.getName());
     private final static Pattern splitterPattern = Pattern.compile("[\\s]+");
-    private BufferedReader br;
+    private LineNumberReader br;
     private String currentLine;
     private Map<ChrString, Integer> chromosomeLengths;
-    private long alnLineCount;
 
-    public ArtAlnReader(final BufferedReader br) throws IOException {
+    public ArtAlnReader(final LineNumberReader br) throws IOException {
         this.br = br;
-        //assume reader is at file beginning
-        alnLineCount = 0;
 
         chromosomeLengths = new HashMap<>();
         readHeader();
@@ -29,7 +27,6 @@ public class ArtAlnReader {
 
     private void readHeader() throws IOException {
         while ((currentLine = br.readLine()) != null) {
-            alnLineCount++;
             if (!currentLine.startsWith("#") && !currentLine.startsWith("@")) {
                 break;
             }
@@ -46,16 +43,16 @@ public class ArtAlnReader {
         }
 
         final String refAln = br.readLine().trim();
-        alnLineCount++;
         final String readAln = br.readLine().trim();
-        alnLineCount++;
 
         final String[] alnFields = splitterPattern.split(currentLine.trim().substring(1));
         int direction = (alnFields[3].equals("-")) ? 1 : 0;
         final int refLength = refAln.replace("-", "").length();
         ArtAlnRecord record = new ArtAlnRecord(new ChrString(alnFields[0]), Integer.parseInt(alnFields[2]) + 1, direction, alnFields[1], refLength);
         if (!chromosomeLengths.containsKey(record.chromosome)) {
-            log.warning("got nonexistent chromosome " + record.chromosome + " at aln file line " + alnLineCount);
+            //minus 2 because there are two more readLine operations
+            //this might be fragile
+            log.warning("got nonexistent chromosome " + record.chromosome + " at aln file line " + (br.getLineNumber() - 2));
             return null;
         }
         if (record.direction == 1) {
@@ -64,7 +61,6 @@ public class ArtAlnReader {
         }
 
         currentLine = br.readLine();
-        alnLineCount++;
         return record;
     }
 
