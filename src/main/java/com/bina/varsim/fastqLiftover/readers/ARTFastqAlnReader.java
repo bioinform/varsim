@@ -23,11 +23,14 @@ public class ARTFastqAlnReader {
     public SimulatedRead getNextRead() throws IOException {
         SimulatedRead read;
         final String nameLine = fastqBr.readLine();
-        if (nameLine == null) return null;
+        //TODO: add logging
+        if (nameLine == null || nameLine.trim().length() < 1) return null;
         ArtAlnRecord alnRecord;
         if ((alnRecord = artAlnR.getNextAln()) == null) return null;
 
         final String nameFields[] = nameLine.trim().substring(1).split("[-/]");
+        //TODO: add logging
+        if (nameFields.length < 2) return null;
         read = new SimulatedRead();
         read.fragment = Integer.parseInt(nameFields[nameFields.length - 1]);
         read.setReadId(nameFields[nameFields.length - 2]);

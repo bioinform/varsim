@@ -13,7 +13,7 @@ public class ArtAlnReader {
     private final static Pattern splitterPattern = Pattern.compile("[\\s]+");
     private BufferedReader br;
     private String currentLine;
-    private Map<String, Integer> chromosomeLengths;
+    private Map<ChrString, Integer> chromosomeLengths;
 
     public ArtAlnReader(final BufferedReader br) throws IOException {
         this.br = br;
@@ -29,7 +29,7 @@ public class ArtAlnReader {
             }
             if (currentLine.startsWith("@SQ")) {
                 final String[] fields = currentLine.split("[\\s]+");
-                chromosomeLengths.put(fields[1], Integer.valueOf(fields[2]));
+                chromosomeLengths.put(new ChrString(fields[1]), Integer.valueOf(fields[2]));
             }
         }
     }
@@ -46,6 +46,10 @@ public class ArtAlnReader {
         int direction = (alnFields[3].equals("-")) ? 1 : 0;
         final int refLength = refAln.replace("-", "").length();
         ArtAlnRecord record = new ArtAlnRecord(new ChrString(alnFields[0]), Integer.parseInt(alnFields[2]) + 1, direction, alnFields[1], refLength);
+        if (!chromosomeLengths.containsKey(record.chromosome)) {
+            //TODO: add logging
+            return null;
+        }
         if (record.direction == 1) {
             final int chromosomeLength = chromosomeLengths.get(record.chromosome);
             record.location = chromosomeLength - (record.location - 1) + 1 - refLength;
