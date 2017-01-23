@@ -119,7 +119,9 @@ def monitor_multiprocesses(processes, logger):
             is_success = False
         else:
             logger.info("Process with pid %d finished successfully" % p.pid)
-    return is_success
+    if not is_success:
+        raise Exception('One process aborted.');
+
 
 
 def monitor_processes(processes):
@@ -608,9 +610,7 @@ if __name__ == "__main__":
         else:
             raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
-        if not monitor_multiprocesses(processes, logger):
-            logger.error("Aborting due to failure...")
-            sys.exit(1)
+        monitor_multiprocesses(processes, logger)
         processes = []
 
         logger.info("Read generation took %g seconds" % (time.time() - sim_ts))
@@ -660,9 +660,7 @@ if __name__ == "__main__":
             processes.append(read_map_liftover_p)
             logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_p.pid))
 
-        if not monitor_multiprocesses(processes, logger):
-            logger.error("Aborting due to failure...")
-            sys.exit(1)
+        monitor_multiprocesses(processes, logger)
 
         logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
 
