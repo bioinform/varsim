@@ -111,12 +111,15 @@ def makedirs(dirs):
 
 
 def monitor_multiprocesses(processes, logger):
+    is_fail = False
     for p in processes:
         p.join()
         if p.exitcode != 0:
             logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))  # Marghoob: pid?
+            is_fail = True
         else:
             logger.info("Process with pid %d finished successfully" % p.pid)
+    return is_fail
 
 
 def monitor_processes(processes):
@@ -605,7 +608,9 @@ if __name__ == "__main__":
         else:
             raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
-        monitor_multiprocesses(processes, logger)
+        if not monitor_multiprocesses(processes, logger):
+            logger.error("Aborting due to failure...")
+            sys.exit(1)
         processes = []
 
         logger.info("Read generation took %g seconds" % (time.time() - sim_ts))
@@ -655,7 +660,9 @@ if __name__ == "__main__":
             processes.append(read_map_liftover_p)
             logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_p.pid))
 
-        monitor_multiprocesses(processes, logger)
+        if not monitor_multiprocesses(processes, logger):
+            logger.error("Aborting due to failure...")
+            sys.exit(1)
 
         logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
 
