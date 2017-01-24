@@ -111,12 +111,17 @@ def makedirs(dirs):
 
 
 def monitor_multiprocesses(processes, logger):
+    is_success = True
     for p in processes:
         p.join()
         if p.exitcode != 0:
             logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))  # Marghoob: pid?
+            is_success = False
         else:
             logger.info("Process with pid %d finished successfully" % p.pid)
+    if not is_success:
+        raise Exception('One process aborted. Please check log for details.');
+
 
 
 def monitor_processes(processes):
