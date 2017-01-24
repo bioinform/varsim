@@ -3,13 +3,12 @@ package com.bina.varsim.fastqLiftover.readers;
 import com.bina.varsim.fastqLiftover.types.ArtAlnRecord;
 import com.bina.varsim.types.ChrString;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
 
 public class ArtAlnReader {
     private final static Logger log = Logger.getLogger(ArtAlnReader.class.getName());
@@ -52,7 +51,7 @@ public class ArtAlnReader {
         if (!chromosomeLengths.containsKey(record.chromosome)) {
             //minus 2 because there are two more readLine operations
             //this might be fragile
-            log.warning("got nonexistent chromosome " + record.chromosome + " at aln file line " + (br.getLineNumber() - 2) + ": " + currentLine.trim());
+            log.warn("got nonexistent chromosome " + record.chromosome + " at aln file line " + (br.getLineNumber() - 2) + ": " + currentLine.trim());
             return null;
         }
         if (record.direction == 1) {

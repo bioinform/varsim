@@ -7,7 +7,7 @@ import com.bina.varsim.fastqLiftover.types.SimulatedRead;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 import java.util.regex.Pattern;
 
 public class ARTFastqAlnReader {
@@ -30,7 +30,7 @@ public class ARTFastqAlnReader {
             return null;
         }
         if (nameLine.trim().length() < 1) {
-            log.severe("got empty name string at FASTQ line " + fastqBr.getLineNumber());
+            log.error("got empty name string at FASTQ line " + fastqBr.getLineNumber());
             return null;
         }
         ArtAlnRecord alnRecord;
@@ -40,7 +40,7 @@ public class ARTFastqAlnReader {
 
         final String nameFields[] = nameLine.trim().substring(1).split("[-/]");
         if (nameFields.length < 2) {
-            log.warning("expect at least 2 fields at fastq line " + fastqBr.getLineNumber() + ": " + nameLine);
+            log.warn("expect at least 2 fields at fastq line " + fastqBr.getLineNumber() + ": " + nameLine);
             return null;
         }
         read = new SimulatedRead();
