@@ -30,7 +30,7 @@ public class ARTFastqAlnReader {
             return null;
         }
         if (nameLine.trim().length() < 1) {
-            log.warning("got empty string at FASTQ line " + fastqBr.getLineNumber());
+            log.severe("got empty name string at FASTQ line " + fastqBr.getLineNumber());
             return null;
         }
         ArtAlnRecord alnRecord;

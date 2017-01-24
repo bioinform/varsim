@@ -52,7 +52,7 @@ public class ArtAlnReader {
         if (!chromosomeLengths.containsKey(record.chromosome)) {
             //minus 2 because there are two more readLine operations
             //this might be fragile
-            log.warning("got nonexistent chromosome " + record.chromosome + " at aln file line " + (br.getLineNumber() - 2));
+            log.warning("got nonexistent chromosome " + record.chromosome + " at aln file line " + (br.getLineNumber() - 2) + ": " + currentLine.trim());
             return null;
         }
         if (record.direction == 1) {
