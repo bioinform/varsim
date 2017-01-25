@@ -5,12 +5,13 @@ import com.bina.varsim.fastqLiftover.types.SimulatedReadPair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 
 public class ARTPairedFastqAlnReader implements PairedFastqReader {
     private ARTFastqAlnReader r1;
     private ARTFastqAlnReader r2;
 
-    public ARTPairedFastqAlnReader(final BufferedReader aln1, final BufferedReader fastq1, final BufferedReader aln2, final BufferedReader fastq2, boolean forceFiveBaseEncoding) throws IOException {
+    public ARTPairedFastqAlnReader(final LineNumberReader aln1, final LineNumberReader fastq1, final LineNumberReader aln2, final LineNumberReader fastq2, boolean forceFiveBaseEncoding) throws IOException {
         r1 = new ARTFastqAlnReader(aln1, fastq1, forceFiveBaseEncoding);
         r2 = new ARTFastqAlnReader(aln2, fastq2, forceFiveBaseEncoding);
     }

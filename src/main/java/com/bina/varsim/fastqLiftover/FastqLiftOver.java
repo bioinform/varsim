@@ -113,10 +113,10 @@ public class FastqLiftOver extends VarSimTool {
     }
 
     public void doLiftOverArtFastqMap(final MapBlocks mapBlocks, final PrintStream ps1, final PrintStream ps2) throws IOException {
-        BufferedReader brFastq1 = new BufferedReader(new InputStreamReader(decompressStream(fastqFiles.get(0))));
-        BufferedReader brAln1 = new BufferedReader(new InputStreamReader(decompressStream(alnFiles.get(0))));
-        BufferedReader brFastq2 = new BufferedReader(new InputStreamReader(decompressStream(fastqFiles.get(1))));
-        BufferedReader brAln2 = new BufferedReader(new InputStreamReader(decompressStream(alnFiles.get(1))));
+        LineNumberReader brFastq1 = new LineNumberReader(new InputStreamReader(decompressStream(fastqFiles.get(0))));
+        LineNumberReader brAln1 = new LineNumberReader(new InputStreamReader(decompressStream(alnFiles.get(0))));
+        LineNumberReader brFastq2 = new LineNumberReader(new InputStreamReader(decompressStream(fastqFiles.get(1))));
+        LineNumberReader brAln2 = new LineNumberReader(new InputStreamReader(decompressStream(alnFiles.get(1))));
 
         doLiftOverPairedFastq(mapBlocks, new ARTPairedFastqAlnReader(brAln1, brFastq1, brAln2, brFastq2, forceFiveBaseEncoding), ps1, ps2);
     }

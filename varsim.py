@@ -13,7 +13,6 @@ import glob
 import tempfile
 import re
 from distutils.version import LooseVersion
-from multiprocessing import Process
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -110,15 +109,6 @@ def makedirs(dirs):
             os.makedirs(d)
 
 
-def monitor_multiprocesses(processes, logger):
-    for p in processes:
-        p.join()
-        if p.exitcode != 0:
-            logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))  # Marghoob: pid?
-        else:
-            logger.info("Process with pid %d finished successfully" % p.pid)
-
-
 def monitor_processes(processes):
     logger = logging.getLogger(monitor_processes.__name__)
     while processes:
@@ -142,10 +132,10 @@ def monitor_processes(processes):
                         os.killpg(p.pid, signal.SIGTERM)
                     except OSError, e:
                         try:
-                            p.terminate()
+                            os.killpg(p.pid, signal.SIGKILL)
                         except OSError, ex:
-                            logger.write("Could not kill the process\n")
-            sys.exit(1)
+                            logger.write("Could not kill the process " + str(p.pid))
+            raise Exception('Aborting... Please check log for details.')
         processes = processes_running
     return []
 
@@ -201,8 +191,9 @@ def run_vcfstats(vcfs, out_dir, log_dir):
         vcfstats_stderr = open(os.path.join(log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
         vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "vcfstats", "-vcf",
                         in_vcf]
+        logger.info("Executing command " + " ".join(vcfstats_command))
         p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-        logger.info("Executing command " + " ".join(vcfstats_command) + " with pid " + str(p_vcfstats.pid))
+        logger.info(" with pid " + str(p_vcfstats.pid))
         processes.append(p_vcfstats)
     return processes
 
@@ -220,8 +211,9 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_i
                         os.path.realpath(reference),
                         "-prop_het", str(prop_het), "-vcf", sampling_vcf]
 
+    logger.info("Executing command " + " ".join(rand_vcf_command))
     p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
-    logger.info("Executing command " + " ".join(rand_vcf_command) + " with pid " + str(p_rand_vcf.pid))
+    logger.info(" with pid " + str(p_rand_vcf.pid))
     return p_rand_vcf
 
 
@@ -412,8 +404,9 @@ if __name__ == "__main__":
                             str(args.sv_max_length_lim), "-ref", os.path.realpath(args.reference.name),
                             "-ins", os.path.realpath(args.sv_insert_seq.name), "-dgv", os.path.realpath(args.sv_dgv.name)]
 
+        logger.info("Executing command " + " ".join(rand_dgv_command))
         p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
-        logger.info("Executing command " + " ".join(rand_dgv_command) + " with pid " + str(p_rand_dgv.pid))
+        logger.info(" with pid " + str(p_rand_dgv.pid))
         processes.append(p_rand_dgv)
         open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
@@ -438,9 +431,10 @@ if __name__ == "__main__":
                                "-id", args.id,
                                "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
 
+        logger.info("Executing command " + " ".join(vcf2diploid_command))
         p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
                                          cwd=args.out_dir)
-        logger.info("Executing command " + " ".join(vcf2diploid_command) + " with pid " + str(p_vcf2diploid.pid))
+        logger.info(" with pid " + str(p_vcf2diploid.pid))
         processes.append(p_vcf2diploid)
 
         processes = monitor_processes(processes)
@@ -509,10 +503,10 @@ if __name__ == "__main__":
 
             gzip_stderr = open(os.path.join(args.log_dir, "gzip.%s" % (fifo_name)), "w")
             gzip_command = "cat %s | gzip -2 > %s" % (fifos[-1], os.path.join(args.out_dir, dst))
-            gzip_p = Process(target=run_shell_command, args=(gzip_command, None, gzip_stderr))
-            gzip_p.start()
+            logger.info("Executing command %s" % (gzip_command) )
+            gzip_p = subprocess.Popen(gzip_command, stdout = None, stderr = gzip_stderr, shell = True)
+            logger.info( " with pid " + str(gzip_p.pid))
             processes.append(gzip_p)
-            logger.info("Executing command %s" % (gzip_command) + " with pid " + str(gzip_p.pid))
             tmp_files.append(os.path.join(args.out_dir, dst))
 
         if args.simulator == "dwgsim":
@@ -527,10 +521,10 @@ if __name__ == "__main__":
 
                 dwgsim_stdout = open(os.path.join(args.log_dir, "dwgsim.lane%d.out" % (i)), "w")
                 dwgsim_stderr = open(os.path.join(args.log_dir, "dwgsim.lane%d.err" % (i)), "w")
-                dwgsim_p = Process(target=run_shell_command, args=(dwgsim_command, dwgsim_stdout, dwgsim_stderr))
-                dwgsim_p.start()
+                logger.info("Executing command " + dwgsim_command)
+                dwgsim_p = subprocess.Popen(dwgsim_command, stdout = dwgsim_stdout, stderr = dwgsim_stderr, shell = True)
+                logger.info( " with pid " + str(dwgsim_p.pid))
                 processes.append(dwgsim_p)
-                logger.info("Executing command " + dwgsim_command + " with pid " + str(dwgsim_p.pid))
         elif args.simulator == "art":
             profile_opts = []
             if args.profile_1 is not None and args.profile_2 is not None:
@@ -550,10 +544,10 @@ if __name__ == "__main__":
                 art_command = " ".join(art_command)
                 art_stdout = open(os.path.join(args.log_dir, "art.lane%d.out" % (i)), "w")
                 art_stderr = open(os.path.join(args.log_dir, "art.lane%d.err" % (i)), "w")
-                art_p = Process(target=run_shell_command, args=(art_command, art_stdout, art_stderr))
-                art_p.start()
+                logger.info("Executing command " + art_command )
+		art_p = subprocess.Popen(art_command, stdout = art_stdout, stderr = art_stderr, shell = True)
+                logger.info( " with pid " + str(art_p.pid))
                 processes.append(art_p)
-                logger.info("Executing command " + art_command + " with pid " + str(art_p.pid))
         elif args.simulator == "pbsim":
             nRef = 0;
             with open(merged_reference, 'r') as fa:
@@ -589,23 +583,23 @@ if __name__ == "__main__":
 
                 pbsim_stdout = open(os.path.join(args.log_dir, "pbsim.lane%d.out" % (i)), "w")
                 pbsim_stderr = open(os.path.join(args.log_dir, "pbsim.lane%d.err" % (i)), "w")
-                pbsim_p = Process(target=run_shell_command, args=(pbsim_command, pbsim_stdout, pbsim_stderr))
-                pbsim_p.start()
+                logger.info("Executing command " + pbsim_command )
+		pbsim_p = subprocess.Popen(pbsim_command, stdout = pbsim_stdout, stderr = pbsim_stderr, shell = True)
+                logger.info( " with pid " + str(pbsim_p.pid))
                 processes.append(pbsim_p)
-                logger.info("Executing command " + pbsim_command + " with pid " + str(pbsim_p.pid))
         elif args.simulator == "longislnd":
-            longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
-            longislnd_command = " ".join(longislnd_command)
+	    longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
+	    longislnd_command = " ".join(longislnd_command)
             longislnd_stdout = open(os.path.join(args.log_dir, "longislnd.out"), "w")
             longislnd_stderr = open(os.path.join(args.log_dir, "longislnd.err"), "w")
-            longislnd_p = Process(target=run_shell_command, args=(longislnd_command, longislnd_stdout, longislnd_stderr))
-            longislnd_p.start()
+            logger.info("Executing command " + longislnd_command)
+            longislnd_p = subprocess.Popen(longislnd_command, stdout = longislnd_stdout, stderr = longislnd_stderr, shell = True)
+            logger.info(" with pid " + str(longislnd_p.pid))
             processes.append(longislnd_p)
-            logger.info("Executing command " + longislnd_command + " with pid " + str(longislnd_p.pid))
         else:
             raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
-        monitor_multiprocesses(processes, logger)
+        monitor_processes(processes)
         processes = []
 
         logger.info("Read generation took %g seconds" % (time.time() - sim_ts))
@@ -637,11 +631,11 @@ if __name__ == "__main__":
                                               "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
                                               "-ref %s/simulated.lane%d.ref " % (args.out_dir, i, args.out_dir, i)
                 fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
-                liftover_p = Process(target=run_shell_command, args=(fastq_liftover_command, liftover_stdout, liftover_stderr))
-                liftover_p.start()
+                logger.info("Executing command " + fastq_liftover_command)
+		liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
+                logger.info(" with pid " + str(liftover_p.pid))
                 processes.append(liftover_p)
                 fastqs.append(os.path.join(args.out_dir, "lane%d.read%d.fq.gz" % (i, end)))
-                logger.info("Executing command " + fastq_liftover_command + " with pid " + str(liftover_p.pid))
         else:
             # liftover the read map files
             read_map_files = list(glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed")))
@@ -650,12 +644,12 @@ if __name__ == "__main__":
             read_maps = "-longislnd %s" % merged_raw_readmap 
             read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
-            read_map_liftover_p = Process(target=run_shell_command, args=(read_map_liftover_command, None, read_map_liftover_stderr))
-            read_map_liftover_p.start()
+            logger.info("Executing command " + read_map_liftover_command )
+            read_map_liftover_p = subprocess.Popen(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
             processes.append(read_map_liftover_p)
-            logger.info("Executing command " + read_map_liftover_command + " with pid " + str(read_map_liftover_p.pid))
+            logger.info(" with pid " + str(read_map_liftover_p.pid))
 
-        monitor_multiprocesses(processes, logger)
+        monitor_processes(processes)
 
         logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
 
