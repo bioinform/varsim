@@ -109,26 +109,6 @@ def makedirs(dirs):
             os.makedirs(d)
 
 
-def monitor_multiprocesses(processes, logger):
-    is_success = True
-    try:
-        for p in processes:
-            p.join()
-            if p.exitcode != 0:
-                logger.error("Process with pid %d failed with exit code %d" % (p.pid, p.exitcode))  # Marghoob: pid?
-                is_success = False
-            else:
-                logger.info("Process with pid %d finished successfully" % p.pid)
-    except KeyboardInterrupt:
-	for p in processes:
-	    p.terminate()
-	is_success = False
-	raise Exception('KeyboardInterrupt received, shutting down...')
-    if not is_success:
-        raise Exception('One process aborted. Please check log for details.')
-
-
-
 def monitor_processes(processes):
     logger = logging.getLogger(monitor_processes.__name__)
     while processes:
@@ -619,7 +599,6 @@ if __name__ == "__main__":
         else:
             raise NotImplementedError("simulation method " + args.simulator + " not implemented");
 
-        #monitor_multiprocesses(processes, logger)
         monitor_processes(processes)
         processes = []
 
@@ -670,7 +649,6 @@ if __name__ == "__main__":
             processes.append(read_map_liftover_p)
             logger.info(" with pid " + str(read_map_liftover_p.pid))
 
-        #monitor_multiprocesses(processes, logger)
         monitor_processes(processes)
 
         logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
