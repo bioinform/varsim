@@ -101,6 +101,20 @@ public class SAMCompareTest {
     universalTestMethodShortRead("src/test/resources/samcompareTests/short_read_test_one_false_positive",new String[]{"-wig","5"});
   }
 
+  /**
+   * there are 2 copies of a gene in the reference, although the 2 copies carry different mutations
+   * some reads may appear equally like to come from either one of the copies.
+   *
+   * there should be one true positive and one false positive evaluated at 95% identity threshold
+   * i.e. one true multialignment one false multialignment
+   *
+   * @throws IOException if file cannot be found/read
+   */
+  @Test
+  public void oneFalsePositiveOneTruePositiveMultiAlignmentSAMCompareShortReadTest() throws IOException{
+    universalTestMethodShortRead("src/test/resources/samcompareTests/multiAlignmentTests/shortReadoneTPoneFPMultiAlignment",new String[]{"-wig","5","-identity_threshold","0.95"});
+  }
+
 
   /***************Long read test***************/
   /**
