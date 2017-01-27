@@ -39,6 +39,9 @@ public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
     static final int MAPQ_CUTOFF = 10;
     static final int MAPQ_UNMAPPED = 255;
+    static final double DEFAULT_IDENTITY_THRESHOLD = 1.0;
+    //bwa outputs matches as M, whereas = is defined as match by SAM spec
+    static final Set<CigarOperator> ALL_POSSIBLE_MATCHES = EnumSet.of(CigarOperator.EQ, CigarOperator.MATCH_OR_MISMATCH);
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
     @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
@@ -54,6 +57,8 @@ public class SAMcompare extends VarSimTool {
     File readMapFile = null;
     @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
+    @Option(name = "-identity_threshold", usage = "an alignment with higher identity (% of matches in a read) will be considered correct alignment regardless of mapping location. DEFAULT: 1.0")
+    double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
     @Argument(usage = "One or more BAM files, header coming from the first file", metaVar = "bam_files ...", required = true)
     private List<String> bamFilenames = new ArrayList<>();
 
@@ -192,14 +197,25 @@ public class SAMcompare extends VarSimTool {
                     boolean unmapped = rec.getReadUnmappedFlag();
                     //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
                     int mappingQuality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
-                    final StatsNamespace validationStatus;
+                    StatsNamespace validationStatus = StatsNamespace.TP;
                     if (unmapped) {
                         validationStatus = isTrueUnmapped ? StatsNamespace.TN : StatsNamespace.FN;
                     } else {
+                        /*
+                         * some explanations about how an alignment is classified as TP or FP
+                          *
+                          * 1) if a read is aligned to correct location, then it is for sure TP
+                          * 2) if a read is not aligned to correct location, but has very high identity (true multi-alignment), then TP
+                          * 3) if a read is not aligned to correct location, doesn't have very high identity, but is assigned very informative mapq (low), then TP
+                          * 4) if a read is supposed to be unmapped, but is mapped given low identity and is assigned high mapq, then FP
+                          * 5) if a read is aligned, not FP, then it is TP
+                          *
+                          *
+                         */
                         // check if the it mapped to the correct location
                         boolean closeAln = false;
                         if (isTrueUnmapped) {
-                            if (mappingQuality > mapqCutoff) {
+                            if (getIdentity(rec) <= identityThreshold && mappingQuality > mapqCutoff) {
                                 tumFPWriter.addAlignment(rec);
                             }
                         } else {
@@ -213,9 +229,10 @@ public class SAMcompare extends VarSimTool {
                             }
 
                             if (!closeAln) {
-                                if (mappingQuality > mapqCutoff) {
+                                if (getIdentity(rec) <= identityThreshold && mappingQuality > mapqCutoff) {
                                     //got another false positive
                                     fpWriter.addAlignment(rec);
+                                    validationStatus = StatsNamespace.FP;
                                     for (final BlockType blockType : BlockType.values()) {
                                         if (fpWriters.containsKey(blockType) && features.contains(EventTypesForStats.valueOf(blockType.getLongName()))) {
                                             //categorize false positive alignments
@@ -225,7 +242,6 @@ public class SAMcompare extends VarSimTool {
                                 }
                             }
                         }
-                        validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
                     outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
                 }
@@ -352,7 +368,7 @@ public class SAMcompare extends VarSimTool {
      * @param rec one alignment in SAM
      * @return
      */
-    private boolean isContainedInBed(BedFile intersector, Collection<GenomeLocation> trueLoci, SAMRecord rec) {
+    private static boolean isContainedInBed(BedFile intersector, Collection<GenomeLocation> trueLoci, SAMRecord rec) {
         if (intersector == null) {
             return true;
         }
@@ -366,5 +382,24 @@ public class SAMcompare extends VarSimTool {
             }
         }
         return isContainedInBed;
+    }
+
+    /**
+     * calculate identity ratio of the read
+     * formula:
+     *
+     * sum of sequence matches (= or M in CIGAR) / total length of the read
+     *
+     * @param alignment
+     * @return
+     */
+    private static double getIdentity(SAMRecord alignment) {
+        int nMatches = 0;
+        for (CigarElement c : alignment.getCigar().getCigarElements()) {
+            if (ALL_POSSIBLE_MATCHES.contains(c.getOperator())) {
+                nMatches += c.getLength();
+            }
+        }
+        return (double) nMatches/alignment.getReadLength();
     }
 }
