@@ -6,7 +6,7 @@ package com.bina.varsim.tools.evaluation;
  * truth alignment can also be supplied via a read map file
  *
  * @author johnmu
- */
+*/
 
 
 import com.bina.varsim.VarSimTool;
@@ -20,6 +20,7 @@ import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.bina.varsim.types.stats.MapRatioRecordSum.EventTypesForStats;
 import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.util.ReadMap;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
@@ -109,7 +109,7 @@ public class SAMcompare extends VarSimTool {
         OutputClass outputBlob = new OutputClass();
 
         // TODO think about better way to deal with multiple bams
-        outputBlob.setParams(new CompareParams(bamFilenames.get(0).substring(0, Math.min(64, bamFilenames.get(0).length())), wiggle, bedFilename));
+        outputBlob.setParams(new CompareParams(bamFilenames.get(0).substring(0, Math.min(64, bamFilenames.get(0).length())), wiggle, bedFilename, identityThreshold));
         outputBlob.setStats(new MapRatioRecordSum());
 
         // read sam/bam file
@@ -326,22 +326,28 @@ public class SAMcompare extends VarSimTool {
      * Stores the parameters. this is mainly for outputting as a JSON.
      */
     class CompareParams {
-        String bam_filename;
+        @JsonProperty(value = "bam_filename")
+        String bamFilename;
+        @JsonProperty(value = "wiggle")
         int wiggle;
+        @JsonProperty(value = "bed_filename")
         String bedFilename;
+        @JsonProperty(value = "identity_threshold")
+        double identityThreshold;
 
-        CompareParams(String bamFilename, int wiggle, String bedFilename) {
-            this.bam_filename = bamFilename;
+        CompareParams(String bamFilename, int wiggle, String bedFilename, double identityThreshold) {
+            this.bamFilename = bamFilename;
             this.wiggle = wiggle;
             this.bedFilename = bedFilename;
+            this.identityThreshold = identityThreshold;
         }
 
-        public String getBam_filename() {
-            return bam_filename;
+        public String getBamFilename() {
+            return bamFilename;
         }
 
-        public void setBam_filename(String bamFilename) {
-            this.bam_filename = bamFilename;
+        public void setBamFilename(String bamFilename) {
+            this.bamFilename = bamFilename;
         }
 
         public int getWiggle() {
