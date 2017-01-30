@@ -1136,15 +1136,45 @@ public class Variant implements Comparable<Variant>{
      * here it guarantees to return
      * genotype 1 or 2
      *
-     * @return
+     * when both maternal and paternal genotypes are
+     * unknown, i.e. -1, then we need to return
+     * something more meaningful than just 1. however
+     * this is by no means a very good return
+     * value. proper fix involves explicitly handling
+     * of missing genotype/phasing information.
+     *
+     * @return genotype number (0,1,2) or 1 for
+     * missing genotype (or maximum possible)
      */
     public byte getGoodPaternal() {
-        return (paternal < 0) ? 1 : paternal;
-
+        return (byte) ((paternal < 0) ? Math.min(1,alts.length) : paternal);
     }
 
+    /**
+     * if genotype missing and return types are iterated over
+     * 4 possible scenarios:
+     *
+     * X: 2 or max possible
+     * Y: 1 or max possible
+     * MT: 1 or max possible
+     * autosomal: 2 or max possible
+     *
+     * here we do not have gender information (sometimes
+     * it's unavailable), so the maternal haploid chromosome
+     * could be actually diploid chromosome, and the reverse
+     * is also possible. we just pretend it is diploid.
+     *
+     * @return exact genotype number (0,1,2) or most comprehensive
+     * genotype number
+     */
     public byte getGoodMaternal() {
-        return (maternal < 0) ? 1: maternal;
+        if (maternal >= 0)
+            return maternal; //not missing
+        //missing
+        if (chr.isY() || chr.isMT()) {
+          return (byte) (Math.min(1, alts.length));
+        }
+        return (byte) (Math.min(2, alts.length));
     }
 
     public String getExtraBase() {
