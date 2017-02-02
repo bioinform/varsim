@@ -1124,9 +1124,10 @@
                     var params = varsim_obj.params;
                     if (params.hasOwnProperty('bam_filename')) {
                         param_str += "\n";
-                        param_str += "SAM/BAM file : " + params.bam_filename + "\n";
-                        param_str += "Wiggle       : " + params.wiggle + "\n";
-                        param_str += "BED file     : ";
+                        param_str += "SAM/BAM file              : " + params.bam_filename + "\n";
+                        param_str += "Wiggle                    : " + params.wiggle + "\n";
+                        param_str += "identity threshold        : " + params.identity_threshold + "\n";
+                        param_str += "BED file                  : ";
                         if (params.bed_filename.length == 0) {
                             param_str += "None";
                         } else {

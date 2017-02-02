@@ -6,7 +6,7 @@ package com.bina.varsim.tools.evaluation;
  * truth alignment can also be supplied via a read map file
  *
  * @author johnmu
- */
+*/
 
 
 import com.bina.varsim.VarSimTool;
@@ -20,6 +20,7 @@ import com.bina.varsim.types.stats.MapRatioRecordSum;
 import com.bina.varsim.types.stats.MapRatioRecordSum.EventTypesForStats;
 import com.bina.varsim.types.stats.StatsNamespace;
 import com.bina.varsim.util.ReadMap;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,12 +34,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SAMcompare extends VarSimTool {
     static final int WIGGLE_ARG = 20;
     static final int MAPQ_CUTOFF = 10;
     static final int MAPQ_UNMAPPED = 255;
+    static final double DEFAULT_IDENTITY_THRESHOLD = 1.0;
+    //bwa outputs matches as M, whereas = is defined as match by SAM spec
+    static final Set<CigarOperator> ALL_POSSIBLE_MATCHES = EnumSet.of(CigarOperator.EQ, CigarOperator.MATCH_OR_MISMATCH);
     private final static Logger log = Logger.getLogger(SAMcompare.class.getName());
     @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
     int wiggle = WIGGLE_ARG;
@@ -54,6 +57,8 @@ public class SAMcompare extends VarSimTool {
     File readMapFile = null;
     @Option(name = "-use_nonprimary", usage = "Do not skip non-primary alignments")
     boolean useNonPrimary = false;
+    @Option(name = "-identity_threshold", usage = "an alignment with higher identity (% of matches in a read) will be considered correct alignment regardless of mapping location. DEFAULT: 1.0")
+    double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
     @Argument(usage = "One or more BAM files, header coming from the first file", metaVar = "bam_files ...", required = true)
     private List<String> bamFilenames = new ArrayList<>();
 
@@ -101,12 +106,10 @@ public class SAMcompare extends VarSimTool {
             return;
         }
 
-        final BedFile intersector = (bedFilename != null && new File(bedFilename).isFile()) ? new BedFile(bedFilename) : null;
-
         OutputClass outputBlob = new OutputClass();
 
         // TODO think about better way to deal with multiple bams
-        outputBlob.setParams(new CompareParams(bamFilenames.get(0).substring(0, Math.min(64, bamFilenames.get(0).length())), wiggle, bedFilename));
+        outputBlob.setParams(new CompareParams(bamFilenames.get(0).substring(0, Math.min(64, bamFilenames.get(0).length())), wiggle, bedFilename, identityThreshold));
         outputBlob.setStats(new MapRatioRecordSum());
 
         // read sam/bam file
@@ -133,6 +136,7 @@ public class SAMcompare extends VarSimTool {
             }
 
             ReadMap readMap = readMapFile != null ? new ReadMap(readMapFile) : null;
+            final BedFile intersector = (bedFilename != null && new File(bedFilename).isFile()) ? new BedFile(bedFilename) : null;
 
             int numReads = 0;
             for (String filename : bamFilenames) {
@@ -159,22 +163,10 @@ public class SAMcompare extends VarSimTool {
                     log.trace("Getting true locations for read " + name);
                     final Collection<GenomeLocation> trueLoci = readMap != null ? readMap.getReadMapRecord(name).getUnclippedStarts(pair_idx) : new SimulatedRead(name).getLocs(pair_idx);
 
-                    //TODO simplify logic here
-                    if (intersector != null) {
-                        boolean isContainedInBed = false;
-                        for (GenomeLocation loc : trueLoci) {
-                            if (intersector.contains(loc.chromosome, loc.location
-                                    //TODO should we change this to alignment length?
-                                    , loc.location + rec.getReadLength() - 1)) {
-                                isContainedInBed = true;
-                            }
-                        }
-                        if (!isContainedInBed) {
-                            // skip this read
-                            continue;
-                        }
+                    if (!isContainedInBed(intersector, trueLoci, rec)) {
+                        // skip this read
+                        continue;
                     }
-
                     boolean isTrueUnmapped;
 
                     //TODO: create enum and replace HashSet with EnumSet
@@ -205,14 +197,25 @@ public class SAMcompare extends VarSimTool {
                     boolean unmapped = rec.getReadUnmappedFlag();
                     //TODO: should mapq=0 for unmapped reads? otherwise all unmapped=true && true_unmapped=true reads will go to FP
                     int mappingQuality = unmapped ? MAPQ_UNMAPPED : rec.getMappingQuality();
-                    final StatsNamespace validationStatus;
+                    StatsNamespace validationStatus = StatsNamespace.TP;
                     if (unmapped) {
                         validationStatus = isTrueUnmapped ? StatsNamespace.TN : StatsNamespace.FN;
                     } else {
+                        /*
+                         * some explanations about how an alignment is classified as TP or FP
+                          *
+                          * 1) if a read is aligned to correct location, then it is for sure TP
+                          * 2) if a read is not aligned to correct location, but has very high identity (true multi-alignment), then TP
+                          * 3) if a read is not aligned to correct location, doesn't have very high identity, but is assigned very informative mapq (low), then TP
+                          * 4) if a read is supposed to be unmapped, but is mapped given low identity and is assigned high mapq, then FP
+                          * 5) if a read is aligned, not FP, then it is TP
+                          *
+                          *
+                         */
                         // check if the it mapped to the correct location
                         boolean closeAln = false;
                         if (isTrueUnmapped) {
-                            if (mappingQuality > mapqCutoff) {
+                            if (getIdentity(rec) <= identityThreshold && mappingQuality > mapqCutoff) {
                                 tumFPWriter.addAlignment(rec);
                             }
                         } else {
@@ -226,9 +229,10 @@ public class SAMcompare extends VarSimTool {
                             }
 
                             if (!closeAln) {
-                                if (mappingQuality > mapqCutoff) {
+                                if (getIdentity(rec) <= identityThreshold && mappingQuality > mapqCutoff) {
                                     //got another false positive
                                     fpWriter.addAlignment(rec);
+                                    validationStatus = StatsNamespace.FP;
                                     for (final BlockType blockType : BlockType.values()) {
                                         if (fpWriters.containsKey(blockType) && features.contains(EventTypesForStats.valueOf(blockType.getLongName()))) {
                                             //categorize false positive alignments
@@ -238,7 +242,6 @@ public class SAMcompare extends VarSimTool {
                                 }
                             }
                         }
-                        validationStatus = closeAln ? StatsNamespace.TP : StatsNamespace.FP;
                     }
                     outputBlob.getStats().incStat(features, mappingQuality, validationStatus);
                 }
@@ -323,22 +326,28 @@ public class SAMcompare extends VarSimTool {
      * Stores the parameters. this is mainly for outputting as a JSON.
      */
     class CompareParams {
-        String bam_filename;
+        @JsonProperty(value = "bam_filename")
+        String bamFilename;
+        @JsonProperty(value = "wiggle")
         int wiggle;
+        @JsonProperty(value = "bed_filename")
         String bedFilename;
+        @JsonProperty(value = "identity_threshold")
+        double identityThreshold;
 
-        CompareParams(String bamFilename, int wiggle, String bedFilename) {
-            this.bam_filename = bamFilename;
+        CompareParams(String bamFilename, int wiggle, String bedFilename, double identityThreshold) {
+            this.bamFilename = bamFilename;
             this.wiggle = wiggle;
             this.bedFilename = bedFilename;
+            this.identityThreshold = identityThreshold;
         }
 
-        public String getBam_filename() {
-            return bam_filename;
+        public String getBamFilename() {
+            return bamFilename;
         }
 
-        public void setBam_filename(String bamFilename) {
-            this.bam_filename = bamFilename;
+        public void setBamFilename(String bamFilename) {
+            this.bamFilename = bamFilename;
         }
 
         public int getWiggle() {
@@ -358,5 +367,45 @@ public class SAMcompare extends VarSimTool {
         }
     }
 
+    /**
+     * check if a read is supposed to be aligned in the user-supplied BED region
+     * @param intersector BED-file object
+     * @param trueLoci collection of true alignment loci
+     * @param rec one alignment in SAM
+     * @return
+     */
+    private static boolean isContainedInBed(BedFile intersector, Collection<GenomeLocation> trueLoci, SAMRecord rec) {
+        if (intersector == null) {
+            return true;
+        }
+        boolean isContainedInBed = false;
+        for (GenomeLocation loc : trueLoci) {
+            if (intersector.contains(loc.chromosome, loc.location
+                    //here we should have used the true alignment length
+                    //however that is difficult to know unless we have a perfect BAM
+                    , loc.location + rec.getReadLength() - 1)) {
+                isContainedInBed = true;
+            }
+        }
+        return isContainedInBed;
+    }
 
+    /**
+     * calculate identity ratio of the read
+     * formula:
+     *
+     * sum of sequence matches (= or M in CIGAR) / total length of the read
+     *
+     * @param alignment
+     * @return
+     */
+    private static double getIdentity(SAMRecord alignment) {
+        int nMatches = 0;
+        for (CigarElement c : alignment.getCigar().getCigarElements()) {
+            if (ALL_POSSIBLE_MATCHES.contains(c.getOperator())) {
+                nMatches += c.getLength();
+            }
+        }
+        return (double) nMatches/alignment.getReadLength();
+    }
 }

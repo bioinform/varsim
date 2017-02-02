@@ -120,6 +120,15 @@ public class VCFCompareTest {
     universalTestMethod("src/test/resources/validationTest/canonicalizationTest3");
   }
   /**
+   * truth is an 2bp MNP
+   * compared against 2 SNPs are actually identical to the MNP (same phase, same genotype)
+   * @throws IOException
+   */
+  @Test
+  public void canonicalizationTest4SNPvsMNP() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/canonicalizationTest4SNPvsMNP");
+  }
+  /**
    * compare two VCFs with two same balanced, nonreciprocal intrachromosomal translocations
    * (cut-and-paste). Validation will be done by evaluating breakend.
    * @throws IOException
