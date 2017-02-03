@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # this is a temporary attempt to get a workable somatic workflow
 
@@ -83,6 +83,9 @@ if __name__ == "__main__":
     # rand_vcf_group.add_argument("--som_vcf", metavar="in_vcf", help="Input somatic variant database VCF", type=file, required=False)
     rand_vcf_group.add_argument("--som_prop_het", metavar="FLOAT", help="Proportion of somatic heterozygous variants",
                                 default=1.0, type=float)
+    rand_vcf_group.add_argument("--sv_insert_seq", metavar="FILE",
+                                help="Path to file containing concatenation of real insertion sequences", type=file,
+                                required=True)
 
     dwgsim_group = main_parser.add_argument_group("DWGSIM options")
     dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base",
@@ -189,7 +192,8 @@ if __name__ == "__main__":
                       "--mean_fragment_size", str(args.mean_fragment_size),
                       "--sd_fragment_size", str(args.sd_fragment_size),
                       "--disable_rand_vcf",
-                      "--disable_rand_dgv"] + other_varsim_opts + vcf_arg_list + filter_arg_list + disable_sim_arg_list \
+                      "--disable_rand_dgv",
+		      "--sv_insert_seq", args.sv_insert_seq.name] + other_varsim_opts + vcf_arg_list + filter_arg_list + disable_sim_arg_list \
                      + force_five_base_encoding_arg_list + keep_temp_arg_list + profile_1_arg_list + profile_2_arg_list
     varsim_command = " ".join(varsim_command)
     p_varsim = subprocess.Popen(varsim_command, stdout=varsim_stdout, stderr=varsim_stderr, shell=True)
