@@ -1139,7 +1139,7 @@ public class Variant implements Comparable<Variant>{
      * value. proper fix involves explicitly handling
      * of missing genotype/phasing information.
      *
-     * @return genotype number
+     * @return paternal genotype number
      */
     public byte getGoodPaternal() {
         if (paternal >= 0)
@@ -1157,21 +1157,20 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-     * if genotype missing and return types are iterated over
-     * 4 possible scenarios:
+     * this method returns a genotype number
+     * -1 for unavailable genotype
+     * 0 for reference allele
+     * 1 for first alternative allele
+     * 2,3,...
      *
-     * X: 2 or max possible
-     * Y: 1 or max possible
-     * MT: 1 or max possible
-     * autosomal: 2 or max possible
+     * when maternal genotype is
+     * unknown, i.e. -1, then we try to return
+     * something meaningful. however
+     * this is by no means a very good return
+     * value. proper fix involves explicitly handling
+     * of missing genotype/phasing information.
      *
-     * here we do not have gender information (sometimes
-     * it's unavailable), so the maternal haploid chromosome
-     * could be actually diploid chromosome, and the reverse
-     * is also possible. we just pretend it is diploid.
-     *
-     * @return exact genotype number (0,1,2) or most comprehensive
-     * genotype number
+     * @return maternal genotype number
      */
     public byte getGoodMaternal() {
         if (maternal >= 0)
