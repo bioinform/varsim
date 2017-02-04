@@ -877,9 +877,19 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-    Returns true if the variant is homozygous
+    Returns true if no genotype is missing
+     and the variant is homozygous
      */
     public boolean isHom() {
+        if (chr.isMT() && maternal < 0) {
+            return false;
+        }
+        if (chr.isY() && paternal < 0) {
+            return false;
+        }
+        if (maternal < 0 || paternal < 0) {
+            return false;
+        }
         return (paternal == maternal);
     }
 
