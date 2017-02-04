@@ -137,6 +137,15 @@ public class VCFCompareTest {
   public void canonicalizationTest5SNPvsMNPnoGT() throws IOException {
     universalTestMethod("src/test/resources/validationTest/canonicalizationTest5SNPvsMNPnoGT");
   }
+
+  /**
+   * test 2 SNPs when both maternal and paternal genotypes are missing
+   * @throws IOException
+   */
+  @Test
+  public void missingGTSNPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/missingGT_SNP");
+  }
   /**
    * compare two VCFs with two same balanced, nonreciprocal intrachromosomal translocations
    * (cut-and-paste). Validation will be done by evaluating breakend.
