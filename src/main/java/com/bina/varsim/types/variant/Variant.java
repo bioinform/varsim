@@ -1147,7 +1147,17 @@ public class Variant implements Comparable<Variant>{
      * missing genotype (or maximum possible)
      */
     public byte getGoodPaternal() {
-        return (byte) ((paternal < 0) ? Math.min(1,alts.length) : paternal);
+        if (paternal >= 0)
+            return paternal; //not missing
+        //missing
+        if (chr.isY()) {
+            return (byte) (Math.min(1, alts.length));
+        }
+        //male does not have MT chromosome
+        if (chr.isMT()) {
+            return (byte) 0;
+        }
+        return (byte) (Math.min(1, alts.length));
     }
 
     /**
@@ -1170,9 +1180,13 @@ public class Variant implements Comparable<Variant>{
     public byte getGoodMaternal() {
         if (maternal >= 0)
             return maternal; //not missing
-        //missing
-        if (chr.isY() || chr.isMT()) {
+        //GT is missing, we try our best to return correct one
+        if (chr.isMT()) {
           return (byte) (Math.min(1, alts.length));
+        }
+        //female does not have Y chromosome
+        if (chr.isY()) {
+            return (byte) 0;
         }
         return (byte) (Math.min(2, alts.length));
     }
