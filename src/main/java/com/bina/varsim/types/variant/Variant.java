@@ -1126,37 +1126,33 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-     * this method returns a genotype
-     * however, why does it return 1
-     * when paternal genotype is < 0?
+     * this method returns a genotype number
+     * -1 for unavailable genotype
      * 0 for reference allele
      * 1 for first alternative allele
-     * -1 for unavailable genotype
+     * 2,3,...
      *
-     * here it guarantees to return
-     * genotype 1 or 2
-     *
-     * when both maternal and paternal genotypes are
-     * unknown, i.e. -1, then we need to return
-     * something more meaningful than just 1. however
+     * when paternal genotype is
+     * unknown, i.e. -1, then we try to return
+     * something meaningful. however
      * this is by no means a very good return
      * value. proper fix involves explicitly handling
      * of missing genotype/phasing information.
      *
-     * @return genotype number (0,1,2) or 1 for
-     * missing genotype (or maximum possible)
+     * @return genotype number
      */
     public byte getGoodPaternal() {
         if (paternal >= 0)
             return paternal; //not missing
         //missing
-        if (chr.isY()) {
-            return (byte) (Math.min(1, alts.length));
-        }
         //male does not have MT chromosome
         if (chr.isMT()) {
             return (byte) 0;
         }
+        /*when chr=X,Y,or autosomal
+        we try return a correct one
+        however there is no guarantee that only one ALT is present
+         */
         return (byte) (Math.min(1, alts.length));
     }
 
@@ -1181,6 +1177,8 @@ public class Variant implements Comparable<Variant>{
         if (maternal >= 0)
             return maternal; //not missing
         //GT is missing, we try our best to return correct one
+        //however there is no guarantee that only one ALT is specified
+        //for a variant on MT
         if (chr.isMT()) {
           return (byte) (Math.min(1, alts.length));
         }
@@ -1188,6 +1186,12 @@ public class Variant implements Comparable<Variant>{
         if (chr.isY()) {
             return (byte) 0;
         }
+        /*chr=X or autosomal
+        we try to return a correct one
+        and make it work with getGoodPaternal(),i.e.
+        getGoodPaternal() returns 1 by default,
+        getGoodMaternal() returns 2 by default.
+         */
         return (byte) (Math.min(2, alts.length));
     }
 
