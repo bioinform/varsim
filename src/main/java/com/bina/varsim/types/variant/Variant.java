@@ -877,9 +877,19 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-    Returns true if the variant is homozygous
+    Returns true if no genotype is missing
+     and the variant is homozygous
      */
     public boolean isHom() {
+        if (chr.isMT() && maternal < 0) {
+            return false;
+        }
+        if (chr.isY() && paternal < 0) {
+            return false;
+        }
+        if (maternal < 0 || paternal < 0) {
+            return false;
+        }
         return (paternal == maternal);
     }
 
@@ -1126,25 +1136,72 @@ public class Variant implements Comparable<Variant>{
     }
 
     /**
-     * this method returns a genotype
-     * however, why does it return 1
-     * when paternal genotype is < 0?
+     * this method returns a genotype number
+     * -1 for unavailable genotype
      * 0 for reference allele
      * 1 for first alternative allele
-     * -1 for unavailable genotype
+     * 2,3,...
      *
-     * here it guarantees to return
-     * genotype 1 or 2
+     * when paternal genotype is
+     * unknown, i.e. -1, then we try to return
+     * something meaningful. however
+     * this is by no means a very good return
+     * value. proper fix involves explicitly handling
+     * of missing genotype/phasing information.
      *
-     * @return
+     * @return paternal genotype number
      */
     public byte getGoodPaternal() {
-        return (paternal < 0) ? 1 : paternal;
-
+        if (paternal >= 0)
+            return paternal; //not missing
+        //missing
+        //male does not have MT chromosome
+        if (chr.isMT()) {
+            return (byte) 0;
+        }
+        /*when chr=X,Y,or autosomal
+        we try return a correct one
+        however there is no guarantee that only one ALT is present
+         */
+        return (byte) (Math.min(1, alts.length));
     }
 
+    /**
+     * this method returns a genotype number
+     * -1 for unavailable genotype
+     * 0 for reference allele
+     * 1 for first alternative allele
+     * 2,3,...
+     *
+     * when maternal genotype is
+     * unknown, i.e. -1, then we try to return
+     * something meaningful. however
+     * this is by no means a very good return
+     * value. proper fix involves explicitly handling
+     * of missing genotype/phasing information.
+     *
+     * @return maternal genotype number
+     */
     public byte getGoodMaternal() {
-        return (maternal < 0) ? 1: maternal;
+        if (maternal >= 0)
+            return maternal; //not missing
+        //GT is missing, we try our best to return correct one
+        //however there is no guarantee that only one ALT is specified
+        //for a variant on MT
+        if (chr.isMT()) {
+          return (byte) (Math.min(1, alts.length));
+        }
+        //female does not have Y chromosome
+        if (chr.isY()) {
+            return (byte) 0;
+        }
+        /*chr=X or autosomal
+        we try to return a correct one
+        and make it work with getGoodPaternal(),i.e.
+        getGoodPaternal() returns 1 by default,
+        getGoodMaternal() returns 2 by default.
+         */
+        return (byte) (Math.min(2, alts.length));
     }
 
     public String getExtraBase() {

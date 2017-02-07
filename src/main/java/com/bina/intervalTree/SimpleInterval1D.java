@@ -235,7 +235,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @return The midpoint of the interval floor((right+left)/2)
      */
     public long getCenter() {
-        return (((getRight() / 2) + (getLeft() / 2)));
+        return Math.round(Math.floor(((getRight() / 2.0) + (getLeft() / 2.0))));
     }
 
     public String toString() {

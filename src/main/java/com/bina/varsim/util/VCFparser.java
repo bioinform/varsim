@@ -149,17 +149,17 @@ public class VCFparser extends GzFileParser<Variant> {
             }
         } else if (geno.length() >= 3) {
                     // this is the case where phase looks like "1|0" or "10|4"
-                    String[] ll = geno.split("[\\|/]");
-                    int c1 = -1;
-                    int c2 = -1;
-                    char phasing = '/';
-                    if (ll.length == 2) {
-                        try {
-                            c1 = Integer.parseInt(ll[0]);
-                            c2 = Integer.parseInt(ll[1]);
-                            phasing = geno.charAt(ll[0].length());
-                        } catch (NumberFormatException e) {
-                            strangePhase = true;
+            String[] ll = geno.split("[\\|/]");
+            int c1 = -1;
+            int c2 = -1;
+            char phasing = '/';
+            if (ll.length == 2) {
+                try {
+                    c1 = Integer.parseInt(ll[0]);
+                    c2 = Integer.parseInt(ll[1]);
+                    phasing = geno.charAt(ll[0].length());
+                } catch (NumberFormatException e) {
+                    strangePhase = true;
                 }
             } else {
                 strangePhase = true;
@@ -179,7 +179,7 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         if (strangePhase) {
-            // System.err.println("Unrecognized phasing '" + phase + "'.");
+            log.warn("Unrecognized phasing '" + geno + "'.");
             vals[0] = -1;
             vals[1] = -1;
             isPhased = false;
