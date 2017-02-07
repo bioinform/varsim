@@ -147,6 +147,14 @@ public class VCFCompareTest {
     universalTestMethod("src/test/resources/validationTest/missingGT_SNP");
   }
   /**
+   * test 2 SNPs with identical loci
+   * @throws IOException
+   */
+  @Test
+  public void duplicateLociSNPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/sameLociSNP");
+  }
+  /**
    * compare two VCFs with two same balanced, nonreciprocal intrachromosomal translocations
    * (cut-and-paste). Validation will be done by evaluating breakend.
    * @throws IOException
