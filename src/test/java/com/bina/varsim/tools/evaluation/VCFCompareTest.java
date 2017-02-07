@@ -219,4 +219,21 @@ public class VCFCompareTest {
   public void breakendEvaluationNonReciprocalBalancedWithLargeWiggle() throws IOException {
     universalTestMethod("src/test/resources/validationTest/breakendTests/nonreciprocalBalancedWithLargeWiggle", new String[]{"-wig", "10"});
   }
+  /******tests for distance-based metrics**************/
+  /**
+   * 1 SNP in TP, 1 SNP in compare, with 1-bp distance
+   *
+   */
+  @Test
+  public void oneBPDistanceSNPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10"});
+  }
+  /**
+   * 1 INS in TP, 1 INS in compare, with 100-bp 3' distance, 200-bp 5' distance, 100bp length difference
+   *
+   */
+  @Test
+  public void distanceINSTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10"});
+  }
 }
