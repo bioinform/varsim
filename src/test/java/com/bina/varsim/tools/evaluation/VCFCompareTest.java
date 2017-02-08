@@ -252,4 +252,12 @@ public class VCFCompareTest {
   public void distanceDELTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/delDistance", new String[]{"-wig", "10","-over","0.5","-distance"});
   }
+  /**
+   * 1 DUP in TP, 1 DUP in compare, length the same, distance 10bp
+   *
+   */
+  @Test
+  public void distanceDUPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/dupDistance", new String[]{"-wig", "10","-over","0.8","-distance"});
+  }
 }
