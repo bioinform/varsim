@@ -234,6 +234,14 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceINSTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "10"});
+  }
+  /**
+   * 1 INV in TP, 1 INV in compare, with 1000-bp 3' distance, 11000-bp 5' distance, 100bp length difference
+   *
+   */
+  @Test
+  public void distanceINVTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/invDistance", new String[]{"-wig", "2000"});
   }
 }
