@@ -260,4 +260,12 @@ public class VCFCompareTest {
   public void distanceDUPTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/dupDistance", new String[]{"-wig", "10","-over","0.8","-distance"});
   }
+  /**
+   * 1 DEL in TP, 2 DEL in compare, length the same, distance 30bp,10bp, respectively
+   * wiggle=50bp, both DEL in compare can match, but we only match the closest one
+   */
+  @Test
+  public void distanceMultipleMatchingTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-distance"});
+  }
 }
