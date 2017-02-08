@@ -226,7 +226,7 @@ public class VCFCompareTest {
    */
   @Test
   public void oneBPDistanceSNPTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10","-distance"});
   }
   /**
    * 1 INS in TP, 1 INS in compare, with 100-bp 3' distance, 200-bp 5' distance, 100bp length difference
@@ -234,7 +234,7 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceINSTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "10"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "10","-distance"});
   }
   /**
    * 1 INV in TP, 1 INV in compare, with 1000-bp 3' distance, 11000-bp 5' distance, 100bp length difference
@@ -242,6 +242,14 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceINVTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/invDistance", new String[]{"-wig", "2000"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/invDistance", new String[]{"-wig", "2000","-distance"});
+  }
+  /**
+   * 1 DEL in TP with 2 ALTs, 1 DEL in compare with 1 ALT, matching only one of the 2 ALTS in TP
+   *
+   */
+  @Test
+  public void distanceDELTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/delDistance", new String[]{"-wig", "10","-over","0.5","-distance"});
   }
 }
