@@ -77,6 +77,10 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-match_geno", usage = "Also ensures genotypes match")
     boolean matchGenotype = false;
 
+    @Option(name = "-output_distance_metric", usage = "output distance-based metrics," +
+            " if enabled, truth and test variants will be matched globally rather than locally.")
+    boolean outputDistanceMetric = false;
+
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bedFilename = "";
 
@@ -710,6 +714,13 @@ public class VCFcompare extends VarSimTool {
         if (!parseArguments(args)) {
             return;
         }
+        if (outputDistanceMetric) {
+            globalMatching();
+        } else {
+            localMatching();
+        }
+    }
+    private void localMatching() {
 
         // these are the statistics we "ideally" want to collect
         // number of variants correct (either genotype) (for each type)
@@ -1157,6 +1168,7 @@ public class VCFcompare extends VarSimTool {
 
         log.info("Done!"); // used to record the time
     }
+    private void globalMatching() {}
 
     class CompareParams {
         @JsonProperty(value = "true_vcf_filename")
