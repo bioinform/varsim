@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.interfaces.MatchingAlgorithm;
+import org.jgrapht.alg.matching.MaximumWeightBipartiteMatching;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.graph.builder.UndirectedWeightedGraphBuilderBase;
+import org.jgrapht.alg.interfaces.MatchingAlgorithm.Matching;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -1367,146 +1370,39 @@ public class VCFcompare extends VarSimTool {
                         log.info("skip line");
                         continue;
                     }
-
-                    boolean skipFP = false;
-
-                    if (variant.getTraid() != null) {
-                        String currentTraid = variant.getTraid();
-                        if (traid2composingVariants.containsKey(currentTraid)) {
-                            traid2composingVariants.get(currentTraid).add(variant);
-                            variant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
-                            traid2composingVariants.remove(currentTraid);
-                            if (intersector != null) {
-                                for (Variant c : variant.getCompositions()) {
-                                    if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither)) {
-                                        skipFP = true;
-                                    }
-                                }
-                            }
-                        } else {
-                            traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
-                            traid2composingVariants.get(currentTraid).add(variant);
-                            continue;
-                        }
-                    } else {
-                        if (intersector != null) {
-                            if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(variant.getChr(), variant.getGenotypeUnionAlternativeInterval(), bedEither)) {
-                                skipFP = true;
-                            }
-                        }
-                    }
-
-                    // the overall type of the called variant
-                    VariantOverallType currentVariantType = variant.getType();
-
                     // if called as complex variant convert to indel+snps
-                    List<Variant> canonicalVariantList = canonicalizeVariant(variant);
-
-                    int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
-                    double validatedLength = 0;
-                    int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
-
-                    // split up variants that are basically one big variant and one small one
-                    //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
-                    //is longer than certain proportion of sum of lengths of all canonicalized variants.
-                    boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
-                            canonicalVariantList.size() > 1;
-
                   /*
                   here we need to figure out all possible pairings between current test variant
-                  and true variants, the pairings will be sorted later based on degree of matching
+                  and true variants, the pairings will be sorted later based on quality of matching
+
+                  we will examine all possible pairings regardless of TPR/FDR BED files
+                  because we consider global maximal matching as the ground truth
                    */
-                    for (Variant currentVariant : canonicalVariantList) {
+                    for (Variant currentVariant : canonicalizeVariant(variant)) {
                         canonicalizedTestVariants.add(currentVariant);
                         allCanonicalizedVariantPairs.addAll(multiResultComparator.findAllPairs(currentVariant));
                     }
-                            for (int i = 0; i < 2; i++) {
-                                byte allele = geno.geno[i];
-                                if (allele > 0) {
-                                    maxTrueLen = Math.max(resultComparator.compareVariant(currentVariant, allele, validatedTrue), maxTrueLen);
-                                }
-                            }
-
-                            final DualIdx dualIdx = matchGenotype ? resultComparator.firstHetMatch() : resultComparator.firstMatch();
-
-                            if (dualIdx.isSplitVariantValid()) {
-                                validatedTrue.set(dualIdx.splitVariantIndex);
-                                fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
-                                validatedLength += currentVariant.maxLen();
-                            } else if (computeAsSplit) {
-                                if (!skipFP) {
-                                    outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
-                                    validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
-                                    if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
-                                        log.warn("SNP with bad length: " + currentVariant);
-                                    }
-                                    variant.output(fpWriter);
-                                } else {
-                                    variant.output(unknownFpWriter);
-                                }
-                            }
-                        }
-                    }
-
-                    if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
-                        if (!skipFP) {
-                            // this is a false positive!
-                            outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
-                            validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
-                            if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
-                                log.warn("SNP with bad length: " + variant);
-                            }
-                            variant.output(fpWriter);
-                        } else {
-                            variant.output(unknownFpWriter);
-                        }
-                    }
-
                     numberOfNewVariants++;
                 }
             }
-            /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        //perform global matching
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-        /**********/
-//            for (String currentVcfFile : newVcfFilename) {
-//                VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
-//
-//                while (newParser.hasMoreInput()) {
-//                    Variant variant = newParser.parseLine();
-//
-//                    //TODO: wrap variant comparison into a method for easier reading
-//                    if (variant == null ||
-//                            (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName()))) {
-//                        log.info("skip line");
-//                        continue;
-//                    }
+            /*
+            now we have all possible pairings of true variants and test variants
+            let's sort them and construct weighted bipartite graph
+             */
+            VanillaVariantPairComparator vanillaVariantPairComparator = new VanillaVariantPairComparator();
+            Collections.sort(allCanonicalizedVariantPairs, vanillaVariantPairComparator);
+            int ranking = 0;
+            for (VariantPair p : allCanonicalizedVariantPairs) {
+                weightedGraphBuilder.addEdge(p.getTrueVariant(), p.getTestVariant(), ranking);
+                ranking++;
+            }
+            MaximumWeightBipartiteMatching maximumWeightBipartiteMatching = new MaximumWeightBipartiteMatching(weightedGraphBuilder.build(),
+                    canonicalizedTrueVariants, canonicalizedTestVariants);
+            //perform global matching
+          Matching<VariantPair> matching = maximumWeightBipartiteMatching.computeMatching();
+            for (VariantPair p : matching.getEdges()) {
+
+            }
 //
 //                    boolean skipFP = false;
 //
@@ -2342,11 +2238,35 @@ public class VCFcompare extends VarSimTool {
             return maxTrueVarianLength;
         }
     }
-    class VariantPair implements Comparable<VariantPair> {
-        @Override
-        public int compareTo(VariantPair o) {
-            return 0;
+
+    /**
+     * store a pair of matched variants
+     * can perform detailed matching (homo, hetero)
+     */
+    class VariantPair {
+        final Variant trueVariant;
+        final Variant testVariant;
+        public VariantPair(Variant trueVariant, Variant testVariant) {
+            this.trueVariant = trueVariant;
+            this.testVariant = testVariant;
+        }
+        public Variant getTrueVariant() {
+            return trueVariant;
+        }
+        public Variant getTestVariant() {
+            return testVariant;
         }
     }
 
+    /**
+     * determine how pairs of matched variants are sorted
+     * the better the match is, the ranking should be larger
+     * (not higher)
+     */
+    class VanillaVariantPairComparator implements Comparator<VariantPair> {
+        @Override
+        public int compare(VariantPair o1, VariantPair o2) {
+            return 0;
+        }
+    }
 }
