@@ -197,7 +197,8 @@ public class Variant implements Comparable<Variant>{
         this.paternal = builder.paternal;
         this.maternal = builder.maternal;
         this.isPhased = builder.isPhased;
-        this.end = builder.end;
+        //add default value for 5' end
+        this.end = builder.end == 0? builder.pos : builder.end;
         this.traid = builder.traid;
         this.isinv = builder.isinv;
         this.compositions = builder.compositions;
