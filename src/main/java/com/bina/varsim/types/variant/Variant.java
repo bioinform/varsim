@@ -90,7 +90,6 @@ public class Variant implements Comparable<Variant>{
         private ChrString[] chr2;
         private int[] pos2;
         private int[] end2;
-        private int end;
         private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
         private String traid; //translocation ID
         private List<Variant> compositions;
@@ -156,10 +155,6 @@ public class Variant implements Comparable<Variant>{
             this.pos2 = pos2;
             return this;
         }
-        public Builder end(final int end) {
-            this.end = end;
-            return this;
-        }
         public Builder end2(final int[] end2) {
             this.end2 = end2;
             return this;
@@ -197,8 +192,6 @@ public class Variant implements Comparable<Variant>{
         this.paternal = builder.paternal;
         this.maternal = builder.maternal;
         this.isPhased = builder.isPhased;
-        //add default value for 5' end
-        this.end = builder.end == 0? builder.pos : builder.end;
         this.traid = builder.traid;
         this.isinv = builder.isinv;
         this.compositions = builder.compositions;
@@ -235,7 +228,6 @@ public class Variant implements Comparable<Variant>{
         this.chr2 = var.chr2;
         this.pos2 = var.pos2;
         this.end2 = var.end2;
-        this.end = var.end;
         paternal = var.paternal;
         maternal = var.maternal;
         isPhased = var.isPhased;
@@ -389,8 +381,24 @@ public class Variant implements Comparable<Variant>{
         return this.end2;
     }
 
+    /**
+     * return 1-based end of variant depending on overall type of the variant
+     * for insertion, SNP, interspersed duplication, tandem duplication
+     * and translocation duplication, return 3' end
+     * otherwise, return 3' end plus length
+     * @return
+     */
     public int getEnd() {
-        return this.end;
+        switch(getType()) {
+            case Insertion:
+            case SNP:
+            case InterDup:
+            case TandemDup:
+            case TransDup:
+                return pos;
+            default:
+                return pos + maxLen() - 1;
+        }
     }
 
     public String getTraid() {
