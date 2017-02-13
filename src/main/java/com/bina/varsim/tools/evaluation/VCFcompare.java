@@ -1230,7 +1230,7 @@ public class VCFcompare extends VarSimTool {
 
 
         //track TRAID-linked variants
-        Map<String, List<Variant>> traid2composingVariants = new HashMap<>();
+        Map<String, List<Variant>> traid2composingTrueVariants = new HashMap<>();
 
         // this is for the original variants
         // it stores the total length of the original variant in bases
@@ -1238,8 +1238,10 @@ public class VCFcompare extends VarSimTool {
         ArrayList<Integer> validatedTotalLength = new ArrayList<>();
         ArrayList<Variant> trueVariantsForOutput = new ArrayList<>();
 
-        Set<Variant> canonicalizedTrueVariants = new HashSet<>();
-        Set<Variant> canonicalizedTestVariants = new HashSet<>();
+        List<Variant> uncanonicalizedTrueVariants = new ArrayList<>();
+        List<Variant> uncanonicalizedTestVariants = new ArrayList<>();
+        List<Variant> canonicalizedTrueVariants = new ArrayList<>();
+        List<Variant> canonicalizedTestVariants = new ArrayList<>();
         List<VariantPair> allCanonicalizedVariantPairs = new ArrayList<>();
         UndirectedWeightedGraphBuilderBase weightedGraphBuilder = SimpleWeightedGraph.builder(VariantPair.class);
         Graph<Variant, VariantPair> bipartiteTrueVsTestVariantGraph = null;
@@ -1266,13 +1268,16 @@ public class VCFcompare extends VarSimTool {
 
             if (trueVariant.getTraid() != null) {
                 String currentTraid = trueVariant.getTraid();
-                if (traid2composingVariants.containsKey(currentTraid)) {
-                    traid2composingVariants.get(currentTraid).add(trueVariant);
-                    trueVariant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
-                    traid2composingVariants.remove(currentTraid);
+                if (traid2composingTrueVariants.containsKey(currentTraid)) {
+                    traid2composingTrueVariants.get(currentTraid).add(trueVariant);
+                    /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                    /*note here the trueVariant has been replaced here*/
+                    /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                    trueVariant = new Variant.Builder().compositions(traid2composingTrueVariants.get(currentTraid)).build();
+                    traid2composingTrueVariants.remove(currentTraid);
                 } else {
-                    traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
-                    traid2composingVariants.get(currentTraid).add(trueVariant);
+                    traid2composingTrueVariants.put(currentTraid, new ArrayList<Variant>());
+                    traid2composingTrueVariants.get(currentTraid).add(trueVariant);
                     continue;
                 }
             }
@@ -1315,11 +1320,13 @@ public class VCFcompare extends VarSimTool {
                     int currentLength = currentVariant.maxLen();
                     validatedTotalLength.add(currentLength);
                     trueVariantsForOutput.add(currentVariant);
+                    uncanonicalizedTrueVariants.add(currentVariant);
                     numReadOriginalVariant++;
                 }
             } else {
                 validatedTotalLength.add(totalLength);
                 trueVariantsForOutput.add(trueVariant);
+                uncanonicalizedTrueVariants.add(trueVariant);
                 numReadOriginalVariant++;
             }
         }
@@ -1351,10 +1358,11 @@ public class VCFcompare extends VarSimTool {
             // However, do don't add to true positives, those that computed later
 
             log.info("Load New VCF");
-            int numberOfNewVariants = 0;
+            int numReadOriginalTestVariant = 0;
+            int numAddedSplitTestVariant = 0;
             // iterate over new VCF and collect stats
 
-            traid2composingVariants.clear();
+            Map<String, List<Variant>> traid2composingTestVariants = new HashMap<>();
             MultiResultComparator multiResultComparator = new MultiResultComparator(trueVariantIntervalTree, overlapRatio,
                     wiggle, ignoreInsertionLength, matchGenotype);
 
@@ -1370,6 +1378,18 @@ public class VCFcompare extends VarSimTool {
                         log.info("skip line");
                         continue;
                     }
+                    if (variant.getTraid() != null) {
+                        String currentTraid = variant.getTraid();
+                        if (traid2composingTestVariants.containsKey(currentTraid)) {
+                            traid2composingTestVariants.get(currentTraid).add(variant);
+                            variant = new Variant.Builder().compositions(traid2composingTestVariants.get(currentTraid)).build();
+                            traid2composingTestVariants.remove(currentTraid);
+                        } else {
+                            traid2composingTestVariants.put(currentTraid, new ArrayList<Variant>());
+                            traid2composingTestVariants.get(currentTraid).add(variant);
+                            continue;
+                        }
+                    }
                     // if called as complex variant convert to indel+snps
                   /*
                   here we need to figure out all possible pairings between current test variant
@@ -1379,10 +1399,15 @@ public class VCFcompare extends VarSimTool {
                   because we consider global maximal matching as the ground truth
                    */
                     for (Variant currentVariant : canonicalizeVariant(variant)) {
+                        currentVariant.splitVariantIndex = numAddedSplitTestVariant;
+                        currentVariant.wholeVariantIndex = numReadOriginalTestVariant;
+                        currentVariant.originalType = variant.getType();
+
                         canonicalizedTestVariants.add(currentVariant);
                         allCanonicalizedVariantPairs.addAll(multiResultComparator.findAllPairs(currentVariant));
                     }
-                    numberOfNewVariants++;
+                    uncanonicalizedTestVariants.add(variant);
+                    numReadOriginalTestVariant++;
                 }
             }
             /*
@@ -1401,134 +1426,134 @@ public class VCFcompare extends VarSimTool {
             //perform global matching
           Matching<VariantPair> matching = maximumWeightBipartiteMatching.computeMatching();
             for (VariantPair p : matching.getEdges()) {
+              Variant trueVariant = p.getTrueVariant();
+                Variant testVariant = p.getTestVariant();
+                boolean skipFP = false;
 
+                if (testVariant.getTraid() != null) {
+                    String currentTraid = testVariant.getTraid();
+                    if (traid2composingVariants.containsKey(currentTraid)) {
+                        traid2composingVariants.get(currentTraid).add(testVariant);
+                        variant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
+                        traid2composingVariants.remove(currentTraid);
+                        if (intersector != null) {
+                            for (Variant c : variant.getCompositions()) {
+                                if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                                    skipFP = true;
+                                }
+                            }
+                        }
+                    } else {
+                        traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
+                        traid2composingVariants.get(currentTraid).add(variant);
+                        continue;
+                    }
+                } else {
+                    if (intersector != null) {
+                        if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(variant.getChr(), variant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                            skipFP = true;
+                        }
+                    }
+                }
+
+                // the overall type of the called variant
+                VariantOverallType currentVariantType = variant.getType();
+
+                // if called as complex variant convert to indel+snps
+                List<Variant> canonicalVariantList = canonicalizeVariant(variant);
+
+                int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
+                double validatedLength = 0;
+                int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
+
+                // split up variants that are basically one big variant and one small one
+                //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
+                //is longer than certain proportion of sum of lengths of all canonicalized variants.
+                boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
+                        canonicalVariantList.size() > 1;
+
+                for (Variant currentVariant : canonicalVariantList) {
+                    canonicalizedTestVariants.add(currentVariant);
+                    // get genotype
+                    Genotypes geno = currentVariant.getGenotypes();
+                    //note here ResultComparator is created for each canonical variant
+                    ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
+
+                    if (currentVariant.isHom()) {
+                        int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.firstMatch();
+                        if (dualIdx.isSplitVariantValid()) {
+                            // validated
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
+                            if (!skipFP) {
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
+                                variant.output(fpWriter);
+                            } else {
+                                variant.output(unknownFpWriter);
+                            }
+                        }
+
+                    } else {
+                        // het
+                        //boolean matched = false;
+                        int maxTrueLen = 0;
+                        /*
+                        for heterozygous variants, all genotypes will be checked
+                        inside compareVariant, all genotypes of overlapping true variants will be checked, too
+                        so overall all possible combinations of genotype matching will be checked
+                        */
+                        for (int i = 0; i < 2; i++) {
+                            byte allele = geno.geno[i];
+                            if (allele > 0) {
+                                maxTrueLen = Math.max(resultComparator.compareVariant(currentVariant, allele, validatedTrue), maxTrueLen);
+                            }
+                        }
+
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.firstHetMatch() : resultComparator.firstMatch();
+
+                        if (dualIdx.isSplitVariantValid()) {
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
+                            if (!skipFP) {
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
+                                if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
+                                    log.warn("SNP with bad length: " + currentVariant);
+                                }
+                                variant.output(fpWriter);
+                            } else {
+                                variant.output(unknownFpWriter);
+                            }
+                        }
+                    }
+                }
+
+                if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
+                    if (!skipFP) {
+                        // this is a false positive!
+                        outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
+                        validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
+                        if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
+                            log.warn("SNP with bad length: " + variant);
+                        }
+                        variant.output(fpWriter);
+                    } else {
+                        variant.output(unknownFpWriter);
+                    }
+                }
+
+                numberOfNewVariants++;
             }
-//
-//                    boolean skipFP = false;
-//
-//                    if (variant.getTraid() != null) {
-//                        String currentTraid = variant.getTraid();
-//                        if (traid2composingVariants.containsKey(currentTraid)) {
-//                            traid2composingVariants.get(currentTraid).add(variant);
-//                            variant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
-//                            traid2composingVariants.remove(currentTraid);
-//                            if (intersector != null) {
-//                                for (Variant c : variant.getCompositions()) {
-//                                    if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither)) {
-//                                        skipFP = true;
-//                                    }
-//                                }
-//                            }
-//                        } else {
-//                            traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
-//                            traid2composingVariants.get(currentTraid).add(variant);
-//                            continue;
-//                        }
-//                    } else {
-//                        if (intersector != null) {
-//                            if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(variant.getChr(), variant.getGenotypeUnionAlternativeInterval(), bedEither)) {
-//                                skipFP = true;
-//                            }
-//                        }
-//                    }
-//
-//                    // the overall type of the called variant
-//                    VariantOverallType currentVariantType = variant.getType();
-//
-//                    // if called as complex variant convert to indel+snps
-//                    List<Variant> canonicalVariantList = canonicalizeVariant(variant);
-//
-//                    int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
-//                    double validatedLength = 0;
-//                    int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
-//
-//                    // split up variants that are basically one big variant and one small one
-//                    //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
-//                    //is longer than certain proportion of sum of lengths of all canonicalized variants.
-//                    boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
-//                            canonicalVariantList.size() > 1;
-//
-//                    for (Variant currentVariant : canonicalVariantList) {
-//                        canonicalizedTestVariants.add(currentVariant);
-//                    // get genotype
-//                    Genotypes geno = currentVariant.getGenotypes();
-//                    //note here ResultComparator is created for each canonical variant
-//                    ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
-//
-//                    if (currentVariant.isHom()) {
-//                        int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
-//                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.firstMatch();
-//                        if (dualIdx.isSplitVariantValid()) {
-//                            // validated
-//                            validatedTrue.set(dualIdx.splitVariantIndex);
-//                            fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
-//                            validatedLength += currentVariant.maxLen();
-//                        } else if (computeAsSplit) {
-//                            if (!skipFP) {
-//                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
-//                                validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
-//                                variant.output(fpWriter);
-//                            } else {
-//                                variant.output(unknownFpWriter);
-//                            }
-//                        }
-//
-//                    } else {
-//                        // het
-//                        //boolean matched = false;
-//                        int maxTrueLen = 0;
-//                        /*
-//                        for heterozygous variants, all genotypes will be checked
-//                        inside compareVariant, all genotypes of overlapping true variants will be checked, too
-//                        so overall all possible combinations of genotype matching will be checked
-//                        */
-//                        for (int i = 0; i < 2; i++) {
-//                            byte allele = geno.geno[i];
-//                            if (allele > 0) {
-//                                maxTrueLen = Math.max(resultComparator.compareVariant(currentVariant, allele, validatedTrue), maxTrueLen);
-//                            }
-//                        }
-//
-//                        final DualIdx dualIdx = matchGenotype ? resultComparator.firstHetMatch() : resultComparator.firstMatch();
-//
-//                        if (dualIdx.isSplitVariantValid()) {
-//                            validatedTrue.set(dualIdx.splitVariantIndex);
-//                            fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
-//                            validatedLength += currentVariant.maxLen();
-//                        } else if (computeAsSplit) {
-//                            if (!skipFP) {
-//                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
-//                                validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
-//                                if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
-//                                    log.warn("SNP with bad length: " + currentVariant);
-//                                }
-//                                variant.output(fpWriter);
-//                            } else {
-//                                variant.output(unknownFpWriter);
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
-//                    if (!skipFP) {
-//                        // this is a false positive!
-//                        outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
-//                        validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
-//                        if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
-//                            log.warn("SNP with bad length: " + variant);
-//                        }
-//                        variant.output(fpWriter);
-//                    } else {
-//                        variant.output(unknownFpWriter);
-//                    }
-//                }
-//
-//                numberOfNewVariants++;
-//            }
-//        }
+        }
+            }
 
-            log.info("Num new variants read: " + numberOfNewVariants);
+            log.info("Num new variants read: " + numReadOriginalTestVariant);
 
             // read through again and compute for the true variants
             int numRead2 = 0;
