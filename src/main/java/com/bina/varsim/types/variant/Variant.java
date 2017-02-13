@@ -45,6 +45,11 @@ public class Variant implements Comparable<Variant>{
     private volatile int hashCode; //caching hashcode
     private List<Variant> compositions; //when this variant is a composite variant, this field will store constitutional variants
 
+    //additional INFO fields
+    private int threePrimeDistance = -1; //3' end distance with a matching variant
+    private int fivePrimeDistance = -1;//5' end distance with a matching variant
+    private int lengthDifference = -1; //length difference with a matching variant
+
 
     public List<Variant> getCompositions() {
         return compositions;
@@ -757,6 +762,18 @@ public class Variant implements Comparable<Variant>{
             alts[ind - 1] = alt;
     }
 
+    public void setThreePrimeDistance(int threePrimeDistance) {
+        this.threePrimeDistance = threePrimeDistance;
+    }
+
+    public void setFivePrimeDistance(int fivePrimeDistance) {
+        this.fivePrimeDistance = fivePrimeDistance;
+    }
+
+    public void setLengthDifference(int lengthDifference) {
+        this.lengthDifference = lengthDifference;
+    }
+
     public String getFilter() {
         return filter;
     }
@@ -1014,6 +1031,7 @@ public class Variant implements Comparable<Variant>{
     /**
      * @return a VCF record of the variant
      */
+    @Override
     public String toString() {
         return toString(getGoodPaternal(), getGoodMaternal());
     }
@@ -1093,6 +1111,24 @@ public class Variant implements Comparable<Variant>{
         } else {
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
+        }
+        /*
+        checking -1 is for backward compatibility
+        if output_distance_metric is disabled,
+        then these INFO fields will not be set
+        nor reported.
+         */
+        if (threePrimeDistance != -1) {
+            sbStr.append(";3PrimeDistance=");
+            sbStr.append(threePrimeDistance);
+        }
+        if (fivePrimeDistance != -1) {
+            sbStr.append(";5PrimeDistance=");
+            sbStr.append(fivePrimeDistance);
+        }
+        if (lengthDifference != -1) {
+            sbStr.append(";LengthDifference=");
+            sbStr.append(lengthDifference);
         }
         sbStr.append("\t");
 
