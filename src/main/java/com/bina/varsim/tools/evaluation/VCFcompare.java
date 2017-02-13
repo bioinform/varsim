@@ -824,7 +824,7 @@ public class VCFcompare extends VarSimTool {
         // this is for the original variants
         // it stores the total length of the original variant in bases
         // Still check for validation of canonical full variants
-        ArrayList<Integer> validatedTotalLength = new ArrayList<>();
+        ArrayList<Integer> trueVariantTotalLength = new ArrayList<>();
         ArrayList<Variant> trueVariantsForOutput = new ArrayList<>();
 
         // For each true variant, if the number of bases validated is over a certain threshold
@@ -895,12 +895,12 @@ public class VCFcompare extends VarSimTool {
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant currentVariant : canonicalVariantList) {
                     int currentLength = currentVariant.maxLen();
-                    validatedTotalLength.add(currentLength);
+                    trueVariantTotalLength.add(currentLength);
                     trueVariantsForOutput.add(currentVariant);
                     numReadOriginalVariant++;
                 }
             } else {
-                validatedTotalLength.add(totalLength);
+                trueVariantTotalLength.add(totalLength);
                 trueVariantsForOutput.add(trueVariant);
                 numReadOriginalVariant++;
             }
@@ -917,7 +917,7 @@ public class VCFcompare extends VarSimTool {
 
         // this is for the original variants
         // count of the number of bases validated for the original variant
-        int[] fullValidatedCount = new int[numReadOriginalVariant];
+        int[] validatedLengths = new int[numReadOriginalVariant];
 
         // generate the output files
         try (
@@ -1007,7 +1007,7 @@ public class VCFcompare extends VarSimTool {
                         if (dualIdx.isSplitVariantValid()) {
                             // validated
                             validatedTrue.set(dualIdx.splitVariantIndex);
-                            fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
+                            validatedLengths[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
@@ -1039,7 +1039,7 @@ public class VCFcompare extends VarSimTool {
 
                         if (dualIdx.isSplitVariantValid()) {
                             validatedTrue.set(dualIdx.splitVariantIndex);
-                            fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
+                            validatedLengths[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
@@ -1090,8 +1090,8 @@ public class VCFcompare extends VarSimTool {
                 }
             }
             if (isKnown) {
-                int totalLength = validatedTotalLength.get(numRead2);
-                int validatedLength = fullValidatedCount[numRead2];
+                int totalLength = trueVariantTotalLength.get(numRead2);
+                int validatedLength = validatedLengths[numRead2];
 
               //if a variant is canonicalized into a few smaller variants, validation
                 //will be carried out on a per-variant basis. An original variant will
