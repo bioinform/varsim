@@ -77,7 +77,7 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-match_geno", usage = "Also ensures genotypes match")
     boolean matchGenotype = false;
 
-    @Option(name = "-output_distance_metric", usage = "output distance-based metrics")
+    @Option(name = "-output_distance_metric", usage = "output distance-based metrics (for canonicalizable variants, max of metrics of constitutional variants will be reported)")
     boolean outputDistanceMetric = false;
 
     @Option(name = "-global_matching", usage = "if enabled, truth and test variants will be matched globally rather than locally.")
@@ -1012,11 +1012,10 @@ public class VCFcompare extends VarSimTool {
                             // validated
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             validatedLengths[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
-                            /*update 3' distance,5' distance,length difference
-                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.min();
-                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.min();
-                            lengthDifference[dualIdx.wholeVariantIndex] = Math.min();
-                            */
+                            //update 3' distance,5' distance,length difference
+                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
+                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
+                            lengthDifference[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
@@ -1049,6 +1048,10 @@ public class VCFcompare extends VarSimTool {
 
                         if (dualIdx.isSplitVariantValid()) {
                             validatedTrue.set(dualIdx.splitVariantIndex);
+                            //update 3' distance,5' distance,length difference
+                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
+                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
+                            lengthDifference[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
                             validatedLengths[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
