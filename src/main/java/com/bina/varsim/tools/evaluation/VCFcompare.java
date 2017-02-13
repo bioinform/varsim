@@ -77,9 +77,11 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-match_geno", usage = "Also ensures genotypes match")
     boolean matchGenotype = false;
 
-    @Option(name = "-output_distance_metric", usage = "output distance-based metrics," +
-            " if enabled, truth and test variants will be matched globally rather than locally.")
+    @Option(name = "-output_distance_metric", usage = "output distance-based metrics")
     boolean outputDistanceMetric = false;
+
+    @Option(name = "-global_matching", usage = "if enabled, truth and test variants will be matched globally rather than locally.")
+    boolean isGlobalMatching = false;
 
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bedFilename = "";
@@ -714,7 +716,7 @@ public class VCFcompare extends VarSimTool {
         if (!parseArguments(args)) {
             return;
         }
-        if (outputDistanceMetric) {
+        if (isGlobalMatching) {
             globalMatching();
         } else {
             localMatching();
