@@ -918,6 +918,9 @@ public class VCFcompare extends VarSimTool {
         // this is for the original variants
         // count of the number of bases validated for the original variant
         int[] validatedLengths = new int[numReadOriginalVariant];
+        int[] threePrimeDistance = new int[numReadOriginalVariant];
+        int[] fivePrimeDistance = new int[numReadOriginalVariant];
+        int[] lengthDifference = new int[numReadOriginalVariant];
 
         // generate the output files
         try (
@@ -1003,11 +1006,17 @@ public class VCFcompare extends VarSimTool {
 
                     if (currentVariant.isHom()) {
                         int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
-                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
+                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
+                        final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
                         if (dualIdx.isSplitVariantValid()) {
                             // validated
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             validatedLengths[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
+                            /*update 3' distance,5' distance,length difference
+                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.min();
+                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.min();
+                            lengthDifference[dualIdx.wholeVariantIndex] = Math.min();
+                            */
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
@@ -1035,7 +1044,8 @@ public class VCFcompare extends VarSimTool {
                             }
                         }
 
-                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
+                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
+                        final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
 
                         if (dualIdx.isSplitVariantValid()) {
                             validatedTrue.set(dualIdx.splitVariantIndex);
@@ -1299,8 +1309,8 @@ public class VCFcompare extends VarSimTool {
 
         // Results to store
         // this stores the indexes of the true variants matched
-        List<DualIdx> homozygousMatches = new ArrayList<>();
-        List<List<DualIdx>> heterozygousMatches = Arrays.asList(new ArrayList<DualIdx>(), new ArrayList<DualIdx>()); // matches either parent
+        List<Variant> homozygousMatches = new ArrayList<>();
+        List<List<Variant>> heterozygousMatches = Arrays.asList(new ArrayList<Variant>(), new ArrayList<Variant>()); // matches either parent
 
         public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
             this.trueVariantIntervalTree = trueVariantIntervalTree;
@@ -1315,16 +1325,16 @@ public class VCFcompare extends VarSimTool {
          * return homozygous match (empty if no match)
          * @return
          */
-        public DualIdx isHomMatch() {
-            return homozygousMatches.isEmpty() ? new DualIdx() : homozygousMatches.get(0);
+        public Variant isHomMatch() {
+            return homozygousMatches.isEmpty() ? null : homozygousMatches.get(0);
         }
 
         /**
          * return heterozygous match (empty if no match)
          * @return
          */
-        public DualIdx isHetMatch() {
-            List<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
+        public Variant isHetMatch() {
+            List<Variant> temp = new ArrayList<>(heterozygousMatches.get(0));
             temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
             //if there is a match in intersection, return the first one from the intersection
             if (!temp.isEmpty()) {
@@ -1349,23 +1359,25 @@ public class VCFcompare extends VarSimTool {
                     return heterozygousMatches.get(1).get(0);
                 }
             }
-            return new DualIdx();
+            return null;
         }
 
         /**
          * determine if there is a match regardless of genotype
          * @return
          */
-        public DualIdx isMatch() {
-            DualIdx idx = isHomMatch();
+        public Variant isMatch() {
+            Variant var = isHomMatch();
+            DualIdx idx = var == null ? new DualIdx() : new DualIdx(var.splitVariantIndex, var.wholeVariantIndex);
             if (idx.isSplitVariantValid()) {
-                return idx;
+                return var;
             }
-            idx = isHetMatch();
+            var = isHetMatch();
+            idx = var == null ? new DualIdx() : new DualIdx(var.splitVariantIndex, var.wholeVariantIndex);
             if (idx.isSplitVariantValid()) {
-                return idx;
+                return var;
             }
-            return idx;
+            return null;
         }
 
         /**
@@ -1421,9 +1433,9 @@ public class VCFcompare extends VarSimTool {
                                     && variant.getPos() == trueVariant.getPos()) {
                                 if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
                                     if (trueVariant.isHom())
-                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                        homozygousMatches.add(trueVariant);
                                     else
-                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                        heterozygousMatches.get(parent).add(trueVariant);
                                 }
                                 hasSnp = true;
                             }
@@ -1483,9 +1495,9 @@ public class VCFcompare extends VarSimTool {
 
                         if (matched) {
                             if (trueVariant.isHom()) {
-                                homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                homozygousMatches.add(trueVariant);
                             } else {
-                                heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                heterozygousMatches.get(parent).add(trueVariant);
                             }
                             maxTrueVarianLength = Math.max(trueVariant.maxLen(allele), maxTrueVarianLength);
                         }
