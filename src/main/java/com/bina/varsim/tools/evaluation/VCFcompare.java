@@ -77,7 +77,7 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-match_geno", usage = "Also ensures genotypes match")
     boolean matchGenotype = false;
 
-    @Option(name = "-output_distance_metric", usage = "output distance-based metrics (for canonicalizable variants, max of metrics of constitutional variants will be reported)")
+    @Option(name = "-output_distance_metric", usage = "output distance-based metrics (for canonicalizable variants, max metrics of constitutional variants will be reported)")
     boolean outputDistanceMetric = false;
 
     @Option(name = "-global_matching", usage = "if enabled, truth and test variants will be matched globally rather than locally.")
@@ -1114,6 +1114,11 @@ public class VCFcompare extends VarSimTool {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
+                  if (outputDistanceMetric) {
+                      var.setThreePrimeDistance(threePrimeDistance[numRead2]);
+                      var.setFivePrimeDistance(fivePrimeDistance[numRead2]);
+                      var.setLengthDifference(lengthDifference[numRead2]);
+                  }
                     var.output(tpWriter);
                 } else {
                     var.output(fnWriter);
