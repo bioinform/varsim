@@ -21,12 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import com.bina.varsim.types.ComparisonResultWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -1091,6 +1089,9 @@ public class VCFcompare extends VarSimTool {
 
         // read through again and compute for the true variants
         int numRead2 = 0;
+            List<Integer> tpThreePrimeDistance = new ArrayList<>();
+            List<Integer> tpFivePrimeDistance = new ArrayList<>();
+            List<Integer> tpLengthDifference = new ArrayList<>();
         for (Variant var : trueVariantsForOutput) {
 
             boolean isKnown = intersector == null || excludeTprFromBedFiltering;
@@ -1114,11 +1115,14 @@ public class VCFcompare extends VarSimTool {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
-                  if (outputDistanceMetric) {
-                      var.setThreePrimeDistance(threePrimeDistance[numRead2]);
-                      var.setFivePrimeDistance(fivePrimeDistance[numRead2]);
-                      var.setLengthDifference(lengthDifference[numRead2]);
-                  }
+                    if (outputDistanceMetric) {
+                        var.setThreePrimeDistance(threePrimeDistance[numRead2]);
+                        tpThreePrimeDistance.add(threePrimeDistance[numRead2]);
+                        var.setFivePrimeDistance(fivePrimeDistance[numRead2]);
+                        tpFivePrimeDistance.add(fivePrimeDistance[numRead2]);
+                        var.setLengthDifference(lengthDifference[numRead2]);
+                        tpLengthDifference.add(lengthDifference[numRead2]);
+                    }
                     var.output(tpWriter);
                 } else {
                     var.output(fnWriter);
@@ -1132,6 +1136,11 @@ public class VCFcompare extends VarSimTool {
             numRead2++;
         }
 
+        if (outputDistanceMetric) {
+            log.info("3' distance summary statistics\n" + getSummaryStats(tpThreePrimeDistance));
+            log.info("5' distance summary statistics\n" + getSummaryStats(tpFivePrimeDistance));
+            log.info("length difference summary statistics\n" + getSummaryStats(tpLengthDifference));
+        }
         if (numReadOriginalVariant != numRead2) {
             log.error("Number of variants read are inconsistent: " + numReadOriginalVariant + "," + numRead2);
         }
@@ -1148,7 +1157,7 @@ public class VCFcompare extends VarSimTool {
 
 
         // output the stats
-        System.err.println(outputBlob.getNumberOfTrueCorrect());
+        log.info(outputBlob.getNumberOfTrueCorrect());
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
@@ -1519,6 +1528,16 @@ public class VCFcompare extends VarSimTool {
 
             return maxTrueVarianLength;
         }
+    }
+    private String getSummaryStats(List<Integer> list) {
+        double[] a = list.stream().mapToDouble(Integer::intValue).toArray();
+        StringBuilder sb = new StringBuilder();
+        sb.append("max: " + StatUtils.max(a) + "\n");
+        sb.append("min: " + StatUtils.min(a) + "\n");
+        sb.append("mean: " + StatUtils.mean(a) + "\n");
+        sb.append("sum: " + StatUtils.sum(a) + "\n");
+        sb.append("variance: " + StatUtils.variance(a) + "\n");
+        return sb.toString();
     }
 
 }
