@@ -720,6 +720,7 @@ public class VCFcompare extends VarSimTool {
             localMatching();
         }
     }
+
     private void localMatching() {
 
         // these are the statistics we "ideally" want to collect
@@ -822,8 +823,8 @@ public class VCFcompare extends VarSimTool {
         // this is for the original variants
         // it stores the total length of the original variant in bases
         // Still check for validation of canonical full variants
-        ArrayList<Integer> trueVariantTotalLength = new ArrayList<>();
-        ArrayList<Variant> trueVariantsForOutput = new ArrayList<>();
+        List<Integer> trueVariantTotalLength = new ArrayList<>();
+        List<Variant> trueVariantsForOutput = new ArrayList<>();
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
@@ -1089,9 +1090,9 @@ public class VCFcompare extends VarSimTool {
 
         // read through again and compute for the true variants
         int numRead2 = 0;
-            List<Integer> tpThreePrimeDistance = new ArrayList<>();
-            List<Integer> tpFivePrimeDistance = new ArrayList<>();
-            List<Integer> tpLengthDifference = new ArrayList<>();
+        List<Integer> tpThreePrimeDistance = new ArrayList<>();
+        List<Integer> tpFivePrimeDistance = new ArrayList<>();
+        List<Integer> tpLengthDifference = new ArrayList<>();
         for (Variant var : trueVariantsForOutput) {
 
             boolean isKnown = intersector == null || excludeTprFromBedFiltering;
