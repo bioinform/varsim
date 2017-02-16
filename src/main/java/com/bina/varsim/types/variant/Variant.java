@@ -45,6 +45,11 @@ public class Variant implements Comparable<Variant>{
     private volatile int hashCode; //caching hashcode
     private List<Variant> compositions; //when this variant is a composite variant, this field will store constitutional variants
 
+    //additional INFO fields
+    private int threePrimeDistance = -1; //3' end distance with a matching variant
+    private int fivePrimeDistance = -1;//5' end distance with a matching variant
+    private int lengthDifference = -1; //length difference with a matching variant
+
 
     public List<Variant> getCompositions() {
         return compositions;
@@ -90,7 +95,6 @@ public class Variant implements Comparable<Variant>{
         private ChrString[] chr2;
         private int[] pos2;
         private int[] end2;
-        private int end;
         private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
         private String traid; //translocation ID
         private List<Variant> compositions;
@@ -156,10 +160,6 @@ public class Variant implements Comparable<Variant>{
             this.pos2 = pos2;
             return this;
         }
-        public Builder end(final int end) {
-            this.end = end;
-            return this;
-        }
         public Builder end2(final int[] end2) {
             this.end2 = end2;
             return this;
@@ -197,7 +197,6 @@ public class Variant implements Comparable<Variant>{
         this.paternal = builder.paternal;
         this.maternal = builder.maternal;
         this.isPhased = builder.isPhased;
-        this.end = builder.end;
         this.traid = builder.traid;
         this.isinv = builder.isinv;
         this.compositions = builder.compositions;
@@ -234,7 +233,6 @@ public class Variant implements Comparable<Variant>{
         this.chr2 = var.chr2;
         this.pos2 = var.pos2;
         this.end2 = var.end2;
-        this.end = var.end;
         paternal = var.paternal;
         maternal = var.maternal;
         isPhased = var.isPhased;
@@ -388,8 +386,24 @@ public class Variant implements Comparable<Variant>{
         return this.end2;
     }
 
+    /**
+     * return 1-based end of variant depending on overall type of the variant
+     * for insertion, SNP, interspersed duplication, tandem duplication
+     * and translocation duplication, return 3' end
+     * otherwise, return 3' end plus length
+     * @return
+     */
     public int getEnd() {
-        return this.end;
+        switch(getType()) {
+            case Insertion:
+            case SNP:
+            case InterDup:
+            case TandemDup:
+            case TransDup:
+                return pos;
+            default:
+                return pos + maxLen() - 1;
+        }
     }
 
     public String getTraid() {
@@ -748,6 +762,18 @@ public class Variant implements Comparable<Variant>{
             alts[ind - 1] = alt;
     }
 
+    public void setThreePrimeDistance(int threePrimeDistance) {
+        this.threePrimeDistance = threePrimeDistance;
+    }
+
+    public void setFivePrimeDistance(int fivePrimeDistance) {
+        this.fivePrimeDistance = fivePrimeDistance;
+    }
+
+    public void setLengthDifference(int lengthDifference) {
+        this.lengthDifference = lengthDifference;
+    }
+
     public String getFilter() {
         return filter;
     }
@@ -1005,6 +1031,7 @@ public class Variant implements Comparable<Variant>{
     /**
      * @return a VCF record of the variant
      */
+    @Override
     public String toString() {
         return toString(getGoodPaternal(), getGoodMaternal());
     }
@@ -1084,6 +1111,24 @@ public class Variant implements Comparable<Variant>{
         } else {
             sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
+        }
+        /*
+        checking -1 is for backward compatibility
+        if output_distance_metric is disabled,
+        then these INFO fields will not be set
+        nor reported.
+         */
+        if (threePrimeDistance != -1) {
+            sbStr.append(";3PrimeDistance=");
+            sbStr.append(threePrimeDistance);
+        }
+        if (fivePrimeDistance != -1) {
+            sbStr.append(";5PrimeDistance=");
+            sbStr.append(fivePrimeDistance);
+        }
+        if (lengthDifference != -1) {
+            sbStr.append(";LengthDifference=");
+            sbStr.append(lengthDifference);
         }
         sbStr.append("\t");
 

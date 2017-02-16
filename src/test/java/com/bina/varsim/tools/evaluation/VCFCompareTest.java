@@ -225,16 +225,16 @@ public class VCFCompareTest {
    *
    */
   @Test
-  public void oneBPDistanceSNPTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-wig", "10","-distance"});
+  public void distanceSNPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/snpDistance", new String[]{"-output_distance_metric"});
   }
   /**
-   * 1 INS in TP, 1 INS in compare, with 100-bp 3' distance, 200-bp 5' distance, 100bp length difference
+   * 1 INS in TP, 1 INS in compare, with 100-bp 3' distance, 100-bp 5' distance, 100bp length difference
    *
    */
   @Test
   public void distanceINSTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "10","-distance"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "150","-over","0.5","-output_distance_metric"});
   }
   /**
    * 1 INV in TP, 1 INV in compare, with 1000-bp 3' distance, 11000-bp 5' distance, 100bp length difference
@@ -242,7 +242,7 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceINVTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/invDistance", new String[]{"-wig", "2000","-distance"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/invDistance", new String[]{"-wig", "2000","-over","0.55","-output_distance_metric"});
   }
   /**
    * 1 DEL in TP with 2 ALTs, 1 DEL in compare with 1 ALT, matching only one of the 2 ALTS in TP
@@ -250,7 +250,7 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceDELTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/delDistance", new String[]{"-wig", "10","-over","0.5","-distance"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/delDistance", new String[]{"-wig", "10","-over","0.5","-output_distance_metric"});
   }
   /**
    * 1 DUP in TP, 1 DUP in compare, length the same, distance 10bp
@@ -258,7 +258,7 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceDUPTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/dupDistance", new String[]{"-wig", "10","-over","0.8","-distance"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/dupDistance", new String[]{"-wig", "20","-over","0.7","-output_distance_metric"});
   }
   /**
    * 1 DEL in TP, 2 DEL in compare, length the same, distance 30bp,10bp, respectively
@@ -266,6 +266,7 @@ public class VCFCompareTest {
    */
   @Test
   public void distanceMultipleMatchingTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-distance"});
+    //disabled until global matching is implemented
+    //universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-output_distance_metric"});
   }
 }
