@@ -24,7 +24,7 @@ mkdir -pv samtools ART
 mkdir samtools
 pushd .
 cd samtools
-wget https://github.com/samtools/samtools/releases/download/$samtools_version/samtools-$version.tar.bz2 
+wget https://github.com/samtools/samtools/releases/download/$samtools_version/samtools-$samtools_version.tar.bz2 
 tar xfj samtools-$samtools_version.tar.bz2
 cd samtools-$samtools_version && make
 popd
