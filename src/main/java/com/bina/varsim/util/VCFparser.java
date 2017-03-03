@@ -179,7 +179,6 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         if (strangePhase) {
-            log.warn("Unrecognized phasing '" + geno + "'.");
             vals[0] = -1;
             vals[1] = -1;
             isPhased = false;
