@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
 
+import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
 import static com.bina.varsim.types.VCFInfo.getType;
 
 public class VCFparser extends GzFileParser<Variant> {
@@ -28,6 +29,7 @@ public class VCFparser extends GzFileParser<Variant> {
     private String sampleId = null;
     private boolean isPassFilterRequired = false;
     private boolean chromLineSeen = false;
+    private int illegalPhasingWarningCount = 0;
 
     public VCFparser() {
         sampleIndex = 10; // the first sample
@@ -179,7 +181,14 @@ public class VCFparser extends GzFileParser<Variant> {
         }
 
         if (strangePhase) {
-            log.warn("Unrecognized phasing '" + geno + "'.");
+            if (illegalPhasingWarningCount < MAX_WARNING_REPEAT) {
+                log.warn("Unrecognized phasing '" + geno + "'.");
+                illegalPhasingWarningCount++;
+                if (illegalPhasingWarningCount == MAX_WARNING_REPEAT) {
+                    log.warn("Reached max number of warnings (" + MAX_WARNING_REPEAT +
+                    ") for unrecognized phasing. No more warnings.");
+                }
+            }
             vals[0] = -1;
             vals[1] = -1;
             isPhased = false;
