@@ -261,6 +261,14 @@ public class VCFCompareTest {
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/dupDistance", new String[]{"-wig", "20","-over","0.7","-output_distance_metric"});
   }
   /**
+   * 10 DUP in TP, 10 DUP in compare, length the same, distance 1,2,3,4,5,6,7,8,9,10bp
+   *
+   */
+  @Test
+  public void distanceTenDUPTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/tenDupDistance", new String[]{"-wig", "20","-over","0.7","-output_distance_metric"});
+  }
+  /**
    * 1 DEL in TP, 2 DEL in compare, length the same, distance 30bp,10bp, respectively
    * wiggle=50bp, both DEL in compare can match, but we only match the closest one
    */
