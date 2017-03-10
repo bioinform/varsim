@@ -1541,11 +1541,11 @@ public class VCFcompare extends VarSimTool {
         sb.append("mean: " + StatUtils.mean(a) + "\n");
         sb.append("sum: " + StatUtils.sum(a) + "\n");
         sb.append("variance: " + StatUtils.variance(a) + "\n");
-        sb.append("5% percentile: " + StatUtils.percentile(a, 0.05) + "\n");
-        sb.append("25% percentile: " + StatUtils.percentile(a, 0.25) + "\n");
-        sb.append("median: " + StatUtils.percentile(a, 0.5) + "\n");
-        sb.append("75% percentile: " + StatUtils.percentile(a, 0.75) + "\n");
-        sb.append("95% percentile: " + StatUtils.percentile(a, 0.95) + "\n");
+        sb.append("5% percentile: " + StatUtils.percentile(a, 5) + "\n");
+        sb.append("25% percentile: " + StatUtils.percentile(a, 25) + "\n");
+        sb.append("median: " + StatUtils.percentile(a, 50) + "\n");
+        sb.append("75% percentile: " + StatUtils.percentile(a, 75) + "\n");
+        sb.append("95% percentile: " + StatUtils.percentile(a, 95) + "\n");
 
         int binCount = Math.min(DISTANCE_METRIC_BIN_COUNT, a.length);
         double scalingFactor = Math.max((double) a.length / MAX_BIN_CAPACITY, 1);
