@@ -1551,14 +1551,24 @@ public class VCFcompare extends VarSimTool {
         double scalingFactor = Math.max((double) a.length / MAX_BIN_CAPACITY, 1);
         EmpiricalDistribution distribution = new EmpiricalDistribution(binCount);
         distribution.load(a);
-        sb.append("Histogram:\n");
+        sb.append("Density histogram:\n");
         for (int i = 0; i < binCount; i++) {
             sb.append(String.format(Locale.US, "%-9.1f", distribution.getUpperBounds()[i]) + ": ");
             for (double j = 0; j < distribution.getBinStats().get(i).getN() / scalingFactor; j++) {
                 sb.append("*");
             }
-            sb.append("\n");
+            sb.append("\t(" + distribution.getBinStats().get(i).getN() + ")\n");
         }
+        sb.append("total count: " + a.length + "\n");
+        int[] counts = new int[3];
+        for (Double i : a) {
+            if (i.intValue() < counts.length) {
+                counts[i.intValue()]++;
+            }
+        }
+        sb.append("0bp count: " + counts[0] + "\n");
+        sb.append("1bp count: " + counts[1] + "\n");
+        sb.append("2bp count: " + counts[2] + "\n");
         return sb.toString();
     }
 
