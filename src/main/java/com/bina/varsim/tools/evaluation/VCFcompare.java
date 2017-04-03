@@ -145,12 +145,12 @@ public class VCFcompare extends VarSimTool {
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
                         canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                     } else {
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
                         canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                     }
                 } else {
                     byte[] phase = {0, 0};
@@ -160,26 +160,26 @@ public class VCFcompare extends VarSimTool {
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
                         canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                         phase[0] = 0;
                         phase[1] = 1;
                         Alt alt2 = new Alt();
                         alt2.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1])));
                         canonicalVariantList.add(template.pos(currentPosition + reference.length).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt2}).phase(phase).build());
                     } else {
                         phase[0] = 1;
                         phase[1] = 0;
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[0], 0, alleleLengthDifference[0])));
                         canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                         phase[0] = 0;
                         phase[1] = 1;
                         Alt alt2 = new Alt();
                         alt2.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[1], 0, alleleLengthDifference[1])));
                         canonicalVariantList.add(template.pos(currentPosition).referenceAlleleLength(0).
-                                ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
+                                ref(new byte[]{'N'}).alts(new Alt[]{alt2}).phase(phase).build());
                     }
                 }
             } else if (alleleLengthDifference[0] < 0) {
@@ -213,13 +213,13 @@ public class VCFcompare extends VarSimTool {
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a])));
                         canonicalVariantList.add(template.pos(currentPosition + reference.length).
-                                referenceAlleleLength(0).ref(new byte[0]).
+                                referenceAlleleLength(0).ref(new byte[]{'N'}).
                                 alts(new Alt[]{alt}).phase(phase).build());
                     } else {
                         Alt alt = new Alt();
                         alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleles[a], 0, alleleLengthDifference[a])));
                         canonicalVariantList.add(template.pos(currentPosition).
-                                referenceAlleleLength(0).ref(new byte[0]).
+                                referenceAlleleLength(0).ref(new byte[]{'N'}).
                                 alts(new Alt[]{alt}).phase(phase).build());
 
                     }
@@ -383,7 +383,7 @@ public class VCFcompare extends VarSimTool {
                     ******************
                     */
                     variantList.add(template.pos(variant.getPos() - 1).referenceAlleleLength(0).
-                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).build());
+                            ref(new byte[]{'N'}).alts(new Alt[]{alt1}).phase(phase).build());
 
                     //right-right
                     Alt alt2 = new Alt();
@@ -392,7 +392,7 @@ public class VCFcompare extends VarSimTool {
                     //here we assume the reference allele length = 1, i.e. the reference base before the breakpoint (before shifting during vcf parsing)
                     //after the shifting in vcf parsing, pos points to the base after breakpoint
                     variantList.add(template.pos(variant.getPos()).
-                            referenceAlleleLength(0).ref(new byte[0]).alts(new Alt[]{alt2}).phase(phase).build());
+                            referenceAlleleLength(0).ref(new byte[]{'N'}).alts(new Alt[]{alt2}).phase(phase).build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
                 //the deletion will be delt with as other variant types (type match + interval overlap)
@@ -440,7 +440,7 @@ public class VCFcompare extends VarSimTool {
                     ******************
                     */
                     variantList.add(template.pos(variant.getPos() - 1).referenceAlleleLength(0).
-                            ref(new byte[0]).alts(new Alt[]{alt1}).phase(phase).build());
+                            ref(new byte[]{'N'}).alts(new Alt[]{alt1}).phase(phase).build());
                 }
                 //a translocation consists of a duplication and a deletion, we only decompose the duplication into breakends
                 //the deletion will be delt with as other variant types (type match + interval overlap)
@@ -641,12 +641,12 @@ public class VCFcompare extends VarSimTool {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference)));
                             variantList.add(template.pos(currentPosition + referenceSequence.length).referenceAlleleLength(0).
-                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                    ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                         } else {
                             Alt alt = new Alt();
                             alt.setSeq(new FlexSeq(Arrays.copyOfRange(alternativeAlleleSequence, 0, alleleLengthDifference)));
                             variantList.add(template.pos(currentPosition).referenceAlleleLength(0).
-                                    ref(new byte[0]).alts(new Alt[]{alt}).phase(phase).build());
+                                    ref(new byte[]{'N'}).alts(new Alt[]{alt}).phase(phase).build());
                         }
                     } else if (alleleLengthDifference < 0) {
                         // deletion
