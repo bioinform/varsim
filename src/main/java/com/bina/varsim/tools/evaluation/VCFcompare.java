@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Argument;
@@ -31,6 +32,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+import static com.bina.varsim.constants.Constant.DISTANCE_METRIC_BIN_COUNT;
+import static com.bina.varsim.constants.Constant.MAX_BIN_CAPACITY;
 import static com.bina.varsim.types.ComparisonResultWriter.*;
 
 
@@ -1538,6 +1541,34 @@ public class VCFcompare extends VarSimTool {
         sb.append("mean: " + StatUtils.mean(a) + "\n");
         sb.append("sum: " + StatUtils.sum(a) + "\n");
         sb.append("variance: " + StatUtils.variance(a) + "\n");
+        sb.append("5% percentile: " + StatUtils.percentile(a, 5) + "\n");
+        sb.append("25% percentile: " + StatUtils.percentile(a, 25) + "\n");
+        sb.append("median: " + StatUtils.percentile(a, 50) + "\n");
+        sb.append("75% percentile: " + StatUtils.percentile(a, 75) + "\n");
+        sb.append("95% percentile: " + StatUtils.percentile(a, 95) + "\n");
+
+        int binCount = Math.min(DISTANCE_METRIC_BIN_COUNT, a.length);
+        double scalingFactor = Math.max((double) a.length / MAX_BIN_CAPACITY, 1);
+        EmpiricalDistribution distribution = new EmpiricalDistribution(binCount);
+        distribution.load(a);
+        sb.append("Density histogram:\n");
+        for (int i = 0; i < binCount; i++) {
+            sb.append(String.format(Locale.US, "%-9.1f", distribution.getUpperBounds()[i]) + ": ");
+            for (double j = 0; j < distribution.getBinStats().get(i).getN() / scalingFactor; j++) {
+                sb.append("*");
+            }
+            sb.append("\t(" + distribution.getBinStats().get(i).getN() + ")\n");
+        }
+        sb.append("total count: " + a.length + "\n");
+        int[] counts = new int[3];
+        for (Double i : a) {
+            if (i.intValue() < counts.length) {
+                counts[i.intValue()]++;
+            }
+        }
+        sb.append("0bp count: " + counts[0] + "\n");
+        sb.append("1bp count: " + counts[1] + "\n");
+        sb.append("2bp count: " + counts[2] + "\n");
         return sb.toString();
     }
 

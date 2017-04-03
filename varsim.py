@@ -588,7 +588,8 @@ if __name__ == "__main__":
                 logger.info( " with pid " + str(pbsim_p.pid))
                 processes.append(pbsim_p)
         elif args.simulator == "longislnd":
-	    longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
+            #total_coverage * 0.5 would be the correct coverage for 2 haploid perturbed genomes
+	    longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage * 0.5), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
 	    longislnd_command = " ".join(longislnd_command)
             longislnd_stdout = open(os.path.join(args.log_dir, "longislnd.out"), "w")
             longislnd_stderr = open(os.path.join(args.log_dir, "longislnd.err"), "w")
