@@ -24,9 +24,10 @@ public class ReadMap extends GzFileParser<ReadMapRecord>{
         while (hasMoreInput()) {
             readLine();
             log.trace("Parsing line " + line);
-            if (line == null || line.trim().isEmpty()) {
+            if (line == null)
                 break;
-            }
+            if (line.trim().isEmpty())
+                continue;
             final ReadMapRecord record = parseLine();
             readMap.put(record.getReadName(), record);
         }
