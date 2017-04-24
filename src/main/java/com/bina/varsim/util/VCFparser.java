@@ -291,7 +291,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
 
         if (genotypeIndex >= 0 && genotypeArray[0] == 0 && genotypeArray[1] == 0) {
-            //return null; // reference alleles... ignore them for now....
+            return null; // reference alleles... ignore them for now....
         }
 
         // determine copy-number
