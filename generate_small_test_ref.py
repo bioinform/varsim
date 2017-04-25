@@ -49,7 +49,7 @@ contigs = []
 with open(os.path.join(outdir, "ref.fa"), "w") as out_fasta:
   first = True
   for region_index, region in enumerate(regions_bedtool, start=1):
-    sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start, end=region.end)
+    sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start - 1, end=region.end)
     region_name = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end) )
     if first:
       out_fasta.write(">{}\n{}".format(region_name, sequence))
@@ -73,7 +73,7 @@ for invcf in invcfs:
 
   new_samples = []
   if targeted_samples:
-    for k,v in vcf_template_reader._sample_indexes.iteritems():
+    for k,v in sorted(vcf_template_reader._sample_indexes.iteritems()):
       if k in targeted_samples:
         new_samples.append(k)
     vcf_template_reader.samples = new_samples
