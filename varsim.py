@@ -167,7 +167,7 @@ def check_executable(fpath):
         sys.exit(os.EX_NOINPUT)
 
 
-def fill_missing_sequences(vcf, seq_file, reference, work_dir, log_dir):
+def fill_missing_sequences(vcf, id, seq_file, reference, work_dir, log_dir):
     logger = logging.getLogger(fill_missing_sequences.__name__)
 
     out_vcf = os.path.join(work_dir, os.path.basename(vcf))
@@ -175,7 +175,7 @@ def fill_missing_sequences(vcf, seq_file, reference, work_dir, log_dir):
         out_vcf = out_vcf[:-3]
     out_log = os.path.join(log_dir, "%s_fill_missing.log" % (os.path.basename(vcf)))
 
-    command = ["java", "-Xmx10g", "-Xms10g", "-jar", VARSIMJAR, "randsequencevcf", "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
+    command = ["java", "-Xmx10g", "-Xms10g", "-jar", VARSIMJAR, "randsequencevcf", "-id", id, "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
     with open(out_log, "w") as log_fd:
         logger.info("Running command " + " ".join(command))
         subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
@@ -376,7 +376,7 @@ if __name__ == "__main__":
     for i, vcf in enumerate(args.vcfs):
         tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
         makedirs([tool_work_dir])
-        in_vcfs.append(fill_missing_sequences(vcf, os.path.realpath(args.sv_insert_seq.name), args.reference.name, tool_work_dir, tool_work_dir))
+        in_vcfs.append(fill_missing_sequences(vcf, args.id, os.path.realpath(args.sv_insert_seq.name), args.reference.name, tool_work_dir, tool_work_dir))
     args.vcfs = map(os.path.realpath, in_vcfs)
 
     open_fds = []
