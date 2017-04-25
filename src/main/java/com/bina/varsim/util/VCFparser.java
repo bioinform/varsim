@@ -76,6 +76,10 @@ public class VCFparser extends GzFileParser<Variant> {
         this(fileName, id, pass, null);
     }
 
+    public VCFparser(File file, String id, boolean pass) {
+        this(file, id, pass, null);
+    }
+
     //TODO: remove unused constructor
     /**
      * Reads a VCF file line by line, if there are multiple individuals, takes the first one

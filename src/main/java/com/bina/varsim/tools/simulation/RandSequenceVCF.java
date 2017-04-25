@@ -28,6 +28,9 @@ public class RandSequenceVCF extends RandVCFgenerator {
     @Option(name = "-ref", usage = "Reference FASTA", required = true)
     File ref = null;
 
+    @Option(name = "-id", usage = "Sample ID", required = false)
+    String id = null;
+
     public RandSequenceVCF(final String command, final String description) {
         super(command, description);
     }
@@ -47,7 +50,7 @@ public class RandSequenceVCF extends RandVCFgenerator {
 
         final byte[] samplingSequence = fileToByteArray(sequenceFile);
 
-        final VCFparser vcfParser = new VCFparser(inFile, false);
+        final VCFparser vcfParser = new VCFparser(inFile, id, false);
         final OutputStream outputStream = (outFile != null) ? new FileOutputStream(outFile) : System.out;
         final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(outputStream));
 
