@@ -95,7 +95,7 @@ for invcf in invcfs:
       if record.POS <= region.start + args.flank or record.POS + len(record.REF) + args.flank - 1 >= region.end: continue
       record.CHROM = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
       # record.POS seems to be zero-based, at least in the infinite wisdom of my version of pysam
-      record.POS = record.POS - region.start
+      record.POS = record.POS - region.start + 1
       if not new_samples:
         vcf_writer.write_record(record)
       else:
