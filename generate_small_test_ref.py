@@ -49,7 +49,7 @@ contigs = []
 with open(os.path.join(outdir, "ref.fa"), "w") as out_fasta:
   first = True
   for region_index, region in enumerate(regions_bedtool, start=1):
-    sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start - 1, end=region.end)
+    sequence = reference_fasta.fetch(reference=str(region.chrom), start=region.start, end=region.end)
     region_name = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end) )
     if first:
       out_fasta.write(">{}\n{}".format(region_name, sequence))
@@ -95,7 +95,7 @@ for invcf in invcfs:
       if record.POS <= region.start + args.flank or record.POS + len(record.REF) + args.flank - 1 >= region.end: continue
       record.CHROM = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
       # record.POS seems to be zero-based, at least in the infinite wisdom of my version of pysam
-      record.POS = record.POS - region.start + 1
+      record.POS = record.POS - region.start
       if not new_samples:
         vcf_writer.write_record(record)
       else:
