@@ -25,8 +25,9 @@ parser.add_argument("--reference", help="Reference FASTA", required=True)
 parser.add_argument("--regions", help="Regions BED", required=True)
 parser.add_argument("--vcfs", nargs="+", required=True, default=[])
 parser.add_argument("--outdir", required=True)
-parser.add_argument("--flank", type=uint, default=0, help="ignore variants this close to the edges of a region")
+parser.add_argument("--flank", type=uint, default=0, help="Ignore variants this close to the edges of a region")
 parser.add_argument("--short_contig_names", action="store_true", help="Generate short contig names instead of the chr_start_end naming")
+parser.add_argument("--samples", nargs="+", default=[], help="Select specific samples. Select all samples if leave empty")
 
 args = parser.parse_args()
 
@@ -34,6 +35,7 @@ reference = args.reference
 regions = args.regions
 invcfs = args.vcfs
 outdir = args.outdir
+targeted_samples = args.samples
 
 if not os.path.exists(outdir):
   os.makedirs(outdir)
@@ -68,33 +70,42 @@ for invcf in invcfs:
   vcf_template_reader = vcf.Reader(open(invcf, "r"))
   vcf_template_reader.metadata["reference"] = os.path.join(outdir, "ref.fa")
   vcf_template_reader.contigs = OrderedDict([(contig_name, vcf.parser._Contig(contig_name, contig_length)) for (contig_name, contig_length) in contigs])
+
+  new_samples = []
+  if targeted_samples:
+    for k,v in sorted(vcf_template_reader._sample_indexes.iteritems()):
+      if k in targeted_samples:
+        new_samples.append(k)
+    vcf_template_reader.samples = new_samples
   vcf_writer = vcf.Writer(open(outvcf, "w"), vcf_template_reader)
 
-  tabix_vcf = pysam.TabixFile(invcf, parser=pysam.asVCF())
+  if targeted_samples:
+    vcf_template_reader = vcf.Reader(open(invcf, "r"))
+
+  #tabix_vcf = pysam.TabixFile(invcf, parser=pysam.asVCF())
   info_warned = False
   for region_index, region in enumerate(regions_bedtool, start=1):
     records = None
-    try: records = tabix_vcf.fetch(reference=str(region.chrom), start=region.start, end=region.end)
+    try: records = vcf_template_reader.fetch(chrom=str(region.chrom), start=region.start, end=region.end)
     except ValueError: logger.error("Failed to retrieve %s from %s" % (str(region).strip(), invcf))
     if records is None: continue
     for record in records:
-      if record.pos <= region.start + args.flank or record.pos + len(record.ref) + args.flank - 1 >= region.end: continue
-      record.contig = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
-      # record.pos seems to be zero-based, at least in the infinite wisdom of my version of pysam
-      record.pos = record.pos - region.start
-      fmt = "GT" if len(record) else None
-      sample_indexes = [0] if len(record) else []
-      info = None
-      try: info = vcf_template_reader._parse_info(record.info)
-      except ValueError:
-        if not info_warned:
-          logger.error("Failed to process INFO %s" % str(record.info))
-          logger.error("more warnings will be suppressed")
-          info_warned = True
-      vcfrecord = vcf.model._Record(record.contig, record.pos + 1, record.id, record.ref, [record.alt,], record.qual, record.filter, info, fmt, sample_indexes)
-      if len(record):
-        vcfrecord.samples = vcf_template_reader._parse_samples([record[0]], "GT", vcfrecord)
-      vcf_writer.write_record(vcfrecord)
+      if record.POS <= region.start + args.flank or record.POS + len(record.REF) + args.flank - 1 >= region.end: continue
+      record.CHROM = str(region_index) if args.short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
+      # record.POS seems to be zero-based, at least in the infinite wisdom of my version of pysam
+      record.POS = record.POS - region.start
+      if not new_samples:
+        vcf_writer.write_record(record)
+      else:
+        snames = []
+        sindexes = {}
+        for s in new_samples:
+          for i in xrange(len(record.samples)):
+            if s == record.samples[i].sample:
+              sindexes[s] = i
+              snames.append(record.samples[i])
+        vcfrecord = vcf.model._Record(record.CHROM, record.POS, record.ID, record.REF, record.ALT, record.QUAL, record.FILTER, record.INFO, record.FORMAT, sindexes, snames)
+        vcf_writer.write_record(vcfrecord)
   vcf_writer.close()
   pysam.tabix_index(outvcf, force=True, preset='vcf')
   logger.info("Lifter over the VCF %s to %s" % (invcf, outvcf))
