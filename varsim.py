@@ -221,7 +221,7 @@ def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
 
-if __name__ == "__main__":
+def varsim_main():
     check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
@@ -361,7 +361,7 @@ if __name__ == "__main__":
         logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=loglevel, format=FORMAT)
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(varsim_main.__name__)
 
     # Make sure we can actually execute the executable
     if not args.disable_sim:
@@ -667,3 +667,7 @@ if __name__ == "__main__":
         for f in tmp_files:
             os.remove(f)
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
+
+
+if __name__ == "__main__":
+    varsim_main()
