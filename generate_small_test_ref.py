@@ -36,7 +36,7 @@ def gen_restricted_reference(reference, regions_bed, out_reference, use_short_co
     return out_reference
 
 
-def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targeted_samples, flank, use_short_contig_names):
+def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targeted_samples, flank, use_short_contig_names=False):
     logger = logging.getLogger(gen_restricted_vcf.__name__)
 
     if not os.path.isfile(in_vcf):
