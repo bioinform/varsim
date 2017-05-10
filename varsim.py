@@ -91,6 +91,7 @@ def get_contigs_list(reference):
 
 # Check java version to make sure it is Java 8
 def check_java():
+    logger = logging.getLogger(check_java.__name__)
     jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
     if LooseVersion(jv) < LooseVersion("1.8"):
         logger.error("VarSim requires Java 1.8 to be on the path.")
