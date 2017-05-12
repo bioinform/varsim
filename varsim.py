@@ -221,7 +221,292 @@ def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
 
-def varsim_main():
+def varsim_main(reference,
+                simulator,
+                simulator_exe,
+                total_coverage,
+                variant_vcfs=[],
+                sampling_vcf=None,
+                dgv_file=None,
+                nlanes=1,
+                simulator_options="",
+                sample_id="VarSim_Sample",
+                log_dir="log",
+                out_dir="out",
+                sv_insert_seq=None,
+                seed=0,
+                sex="MALE",
+                remove_filtered=False,
+                keep_temp=False,
+                force_five_base_encoding=False,
+                lift_ref=False,
+                disable_rand_vcf=False,
+                disable_rand_dgv=False,
+                disable_vcf2diploid=False,
+                disable_sim=False):
+    check_java()
+
+    args = main_parser.parse_args()
+
+    # make the directories we need
+    makedirs([log_dir, out_dir])
+
+    logger = logging.getLogger(varsim_main.__name__)
+
+    # Make sure we can actually execute the executable
+    if not disable_sim:
+        check_executable(simulator_exe)
+
+    processes = []
+
+    t_s = time.time()
+
+    variant_vcfs = map(os.path.realpath, variant_vcfs)
+
+    if sv_insert_seq:
+        in_vcfs = []
+        for i, vcf in enumerate(variant_vcfs):
+            tool_work_dir = os.path.join(out_dir, "filled_in", str(i))
+            makedirs([tool_work_dir])
+            in_vcfs.append(fill_missing_sequences(vcf, sample_id, os.path.realpath(sv_insert_seq), reference, tool_work_dir, tool_work_dir))
+        variant_vcfs = map(os.path.realpath, in_vcfs)
+    else:
+        logger.warn("Not filling in SV sequences since no insert sequence file provided")
+
+    open_fds = []
+    if not disable_rand_vcf:
+        if not sampling_vcf:
+            logger.error("Need to provide the VCF for random sampling")
+            raise ValueError("Sampling VCF missing")
+
+        rand_vcf_out_fd = open(os.path.join(out_dir, "random.vc.vcf"), "w")
+        rand_vcf_log_fd = open(os.path.join(log_dir, "RandVCF2VCF.err"), "w")
+        variant_vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
+        processes.append(run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd,
+                    seed, sex, args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp,
+                    args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim,
+                    reference, args.vc_prop_het))
+        open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
+
+    if not disable_rand_dgv:
+        if not sv_insert_seq:
+            raise ValueError("Need SV sequence file to fill in SV sequences")
+
+        if not dgv_file:
+            logger.error("Need to provide the DGV file for random sampling")
+            raise ValueError("DGV file missing")
+
+        rand_dgv_stdout = open(os.path.join(out_dir, "random.sv.vcf"), "w")
+        rand_dgv_stderr = open(os.path.join(log_dir, "RandDGV2VCF.err"), "w")
+        variant_vcfs.append(os.path.realpath(rand_dgv_stdout.name))
+
+        rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
+                            "-t", sex,
+                            "-seed", str(seed),
+                            "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup",
+                            str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
+                            "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len",
+                            str(args.sv_max_length_lim), "-ref", os.path.realpath(reference),
+                            "-ins", os.path.realpath(sv_insert_seq), "-dgv", os.path.realpath(dgv_file)]
+
+        logger.info("Executing command " + " ".join(rand_dgv_command))
+        p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
+        logger.info(" with pid " + str(p_rand_dgv.pid))
+        processes.append(p_rand_dgv)
+        open_fds += [rand_dgv_stdout, rand_dgv_stderr]
+
+    processes = monitor_processes(processes)
+    for open_fd in open_fds:
+        open_fd.close()
+
+    merged_reference = os.path.join(out_dir, "%s.fa" % (sample_id))
+    merged_truth_vcf = os.path.join(out_dir, "%s.truth.vcf" % (sample_id))
+    merged_map = os.path.join(out_dir, "%s.map" % (sample_id))
+
+    processes = run_vcfstats(variant_vcfs, out_dir, log_dir)
+
+    if not disable_vcf2diploid:
+        variant_vcfs.reverse()
+        vcf2diploid_stdout = open(os.path.join(out_dir, "vcf2diploid.out"), "w")
+        vcf2diploid_stderr = open(os.path.join(log_dir, "vcf2diploid.err"), "w")
+        vcf_arg_list = sum([["-vcf", v] for v in variant_vcfs], [])
+        filter_arg_list = ["-pass"] if remove_filtered else []
+        vcf2diploid_command = ["java", "-jar", VARSIMJAR, "vcf2diploid",
+                               "-t", sex,
+                               "-id", sample_id,
+                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list
+
+        logger.info("Executing command " + " ".join(vcf2diploid_command))
+        p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
+                                         cwd=out_dir)
+        logger.info(" with pid " + str(p_vcf2diploid.pid))
+        processes.append(p_vcf2diploid)
+
+        processes = monitor_processes(processes)
+
+        # Now concatenate the .fa from vcf2diploid
+        contigs = get_contigs_list(reference)
+        contig_fastas = map(lambda (x, y): os.path.join(out_dir, "%s_%s_%s.fa" % (x, sample_id, y)), itertools.product(contigs, ["maternal", "paternal"]))
+        fastas_to_cat = filter(os.path.isfile, contig_fastas)
+        concatenate_files(fastas_to_cat, merged_reference, remove_original=True)
+
+        if os.path.getsize(merged_reference) == 0:
+            logger.error("Merged FASTA is empty. Something bad happened. Exiting")
+            raise RuntimeError("Empty FASTA generated by vcf2diploid")
+
+        # contatenate the vcfs
+        vcfs_to_cat = filter(os.path.isfile, map(lambda x: os.path.join(out_dir, "%s_%s.vcf" % (x, sample_id)), contigs))
+        concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
+
+        monitor_processes(run_vcfstats([merged_truth_vcf], out_dir, log_dir))
+
+        if lift_ref:
+            lifted_dir = os.path.join(out_dir, "lifted")
+            makedirs([lifted_dir])
+            #quick fix for issue of CN
+            convertCN([merged_truth_vcf], "two2one")
+            merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
+            #quick fix for issue of CN
+            convertCN([merged_truth_vcf], "one2two")
+            merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
+
+    if processes:
+        processes = monitor_processes(processes)
+
+    # Now generate the reads using art/pbsim/dwgsim
+    tmp_files = []
+    if not disable_sim:
+        if simulator not in ["dwgsim", "art", "longislnd"]:
+            raise NotImplementedError("Simulation method {} not implemented".format(simulator))
+
+        fifos = []
+        fastqs = []
+        sim_ts = time.time()
+        coverage_per_lane = total_coverage * 0.5 / nlanes
+        processes = []
+
+        fifo_src_dst = []
+        if simulator == "dwgsim":
+            for i, end in itertools.product(xrange(nlanes), [1, 2]):
+                fifo_src_dst.append(
+                    ("simulated.lane%d.read%d.fastq" % (i, end),
+                     "simulated.lane%d.read%d.fq.gz" % (i, end)))
+        elif simulator == "art":
+            for i, end, suffix in itertools.product(xrange(nlanes), [1, 2], ["fq", "aln"]):
+                fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
+                                     "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
+        else: # simulator == "longislnd":
+            pass
+
+        for fifo_name, dst in fifo_src_dst:
+            fifos.append(os.path.join(out_dir, fifo_name))
+            if os.path.exists(fifos[-1]): os.remove(fifos[-1])
+            os.mkfifo(fifos[-1])
+
+            gzip_stderr = open(os.path.join(log_dir, "gzip.%s" % (fifo_name)), "w")
+            gzip_command = "cat %s | gzip -2 > %s" % (fifos[-1], os.path.join(out_dir, dst))
+            logger.info("Executing command %s" % (gzip_command) )
+            gzip_p = subprocess.Popen(gzip_command, stdout = None, stderr = gzip_stderr, shell = True)
+            logger.info( " with pid " + str(gzip_p.pid))
+            processes.append(gzip_p)
+            tmp_files.append(os.path.join(out_dir, dst))
+
+        simulator_commands_files = []
+        if simulator == "dwgsim":
+            for i in xrange(nlanes):
+                simulator_command = "{} {} -C {} -z {} {} {}".format(os.path.realpath(simulator_exe), simulator_options, coverage_per_lane, seed + i, merged_reference, os.path.join(out_dir, "simulated.lane%d" % (i)))
+                simulator_commands_files.append((dwgsim_command, os.path.join(log_dir, "dwgsim.lane%d.out" % (i)), os.path.join(log_dir, "dwgsim.lane%d.err" % (i))))
+        elif simulator == "art":
+            for i in xrange(nlanes):
+                simulator_command = "{} {} -i {} -f {} -rs {} -o {}".format(simulator_exe, simulator_options, merged_reference, coverage_per_lane, seed + i, os.path.join(out_dir, "simulated.lane%d.read" % (i)))
+                simulator_commands_files.append((art_command, os.path.join(log_dir, "art.lane%d.out" % (i)), os.path.join(log_dir, "art.lane%d.err" % (i))))
+        else: # simulator == "longislnd":
+            simulator_command = "{} {} --coverage {} --out {} --fasta {}".format(simulator_exe, simulator_options, total_coverage * 0.5, os.path.join(out_dir, "longislnd_sim", merged_reference))
+            simulator_commands_files.append((simulator_command, os.path.join(log_dir, "longislnd.out"), os.path.join(log_dir, "longislnd.err")))
+
+        simulator_fds = []
+        for command, stdout, stderr in simulator_commands_files:
+            stdout_fd = open(stdout, "w")
+            stderr_fd = open(stderr, "w")
+            process = subprocess.Popen(command, stdout=stdout_fd, stderr=stderr_fd, shell=True, close_fds=True)
+            logger.info("Executing command {} with pid {}".format(command, process.pid))
+            processes.append(process)
+            simulator_fds += [stdout_fd, stderr_fd]
+
+        monitor_processes(processes)
+
+        for fd in simulator_fds:
+            fd.close()
+
+        processes = []
+
+        logger.info("Read generation took %g seconds" % (time.time() - sim_ts))
+
+        sim_t_liftover = time.time()
+
+        # Now start lifting over the gzipped files
+        if simulator != "longislnd":
+            for i in xrange(nlanes):
+                liftover_stdout = open(os.path.join(log_dir, "lane%d.out" % (i)), "w")
+                liftover_stderr = open(os.path.join(log_dir, "liftover%d.log" % (i)), "w")
+                fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
+                                         "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
+                                         "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
+                                         "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
+                                         "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
+                                             VARSIMJAR, merged_map, i, out_dir, i,
+                                             out_dir, i, out_dir, i,
+                                             out_dir, i)
+                if force_five_base_encoding:
+                    fastq_liftover_command += " -force_five_base_encoding "
+                if simulator == "art":
+                    fastq_liftover_command += " -type art " \
+                                              "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
+                                              "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
+                                                  out_dir, i, out_dir, i)
+                elif simulator == "pbsim":
+                    fastq_liftover_command += " -type pbsim " \
+                                              "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
+                                              "-ref %s/simulated.lane%d.ref " % (out_dir, i, out_dir, i)
+                fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
+                logger.info("Executing command " + fastq_liftover_command)
+		liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
+                logger.info(" with pid " + str(liftover_p.pid))
+                processes.append(liftover_p)
+                fastqs.append(os.path.join(out_dir, "lane%d.read%d.fq.gz" % (i, end)))
+        else:
+            # liftover the read map files
+            read_map_files = list(glob.glob(os.path.join(out_dir, "longislnd_sim", "*.bed")))
+            merged_raw_readmap = os.path.join(out_dir, "longislnd_sim", "merged_readmap.bed")
+            concatenate_files(read_map_files, merged_raw_readmap)
+            read_maps = "-longislnd %s" % merged_raw_readmap 
+            read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(out_dir, sample_id + ".truth.map"))
+            read_map_liftover_stderr = open(os.path.join(log_dir, "longislnd_liftover.err"), "w")
+            logger.info("Executing command " + read_map_liftover_command )
+            read_map_liftover_p = subprocess.Popen(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
+            processes.append(read_map_liftover_p)
+            logger.info(" with pid " + str(read_map_liftover_p.pid))
+
+        monitor_processes(processes)
+
+        logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
+
+        sim_te = max(sim_ts + 1, time.time())
+        bytes_written = sum([os.path.getsize(fastq) for fastq in fastqs])
+        logger.info("Took %g seconds, %ld Mbytes written, %g MB/s" % (
+            sim_te - sim_ts, bytes_written / 1024.0 / 1024.0, bytes_written / 1024.0 / 1024.0 / (sim_te - sim_ts)))
+
+        for fifo in fifos:
+            os.remove(fifo)
+
+    if not keep_temp:
+        logger.info("Cleaning up intermediate files")
+        for f in tmp_files:
+            os.remove(f)
+    logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
+
+
+if __name__ == "__main__":
     check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
@@ -337,11 +622,9 @@ def varsim_main():
     dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
 
     art_group = main_parser.add_argument_group("ART options")
-    art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default=None,
-                           type=file)
-    art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default=None,
-                           type=file)
-    art_group.add_argument("--art_options", help="ART command-line options", default="", required=False)
+    art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default="")
+    art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default="")
+    art_group.add_argument("--art_options", help="ART command-line options", default="")
 
     pbsim_group = main_parser.add_argument_group("PBSIM options")
     pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
@@ -351,9 +634,6 @@ def varsim_main():
 
     args = main_parser.parse_args()
 
-    # make the directories we need
-    makedirs([args.log_dir, args.out_dir])
-
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     loglevel = get_loglevel(args.loglevel)
@@ -361,313 +641,38 @@ def varsim_main():
         logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=loglevel, format=FORMAT)
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
-    logger = logging.getLogger(varsim_main.__name__)
 
-    # Make sure we can actually execute the executable
-    if not args.disable_sim:
-        check_executable(args.simulator_executable.name)
+    simulator_opts = ""
+    if args.simulator == "dwgsim":
+        simulator_opts = "-e {1},{2} -E {1},{2} -d {3} -s {4} -1 {5} -2 {5} {6}".format(args.dwgsim_start_e, args.dwgsim_end_e, args.mean_fragment_size, args.sd_fragment_size, args.read_length, args.dwgsim_options)
+    elif args.simulator == "art":
+        profile_opts = "-1 {} -2 {}".format(args.profile_1, args.profile_2) if (args.profile_1 and args.profile_2) else ""
+        simulator_opts = "-p -l {} -m {} -s {} {} {}".format(args.read_length, args.mean_fragment_size, args.sd_fragment_size, profile_opts, args.art_options)
+    elif args.simulator == "longislnd":
+        simulator_opts = args.longislnd_options
+    elif args.simulator == "pbsim":
+        raise NotImplementedError("pbsim is no longer supported")
 
-    processes = []
-
-    t_s = time.time()
-
-    args.vcfs = map(os.path.realpath, args.vcfs)
-    in_vcfs = []
-    for i, vcf in enumerate(args.vcfs):
-        tool_work_dir = os.path.join(args.out_dir, "filled_in", str(i))
-        makedirs([tool_work_dir])
-        in_vcfs.append(fill_missing_sequences(vcf, args.id, os.path.realpath(args.sv_insert_seq.name), args.reference.name, tool_work_dir, tool_work_dir))
-    args.vcfs = map(os.path.realpath, in_vcfs)
-
-    open_fds = []
-    if not args.disable_rand_vcf:
-        rand_vcf_out_fd = open(os.path.join(args.out_dir, "random.vc.vcf"), "w")
-        rand_vcf_log_fd = open(os.path.join(args.log_dir, "RandVCF2VCF.err"), "w")
-        args.vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
-        processes.append(run_randvcf(os.path.realpath(args.vc_in_vcf.name), rand_vcf_out_fd, rand_vcf_log_fd,
-                    args.seed, args.sex, args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp,
-                    args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim,
-                    args.reference.name, args.vc_prop_het))
-        open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
-
-    if not args.disable_rand_dgv:
-        rand_dgv_stdout = open(os.path.join(args.out_dir, "random.sv.vcf"), "w")
-        rand_dgv_stderr = open(os.path.join(args.log_dir, "RandDGV2VCF.err"), "w")
-        args.vcfs.append(os.path.realpath(rand_dgv_stdout.name))
-
-        rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
-                            "-t", args.sex,
-                            "-seed", str(args.seed),
-                            "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup",
-                            str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
-                            "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len",
-                            str(args.sv_max_length_lim), "-ref", os.path.realpath(args.reference.name),
-                            "-ins", os.path.realpath(args.sv_insert_seq.name), "-dgv", os.path.realpath(args.sv_dgv.name)]
-
-        logger.info("Executing command " + " ".join(rand_dgv_command))
-        p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
-        logger.info(" with pid " + str(p_rand_dgv.pid))
-        processes.append(p_rand_dgv)
-        open_fds += [rand_dgv_stdout, rand_dgv_stderr]
-
-    processes = monitor_processes(processes)
-    for open_fd in open_fds:
-        open_fd.close()
-
-    merged_reference = os.path.join(args.out_dir, "%s.fa" % (args.id))
-    merged_truth_vcf = os.path.join(args.out_dir, "%s.truth.vcf" % (args.id))
-    merged_map = os.path.join(args.out_dir, "%s.map" % (args.id))
-
-    processes = run_vcfstats(args.vcfs, args.out_dir, args.log_dir)
-
-    if not args.disable_vcf2diploid:
-        args.vcfs.reverse()
-        vcf2diploid_stdout = open(os.path.join(args.out_dir, "vcf2diploid.out"), "w")
-        vcf2diploid_stderr = open(os.path.join(args.log_dir, "vcf2diploid.err"), "w")
-        vcf_arg_list = sum([["-vcf", v] for v in args.vcfs], [])
-        filter_arg_list = ["-pass"] if args.filter else []
-        vcf2diploid_command = ["java", "-jar", VARSIMJAR, "vcf2diploid",
-                               "-t", args.sex,
-                               "-id", args.id,
-                               "-chr", os.path.realpath(args.reference.name)] + filter_arg_list + vcf_arg_list
-
-        logger.info("Executing command " + " ".join(vcf2diploid_command))
-        p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
-                                         cwd=args.out_dir)
-        logger.info(" with pid " + str(p_vcf2diploid.pid))
-        processes.append(p_vcf2diploid)
-
-        processes = monitor_processes(processes)
-
-        # Now concatenate the .fa from vcf2diploid
-        contigs = get_contigs_list(args.reference.name)
-        contig_fastas = map(lambda (x, y): os.path.join(args.out_dir, "%s_%s_%s.fa" % (x, args.id, y)), itertools.product(contigs, ["maternal", "paternal"]))
-        fastas_to_cat = filter(os.path.isfile, contig_fastas)
-        concatenate_files(fastas_to_cat, merged_reference, remove_original=True)
-
-        if os.path.getsize(merged_reference) == 0:
-            logger.error("Merged FASTA is empty. Something bad happened. Exiting")
-            raise RuntimeError("Empty FASTA generated by vcf2diploid")
-
-        # contatenate the vcfs
-        vcfs_to_cat = filter(os.path.isfile, map(lambda x: os.path.join(args.out_dir, "%s_%s.vcf" % (x, args.id)), contigs))
-        concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
-
-        monitor_processes(run_vcfstats([merged_truth_vcf], args.out_dir, args.log_dir))
-
-        if args.lift_ref:
-            lifted_dir = os.path.join(args.out_dir, "lifted")
-            makedirs([lifted_dir])
-            #quick fix for issue of CN
-            convertCN([merged_truth_vcf], "two2one")
-            merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
-            #quick fix for issue of CN
-            convertCN([merged_truth_vcf], "one2two")
-            merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
-
-    if processes:
-        processes = monitor_processes(processes)
-
-    # Now generate the reads using art/pbsim/dwgsim
-    tmp_files = []
-    if not args.disable_sim:
-        fifos = []
-        fastqs = []
-        sim_ts = time.time()
-        coverage_per_lane = args.total_coverage * 0.5 / args.nlanes
-        processes = []
-
-        fifo_src_dst = []
-        if args.simulator == "dwgsim":
-            for i, end in itertools.product(xrange(args.nlanes), [1, 2]):
-                fifo_src_dst.append(
-                    ("simulated.lane%d.read%d.fastq" % (i, end),
-                     "simulated.lane%d.read%d.fq.gz" % (i, end)))
-        elif args.simulator == "art":
-            for i, end, suffix in itertools.product(xrange(args.nlanes), [1, 2], ["fq", "aln"]):
-                fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
-                                     "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
-        elif args.simulator == "pbsim":
-            for i, end, suffix in itertools.product(xrange(args.nlanes), [1, 2], ["fq", "maf"]): # the '2' read files are empty and for compatibility only
-                fifo_src_dst.append(("simulated.lane%d.read%d.%s" % (i, end, suffix),
-                                     "simulated.lane%d.read%d.%s.gz" % (i, end, suffix)))
-        elif args.simulator == "longislnd":
-            pass
-        else:
-            raise NotImplementedError("simulation method " + args.simulator + " not implemented");
-
-        for fifo_name, dst in fifo_src_dst:
-            fifos.append(os.path.join(args.out_dir, fifo_name))
-            if os.path.exists(fifos[-1]): os.remove(fifos[-1])
-            os.mkfifo(fifos[-1])
-
-            gzip_stderr = open(os.path.join(args.log_dir, "gzip.%s" % (fifo_name)), "w")
-            gzip_command = "cat %s | gzip -2 > %s" % (fifos[-1], os.path.join(args.out_dir, dst))
-            logger.info("Executing command %s" % (gzip_command) )
-            gzip_p = subprocess.Popen(gzip_command, stdout = None, stderr = gzip_stderr, shell = True)
-            logger.info( " with pid " + str(gzip_p.pid))
-            processes.append(gzip_p)
-            tmp_files.append(os.path.join(args.out_dir, dst))
-
-        if args.simulator == "dwgsim":
-            for i in xrange(args.nlanes):
-                dwgsim_command = [os.path.realpath(args.simulator_executable.name), "-e",
-                                  "%s,%s" % (args.dwgsim_start_e, args.dwgsim_end_e),
-                                  "-E", "%s,%s" % (args.dwgsim_start_e, args.dwgsim_end_e), args.dwgsim_options,
-                                  "-d", str(args.mean_fragment_size), "-s", str(args.sd_fragment_size), "-C",
-                                  str(coverage_per_lane), "-1", str(args.read_length), "-2", str(args.read_length),
-                                  "-z", str(i), merged_reference, os.path.join(args.out_dir, "simulated.lane%d" % (i))]
-                dwgsim_command = " ".join(dwgsim_command)
-
-                dwgsim_stdout = open(os.path.join(args.log_dir, "dwgsim.lane%d.out" % (i)), "w")
-                dwgsim_stderr = open(os.path.join(args.log_dir, "dwgsim.lane%d.err" % (i)), "w")
-                logger.info("Executing command " + dwgsim_command)
-                dwgsim_p = subprocess.Popen(dwgsim_command, stdout = dwgsim_stdout, stderr = dwgsim_stderr, shell = True)
-                logger.info( " with pid " + str(dwgsim_p.pid))
-                processes.append(dwgsim_p)
-        elif args.simulator == "art":
-            profile_opts = []
-            if args.profile_1 is not None and args.profile_2 is not None:
-                profile_opts = ["-1", args.profile_1.name, "-2", args.profile_2.name]
-
-            for i in xrange(args.nlanes):
-                art_command = [args.simulator_executable.name] + profile_opts + ["-i", merged_reference, "-p",
-                                                                                 "-l", str(args.read_length), "-f",
-                                                                                 str(coverage_per_lane),
-                                                                                 "-m", str(args.mean_fragment_size),
-                                                                                 "-s", str(args.sd_fragment_size), "-rs",
-                                                                                 str(i),
-                                                                                 args.art_options, "-o",
-                                                                                 os.path.join(args.out_dir,
-                                                                                              "simulated.lane%d.read" % (
-                                                                                                  i))]
-                art_command = " ".join(art_command)
-                art_stdout = open(os.path.join(args.log_dir, "art.lane%d.out" % (i)), "w")
-                art_stderr = open(os.path.join(args.log_dir, "art.lane%d.err" % (i)), "w")
-                logger.info("Executing command " + art_command )
-		art_p = subprocess.Popen(art_command, stdout = art_stdout, stderr = art_stderr, shell = True)
-                logger.info( " with pid " + str(art_p.pid))
-                processes.append(art_p)
-        elif args.simulator == "pbsim":
-            nRef = 0;
-            with open(merged_reference, 'r') as fa:
-                nRef = sum(1 for line in fa if len(line) > 0 and line[0] == '>')
-            assert 0 < nRef < 10000
-
-            for i in xrange(args.nlanes):
-                tmp_prefix = os.path.join(args.out_dir, "simulated.lane%d" % (i));
-                tmp_fastq_list = " ".join(
-                    "%s_%s.fastq" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
-                tmp_maf_list = " ".join(
-                    "%s_%s.maf" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
-                tmp_ref_list = " ".join(
-                    "%s_%s.ref" % (tmp_prefix, "0" * (4 - len(str(idx))) + str(idx)) for idx in range(1, nRef + 1))
-                pbsim_command = [os.path.realpath(args.simulator_executable.name),
-                                 "--data-type", "CLR",
-                                 "--depth", str(coverage_per_lane),
-                                 "--model_qc", args.model_qc,
-                                 "--seed", str(2089 * (i + 1)),
-                                 merged_reference,
-                                 "--prefix", tmp_prefix,
-                                 "&& ( cat", tmp_fastq_list, "> %s.read1.fq" % (tmp_prefix), ")",
-                                 # this cat is i/o bound, need optimization of piping
-                                 "&& ( cat", tmp_maf_list, "> %s.read1.maf" % (tmp_prefix),
-                                 ")"  # this cat is i/o bound, need optimization of piping
-                                 "&& ( head -q -n1 ", tmp_ref_list, "> %s.ref" % (tmp_prefix),
-                                 ")"  # make reference header list
-                                 "&& ( echo > %s.read2.fq" % (tmp_prefix), ")",  # dummy file
-                                 "&& ( echo > %s.read2.maf" % (tmp_prefix), ")"  # dummy file
-                                 ]
-
-                pbsim_command = " ".join(pbsim_command)
-
-                pbsim_stdout = open(os.path.join(args.log_dir, "pbsim.lane%d.out" % (i)), "w")
-                pbsim_stderr = open(os.path.join(args.log_dir, "pbsim.lane%d.err" % (i)), "w")
-                logger.info("Executing command " + pbsim_command )
-		pbsim_p = subprocess.Popen(pbsim_command, stdout = pbsim_stdout, stderr = pbsim_stderr, shell = True)
-                logger.info( " with pid " + str(pbsim_p.pid))
-                processes.append(pbsim_p)
-        elif args.simulator == "longislnd":
-            #total_coverage * 0.5 would be the correct coverage for 2 haploid perturbed genomes
-	    longislnd_command = [args.simulator_executable.name, args.longislnd_options, "--coverage", str(args.total_coverage * 0.5), "--out", os.path.join(args.out_dir, "longislnd_sim"), "--fasta", merged_reference]
-	    longislnd_command = " ".join(longislnd_command)
-            longislnd_stdout = open(os.path.join(args.log_dir, "longislnd.out"), "w")
-            longislnd_stderr = open(os.path.join(args.log_dir, "longislnd.err"), "w")
-            logger.info("Executing command " + longislnd_command)
-            longislnd_p = subprocess.Popen(longislnd_command, stdout = longislnd_stdout, stderr = longislnd_stderr, shell = True)
-            logger.info(" with pid " + str(longislnd_p.pid))
-            processes.append(longislnd_p)
-        else:
-            raise NotImplementedError("simulation method " + args.simulator + " not implemented");
-
-        monitor_processes(processes)
-        processes = []
-
-        logger.info("Read generation took %g seconds" % (time.time() - sim_ts))
-
-        sim_t_liftover = time.time()
-
-        # Now start lifting over the gzipped files
-        if args.simulator != "longislnd":
-            for i in xrange(args.nlanes):
-                liftover_stdout = open(os.path.join(args.log_dir, "lane%d.out" % (i)), "w")
-                liftover_stderr = open(os.path.join(args.log_dir, "liftover%d.log" % (i)), "w")
-                fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
-                                         "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
-                                         "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
-                                         "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
-                                         "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
-                                             VARSIMJAR, merged_map, i, args.out_dir, i,
-                                             args.out_dir, i, args.out_dir, i,
-                                             args.out_dir, i)
-                if args.force_five_base_encoding:
-                    fastq_liftover_command += " -force_five_base_encoding "
-                if args.simulator == "art":
-                    fastq_liftover_command += " -type art " \
-                                              "-aln <(gunzip -c %s/simulated.lane%d.read1.aln.gz) " \
-                                              "-aln <(gunzip -c %s/simulated.lane%d.read2.aln.gz)" % (
-                                                  args.out_dir, i, args.out_dir, i)
-                elif args.simulator == "pbsim":
-                    fastq_liftover_command += " -type pbsim " \
-                                              "-maf <(gunzip -c %s/simulated.lane%d.read1.maf.gz) " \
-                                              "-ref %s/simulated.lane%d.ref " % (args.out_dir, i, args.out_dir, i)
-                fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
-                logger.info("Executing command " + fastq_liftover_command)
-		liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
-                logger.info(" with pid " + str(liftover_p.pid))
-                processes.append(liftover_p)
-                fastqs.append(os.path.join(args.out_dir, "lane%d.read%d.fq.gz" % (i, end)))
-        else:
-            # liftover the read map files
-            read_map_files = list(glob.glob(os.path.join(args.out_dir, "longislnd_sim", "*.bed")))
-            merged_raw_readmap = os.path.join(args.out_dir, "longislnd_sim", "merged_readmap.bed")
-            concatenate_files(read_map_files, merged_raw_readmap)
-            read_maps = "-longislnd %s" % merged_raw_readmap 
-            read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(args.out_dir, args.id + ".truth.map"))
-            read_map_liftover_stderr = open(os.path.join(args.log_dir, "longislnd_liftover.err"), "w")
-            logger.info("Executing command " + read_map_liftover_command )
-            read_map_liftover_p = subprocess.Popen(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
-            processes.append(read_map_liftover_p)
-            logger.info(" with pid " + str(read_map_liftover_p.pid))
-
-        monitor_processes(processes)
-
-        logger.info("Liftover took %g seconds" % (time.time() - sim_t_liftover))
-
-        sim_te = max(sim_ts + 1, time.time())
-        bytes_written = sum([os.path.getsize(fastq) for fastq in fastqs])
-        logger.info("Took %g seconds, %ld Mbytes written, %g MB/s" % (
-            sim_te - sim_ts, bytes_written / 1024.0 / 1024.0, bytes_written / 1024.0 / 1024.0 / (sim_te - sim_ts)))
-
-        for fifo in fifos:
-            os.remove(fifo)
-
-    if not args.keep_temp:
-        logger.info("Cleaning up intermediate files")
-        for f in tmp_files:
-            os.remove(f)
-    logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
-
-
-if __name__ == "__main__":
-    varsim_main()
+    varsim_main(args.reference,
+                args.simulator,
+                args.simulator_executable,
+                args.total_coverage,
+                variant_vcfs=args.vcfs,
+                sampling_vcf=args.vc_in_vcf,
+                dgv_file=args.sv_dgv,
+                nlanes=args.nlanes,
+                simulator_options=simulator_opts,
+                sample_id=args.id,
+                log_dir=args.log_dir,
+                out_dir=args.out_dir,
+                sv_insert_seq=args.sv_insert_seq,
+                seed=args.seed,
+                sex=args.sex,
+                remove_filtered=args.filter,
+                keep_temp=args.keep_temp,
+                force_five_base_encoding=args.force_five_base_encoding,
+                lift_ref=args.lift_ref,
+                disable_rand_vcf=args.disable_rand_vcf,
+                disable_rand_dgv=args.disable_rand_dgv,
+                disable_vcf2diploid=args.disable_vcf2diploid,
+                disable_sim=args.disable_sim)
