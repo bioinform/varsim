@@ -98,15 +98,20 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
 
 
 def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, flank=0, short_contig_names=False):
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
+    restricted_fasta = reference
+    outvcfs = invcfs
 
-    restricted_fasta = os.path.join(outdir, "ref.fa")
-    gen_restricted_reference(reference, regions, restricted_fasta, short_contig_names)
+    if regions:
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
-    outvcfs = map(lambda x: os.path.join(outdir, os.path.splitext(os.path.basename(x))[0]), invcfs)
-    for invcf, outvcf in zip(invcfs, outvcfs):
-        gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, samples, flank, short_contig_names)
+        restricted_fasta = os.path.join(outdir, "ref.fa")
+        gen_restricted_reference(reference, regions, restricted_fasta, short_contig_names)
+
+        if outvcfs:
+            outvcfs = map(lambda x: os.path.join(outdir, os.path.splitext(os.path.basename(x))[0]) if x else None, invcfs)
+            for invcf, outvcf in zip(invcfs, outvcfs):
+                gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, samples, flank, short_contig_names)
 
     return (restricted_fasta, outvcfs)
 
