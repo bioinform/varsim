@@ -198,23 +198,75 @@ def run_vcfstats(vcfs, out_dir, log_dir):
     return processes
 
 
-def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, reference, prop_het):
+class RandVCFOptions:
+    def __init__(self, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, prop_het):
+        self.num_snp = num_snp
+        self.num_ins = num_ins
+        self.num_del = num_del
+        self.num_mnp = num_mnp
+        self.num_complex = num_complex
+        self.percent_novel = percent_novel
+        self.min_length = min_length
+        self.max_length = max_length
+        self.prop_het = prop_het
+
+class RandDGVOptions:
+    def __init__(self, num_ins, num_del, num_dup, num_inv, percent_novel, min_length, max_length):
+        self.num_ins = num_ins
+        self.num_del = num_del
+        self.num_dup = num_dup
+        self.num_inv = num_inv
+        self.percent_novel = percent_novel
+        self.min_length = min_length
+        self.max_length = max_length
+
+
+def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference):
     logger = logging.getLogger(run_randvcf.__name__)
 
-    rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf", "-seed", str(seed),
+    rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf",
+                        "-seed", str(seed),
                         "-t", sex,
-                        "-num_snp", str(num_snp), "-num_ins", str(num_ins), "-num_del",
-                        str(num_del),
-                        "-num_mnp", str(num_mnp), "-num_complex", str(num_complex), "-novel",
-                        str(percent_novel),
-                        "-min_len", str(min_length), "-max_len", str(max_length), "-ref",
-                        os.path.realpath(reference),
-                        "-prop_het", str(prop_het), "-vcf", sampling_vcf]
+                        "-num_snp", str(randvcf_options.num_snp),
+                        "-num_ins", str(randvcf_options.num_ins),
+                        "-num_del", str(randvcf_options.num_del),
+                        "-num_mnp", str(randvcf_options.num_mnp),
+                        "-num_complex", str(randvcf_options.num_complex),
+                        "-novel", str(randvcf_options.percent_novel),
+                        "-min_len", str(randvcf_options.min_length),
+                        "-max_len", str(randvcf_options.max_length),
+                        "-prop_het", str(randvcf_options.prop_het),
+                        "-ref", os.path.realpath(reference),
+                        "-vcf", sampling_vcf]
 
     logger.info("Executing command " + " ".join(rand_vcf_command))
     p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
     logger.info(" with pid " + str(p_rand_vcf.pid))
     return p_rand_vcf
+
+
+def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file):
+    logger = logging.getLogger(run_randvcf.__name__)
+
+    rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
+                        "-t", sex,
+                        "-seed", str(seed),
+                        "-num_ins", str(options.num_ins),
+                        "-num_del", str(options.num_del),
+                        "-num_dup", str(options.num_dup),
+                        "-num_inv", str(options.num_inv),
+                        "-novel", str(options.percent_novel),
+                        "-min_len", str(options.min_len),
+                        "-max_len", str(options.max_length),
+                        "-ref", os.path.realpath(reference),
+                        "-ins", os.path.realpath(insert_seq_file),
+                        "-dgv", os.path.realpath(dgv_file)]
+
+    logger.info("Executing command " + " ".join(rand_dgv_command))
+    p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=out_vcf_fd, stderr=log_file_fd)
+    logger.info(" with pid " + str(p_rand_dgv.pid))
+
+    return p_rand_dgv
 
 
 def get_version():
@@ -228,6 +280,9 @@ def varsim_main(reference,
                 variant_vcfs=[],
                 sampling_vcf=None,
                 dgv_file=None,
+                randvcf_options=None,
+                randdgv_options=None,
+                regions_bed=None,
                 nlanes=1,
                 simulator_options="",
                 sample_id="VarSim_Sample",
@@ -246,12 +301,14 @@ def varsim_main(reference,
                 disable_sim=False):
     check_java()
 
-    args = main_parser.parse_args()
-
     # make the directories we need
     makedirs([log_dir, out_dir])
 
     logger = logging.getLogger(varsim_main.__name__)
+
+    if regions_bed:
+        restricted_dir = os.path.join(out_dir, "restricted")
+        makedirs([restricted_dir])
 
     # Make sure we can actually execute the executable
     if not disable_sim:
@@ -274,7 +331,7 @@ def varsim_main(reference,
         logger.warn("Not filling in SV sequences since no insert sequence file provided")
 
     open_fds = []
-    if not disable_rand_vcf:
+    if randvcf_options:
         if not sampling_vcf:
             logger.error("Need to provide the VCF for random sampling")
             raise ValueError("Sampling VCF missing")
@@ -282,13 +339,10 @@ def varsim_main(reference,
         rand_vcf_out_fd = open(os.path.join(out_dir, "random.vc.vcf"), "w")
         rand_vcf_log_fd = open(os.path.join(log_dir, "RandVCF2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
-        processes.append(run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd,
-                    seed, sex, args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp,
-                    args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim,
-                    reference, args.vc_prop_het))
+        processes.append(run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference))
         open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
 
-    if not disable_rand_dgv:
+    if randdgv_options:
         if not sv_insert_seq:
             raise ValueError("Need SV sequence file to fill in SV sequences")
 
@@ -299,20 +353,7 @@ def varsim_main(reference,
         rand_dgv_stdout = open(os.path.join(out_dir, "random.sv.vcf"), "w")
         rand_dgv_stderr = open(os.path.join(log_dir, "RandDGV2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_dgv_stdout.name))
-
-        rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
-                            "-t", sex,
-                            "-seed", str(seed),
-                            "-num_ins", str(args.sv_num_ins), "-num_del", str(args.sv_num_del), "-num_dup",
-                            str(args.sv_num_dup), "-num_inv", str(args.sv_num_inv),
-                            "-novel", str(args.sv_percent_novel), "-min_len", str(args.sv_min_length_lim), "-max_len",
-                            str(args.sv_max_length_lim), "-ref", os.path.realpath(reference),
-                            "-ins", os.path.realpath(sv_insert_seq), "-dgv", os.path.realpath(dgv_file)]
-
-        logger.info("Executing command " + " ".join(rand_dgv_command))
-        p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=rand_dgv_stdout, stderr=rand_dgv_stderr)
-        logger.info(" with pid " + str(p_rand_dgv.pid))
-        processes.append(p_rand_dgv)
+        processes.append(run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq))
         open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
     processes = monitor_processes(processes)
@@ -652,6 +693,9 @@ if __name__ == "__main__":
         simulator_opts = args.longislnd_options
     elif args.simulator == "pbsim":
         raise NotImplementedError("pbsim is no longer supported")
+
+    randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
+    randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
 
     varsim_main(args.reference,
                 args.simulator,
