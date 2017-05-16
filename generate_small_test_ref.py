@@ -97,6 +97,20 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     return out_vcf
 
 
+def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, flank=0, short_contig_names=False):
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    restricted_fasta = os.path.join(outdir, "ref.fa")
+    gen_restricted_reference(reference, regions, restricted_fasta, short_contig_names)
+
+    outvcfs = map(lambda x: os.path.join(outdir, os.path.splitext(os.path.basename(x))[0]), invcfs)
+    for invcf, outvcf in zip(invcfs, outvcfs):
+        gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, samples, flank, short_contig_names)
+
+    return (restricted_fasta, outvcfs)
+
+
 def main():
     logger = logging.getLogger(main.__name__)
 
@@ -111,21 +125,7 @@ def main():
 
     args = parser.parse_args()
 
-    reference = args.reference
-    regions = args.regions
-    invcfs = args.vcfs
-    outdir = args.outdir
-    targeted_samples = args.samples
-
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-
-    restricted_fasta = os.path.join(outdir, "ref.fa")
-    gen_restricted_reference(args.reference, args.regions, restricted_fasta, args.short_contig_names)
-
-    for invcf in invcfs:
-        outvcf = os.path.join(outdir, os.path.splitext(os.path.basename(invcf))[0])
-        gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, targeted_samples, args.flank, args.short_contig_names)
+    gen_restricted_ref_and_vcfs(args.reference, args.invcfs, args.regions, args.samples, args.outdir, args.flank, args.short_contig_names)
 
 
 if __name__ == "__main__":
