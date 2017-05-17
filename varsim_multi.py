@@ -144,8 +144,7 @@ if __name__ == "__main__":
     rand_vcf_group.add_argument("--vc_max_length_lim", metavar="INTEGER",
                                 help="Max length of small variant to accept [inclusive]", default=99,
                                 type=int)
-    rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP",
-                                required=False)
+    rand_vcf_group.add_argument("--sampling_vcf", metavar="VCF", help="Input small variant sampling VCF, usually dbSNP")
     rand_vcf_group.add_argument("--vc_prop_het", metavar="FLOAT", help="Proportion of heterozygous small variants",
                                 default=0.6,
                                 type=float)
@@ -195,7 +194,7 @@ if __name__ == "__main__":
                  args.simulator_executable,
                  args.total_coverage,
                  variant_vcfs=args.vcfs,
-                 sampling_vcf=args.vc_in_vcf,
+                 sampling_vcf=args.sampling_vcf,
                  dgv_file=args.sv_dgv,
                  regions=args.regions,
                  randvcf_options=randvcf_options,
