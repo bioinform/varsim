@@ -55,7 +55,7 @@ def varsim_multi(reference,
 
     for index, sample in enumerate(samples):
         sample_dir = os.path.join(out_dir, sample)
-        logger.info("Simulating sample {} in {}".format(sample_dir))
+        logger.info("Simulating sample {} in {}".format(sample, sample_dir))
         varsim_main(restricted_reference,
                     simulator,
                     simulator_exe,
@@ -77,8 +77,7 @@ def varsim_multi(reference,
                     keep_temp,
                     force_five_base_encoding,
                     lift_ref,
-                    disable_vcf2diploid,
-                    disable_sim)
+                    disable_vcf2diploid)
 
 
 if __name__ == "__main__":
@@ -95,11 +94,9 @@ if __name__ == "__main__":
     main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
                              choices=["MALE", "FEMALE"], default="MALE")
     main_parser.add_argument("--samples", help="Samples to be simulated", required=True, nargs="+")
-    main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", required=False, type=str,
-                             choices=["art", "dwgsim", "longislnd"], default="art")
+    main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", choices=["art", "dwgsim", "longislnd"], default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
-                             help="Path to the executable of the read simulator chosen"
-                             , required=True)
+                             help="Path to the executable of the read simulator chosen")
     main_parser.add_argument("--simulator_options", help="Simulator options", required=False, default="")
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
@@ -180,7 +177,7 @@ if __name__ == "__main__":
 
     args = main_parser.parse_args()
 
-    makedirs([args.log_dir, args.out_dir])
+    makedirs([args.out_dir])
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
@@ -190,28 +187,29 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
 
+    simulator = None if args.disable_sim else args.simulator
     randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
     randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
     varsim_multi(args.reference,
-                args.simulator,
-                args.simulator_executable,
-                args.total_coverage,
-                variant_vcfs=args.vcfs,
-                sampling_vcf=args.vc_in_vcf,
-                dgv_file=args.sv_dgv,
-                regions=args.regions,
-                randvcf_options=randvcf_options,
-                randdgv_options=randdgv_options,
-                nlanes=args.nlanes,
-                simulator_options=args.simulator_options,
-                samples=args.samples,
-                out_dir=args.out_dir,
-                sv_insert_seq=args.sv_insert_seq,
-                seed=args.seed,
-                sex=args.sex,
-                remove_filtered=args.filter,
-                keep_temp=args.keep_temp,
-                force_five_base_encoding=args.force_five_base_encoding,
-                lift_ref=args.lift_ref,
-                disable_vcf2diploid=args.disable_vcf2diploid,
-                disable_sim=args.disable_sim)
+                 simulator,
+                 args.simulator_executable,
+                 args.total_coverage,
+                 variant_vcfs=args.vcfs,
+                 sampling_vcf=args.vc_in_vcf,
+                 dgv_file=args.sv_dgv,
+                 regions=args.regions,
+                 randvcf_options=randvcf_options,
+                 randdgv_options=randdgv_options,
+                 nlanes=args.nlanes,
+                 simulator_options=args.simulator_options,
+                 samples=args.samples,
+                 out_dir=args.out_dir,
+                 sv_insert_seq=args.sv_insert_seq,
+                 seed=args.seed,
+                 sex=args.sex,
+                 remove_filtered=args.filter,
+                 keep_temp=args.keep_temp,
+                 force_five_base_encoding=args.force_five_base_encoding,
+                 lift_ref=args.lift_ref,
+                 disable_vcf2diploid=args.disable_vcf2diploid,
+                 disable_sim=args.disable_sim)

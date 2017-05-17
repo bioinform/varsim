@@ -295,10 +295,7 @@ def varsim_main(reference,
                 keep_temp=False,
                 force_five_base_encoding=False,
                 lift_ref=False,
-                disable_rand_vcf=False,
-                disable_rand_dgv=False,
-                disable_vcf2diploid=False,
-                disable_sim=False):
+                disable_vcf2diploid=False):
     check_java()
 
     # make the directories we need
@@ -307,7 +304,9 @@ def varsim_main(reference,
     logger = logging.getLogger(varsim_main.__name__)
 
     # Make sure we can actually execute the executable
-    if not disable_sim:
+    if simulator:
+        if simulator not in ["dwgsim", "art", "longislnd"]:
+            raise NotImplementedError("Simulation method {} not implemented".format(simulator))
         check_executable(simulator_exe)
 
     processes = []
@@ -412,10 +411,7 @@ def varsim_main(reference,
 
     # Now generate the reads using art/pbsim/dwgsim
     tmp_files = []
-    if not disable_sim:
-        if simulator not in ["dwgsim", "art", "longislnd"]:
-            raise NotImplementedError("Simulation method {} not implemented".format(simulator))
-
+    if simulator:
         fifos = []
         fastqs = []
         sim_ts = time.time()
@@ -681,6 +677,7 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=loglevel, format=FORMAT)
 
+    simulator = None if args.disable_sim else args.simulator
     simulator_opts = ""
     if args.simulator == "dwgsim":
         simulator_opts = "-e {1},{2} -E {1},{2} -d {3} -s {4} -1 {5} -2 {5} {6}".format(args.dwgsim_start_e, args.dwgsim_end_e, args.mean_fragment_size, args.sd_fragment_size, args.read_length, args.dwgsim_options)
@@ -696,7 +693,7 @@ if __name__ == "__main__":
     randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
 
     varsim_main(args.reference,
-                args.simulator,
+                simulator,
                 args.simulator_executable,
                 args.total_coverage,
                 variant_vcfs=args.vcfs,

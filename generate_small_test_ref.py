@@ -39,6 +39,9 @@ def gen_restricted_reference(reference, regions_bed, out_reference, use_short_co
 def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targeted_samples, flank=0, use_short_contig_names=False):
     logger = logging.getLogger(gen_restricted_vcf.__name__)
 
+    if not in_vcf:
+        return None
+
     if not os.path.isfile(in_vcf):
         logger.error("%s not found" % in_vcf)
         return None
@@ -94,7 +97,7 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     pysam.tabix_index(out_vcf, force=True, preset='vcf')
     logger.info("Lifter over the VCF %s to %s" % (in_vcf, out_vcf))
 
-    return out_vcf
+    return "{}.gz".format(out_vcf)
 
 
 def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, flank=0, short_contig_names=False):
@@ -110,8 +113,10 @@ def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, fla
 
         if outvcfs:
             outvcfs = map(lambda x: os.path.join(outdir, os.path.splitext(os.path.basename(x))[0]) if x else None, invcfs)
+            generated_vcfs = []
             for invcf, outvcf in zip(invcfs, outvcfs):
-                gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, samples, flank, short_contig_names)
+                generated_vcfs.append(gen_restricted_vcf(invcf, regions, outvcf, restricted_fasta, samples, flank, short_contig_names))
+            outvcfs = generated_vcfs
 
     return (restricted_fasta, outvcfs)
 
