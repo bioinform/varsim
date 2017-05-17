@@ -13,7 +13,8 @@ from varsim import check_java, makedirs, monitor_processes, check_executable, ru
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
 
-if __name__ == "__main__":
+def varsim_somatic_main():
+
     check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(varsim_somatic_main.__name__)
 
     if not args.disable_sim:
         if not args.simulator_executable:
@@ -223,3 +224,6 @@ if __name__ == "__main__":
     monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.out_dir, args.log_dir))
 
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
+
+if __name__ == "__main__":
+    varsim_somatic_main()
