@@ -543,64 +543,6 @@ def varsim_main(reference,
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
 
 
-def varsim_multi(reference,
-                 simulator,
-                 simulator_exe,
-                 total_coverage,
-                 variant_vcfs=[],
-                 sampling_vcf=None,
-                 dgv_file=None,
-                 regions=None,
-                 randvcf_options=None,
-                 randdgv_options=None,
-                 nlanes=1,
-                 simulator_options="",
-                 samples=[],
-                 log_dir="log",
-                 out_dir="out",
-                 sv_insert_seq=None,
-                 seed=0,
-                 sex="MALE",
-                 remove_filtered=False,
-                 keep_temp=False,
-                 force_five_base_encoding=False,
-                 lift_ref=False,
-                 disable_vcf2diploid=False,
-                 disable_sim=False):
-    logger = logging.getLogger(varsim_multi.__name__)
-
-    restricted_dir = os.path.join(out_dir, "restricted")
-
-    restricted_reference, restricted_vcfs = gen_restricted_ref_and_vcfs(reference, variant_vcfs + [sampling_vcf], regions, samples, restricted_dir, flank=0, short_contig_names=False)
-
-    for index, sample in enumerate(samples):
-        sample_dir = os.path.join(out_dir, sample)
-        logger.info("Simulating sample {} in {}".format(sample_dir))
-        varsim_main(restricted_reference,
-                    simulator,
-                    simulator_exe,
-                    total_coverage,
-                    restricted_vcfs[:-1],
-                    restricted_vcfs[-1],
-                    dgv_file,
-                    randvcf_options,
-                    randdgv_options,
-                    nlanes,
-                    simulator_options,
-                    sample,
-                    os.path.join(sample_dir, "log"),
-                    os.path.join(sample_dir, "out"),
-                    sv_insert_seq,
-                    seed + 1000 * index,
-                    sex,
-                    remove_filtered,
-                    keep_temp,
-                    force_five_base_encoding,
-                    lift_ref,
-                    disable_vcf2diploid,
-                    disable_sim)
-
-
 if __name__ == "__main__":
     check_java()
 
@@ -760,6 +702,8 @@ if __name__ == "__main__":
                 variant_vcfs=args.vcfs,
                 sampling_vcf=args.vc_in_vcf,
                 dgv_file=args.sv_dgv,
+                randvcf_options=randvcf_options,
+                randdgv_options=randdgv_options,
                 nlanes=args.nlanes,
                 simulator_options=simulator_opts,
                 sample_id=args.id,
