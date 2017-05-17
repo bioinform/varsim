@@ -458,7 +458,7 @@ def varsim_main(reference,
                 simulator_command = "{} {} -i {} -f {} -rs {} -o {}".format(simulator_exe, simulator_options, merged_reference, coverage_per_lane, seed + i, os.path.join(out_dir, "simulated.lane%d.read" % (i)))
                 simulator_commands_files.append((art_command, os.path.join(log_dir, "art.lane%d.out" % (i)), os.path.join(log_dir, "art.lane%d.err" % (i))))
         else: # simulator == "longislnd":
-            simulator_command = "{} {} --coverage {} --out {} --fasta {}".format(simulator_exe, simulator_options, total_coverage * 0.5, os.path.join(out_dir, "longislnd_sim", merged_reference))
+            simulator_command = "{} {} --coverage {} --out {} --fasta {}".format(simulator_exe, simulator_options, total_coverage * 0.5, os.path.join(out_dir, "longislnd_sim"), merged_reference)
             simulator_commands_files.append((simulator_command, os.path.join(log_dir, "longislnd.out"), os.path.join(log_dir, "longislnd.err")))
 
         simulator_fds = []
@@ -550,7 +550,7 @@ def varsim_multi(reference,
                  variant_vcfs=[],
                  sampling_vcf=None,
                  dgv_file=None,
-                 regions=None
+                 regions=None,
                  randvcf_options=None,
                  randdgv_options=None,
                  nlanes=1,
@@ -614,7 +614,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--log_dir", metavar="DIR", help="Log files of all steps are kept here", required=False,
                              default="log")
     main_parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into",
-                             required=True, type=file)
+                             required=True)
     main_parser.add_argument("--seed", metavar="seed", help="Random number seed for reproducibility", type=int, default=0)
     main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
                              choices=["MALE", "FEMALE"], default="MALE")
@@ -623,8 +623,8 @@ if __name__ == "__main__":
                              choices=["art", "dwgsim", "longislnd"], default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen"
-                             , required=True, type=file)
-    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)", type=file,
+                             , required=True)
+    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)",
                              default=DEFAULT_VARSIMJAR,
                              required=False)
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
@@ -678,7 +678,7 @@ if __name__ == "__main__":
     rand_vcf_group.add_argument("--vc_max_length_lim", metavar="INTEGER",
                                 help="Max length of small variant to accept [inclusive]", default=99,
                                 type=int)
-    rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP", type=file,
+    rand_vcf_group.add_argument("--vc_in_vcf", metavar="VCF", help="Input small variant VCF, usually dbSNP",
                                 required=False)
     rand_vcf_group.add_argument("--vc_prop_het", metavar="FLOAT", help="Proportion of heterozygous small variants",
                                 default=0.6,
@@ -704,9 +704,9 @@ if __name__ == "__main__":
                                 help="Max length of structural variant to accept [inclusive]", default=1000000,
                                 type=int)
     rand_dgv_group.add_argument("--sv_insert_seq", metavar="FILE",
-                                help="Path to file containing concatenation of real insertion sequences", type=file,
+                                help="Path to file containing concatenation of real insertion sequences",
                                 required=False)
-    rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants", type=file,
+    rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants",
                                 required=False)
 
     dwgsim_group = main_parser.add_argument_group("DWGSIM options")
@@ -728,6 +728,8 @@ if __name__ == "__main__":
     longislnd_group.add_argument("--longislnd_options", help="LongISLND options", default="")
 
     args = main_parser.parse_args()
+
+    makedirs([args.log_dir, args.out_dir])
 
     # Setup logging
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'

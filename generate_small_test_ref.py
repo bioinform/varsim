@@ -130,7 +130,7 @@ def main():
 
     args = parser.parse_args()
 
-    gen_restricted_ref_and_vcfs(args.reference, args.invcfs, args.regions, args.samples, args.outdir, args.flank, args.short_contig_names)
+    gen_restricted_ref_and_vcfs(args.reference, args.vcfs, args.regions, args.samples, args.outdir, args.flank, args.short_contig_names)
 
 
 if __name__ == "__main__":
