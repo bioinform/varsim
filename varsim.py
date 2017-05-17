@@ -275,14 +275,14 @@ def get_version():
 
 
 def varsim_main(reference,
-                simulator,
+                simulator, # use None to disable simulation
                 simulator_exe,
                 total_coverage,
                 variant_vcfs=[],
                 sampling_vcf=None,
                 dgv_file=None,
-                randvcf_options=None,
-                randdgv_options=None,
+                randvcf_options=None, # use None to disable RandVCF
+                randdgv_options=None, # use None to disable RandDGV 
                 nlanes=1,
                 simulator_options="",
                 sample_id="VarSim_Sample",
