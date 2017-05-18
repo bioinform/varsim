@@ -51,7 +51,7 @@ def varsim_multi(reference,
 
     restricted_dir = os.path.join(out_dir, "restricted")
 
-    restricted_reference, restricted_vcfs = gen_restricted_ref_and_vcfs(reference, variant_vcfs + [sampling_vcf], regions, samples, restricted_dir, flank=0, short_contig_names=False)
+    restricted_reference, restricted_vcfs = gen_restricted_ref_and_vcfs(reference, variant_vcfs, regions, samples, restricted_dir, flank=0, short_contig_names=False)
     _, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], regions, [], os.path.join(out_dir, "restricted_sampling"), flank=0, short_contig_names=False)
 
     for index, sample in enumerate(samples):
