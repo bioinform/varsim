@@ -83,6 +83,7 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
             record.POS = record.POS - region.start
             if not new_samples:
                 vcf_writer.write_record(record)
+                continue
             else:
                 snames = []
                 sindexes = {}
@@ -95,7 +96,7 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
             vcf_writer.write_record(vcfrecord)
     vcf_writer.close()
     pysam.tabix_index(out_vcf, force=True, preset='vcf')
-    logger.info("Lifter over the VCF %s to %s" % (in_vcf, out_vcf))
+    logger.info("Lifted over the VCF %s to %s" % (in_vcf, out_vcf))
 
     return "{}.gz".format(out_vcf)
 
