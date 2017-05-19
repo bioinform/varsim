@@ -45,8 +45,7 @@ def varsim_multi(reference,
                  keep_temp=False,
                  force_five_base_encoding=False,
                  lift_ref=False,
-                 disable_vcf2diploid=False,
-                 disable_sim=False):
+                 disable_vcf2diploid=False):
     logger = logging.getLogger(varsim_multi.__name__)
 
     restricted_dir = os.path.join(out_dir, "restricted")
@@ -211,5 +210,4 @@ if __name__ == "__main__":
                  keep_temp=args.keep_temp,
                  force_five_base_encoding=args.force_five_base_encoding,
                  lift_ref=args.lift_ref,
-                 disable_vcf2diploid=args.disable_vcf2diploid,
-                 disable_sim=args.disable_sim)
+                 disable_vcf2diploid=args.disable_vcf2diploid)
