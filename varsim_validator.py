@@ -75,7 +75,7 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
     final_report = {}
     final_report["all"] = aggregate_reports(sample_reports, samples)
     final_report["snp"] = aggregate_reports(sample_reports, samples, "snp")
-    print json.dumps(json.dumps(final_report, indent=2))
+    print json.dumps(final_report, indent=2)
 
 if __name__ == "__main__":
     check_java()
