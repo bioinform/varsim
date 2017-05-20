@@ -21,7 +21,7 @@ import json
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 
-def aggregate_reports(reports, samples, variant_type="all"):
+def aggregate_reports(sample_reports, samples, variant_type="all"):
     if variant_type == "all":
         summary_report = sample_reports[samples[0]]["num_true_correct"]["all_data"]["sum_count"]
     elif variant_type == "snp":
