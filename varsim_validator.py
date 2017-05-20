@@ -40,6 +40,7 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
     summary_report["fdr"] = float(summary_report["fp"]) / float(summary_report["fp"] + summary_report["tp"]) * 100
     summary_report["tpr"] = float(summary_report["tp"]) / float(summary_report["t"]) * 100
     summary_report["ppv"] = 100.0 - summary_report["fdr"]
+    summary_report["f1"] = 2.0 * float(summary_report["ppv"]  * summary_report["tpr"]) / float(summary_report["ppv"] + summary_report["tpr"])
 
     return summary_report
     
