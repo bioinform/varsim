@@ -27,7 +27,7 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
     elif variant_type == "snp":
         summary_report = sample_reports[samples[0]]["num_true_correct"]["data"]["SNP"]["sum_count"]
         
-    keys_for_aggregation = ["_TP", "_FP", "_TN", "_FN", "_T", "fp", "tn", "fn", "t"]
+    keys_for_aggregation = ["_TP", "_FP", "_TN", "_FN", "_T", "fp", "tn", "fn", "tp", "t"]
     for sample in samples[1:]:
         if variant_type == "all":
             sample_report = sample_reports[sample]["num_true_correct"]["all_data"]["sum_count"]
