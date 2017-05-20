@@ -26,6 +26,10 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
         summary_report = sample_reports[samples[0]]["num_true_correct"]["all_data"]["sum_count"]
     elif variant_type == "snp":
         summary_report = sample_reports[samples[0]]["num_true_correct"]["data"]["SNP"]["sum_count"]
+    elif variant_type == "ins":
+        summary_report = sample_reports[samples[0]]["num_true_correct"]["data"]["Insertion"]["sum_count"]
+    elif variant_type == "del":
+        summary_report = sample_reports[samples[0]]["num_true_correct"]["data"]["Deletion"]["sum_count"]
         
     keys_for_aggregation = ["_TP", "_FP", "_TN", "_FN", "_T", "fp", "tn", "fn", "tp", "t"]
     for sample in samples[1:]:
@@ -33,6 +37,10 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
             sample_report = sample_reports[sample]["num_true_correct"]["all_data"]["sum_count"]
         elif variant_type == "snp":
             sample_report = sample_reports[sample]["num_true_correct"]["data"]["SNP"]["sum_count"]
+        elif variant_type == "ins":
+            sample_report = sample_reports[sample]["num_true_correct"]["data"]["Insertion"]["sum_count"]
+        elif variant_type == "del":
+            sample_report = sample_reports[sample]["num_true_correct"]["data"]["Deletion"]["sum_count"]
 
         for key in keys_for_aggregation:
             summary_report[key] += sample_report[key]
@@ -76,6 +84,8 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
     final_report = {}
     final_report["all"] = aggregate_reports(sample_reports, samples)
     final_report["snp"] = aggregate_reports(sample_reports, samples, "snp")
+    final_report["ins"] = aggregate_reports(sample_reports, samples, "ins")
+    final_report["del"] = aggregate_reports(sample_reports, samples, "del")
     print json.dumps(final_report, indent=2)
 
 if __name__ == "__main__":
