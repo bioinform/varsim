@@ -28,7 +28,8 @@ def lift_vcfs(vcfs, out_vcf, reference):
   if reference:
     vcf_template_reader.metadata["reference"] = reference
     vcf_template_reader.contigs = OrderedDict([(contig_name, vcf.parser._Contig(contig_name, contig_length)) for (contig_name, contig_length) in contigs])
-  vcf_writer = vcf.Writer(open(out_vcf, "w"), vcf_template_reader)
+
+  vcf_records = []
   for index, vcf_ in enumerate(vcfs):
     with open(vcf_) as vcf_fd:
       vcf_reader = vcf.Reader(vcf_fd)
@@ -52,7 +53,19 @@ def lift_vcfs(vcfs, out_vcf, reference):
           logger.error("Failed to process INFO %s" % str(record.INFO))
 
         new_record = vcf.model._Record(original_chrom, record.POS + original_start, record.ID, record.REF, record.ALT, record.QUAL, record.FILTER, info, record.FORMAT, record._sample_indexes, record.samples)
-        vcf_writer.write_record(new_record)
+        vcf_records.append(new_record)
+
+  vcf_records.sort(key = lambda record: (record.CHROM, record.POS, record.REF, record.ALT))
+
+  # Write while removing non-unique entries after liftover
+  vcf_writer = vcf.Writer(open(out_vcf, "w"), vcf_template_reader)
+  for index in xrange(len(vcf_records)):
+      curr_record = vcf_records[index]
+      if index:
+          prev_record = vcf_records[index - 1]
+          if (curr_record.CHROM, curr_record.POS, curr_record.REF, curr_record.ALT) == (prev_record.CHROM, prev_record.POS, prev_record.REF, prev_record.ALT):
+              continue
+      vcf_writer.write_record(record)
   vcf_writer.close()
 
   logger.info("Finished liftover of VCF to original reference")
