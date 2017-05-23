@@ -88,7 +88,7 @@ public class Sequence {
      */
     public int getNumNonNBases(final int start, final int end) {
         int count = 0;
-        for (int index = start; start < end; index++) {
+        for (int index = start; index < end; index++) {
             if (!isN(_seq[index])) count++;
         }
         return count;
