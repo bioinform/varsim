@@ -1154,7 +1154,7 @@ public class VCFcompare extends VarSimTool {
             final VariantOverallType variantOverallTypes[] = {VariantOverallType.SNP, VariantOverallType.Insertion, VariantOverallType.Deletion};
             for (final VariantOverallType variantOverallType : variantOverallTypes) {
                 if (outputBlob.getNumberOfTrueCorrect().getData().containsKey(variantOverallType)) {
-                    if (bedFilename != null && !bedFilename.isEmpty()) {
+                    if (bedFilename == null || bedFilename.isEmpty()) {
                         outputBlob.getNumberOfTrueCorrect().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases());
                     } else {
                         outputBlob.getNumberOfTrueCorrect().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases(new File(bedFilename)));
