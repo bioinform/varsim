@@ -81,6 +81,20 @@ public class Sequence {
     }
 
     /**
+     *
+     * @param start 0-based start, consistent with BED
+     * @param end non-inclusive end, consistent with BED
+     * @return number of non-N based in the sequence in the region of interest
+     */
+    public int getNumNonNBases(final int start, final int end) {
+        int count = 0;
+        for (int index = start; start < end; index++) {
+            if (!isN(_seq[index])) count++;
+        }
+        return count;
+    }
+
+    /**
      * Reverses and complements the bases in place.
      */
     public static void reverseComplement(final byte[] bases) {

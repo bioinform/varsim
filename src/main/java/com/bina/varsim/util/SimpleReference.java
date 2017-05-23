@@ -10,9 +10,18 @@ import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.Sequence;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.tribble.FeatureCodec;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.readers.AsciiLineReader;
+import htsjdk.tribble.readers.AsciiLineReaderIterator;
+import htsjdk.tribble.readers.LineIterator;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -155,6 +164,19 @@ public class SimpleReference {
         long count = 0;
         for (Sequence sequence : data.values()) {
             count += sequence.getNumNonNBases();
+        }
+        return count;
+    }
+
+    public long getNumNonNBases(final File regions) throws IOException {
+        long count = 0;
+
+        final FeatureCodec<BEDFeature, LineIterator> bedCodec = new BEDCodec(BEDCodec.StartOffset.ONE);
+        final LineIterator lineIterator = new AsciiLineReaderIterator(new AsciiLineReader(new FileInputStream(regions)));
+
+        while (lineIterator.hasNext()) {
+            final BEDFeature bedFeature = bedCodec.decode(lineIterator);
+            count += data.get(new ChrString(bedFeature.getContig())).getNumNonNBases(bedFeature.getStart(), bedFeature.getEnd());
         }
         return count;
     }
