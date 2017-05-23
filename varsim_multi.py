@@ -17,6 +17,7 @@ from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf
 import pybedtools
+import pysam
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
@@ -69,15 +70,18 @@ def varsim_multi(reference,
 
     for index, sample in enumerate(samples):
         sample_dir = os.path.join(out_dir, sample)
+        makedirs([sample_dir])
         logger.info("Simulating sample {} in {}".format(sample, sample_dir))
 
         # Run RandVCF first to get the sampled variants for the sample
         if randvcf_options:
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
-                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, seed + 1000 * index).wait()
+                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, seed + 1000 * index, sex, randvcf_options, reference).wait()
+            pysam.tabix_index(sampled_vcf, force=True, preset='vcf')
+            sampled_vcf = "{}.gz".format(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
-            _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf.vcf"), flank=0)
+            _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
             sample_variant_vcfs = restricted_vcfs + [restricted_sampled_vcf]
         else:
             sample_variant_vcfs = restricted_vcfs

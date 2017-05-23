@@ -65,7 +65,7 @@ def lift_vcfs(vcfs, out_vcf, reference):
           prev_record = vcf_records[index - 1]
           if (curr_record.CHROM, curr_record.POS, curr_record.REF, curr_record.ALT) == (prev_record.CHROM, prev_record.POS, prev_record.REF, prev_record.ALT):
               continue
-      vcf_writer.write_record(record)
+      vcf_writer.write_record(curr_record)
   vcf_writer.close()
 
   logger.info("Finished liftover of VCF to original reference")
