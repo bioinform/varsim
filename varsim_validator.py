@@ -24,7 +24,7 @@ VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 
 ALL_COUNTS = ["fp", "tp", "fn", "tn", "t"]
 
-def sum_counts(count1, count2={}, keys_for_summation=["_TP", "_FP", "_FN", "_T", "fp", "fn", "tp", "t"]):    
+def sum_counts(count1, count2={}, keys_for_summation=["fp", "fn", "tp", "t"]):    
     for key in keys_for_summation:
         if key not in count1:
             count1[key] = 0
@@ -60,10 +60,16 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
     summary_report["tpr"] = (float(summary_report["tp"]) / float(summary_report["t"]) * 100) if summary_report["t"] > 0 else 0
     summary_report["ppv"] = 100.0 - summary_report["fdr"]
     summary_report["f1"] = (2.0 * float(summary_report["ppv"]  * summary_report["tpr"]) / float(summary_report["ppv"] + summary_report["tpr"])) if (summary_report["ppv"] + summary_report["tpr"] > 0) else 0
-    summary_report["spc"] = float(summary_report["tn"]) / float(summary_report["tn"] + summary_report["fp"]) if (summary_report["tn"] + summary_report["fp"] > 0) else 0
+    summary_report["spc"] = 100.0 * float(summary_report["tn"]) / float(summary_report["tn"] + summary_report["fp"]) if (summary_report["tn"] + summary_report["fp"] > 0) else 0
 
     return summary_report
-    
+
+def get_quantile(values, quantile=50.0):
+    logger = logging.getLogger(get_quantile.__name__)
+
+    sorted_values = sorted(values)
+    return sorted_values[int(len(values)*(1 - quantile/100.0))]
+
 
 def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_dir, out_dir, vcfcompare_options="", disable_vcfcompare=False):
     logger = logging.getLogger(varsim_multi_validation.__name__)
@@ -86,8 +92,6 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
             logger.error("{} missing".format(sample_called))
             continue
 
-        samples_found[sample] = {"truth": sample_truth, "called": sample_called}
-
         if not disable_vcfcompare:
             command = "java -jar {} vcfcompare -reference {} {} -true_vcf {} -prefix {} {}".format(VARSIMJAR, reference, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
 
@@ -95,6 +99,12 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
                 subprocess.check_call(command, shell=True, stdout=stdout, stderr=stderr)
 
         report_json = os.path.join(sample_dir, "{}_report.json".format(sample))
+
+        if not os.path.isfile(report_json):
+            logger.error("Accuracy report {} missing for {}".format(report_json, sample))
+            continue
+        
+        samples_found[sample] = {"truth": sample_truth, "called": sample_called}
         with open(report_json) as report_json_fd:
             sample_reports[sample] = json.load(report_json_fd)
 
@@ -104,17 +114,28 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
     # Now generate summary stats
 
     final_report = {}
-    final_report["all"] = aggregate_reports(sample_reports, None)
-    final_report["snp"] = aggregate_reports(sample_reports, None, "snp")
-    final_report["ins"] = aggregate_reports(sample_reports, None, "ins")
-    final_report["del"] = aggregate_reports(sample_reports, None, "del")
-    final_report["indel"] = aggregate_reports(sample_reports, None, "indel")
+    for v in ["all", "snp", "ins", "del", "indel"]:
+        final_report[v] = aggregate_reports(sample_reports, None, v)
     final_report["samples"] = {}
     for sample in sample_reports:
         sample_summary = {"report": {}, "truth": samples_found[sample]["truth"], "called": samples_found[sample]["called"]}
         for key in ["all", "snp", "ins", "del", "indel"]:
             sample_summary["report"][key] = aggregate_reports(sample_reports, [sample], key)
         final_report["samples"][sample] = sample_summary
+
+    per_sample_accuracies = {}
+    samples = sorted(sample_reports.keys())
+
+    per_sample_accuracies["samples"] = samples
+
+    #logger.info(json.dumps(final_report["samples"], indent=2))
+    for key in ["all", "snp", "ins", "del", "indel"]:
+        key_metric = {}
+        for metric in ["tpr", "spc", "ppv", "t", "fp", "fn", "tp"]:
+            values = [final_report["samples"][sample]["report"][key][metric] for sample in samples]
+            key_metric[metric] = {"data": values, "mean": float(sum(values)) / len(values), "median": get_quantile(values), "ci95": get_quantile(values, 95)}
+        per_sample_accuracies[key] = key_metric
+    final_report["per_sample"] = per_sample_accuracies
 
     final_report["num_samples"] = len(final_report["samples"])
     print json.dumps(final_report, indent=2)
