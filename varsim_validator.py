@@ -24,7 +24,7 @@ VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 
 ALL_COUNTS = ["fp", "tp", "fn", "tn", "t"]
 
-def sum_counts(count1, count2={}, keys_for_summation=["fp", "fn", "tp", "t"]):    
+def sum_counts(count1, count2={}, keys_for_summation=["fp", "fn", "tp", "t"]):
     for key in keys_for_summation:
         if key not in count1:
             count1[key] = 0
@@ -56,6 +56,7 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
             summary_report = sum_counts(summary_report, sample_s[v]["sum_count"])
             summary_report = sum_counts(summary_report, sample_s[v]["sum_per_base_count"], keys_for_summation=["_TN", "tn"])
 
+    summary_report["fn"] = summary_report["t"] - summary_report["tp"]
     summary_report["fdr"] = (float(summary_report["fp"]) / float(summary_report["fp"] + summary_report["tp"]) * 100) if (summary_report["fp"] + summary_report["tp"] > 0) else 0
     summary_report["tpr"] = (float(summary_report["tp"]) / float(summary_report["t"]) * 100) if summary_report["t"] > 0 else 0
     summary_report["ppv"] = 100.0 - summary_report["fdr"]
