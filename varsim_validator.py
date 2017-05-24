@@ -54,7 +54,11 @@ def aggregate_reports(sample_reports, samples, variant_type="all"):
                 logger.error("{} missing for {}".format(v, sample))
                 continue
             summary_report = sum_counts(summary_report, sample_s[v]["sum_count"])
-            summary_report = sum_counts(summary_report, sample_s[v]["sum_per_base_count"], keys_for_summation=["_TN", "tn"])
+            if variant_type != "all":
+                summary_report = sum_counts(summary_report, sample_s[v]["sum_per_base_count"], keys_for_summation=["_TN", "tn"])
+        if variant_type == "all":
+            summary_report = sum_counts(summary_report, sample_reports[sample]["num_true_correct"]["all_data"]["sum_per_base_count"], keys_for_summation=["tn"])
+        
 
     summary_report["fn"] = summary_report["t"] - summary_report["tp"]
     summary_report["fdr"] = (float(summary_report["fp"]) / float(summary_report["fp"] + summary_report["tp"]) * 100) if (summary_report["fp"] + summary_report["tp"] > 0) else 0
@@ -132,7 +136,7 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
     #logger.info(json.dumps(final_report["samples"], indent=2))
     for key in ["all", "snp", "ins", "del", "indel"]:
         key_metric = {}
-        for metric in ["tpr", "spc", "ppv", "t", "fp", "fn", "tp"]:
+        for metric in ["tpr", "spc", "ppv", "t", "fp", "fn", "tp", "tn"]:
             values = [final_report["samples"][sample]["report"][key][metric] for sample in samples]
             key_metric[metric] = {"data": values, "mean": float(sum(values)) / len(values), "median": get_quantile(values), "ci95": get_quantile(values, 95)}
         per_sample_accuracies[key] = key_metric
@@ -140,6 +144,7 @@ def varsim_multi_validation(reference, regions, samples, varsim_dir, variants_di
 
     final_report["num_samples"] = len(final_report["samples"])
     print json.dumps(final_report, indent=2)
+
 
 if __name__ == "__main__":
     check_java()
