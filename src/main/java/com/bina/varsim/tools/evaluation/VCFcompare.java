@@ -1161,6 +1161,7 @@ public class VCFcompare extends VarSimTool {
                     }
                 }
             }
+            outputBlob.getNumberOfTrueCorrect().getAllData().computeTN((int) referenceGenome.getNumNonNBases(new File(bedFilename)));
         }
 
 
