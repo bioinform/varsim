@@ -73,7 +73,7 @@ def get_quantile(values, quantile=50.0):
     return sorted_values[int(len(values)*(1 - quantile/100.0))]
 
 
-def varsim_multi_validation(reference, regions, samples, varsim_dirs, variants_dirs, out_dir, vcfcompare_options="", disable_vcfcompare=False):
+def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_dir, vcfcompare_options="", disable_vcfcompare=False):
     logger = logging.getLogger(varsim_multi_validation.__name__)
 
     bed_options = "-bed {}".format(regions) if regions else ""
@@ -100,7 +100,7 @@ def varsim_multi_validation(reference, regions, samples, varsim_dirs, variants_d
             continue
 
         if not disable_vcfcompare:
-            command = "java -jar {} vcfcompare -reference {} {} -true_vcf {} -prefix {} {}".format(VARSIMJAR, reference, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
+            command = "java -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
 
             with open(os.path.join(sample_dir, "vcfcompare.out"), "w") as stdout, open(os.path.join(sample_dir, "vcfcompare.err"), "w") as stderr:
                 subprocess.check_call(command, shell=True, stdout=stdout, stderr=stderr)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir", metavar="DIR",
                              help="Output directory for the simulated genome, reads and variants", required=False,
                              default="out")
-    parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into", required=True)
+    parser.add_argument("--reference", metavar="FASTA", help="Reference genome that variants will be inserted into", default="")
     parser.add_argument("--regions", help="Regions of interest for simulation. Skip for whole genome simulation")
     parser.add_argument("--samples", help="Samples to be simulated", required=True, nargs="+")
     parser.add_argument("--varsim", help="Root directory of multi-sample truth generation", nargs="+", required=True)
@@ -173,4 +173,5 @@ if __name__ == "__main__":
     loglevel = get_loglevel(args.loglevel)
     logging.basicConfig(level=loglevel, format=FORMAT)
 
-    varsim_multi_validation(args.reference, args.regions, args.samples, args.varsim, args.variants, args.out_dir, args.vcfcompare_options, args.disable_vcfcompare)
+    vcfcompare_options = "-reference {} {}".format(args.reference, args.vcfcompare_options) if args.reference else args.vcfcompare_options
+    varsim_multi_validation(args.regions, args.samples, args.varsim, args.variants, args.out_dir, args.vcfcompare_options, args.disable_vcfcompare)
