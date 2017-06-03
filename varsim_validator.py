@@ -21,6 +21,10 @@ VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 
 ALL_COUNTS = ["fp", "tp", "fn", "tn", "t"]
 
+def safe_mean(counts):
+    return (float(sum(counts)) / len(counts)) if counts else 0.0
+
+
 def sum_counts(count1, count2={}, keys_for_summation=["fp", "fn", "tp", "t"]):
     for key in keys_for_summation:
         if key not in count1:
@@ -70,7 +74,7 @@ def get_quantile(values, quantile=50.0):
     logger = logging.getLogger(get_quantile.__name__)
 
     sorted_values = sorted(values)
-    return sorted_values[int(len(values)*(1 - quantile/100.0))]
+    return sorted_values[int(len(values)*(1 - quantile/100.0))] if sorted_values else 0.0
 
 
 def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_dir, vcfcompare_options="", disable_vcfcompare=False):
@@ -138,7 +142,7 @@ def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_di
         key_metric = {}
         for metric in ["tpr", "spc", "ppv", "t", "fp", "fn", "tp", "tn"]:
             values = [final_report["samples"][sample]["report"][key][metric] for sample in samples]
-            key_metric[metric] = {"data": values, "mean": float(sum(values)) / len(values), "median": get_quantile(values), "ci95": get_quantile(values, 95)}
+            key_metric[metric] = {"data": values, "mean": safe_mean(values), "median": get_quantile(values), "ci95": get_quantile(values, 95)}
         per_sample_accuracies[key] = key_metric
     final_report["per_sample"] = per_sample_accuracies
 
