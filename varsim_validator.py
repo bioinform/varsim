@@ -177,5 +177,5 @@ if __name__ == "__main__":
     loglevel = get_loglevel(args.loglevel)
     logging.basicConfig(level=loglevel, format=FORMAT)
 
-    vcfcompare_options = "-reference {} {}".format(args.reference, args.vcfcompare_options) if args.reference else args.vcfcompare_options
+    args.vcfcompare_options = "-reference {} {}".format(args.reference, args.vcfcompare_options) if args.reference else args.vcfcompare_options
     varsim_multi_validation(args.regions, args.samples, args.varsim, args.variants, args.out_dir, args.vcfcompare_options, args.disable_vcfcompare)
