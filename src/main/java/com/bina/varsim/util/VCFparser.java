@@ -298,6 +298,11 @@ public class VCFparser extends GzFileParser<Variant> {
             return null; // reference alleles... ignore them for now....
         }
 
+        if (!REF.matches("[ATCGN]+")) {
+            log.warn("only ATCGN allowed for REF column");
+            return null; //
+        }
+
         // determine copy-number
         // TODO need to be able to deal with unphased copy-numbers?
         byte[] copyNumberArray = new byte[2]; // paternal-maternal
