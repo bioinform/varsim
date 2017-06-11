@@ -67,9 +67,10 @@ def lift_vcfs(vcfs, out_vcf, reference):
               continue
       vcf_writer.write_record(curr_record)
   vcf_writer.close()
+  pysam.tabix_index(out_vcf, force=True, preset='vcf')
 
   logger.info("Finished liftover of VCF to original reference")
-  return out_vcf
+  return "{}.gz".format(out_vcf)
 
 
 def lift_maps(maps, out_map):
