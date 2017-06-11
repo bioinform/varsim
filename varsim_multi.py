@@ -47,7 +47,8 @@ def varsim_multi(reference,
                  keep_temp=False,
                  force_five_base_encoding=False,
                  lift_ref=False,
-                 disable_vcf2diploid=False):
+                 disable_vcf2diploid=False,
+                 samples_random=0):
     logger = logging.getLogger(varsim_multi.__name__)
 
     makedirs([out_dir])
@@ -65,10 +66,9 @@ def varsim_multi(reference,
         # Now lift over the restricted_sampling_vcf to get the region-limited VCF
         sampling_vcf = lift_vcfs([restricted_sampling_vcf], os.path.join(out_dir, "region_restricted", "region-restricted-sampling.vcf"), reference)
         
+    all_samples = samples + ["VarSim%d" % i for i in xrange(samples_random)]
 
-    #_, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], regions, [], os.path.join(out_dir, "restricted_sampling"), flank=0, short_contig_names=False)
-
-    for index, sample in enumerate(samples):
+    for index, sample in enumerate(all_samples):
         sample_dir = os.path.join(out_dir, sample)
         makedirs([sample_dir])
         logger.info("Simulating sample {} in {}".format(sample, sample_dir))
@@ -82,7 +82,7 @@ def varsim_multi(reference,
             sampled_vcf = "{}.gz".format(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
-            sample_variant_vcfs = restricted_vcfs + [restricted_sampled_vcf]
+            sample_variant_vcfs = (restricted_vcfs if index >= len(samples) else []) + [restricted_sampled_vcf]
         else:
             sample_variant_vcfs = restricted_vcfs
 
@@ -123,7 +123,8 @@ if __name__ == "__main__":
     main_parser.add_argument("--seed", metavar="seed", help="Random number seed for reproducibility", type=int, default=0)
     main_parser.add_argument("--sex", metavar="Sex", help="Sex of the person (MALE/FEMALE)", required=False, type=str,
                              choices=["MALE", "FEMALE"], default="MALE")
-    main_parser.add_argument("--samples", help="Samples to be simulated", required=True, nargs="+")
+    main_parser.add_argument("--samples", help="Samples to be simulated", required=False, nargs="+", default=[])
+    main_parser.add_argument("--samples_random", help="Number of random samples to generate", type=int, default=0)
     main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", choices=["art", "dwgsim", "longislnd"], default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen")
@@ -240,4 +241,5 @@ if __name__ == "__main__":
                  keep_temp=args.keep_temp,
                  force_five_base_encoding=args.force_five_base_encoding,
                  lift_ref=args.lift_ref,
-                 disable_vcf2diploid=args.disable_vcf2diploid)
+                 disable_vcf2diploid=args.disable_vcf2diploid,
+                 samples_random=args.samples_random)
