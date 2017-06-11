@@ -109,6 +109,9 @@ def varsim_multi(reference,
                     lift_ref,
                     disable_vcf2diploid)
 
+    with open(os.path.join(out_dir, "samples.txt"), "w") as samples_fd:
+        samples_fd.write("\n".join(all_samples))
+
 
 if __name__ == "__main__":
     check_java()
