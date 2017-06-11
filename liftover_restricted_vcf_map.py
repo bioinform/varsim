@@ -9,7 +9,7 @@ import logging
 import copy
 from collections import defaultdict, OrderedDict
 
-def lift_vcfs(vcfs, out_vcf, reference):
+def lift_vcfs(vcfs, out_vcf, reference, tabix_index=True):
   logger = logging.getLogger(lift_vcfs.__name__)
 
   if not vcfs:
@@ -67,10 +67,11 @@ def lift_vcfs(vcfs, out_vcf, reference):
               continue
       vcf_writer.write_record(curr_record)
   vcf_writer.close()
-  pysam.tabix_index(out_vcf, force=True, preset='vcf')
+  if tabix_index:
+      pysam.tabix_index(out_vcf, force=True, preset='vcf')
 
   logger.info("Finished liftover of VCF to original reference")
-  return "{}.gz".format(out_vcf)
+  return "{}.gz".format(out_vcf) if tabix_index else out_vcf
 
 
 def lift_maps(maps, out_map):

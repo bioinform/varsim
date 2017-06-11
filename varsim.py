@@ -12,6 +12,7 @@ import itertools
 import glob
 import tempfile
 import re
+import pysam
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
@@ -402,9 +403,10 @@ def varsim_main(reference,
             makedirs([lifted_dir])
             #quick fix for issue of CN
             convertCN([merged_truth_vcf], "two2one")
-            merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None)
+            merged_truth_vcf = lift_vcfs([merged_truth_vcf], os.path.join(lifted_dir, "truth.vcf"), None, tabix_index=False)
             #quick fix for issue of CN
             convertCN([merged_truth_vcf], "one2two")
+            pysam.tabix_index(merged_truth_vcf, force=True, preset='vcf')
             merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
 
     if processes:
