@@ -68,8 +68,9 @@ def varsim_multi(reference,
         
     all_samples = samples + ["VarSim%d" % i for i in xrange(samples_random)]
 
-    for index, sample in enumerate(all_samples):
+    for index, (sample, coverage) in enumerate(zip(all_samples, total_coverage)):
         sample_dir = os.path.join(out_dir, sample)
+        sample_seed = seed + 1000 * index
         makedirs([sample_dir])
         logger.info("Simulating sample {} in {}".format(sample, sample_dir))
 
@@ -77,7 +78,7 @@ def varsim_multi(reference,
         if randvcf_options:
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
-                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, seed + 1000 * index, sex, randvcf_options, reference).wait()
+                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference).wait()
             pysam.tabix_index(sampled_vcf, force=True, preset='vcf')
             sampled_vcf = "{}.gz".format(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
@@ -89,7 +90,7 @@ def varsim_multi(reference,
         varsim_main(restricted_reference,
                     simulator,
                     simulator_exe,
-                    total_coverage,
+                    coverage,
                     sample_variant_vcfs,
                     None,
                     dgv_file,
@@ -101,7 +102,7 @@ def varsim_multi(reference,
                     os.path.join(sample_dir, "log"),
                     os.path.join(sample_dir, "out"),
                     sv_insert_seq,
-                    seed + 1000 * index,
+                    sample_seed,
                     sex,
                     remove_filtered,
                     keep_temp,
@@ -135,8 +136,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
                              default=1, type=int)
-    main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=1.0,
-                             type=float)
+    main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=[1.0], nargs="+")
     main_parser.add_argument("--vcfs", metavar="VCF",
                              help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+",
                              default=[])
@@ -223,10 +223,18 @@ if __name__ == "__main__":
     simulator = None if args.disable_sim else args.simulator
     randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
     randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
+
+    num_samples = len(args.samples) + args.samples_random
+    total_coverage = map(float, args.total_coverage)
+    if len(total_coverage) == 1:
+        total_coverage *= num_samples
+    if len(total_coverage) != num_samples:
+        raise ValueError("Expect total_coverage to have length either 1 or total number of samples")
+
     varsim_multi(args.reference,
                  simulator,
                  args.simulator_executable,
-                 args.total_coverage,
+                 total_coverage,
                  variant_vcfs=args.vcfs,
                  sampling_vcf=args.sampling_vcf,
                  dgv_file=args.sv_dgv,
