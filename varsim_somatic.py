@@ -126,10 +126,8 @@ def varsim_somatic_main():
         cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
         # Not able to support novel yet for COSMIC variants
-        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr,
-                         args.seed, args.sex, args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp,
-                         args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim,
-                         os.path.realpath(args.reference.name), args.som_prop_het)])
+        randvcf_options = RandVCFOptions(args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp, args.som_num_comples, 0, args.som_min_length_lim, args.som_max_length_lim, args.som_prop_het)
+        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference.name)])
 
     normal_vcfs = [args.normal_vcf]
     somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
