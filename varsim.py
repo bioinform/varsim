@@ -259,7 +259,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-num_dup", str(options.num_dup),
                         "-num_inv", str(options.num_inv),
                         "-novel", str(options.percent_novel),
-                        "-min_len", str(options.min_len),
+                        "-min_len", str(options.min_length),
                         "-max_len", str(options.max_length),
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
