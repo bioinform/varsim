@@ -13,10 +13,7 @@ import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.types.variant.alt.Alt;
-import com.bina.varsim.util.ConstraintValidator;
-import com.bina.varsim.util.SimpleReference;
-import com.bina.varsim.util.VCFparser;
-import com.bina.varsim.util.chrSearchTree;
+import com.bina.varsim.util.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -925,7 +922,7 @@ public class VCFcompare extends VarSimTool {
         int[] validatedLengths = new int[numReadOriginalVariant];
         int[] threePrimeDistance = new int[numReadOriginalVariant];
         int[] fivePrimeDistance = new int[numReadOriginalVariant];
-        int[] lengthDifference = new int[numReadOriginalVariant];
+        Integer[] lengthDifference = new Integer[numReadOriginalVariant];
 
         // generate the output files
         try (
@@ -1020,7 +1017,12 @@ public class VCFcompare extends VarSimTool {
                             //update 3' distance,5' distance,length difference
                             threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
                             fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            lengthDifference[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
+                            if (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise()) {
+                                //if predicted variant or matched true variant has imprecise length, skip length difference calculation
+                                lengthDifference[dualIdx.wholeVariantIndex] = null;
+                            } else {
+                                lengthDifference[dualIdx.wholeVariantIndex] = VarSimMath.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
+                            }
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
                             if (!skipFP) {
@@ -1056,7 +1058,12 @@ public class VCFcompare extends VarSimTool {
                             //update 3' distance,5' distance,length difference
                             threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
                             fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            lengthDifference[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
+                            if (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise()) {
+                                //if predicted variant or matched true variant has imprecise length, skip length difference calculation
+                                lengthDifference[dualIdx.wholeVariantIndex] = null;
+                            } else {
+                                lengthDifference[dualIdx.wholeVariantIndex] = VarSimMath.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
+                            }
                             validatedLengths[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
                             validatedLength += currentVariant.maxLen();
                         } else if (computeAsSplit) {
@@ -1127,8 +1134,10 @@ public class VCFcompare extends VarSimTool {
                         tpThreePrimeDistance.add(threePrimeDistance[numRead2]);
                         var.setFivePrimeDistance(fivePrimeDistance[numRead2]);
                         tpFivePrimeDistance.add(fivePrimeDistance[numRead2]);
-                        var.setLengthDifference(lengthDifference[numRead2]);
-                        tpLengthDifference.add(lengthDifference[numRead2]);
+                        if ( lengthDifference[numRead2] != null) {
+                            var.setLengthDifference(lengthDifference[numRead2]);
+                            tpLengthDifference.add(lengthDifference[numRead2]);
+                        }
                     }
                     var.output(tpWriter);
                 } else {
@@ -1542,6 +1551,9 @@ public class VCFcompare extends VarSimTool {
         }
     }
     private String getSummaryStats(List<Integer> list) {
+        if (list == null || list.isEmpty()) {
+            return "No data.";
+        }
         double[] a = list.stream().mapToDouble(Integer::intValue).toArray();
         StringBuilder sb = new StringBuilder();
         sb.append("max: " + StatUtils.max(a) + "\n");
