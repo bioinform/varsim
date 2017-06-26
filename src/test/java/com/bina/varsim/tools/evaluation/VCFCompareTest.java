@@ -237,6 +237,16 @@ public class VCFCompareTest {
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/insDistance", new String[]{"-wig", "150","-over","0.5","-output_distance_metric"});
   }
   /**
+   * 1 INS in TP, 1 INS in compare, with 100-bp 3' distance, 100-bp 5' distance, 100bp length difference
+   *
+   * predicted length is imprecise
+   *
+   */
+  @Test
+  public void impreciseDistanceINSTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/impreciseInsDistance", new String[]{"-wig", "150","-over","0.5","-output_distance_metric","-ignore_imprecise_length"});
+  }
+  /**
    * 1 INV in TP, 1 INV in compare, with 1000-bp 3' distance, 11000-bp 5' distance, 100bp length difference
    *
    */
