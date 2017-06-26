@@ -1017,7 +1017,8 @@ public class VCFcompare extends VarSimTool {
                             //update 3' distance,5' distance,length difference
                             threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
                             fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            if (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise()) {
+                            if (ignoreImpreciseLength &&
+                                    (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise())) {
                                 //if predicted variant or matched true variant has imprecise length, skip length difference calculation
                                 lengthDifference[dualIdx.wholeVariantIndex] = null;
                             } else {
@@ -1058,7 +1059,8 @@ public class VCFcompare extends VarSimTool {
                             //update 3' distance,5' distance,length difference
                             threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
                             fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            if (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise()) {
+                            if (ignoreImpreciseLength &&
+                                    (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise())) {
                                 //if predicted variant or matched true variant has imprecise length, skip length difference calculation
                                 lengthDifference[dualIdx.wholeVariantIndex] = null;
                             } else {
