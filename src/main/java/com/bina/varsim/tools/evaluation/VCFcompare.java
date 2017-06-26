@@ -81,6 +81,9 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-output_distance_metric", usage = "output distance-based metrics (for canonicalizable variants, max metrics of constitutional variants will be reported)")
     boolean outputDistanceMetric = false;
 
+    @Option(name = "-ignore_imprecise_length", usage = "when a variant has IMPRECISE_LENGTH in INFO field, ignore its length for comparison. This works for both predicted and truth variants.")
+    boolean ignoreImpreciseLength = false;
+
     @Option(name = "-global_matching", usage = "if enabled, truth and test variants will be matched globally rather than locally.")
     boolean isGlobalMatching = false;
 
