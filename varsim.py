@@ -455,7 +455,7 @@ def varsim_main(reference,
         elif simulator == "art":
             for i in xrange(nlanes):
                 simulator_command = "{} {} -i {} -f {} -rs {} -o {}".format(simulator_exe, simulator_options, merged_reference, coverage_per_lane, seed + i, os.path.join(out_dir, "simulated.lane%d.read" % (i)))
-                simulator_commands_files.append((art_command, os.path.join(log_dir, "art.lane%d.out" % (i)), os.path.join(log_dir, "art.lane%d.err" % (i))))
+                simulator_commands_files.append((simulator_command, os.path.join(log_dir, "art.lane%d.out" % (i)), os.path.join(log_dir, "art.lane%d.err" % (i))))
         else: # simulator == "longislnd":
             simulator_command = "{} {} --coverage {} --out {} --fasta {}".format(simulator_exe, simulator_options, total_coverage * 0.5, os.path.join(out_dir, "longislnd_sim"), merged_reference)
             simulator_commands_files.append((simulator_command, os.path.join(log_dir, "longislnd.out"), os.path.join(log_dir, "longislnd.err")))
