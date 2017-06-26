@@ -451,7 +451,7 @@ def varsim_main(reference,
         if simulator == "dwgsim":
             for i in xrange(nlanes):
                 simulator_command = "{} {} -C {} -z {} {} {}".format(os.path.realpath(simulator_exe), simulator_options, coverage_per_lane, seed + i, merged_reference, os.path.join(out_dir, "simulated.lane%d" % (i)))
-                simulator_commands_files.append((dwgsim_command, os.path.join(log_dir, "dwgsim.lane%d.out" % (i)), os.path.join(log_dir, "dwgsim.lane%d.err" % (i))))
+                simulator_commands_files.append((simulator_command, os.path.join(log_dir, "dwgsim.lane%d.out" % (i)), os.path.join(log_dir, "dwgsim.lane%d.err" % (i))))
         elif simulator == "art":
             for i in xrange(nlanes):
                 simulator_command = "{} {} -i {} -f {} -rs {} -o {}".format(simulator_exe, simulator_options, merged_reference, coverage_per_lane, seed + i, os.path.join(out_dir, "simulated.lane%d.read" % (i)))
