@@ -117,7 +117,7 @@ abstract public class RandVCFgenerator extends VarSimTool {
                 int len = alt.length();
                 byte newSeq[] = new byte[len];
                 // randomly duplicate insertion sequence if it is small
-                final int segLen = (len > insertSeq.length) ? (int) Math.ceil(insertSeq.length / NSEGMENTS) : len;
+                final int segLen = (len >= insertSeq.length) ? (int) Math.ceil(insertSeq.length / NSEGMENTS) : len;
                 for (int i = 0; i < len; i += segLen) {
                     // choose random start loc
                     int randStart = rand.nextInt(insertSeq.length - segLen);
