@@ -357,6 +357,7 @@ public class VCFparser extends GzFileParser<Variant> {
           int[] pos2 =  info.getValue("POS2", int[].class);
           Boolean isinv =  info.getValue("ISINV", Boolean.class);
           Boolean isLengthImprecise =  info.getValue("IMPRECISE_LENGTH", Boolean.class);
+          isLengthImprecise = isLengthImprecise == null? false : isLengthImprecise;
           String[] traid =  info.getValue("TRAID", String[].class);
           String[] chr2 =  info.getValue("CHR2", String[].class);
           deletedReference = REF;

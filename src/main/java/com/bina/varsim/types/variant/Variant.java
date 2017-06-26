@@ -97,7 +97,7 @@ public class Variant implements Comparable<Variant>{
         private int[] pos2;
         private int[] end2;
         private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
-        private Boolean isLengthImprecise;
+        private Boolean isLengthImprecise = false;
         private String traid; //translocation ID
         private List<Variant> compositions;
 
