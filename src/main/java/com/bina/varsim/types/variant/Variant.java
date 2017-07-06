@@ -49,6 +49,7 @@ public class Variant implements Comparable<Variant>{
     private int threePrimeDistance = -1; //3' end distance with a matching variant
     private int fivePrimeDistance = -1;//5' end distance with a matching variant
     private int lengthDifference = -1; //length difference with a matching variant
+    private Boolean isLengthImprecise = false; //true if length is imprecise
 
 
     public List<Variant> getCompositions() {
@@ -96,6 +97,7 @@ public class Variant implements Comparable<Variant>{
         private int[] pos2;
         private int[] end2;
         private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
+        private Boolean isLengthImprecise = false;
         private String traid; //translocation ID
         private List<Variant> compositions;
 
@@ -168,6 +170,10 @@ public class Variant implements Comparable<Variant>{
             this.isinv = b;
             return this;
         }
+        public Builder isLengthImprecise(final Boolean b) {
+            this.isLengthImprecise = b;
+            return this;
+        }
         public Builder traid(final String id) {
             this.traid = id;
             return this;
@@ -199,6 +205,7 @@ public class Variant implements Comparable<Variant>{
         this.isPhased = builder.isPhased;
         this.traid = builder.traid;
         this.isinv = builder.isinv;
+        this.isLengthImprecise = builder.isLengthImprecise;
         this.compositions = builder.compositions;
     }
 
@@ -238,6 +245,7 @@ public class Variant implements Comparable<Variant>{
         isPhased = var.isPhased;
         rand = var.rand;
         isinv = var.isinv;
+        isLengthImprecise = var.isLengthImprecise;
         traid = var.traid;
         compositions = var.getCompositions();
     }
@@ -1253,4 +1261,11 @@ public class Variant implements Comparable<Variant>{
         return extraBase;
     }
 
+    public Boolean isLengthImprecise() {
+        return isLengthImprecise;
+    }
+
+    public void setLengthImprecise(Boolean lengthImprecise) {
+        isLengthImprecise = lengthImprecise;
+    }
 }

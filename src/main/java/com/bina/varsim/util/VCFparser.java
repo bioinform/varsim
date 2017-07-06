@@ -356,6 +356,8 @@ public class VCFparser extends GzFileParser<Variant> {
           int[] end2 =  info.getValue("END2", int[].class);
           int[] pos2 =  info.getValue("POS2", int[].class);
           Boolean isinv =  info.getValue("ISINV", Boolean.class);
+          Boolean isLengthImprecise =  info.getValue("IMPRECISE_LENGTH", Boolean.class);
+          isLengthImprecise = isLengthImprecise == null? false : isLengthImprecise;
           String[] traid =  info.getValue("TRAID", String[].class);
           String[] chr2 =  info.getValue("CHR2", String[].class);
           deletedReference = REF;
@@ -374,6 +376,7 @@ public class VCFparser extends GzFileParser<Variant> {
           Variant.Builder template = new Variant.Builder().chr(chr).pos(pos).
                   ref(refs).phase(genotypeArray).isPhased(isGenotypePhased).
                   varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                  isLengthImprecise(isLengthImprecise).
                   randomNumberGenerator(random);
 
           if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INV) {
