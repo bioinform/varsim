@@ -2,28 +2,12 @@
 
 import argparse
 import os
-import sys
-import subprocess
 import logging
-import shutil
-import time
-import signal
-import itertools
-import glob
-import tempfile
-import re
-from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf
 import pybedtools
 import pysam
-
-MY_DIR = os.path.dirname(os.path.realpath(__file__))
-VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
-REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
 
 
 def varsim_multi(reference,

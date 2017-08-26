@@ -18,10 +18,8 @@ from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
-VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
-REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
+VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
+SUPPORTED_SIMULATORS = ["dwgsim", "art", "longislnd"]
 
 def get_loglevel(string):
     if string == "info":
@@ -565,9 +563,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen"
                              , required=True)
-    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)",
-                             default=DEFAULT_VARSIMJAR,
-                             required=False)
+    main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)")
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
