@@ -9,7 +9,7 @@ import logging
 import time
 from varsim import SUPPORTED_SIMULATORS
 from varsim import check_java, makedirs, monitor_processes, run_vcfstats, run_randvcf, get_version, RandVCFOptions
-from varsim import varsim_main
+from varsim import varsim_main, add_varsim_id
 
 
 def varsim_somatic_main():
@@ -107,13 +107,14 @@ def varsim_somatic_main():
         if not args.cosmic_vcf:
             logger.error("COSMIC database VCF not specified using --cosmic_vcf")
             sys.exit(os.EX_USAGE)
-        rand_vcf_stdout = open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w")
-        rand_vcf_stderr = open(os.path.join(args.log_dir, "random.cosmic.err"), "w")
-        cosmic_sampled_vcfs = [rand_vcf_stdout.name]
-
-        # Not able to support novel yet for COSMIC variants
         randvcf_options = RandVCFOptions(args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp, args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim, args.som_prop_het)
-        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference)])
+
+        with open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w") as rand_vcf_stdout, \
+                open(os.path.join(args.log_dir, "random.cosmic.err"), "w") as rand_vcf_stderr:
+            cosmic_sampled_vcfs = [rand_vcf_stdout.name]
+
+            # Not able to support novel yet for COSMIC variants
+            monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference)])
 
     normal_vcfs = [args.normal_vcf]
     somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
@@ -121,20 +122,10 @@ def varsim_somatic_main():
     if somatic_vcfs:
         vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
         makedirs([vcfs_dir])
-        count = 0
-        for index, vcf in enumerate(somatic_vcfs):
-            copied_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
-            logger.info("Copying somatic VCF %s to %s and adding VARSIMSOMATIC id to entries if missing" % (vcf, copied_vcf))
-            with open(vcf, "r") as vcf_fd, open(copied_vcf, "w") as copied_vcf_fd:
-                for line in vcf_fd:
-                    if line.startswith("#"):
-                        copied_vcf_fd.write(line)
-                    else:
-                        line_fields = line.split("\t")
-                        line_fields[2] = ("VARSIMSOMATIC%d" % count) if line_fields[2] == "." else ("%s,VARSIMSOMATIC%d" % (line_fields[2], count))
-                        copied_vcf_fd.write("\t".join(line_fields))
-                        count += 1
-            fixed_somatic_vcfs.append(copied_vcf)
+        for index, src_vcf in enumerate(somatic_vcfs):
+            dst_vcf = os.path.join(vcfs_dir, "%d.vcf" % index)
+            add_varsim_id(src_vcf, dst_vcf, sindex=0, id_prefix="VarSimSomatic%d" % index)
+            fixed_somatic_vcfs.append(dst_vcf)
 
     vcf_files = (fixed_somatic_vcfs + normal_vcfs) if args.merge_priority == "sn" else (normal_vcfs + fixed_somatic_vcfs)
     vcf_files = map(os.path.realpath, filter(None, vcf_files))

@@ -12,6 +12,7 @@ import itertools
 import glob
 import tempfile
 import re
+import gzip
 import pysam
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
@@ -21,6 +22,7 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 SUPPORTED_SIMULATORS = ["dwgsim", "art", "longislnd"]
 
+
 def get_loglevel(string):
     if string == "info":
         return logging.INFO
@@ -29,6 +31,30 @@ def get_loglevel(string):
     if string == "debug":
         return logging.DEBUG
     return logging.INFO
+
+
+def add_varsim_id(src_variants, dst_variants, sindex=0, id_prefix=""):
+    # type: (str, str, int, str) -> int
+    logger = logging.getLogger(add_varsim_id.__name__)
+
+    src_fd = gzip.open(src_variants) if src_variants.endswith(".gz") else open(src_variants)
+    dst_fd = gzip.open(dst_variants, "w") if dst_variants.endswith(".gz") else open(dst_variants, "w")
+
+    logger.info("Copying VCF %s to %s and adding VarSim id to entries" % (src_variants, dst_variants))
+
+    count = 0
+    if not id_prefix:
+        id_prefix = "VarSim_" + os.path.basename(src_variants).replace(".", "_")
+    for line in src_fd:
+        if line.startswith("#"):
+            dst_fd.write(line)
+        else:
+            line_fields = line.split("\t")
+            id_string = "{}_{}".format(id_prefix, count + sindex)
+            line_fields[2] = id_string if line_fields[2] == "." else (line_fields[2] + "," + id_string)
+            dst_fd.write("\t".join(line_fields))
+            count += 1
+    return count
 
 
 def convertCN(filenames, operation):

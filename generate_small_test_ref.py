@@ -68,7 +68,6 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
         vcf_template_reader = vcf.Reader(open(in_vcf, "r"))
 
     #tabix_vcf = pysam.TabixFile(invcf, parser=pysam.asVCF())
-    info_warned = False
     regions_bedtool = pybedtools.BedTool(regions_bed)
 
     for region_index, region in enumerate(regions_bedtool, start=1):

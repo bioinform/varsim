@@ -41,11 +41,9 @@ def varsim_multi(reference,
 
     restricted_reference, restricted_vcfs = gen_restricted_ref_and_vcfs(reference, variant_vcfs, regions, samples, restricted_dir, flank=0, short_contig_names=False)
 
-    merged_bedtool = pybedtools.BedTool(regions).merge() if regions else None
-
     if regions and sampling_vcf:
         merged_bed = os.path.join(out_dir, "merged.bed")
-        merged_bedtool = pybedtools.BedTool(regions).merge().saveas(merged_bed)
+        pybedtools.BedTool(regions).merge().saveas(merged_bed)
         _, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], merged_bed, [], os.path.join(out_dir, "region_restricted"), flank=0)
         # Now lift over the restricted_sampling_vcf to get the region-limited VCF
         sampling_vcf = lift_vcfs([restricted_sampling_vcf], os.path.join(out_dir, "region_restricted", "region-restricted-sampling.vcf"), reference)
