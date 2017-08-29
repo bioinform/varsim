@@ -168,7 +168,7 @@ def varsim_somatic_main():
                 somatic_vcf_fd.write(line)
                 normal_vcf_fd.write(line)
                 continue
-            if line.find("VARSIMSOMATIC") >= 0:
+            if line.find("VarSimSomatic") >= 0:
                 somatic_vcf_fd.write(line)
             else:
                 normal_vcf_fd.write(line)
