@@ -20,7 +20,7 @@ def varsim_somatic_main():
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     main_parser.add_argument("--out_dir", metavar="Out directory", help="Output directory",
                              default="somatic_out")
-    main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory",
+    main_parser.add_argument("--work_dir", metavar="Work directory", help="Work directory (deprecated)",
                              default="somatic_work")
     main_parser.add_argument("--log_dir", metavar="Log directory", help="Directory to log to",
                              default="somatic_log")
@@ -36,6 +36,7 @@ def varsim_somatic_main():
                              , required=True)
     main_parser.add_argument("--simulator_options", help="Options to be passed to read simulator", default="")
     main_parser.add_argument("--regions", help="Restrict simulation to regions in the BED file")
+    main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument("--varsim_jar", help="Path to VarSim.jar (deprecated)")
     main_parser.add_argument("--read_length", help="Length of read to simulate (deprecated)", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INT",
