@@ -32,8 +32,7 @@ def varsim_somatic_main():
     main_parser.add_argument("--simulator", metavar="simulator", help="Read simulator to use",
                              choices=SUPPORTED_SIMULATORS, default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
-                             help="Path to the executable of the read simulator chosen"
-                             , required=True)
+                             help="Path to the executable of the read simulator chosen")
     main_parser.add_argument("--simulator_options", help="Options to be passed to read simulator", default="")
     main_parser.add_argument("--regions", help="Restrict simulation to regions in the BED file")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
