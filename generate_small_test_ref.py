@@ -108,7 +108,7 @@ def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, fla
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
-        restricted_fasta = os.path.join(outdir, os.path.splitext(os.path.basename(reference))[0])
+        restricted_fasta = os.path.join(outdir, os.path.basename(reference))
         gen_restricted_reference(reference, regions, restricted_fasta, short_contig_names)
 
         if outvcfs:
