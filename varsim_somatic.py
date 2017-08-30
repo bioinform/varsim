@@ -53,7 +53,8 @@ def varsim_somatic_main():
     main_parser.add_argument('--version', action='version', version=get_version())
 
     input_vcf_group = main_parser.add_argument_group("Input VCFs options")
-    input_vcf_group.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled.")
+    input_vcf_group.add_argument("--cosmic_vcf", metavar="VCF", help="COSMIC database VCF. Need to specify when random COSMIC sampling is enabled. (deprecated)")
+    input_vcf_group.add_argument("--somatic_sampling_vcf", help="Somatic database VCF for sampling.")
     input_vcf_group.add_argument("--normal_vcf", metavar="VCF", help="Normal VCF from previous VarSim run", required=True)
     input_vcf_group.add_argument("--somatic_vcfs", metavar="VCF", nargs="+", help="Somatic VCF", default=[])
     input_vcf_group.add_argument("--merge_priority", choices=["sn", "ns"], help="Priority of merging (lowest first) somatic (s) and normal truth (n).", default="sn")
@@ -102,22 +103,22 @@ def varsim_somatic_main():
 
     t_s = time.time()
 
-    cosmic_sampled_vcfs = []
+    somatic_sampled_vcfs = []
     if not args.disable_rand_vcf:
-        if not args.cosmic_vcf:
-            logger.error("COSMIC database VCF not specified using --cosmic_vcf")
+        if not args.somatic_sampling_vcf:
+            logger.error("COSMIC database VCF not specified using --somatic_sampling_vcf")
             sys.exit(os.EX_USAGE)
         randvcf_options = RandVCFOptions(args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp, args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim, args.som_prop_het)
 
-        with open(os.path.join(args.out_dir, "random.cosmic.vcf"), "w") as rand_vcf_stdout, \
-                open(os.path.join(args.log_dir, "random.cosmic.err"), "w") as rand_vcf_stderr:
-            cosmic_sampled_vcfs = [rand_vcf_stdout.name]
+        with open(os.path.join(args.out_dir, "random.somatic.vcf"), "w") as rand_vcf_stdout, \
+                open(os.path.join(args.log_dir, "random.somatic.err"), "w") as rand_vcf_stderr:
+            somatic_sampled_vcfs = [rand_vcf_stdout.name]
 
-            # Not able to support novel yet for COSMIC variants
-            monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference)])
+            # Not able to support novel yet for somatic variants
+            monitor_processes([run_randvcf(os.path.realpath(args.somatic_sampling_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference)])
 
     normal_vcfs = [args.normal_vcf]
-    somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
+    somatic_vcfs = somatic_sampled_vcfs + args.somatic_vcfs
     fixed_somatic_vcfs = []
     if somatic_vcfs:
         vcfs_dir = os.path.join(args.out_dir, "somatic_vcfs")
