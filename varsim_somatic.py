@@ -133,6 +133,7 @@ def varsim_somatic_main():
 
     monitor_processes(run_vcfstats(vcf_files, args.out_dir, args.log_dir))
 
+    varsim_out_dir = os.path.join(args.out_dir, "varsim")
     varsim_main(args.reference,
                 args.simulator if not args.disable_sim else None,
                 args.simulator_executable,
@@ -146,7 +147,7 @@ def varsim_somatic_main():
                 simulator_options=args.simulator_options,
                 sample_id=args.id,
                 log_dir=os.path.join(args.log_dir, "varsim"),
-                out_dir=os.path.join(args.out_dir, "varsim"),
+                out_dir=varsim_out_dir,
                 sv_insert_seq=None,
                 seed=args.seed,
                 sex=args.sex,
@@ -157,7 +158,7 @@ def varsim_somatic_main():
                 disable_vcf2diploid=False)
 
     # Split the tumor truth VCF into normal variants and somatic variants
-    tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
+    tumor_vcf = os.path.realpath(os.path.join(varsim_out_dir, "%s.truth.vcf" % args.id))
     normal_vcf = os.path.join(args.out_dir, "%s_norm.vcf" % args.id)
     somatic_vcf = os.path.join(args.out_dir, "%s_somatic.vcf" % args.id)
     logger.info("Splitting the truth VCF %s into normal and somatic VCFs" % tumor_vcf)
