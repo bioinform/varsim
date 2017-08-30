@@ -154,7 +154,7 @@ def varsim_somatic_main():
                 keep_temp=args.keep_temp,
                 force_five_base_encoding=args.force_five_base_encoding,
                 lift_ref=args.lift_ref,
-                disable_vcf2diploid=args.disable_vcf2diploid)
+                disable_vcf2diploid=False)
 
     # Split the tumor truth VCF into normal variants and somatic variants
     tumor_vcf = os.path.realpath(os.path.join(args.out_dir, "%s.truth.vcf" % args.id))
