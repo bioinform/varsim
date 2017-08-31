@@ -18,14 +18,20 @@ public class ChrString implements Comparable<ChrString>{
      * @param chr Chromosome name as a string
      * @return chromosome name as a string in b37 format
      */
-    public static String stripChr(final String chr) {
-        if (chr.length() > 3 && chr.substring(0, 3).equalsIgnoreCase("chr")) {
-            return chr.substring(3);
-        }
-        if (chr.equals("M")) {
-            return "MT";
+    public static String stripChr(final String chr, final boolean convertToB37Name) {
+        if (convertToB37Name) {
+            if (chr.length() > 3 && chr.substring(0, 3).equalsIgnoreCase("chr")) {
+                return chr.substring(3);
+            }
+            if (chr.equals("M")) {
+                return "MT";
+            }
         }
         return chr;
+    }
+
+    public static String stripChr(final String chr) {
+        return stripChr(chr, false);
     }
 
     /**
@@ -54,11 +60,11 @@ public class ChrString implements Comparable<ChrString>{
     }
 
     public boolean isX() {
-        return name.equals("X");
+        return name.equals("X") || name.equals("chrX");
     }
 
     public boolean isY() {
-        return name.equals("Y");
+        return name.equals("Y") || name.equals("chrY");
     }
 
     public boolean isMT() {
