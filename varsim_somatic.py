@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 import time
+import gzip
 from varsim import SUPPORTED_SIMULATORS
 from varsim import check_java, makedirs, monitor_processes, run_vcfstats, run_randvcf, get_version, RandVCFOptions
 from varsim import varsim_main, add_varsim_id
@@ -134,37 +135,38 @@ def varsim_somatic_main():
     monitor_processes(run_vcfstats(vcf_files, args.out_dir, args.log_dir))
 
     varsim_out_dir = os.path.join(args.out_dir, "varsim")
-    varsim_main(args.reference,
-                args.simulator if not args.disable_sim else None,
-                args.simulator_executable,
-                args.total_coverage,
-                variant_vcfs=vcf_files,
-                sampling_vcf=None,
-                dgv_file=None,
-                randvcf_options=None,
-                randdgv_options=None,
-                nlanes=args.nlanes,
-                simulator_options=args.simulator_options,
-                sample_id=args.id,
-                log_dir=os.path.join(args.log_dir, "varsim"),
-                out_dir=varsim_out_dir,
-                sv_insert_seq=None,
-                seed=args.seed,
-                sex=args.sex,
-                remove_filtered=args.filter,
-                keep_temp=args.keep_temp,
-                force_five_base_encoding=args.force_five_base_encoding,
-                lift_ref=args.lift_ref,
-                disable_vcf2diploid=False)
+    varsim_output = varsim_main(args.reference,
+                                args.simulator if not args.disable_sim else None,
+                                args.simulator_executable,
+                                args.total_coverage,
+                                variant_vcfs=vcf_files,
+                                sampling_vcf=None,
+                                dgv_file=None,
+                                randvcf_options=None,
+                                randdgv_options=None,
+                                nlanes=args.nlanes,
+                                simulator_options=args.simulator_options,
+                                sample_id=args.id,
+                                log_dir=os.path.join(args.log_dir, "varsim"),
+                                out_dir=varsim_out_dir,
+                                sv_insert_seq=None,
+                                seed=args.seed,
+                                sex=args.sex,
+                                remove_filtered=args.filter,
+                                keep_temp=args.keep_temp,
+                                force_five_base_encoding=args.force_five_base_encoding,
+                                lift_ref=args.lift_ref,
+                                disable_vcf2diploid=False)
 
     # Split the tumor truth VCF into normal variants and somatic variants
-    tumor_vcf = os.path.realpath(os.path.join(varsim_out_dir, "%s.truth.vcf" % args.id))
+    tumor_vcf = os.path.realpath(varsim_output.get_truth())
     normal_vcf = os.path.join(args.out_dir, "%s_norm.vcf" % args.id)
     somatic_vcf = os.path.join(args.out_dir, "%s_somatic.vcf" % args.id)
     logger.info("Splitting the truth VCF %s into normal and somatic VCFs" % tumor_vcf)
-    with open(tumor_vcf, "r") as tumor_truth_fd, \
-        open(normal_vcf, "w") as normal_vcf_fd, \
-        open(somatic_vcf, "w") as somatic_vcf_fd:
+
+    tumor_truth_fd = gzip.open(tumor_vcf) if tumor_vcf.endswith(".gz") else open(tumor_vcf)
+    with open(normal_vcf, "w") as normal_vcf_fd, \
+            open(somatic_vcf, "w") as somatic_vcf_fd:
         for line in tumor_truth_fd:
             if line.startswith("#"):
                 somatic_vcf_fd.write(line)
@@ -174,7 +176,8 @@ def varsim_somatic_main():
                 somatic_vcf_fd.write(line)
             else:
                 normal_vcf_fd.write(line)
-
+    tumor_truth_fd.close()
+    
     monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.out_dir, args.log_dir))
 
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))

@@ -300,6 +300,17 @@ def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
 
+class VarSimOutput:
+    def __init__(self, truth_vcf=None):
+        self.truth_vcf = truth_vcf
+
+    def set_truth(self, truth_vcf):
+        self.truth_vcf = truth_vcf
+
+    def get_truth(self):
+        return self.truth_vcf
+
+
 def varsim_main(reference,
                 simulator, # use None to disable simulation
                 simulator_exe,
@@ -323,6 +334,8 @@ def varsim_main(reference,
                 lift_ref=False,
                 disable_vcf2diploid=False):
     check_java()
+
+    output = VarSimOutput()
 
     # make the directories we need
     makedirs([log_dir, out_dir])
@@ -422,6 +435,7 @@ def varsim_main(reference,
 
         monitor_processes(run_vcfstats([merged_truth_vcf], out_dir, log_dir))
 
+        output.set_truth(merged_truth_vcf)
         if lift_ref:
             lifted_dir = os.path.join(out_dir, "lifted")
             makedirs([lifted_dir])
@@ -432,6 +446,8 @@ def varsim_main(reference,
             convertCN([merged_truth_vcf], "one2two")
             pysam.tabix_index(merged_truth_vcf, force=True, preset='vcf')
             merged_map = lift_maps([merged_map], os.path.join(lifted_dir, "truth.map"))
+
+            output.set_truth(merged_truth_vcf + ".gz")
 
     if processes:
         processes = monitor_processes(processes)
@@ -530,7 +546,7 @@ def varsim_main(reference,
                                               "-ref %s/simulated.lane%d.ref " % (out_dir, i, out_dir, i)
                 fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
                 logger.info("Executing command " + fastq_liftover_command)
-		liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
+                liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
                 logger.info(" with pid " + str(liftover_p.pid))
                 processes.append(liftover_p)
                 fastqs.append(os.path.join(out_dir, "lane%d.read%d.fq.gz" % (i, end)))
@@ -564,6 +580,8 @@ def varsim_main(reference,
         for f in tmp_files:
             os.remove(f)
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
+
+    return output
 
 
 if __name__ == "__main__":
