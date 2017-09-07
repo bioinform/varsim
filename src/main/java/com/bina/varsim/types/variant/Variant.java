@@ -1063,10 +1063,11 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(varId);
         sbStr.append("\t");
         // ref allele
-        sbStr.append(getReferenceString() + extraBase);
+	String ref = getReferenceString() + extraBase;
+        sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
         // alt alleles
-        sbStr.append(alternativeAlleleString());
+        sbStr.append(alternativeAlleleString().toUpperCase());
         sbStr.append("\t");
         // variant quality
         sbStr.append(".\t");
