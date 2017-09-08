@@ -816,7 +816,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public int getCN(final int ind) {
-        return (ind <= 0 || ind > alts.length) ? 0 : alts[ind - 1].getCopyNumber();
+        return (ind <= 0 || ind > alts.length) ? 1 : alts[ind - 1].getCopyNumber();
     }
 
     /**
