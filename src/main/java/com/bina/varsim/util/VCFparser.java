@@ -409,7 +409,7 @@ public class VCFparser extends GzFileParser<Variant> {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       // TODO this is temporary, how to encode copy number?
-                      int currentCopyNumber = 1;
+                      int currentCopyNumber = 2;
                       for (int j = 0; j < 2; j++) {
                           if ((i + 1) == genotypeArray[j]) {
                             /*
@@ -505,7 +505,7 @@ public class VCFparser extends GzFileParser<Variant> {
                   //0 is for reference allele
                   //alternative allele is numbered 1,2,... per VCFSpec
                   for (int altAlleleIndex = 1; altAlleleIndex <= svlen.length; altAlleleIndex++) {
-                      int currentCopyNumber = 1;
+                      int currentCopyNumber = 2;
                     /*
                     implicit assumption here: genotype[0] == genotype[1] => copyNumberArray[0] == copyNumberArray[1]
                      */
