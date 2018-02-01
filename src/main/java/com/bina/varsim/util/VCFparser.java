@@ -298,8 +298,8 @@ public class VCFparser extends GzFileParser<Variant> {
             return null; // reference alleles... ignore them for now....
         }
 
-        if (!REF.matches("[ATCGN]+")) {
-            log.warn("only ATCGN allowed for REF column");
+        if (!REF.matches("[ATCGNatcgn]+")) {
+            log.warn("only ATCGN (case-insensitive) allowed for REF column");
             return null; //
         }
 
