@@ -74,7 +74,7 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     for region_index, region in enumerate(regions_bedtool, start=1):
         records = None
         try: records = vcf_template_reader.fetch(chrom=str(region.chrom), start=region.start, end=region.end)
-        except ValueError: logger.error("Failed to retrieve %s from %s" % (str(region).strip(), in_vcf))
+        except ValueError: logger.info("No records found in %s from %s" % (str(region).strip(), in_vcf))
         if records is None: continue
         for record in records:
             if record.POS <= region.start + flank or record.POS + len(record.REF) + flank - 1 >= region.end: continue
