@@ -611,7 +611,13 @@ public class Variant implements Comparable<Variant>{
         we can be assured that correct variant type is
         returned.
          */
-        Alt alt = alts[ind - 1];
+        Alt alt = null;
+        try {
+            alt = alts[ind - 1];
+        } catch (IndexOutOfBoundsException e) {
+            log.error(this.toString());
+            throw e;
+        }
         if (alt.getSymbolicAllele() != null) {
             Alt.SVType major = alt.getSymbolicAllele().getMajor();
             Alt.SVType.SVSubtype minor = alt.getSymbolicAllele().getMinor();

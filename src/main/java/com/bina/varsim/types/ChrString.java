@@ -1,15 +1,18 @@
 package com.bina.varsim.types;
 
+import java.util.logging.Logger;
+
 /**
  * Used to represent the chromosome name, able to useful things like determine sex
  * <p/>
  * Created by johnmu on 1/27/15.
  */
 public class ChrString implements Comparable<ChrString>{
+    private final static Logger log = Logger.getLogger(ChrString.class.getName());
     final String name;
 
     public ChrString(final String name) {
-        this.name = stripChr(name);
+        this.name = name;
     }
 
     /**
@@ -54,15 +57,36 @@ public class ChrString implements Comparable<ChrString>{
     }
 
     public boolean isX() {
-        return name.equals("X");
+        if (name.equals("X") || name.equals("chrX")) {
+            return true;
+        } else if (name.startsWith("X") || name.startsWith("chrX")) {
+            //TODO: handle restricted X chromosome (say X_1_1000)
+            log.warning("Prefix looks like chromosome X, but might be treated as diploid genome.");
+            return false;
+        }
+        return false;
     }
 
     public boolean isY() {
-        return name.equals("Y");
+        if (name.equals("Y") || name.equals("chrY")) {
+            return true;
+        } else if (name.startsWith("Y") || name.startsWith("chrY")) {
+            //TODO: handle restricted Y chromosome (say Y_1_1000)
+            log.warning("Prefix looks like chromosome Y, but might be treated as diploid genome.");
+            return false;
+        }
+        return false;
     }
 
     public boolean isMT() {
-        return name.equals("MT");
+        if (name.equals("MT") || name.equals("chrM")) {
+            return true;
+        } else if (name.startsWith("MT") || name.startsWith("chrM")) {
+            //TODO: handle restricted MT chromosome (say chrM_1_1000)
+            log.warning("Prefix looks like chromosome MT, but might be treated as diploid genome.");
+            return false;
+        }
+        return false;
     }
 
     /**
