@@ -137,7 +137,7 @@ def monitor_processes(processes):
                         try:
                             os.killpg(p.pid, signal.SIGKILL)
                         except OSError, ex:
-                            logger.write("Could not kill the process " + str(p.pid))
+                            logger.error("Could not kill the process " + str(p.pid))
             raise Exception('Aborting... Please check log for details.')
         processes = processes_running
     return []
