@@ -8,8 +8,6 @@ import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.util.DGVparser;
 import com.bina.varsim.util.SimpleReference;
 import org.apache.log4j.Logger;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
@@ -178,10 +176,15 @@ public class RandDGV2VCF extends RandVCFgenerator {
                 continue;
             }
 
-            Genotypes geno = selectedGenotypes.get(genoIdx);
+            final Genotypes geno = selectedGenotypes.get(genoIdx);
             genoIdx++;
 
-            if (prevVar.getPos() == var.getPos()) {
+            if (prevVar.getPos() >= 0 && var.getPos() >= 0 &&
+                    prevVar.getChr().equals(var.getChr()) &&
+                    (prevVar.getPos() > var.getPos())) {
+                throw new IllegalArgumentException("input must be sorted by position in ascending order.");
+            }
+            if (prevVar.getChr().equals(var.getChr()) && prevVar.getPos() == var.getPos()) {
                 // duplicate
                 continue;
             }
