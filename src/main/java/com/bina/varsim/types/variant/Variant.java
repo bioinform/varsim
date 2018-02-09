@@ -615,7 +615,6 @@ public class Variant implements Comparable<Variant>{
         try {
             alt = alts[ind - 1];
         } catch (IndexOutOfBoundsException e) {
-            log.error(this.toString());
             throw e;
         }
         if (alt.getSymbolicAllele() != null) {

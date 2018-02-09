@@ -1,0 +1,9 @@
+6	1_paternal	1	1	1	+	SEQ	.
+43	1_paternal	7	1	6	+	INS	small_1345
+99	1_paternal	50	1	7	+	SEQ	.
+3	1_paternal	149	1	105	+	INS	.
+535	1_paternal	152	1	106	+	SEQ	.
+4	1_maternal	1	1	1	+	SEQ	.
+460	1_maternal	4	1	5	+	DEL	.
+176	1_maternal	5	1	465	+	SEQ	.
+
