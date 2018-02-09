@@ -361,7 +361,7 @@ public class VCF2diploid extends VarSimTool {
         variants in the same haplotype should never overlap.
         Otherwise, they should be merged at first place.
          */
-        for (int p = position; p <= position + referenceAlleleLength; p++) {
+        for (int p = position; p < position + referenceAlleleLength; p++) {
             // if any location of this variant overlap a deleted base or a SNP, we skip it
             // DELETED_BASE is used as a flag to mark that this position has been processed/modified
             if (maskedSequence[p - 1] == DELETED_BASE
