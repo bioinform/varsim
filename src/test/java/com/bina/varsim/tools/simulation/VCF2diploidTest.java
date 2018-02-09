@@ -339,4 +339,8 @@ public class VCF2diploidTest {
     public void hom_del_overlap_others() throws IOException {
         universalTestMethod2("src/test/resources/simulationTests/hom_del_overlap_others");
     }
+    @Test
+    public void het_del_overlap_others() throws IOException {
+        universalTestMethod2("src/test/resources/simulationTests/het_del_overlap_others");
+    }
 }
