@@ -361,24 +361,33 @@ public class VCF2diploid extends VarSimTool {
         variants in the same haplotype should never overlap.
         Otherwise, they should be merged at first place.
          */
-        for (int p = position; p < position + referenceAlleleLength; p++) {
-            // if any location of this variant overlap a deleted base or a SNP, we skip it
-            // DELETED_BASE is used as a flag to mark that this position has been processed/modified
-            if (maskedSequence[p - 1] == DELETED_BASE
-                    // insertions may not be next to SNPs or deletions, this is to avoid problem of DUP/INV
-                    //why p - 1 for maskedSequence? is it 1-based or 0-based?
-                    || maskedSequence[p - 1] != referenceSequence.byteAt(p)) {
-                overlap = true;
+        if (referenceAlleleLength == 0) {//insertion or duplication
+            // insertions may not be surrounded by deletions
+                if (maskedSequence[position - 1] == DELETED_BASE &&
+                        (position >= 2 && maskedSequence[position - 2] == DELETED_BASE) &&
+                        (position < maskedSequence.length && maskedSequence[position] == DELETED_BASE)) {
+                    overlap = true;
+                    log.warn("Variant (" + variant + ") is surrounded by deleted bases.");
+                }
+        } else {
+            for (int p = position; p < position + referenceAlleleLength; p++) {
+                // if any location of this variant overlap a deleted base or a SNP, we skip it
+                // DELETED_BASE is used as a flag to mark that this position has been processed/modified
+                if (maskedSequence[p - 1] == DELETED_BASE
+                        //why p - 1 for maskedSequence? it is 0-based?
+                        || maskedSequence[p - 1] != referenceSequence.byteAt(p)) {
+                    overlap = true;
+                }
             }
         }
 
         if (overlap) {
             try {
                 if (insertions != null) {
-                    log.warn("Variant overlap at " + referenceSequence.getName() + ":"
+                    log.warn("Variant (" + variant + ") overlap at " + referenceSequence.getName() + ":"
                             + position + ", (referenceAlleleLength,insertions) of (" + referenceAlleleLength + "," + new String(insertions, "US-ASCII") + "). Skipping.");
                 } else {
-                    log.warn("Variant overlap at " + referenceSequence.getName() + ":"
+                    log.warn("Variant (" + variant + ") overlap at " + referenceSequence.getName() + ":"
                             + position + ", (referenceAlleleLength,insertions) of (" + referenceAlleleLength + ",<imprecise>). Skipping.");
                 }
             } catch (UnsupportedEncodingException e) {
@@ -414,10 +423,10 @@ public class VCF2diploid extends VarSimTool {
                         + referenceSequence.getName() + ":" + position);
                 try {
                     if (insertions != null) {
-                        log.warn("Skipping variant with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
+                        log.warn("Skipping variant (" + variant + ") with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
                                 + "," + new String(insertions, "US-ASCII") + ").");
                     } else {
-                        log.warn("Skipping variant with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
+                        log.warn("Skipping variant (" + variant + ") with (referenceAlleleLength,insertions) of (" + referenceAlleleLength
                                 + ", <imprecise> ).");
                     }
                 } catch (UnsupportedEncodingException e) {
