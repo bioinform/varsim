@@ -364,8 +364,7 @@ public class VCF2diploid extends VarSimTool {
         if (referenceAlleleLength == 0) {//insertion or duplication
             // insertions may not be surrounded by deletions
                 if (maskedSequence[position - 1] == DELETED_BASE &&
-                        (position >= 2 && maskedSequence[position - 2] == DELETED_BASE) &&
-                        (position < maskedSequence.length && maskedSequence[position] == DELETED_BASE)) {
+                        (position >= 2 && maskedSequence[position - 2] == DELETED_BASE)) {
                     overlap = true;
                     log.warn("Variant (" + variant + ") is surrounded by deleted bases.");
                 }
