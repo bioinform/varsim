@@ -9,11 +9,12 @@ import subprocess
 import logging
 import time
 from varsim import MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
-from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf, get_version
+from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf, get_version, RandVCFOptions
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
 
-if __name__ == "__main__":
+def varsim_somatic_main():
+
     check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: somatic workflow",
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     logging.basicConfig(filename=os.path.join(args.log_dir, "varsim.log"), filemode="w", level=logging.DEBUG, format=FORMAT)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(varsim_somatic_main.__name__)
 
     if not args.disable_sim:
         if not args.simulator_executable:
@@ -125,10 +126,8 @@ if __name__ == "__main__":
         cosmic_sampled_vcfs = [rand_vcf_stdout.name]
 
         # Not able to support novel yet for COSMIC variants
-        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr,
-                         args.seed, args.sex, args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp,
-                         args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim,
-                         os.path.realpath(args.reference.name), args.som_prop_het)])
+        randvcf_options = RandVCFOptions(args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp, args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim, args.som_prop_het)
+        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference.name)])
 
     normal_vcfs = [args.normal_vcf]
     somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
@@ -223,3 +222,6 @@ if __name__ == "__main__":
     monitor_processes(run_vcfstats([normal_vcf, somatic_vcf], args.out_dir, args.log_dir))
 
     logger.info("Done! (%g hours)" % ((time.time() - t_s) / 3600.0))
+
+if __name__ == "__main__":
+    varsim_somatic_main()

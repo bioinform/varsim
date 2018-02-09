@@ -735,6 +735,7 @@ public class VCF2diploid extends VarSimTool {
                 "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome of source sequence\">\n" +
                 "##INFO=<ID=ISINV,Number=1,Type=Flag,Description=\"whether a duplication is inverted\">\n" +
                 "##INFO=<ID=TRAID,Number=1,Type=String,Description=\"translocation ID\">\n" +
+                "##INFO=<ID=IMPRECISE_LENGTH,Number=1,Type=Flag,Description=\"SVLEN is imprecise\">\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 /*CN is defined as Integer in VCF4.1,4.3, making it impossible to specify multiple CN values
                 here we changed it to String to allow such behavior.
