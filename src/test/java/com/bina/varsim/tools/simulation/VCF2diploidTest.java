@@ -53,6 +53,31 @@ public class VCF2diploidTest {
         assertTrue(FileUtils.contentEquals(outputPaternalReference2Path.toFile(), new File(paternalReference2)));
         assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
     }
+    public void universalTestMethod2(String directory) throws IOException {
+        File wd = tmpFolder.newFolder("tmp");
+        String reference = new File(directory, "reference.fa").toString();
+        String vcf = new File(directory, "input.vcf").toString();
+        String expectedVCF1 = new File(directory, "1.vcf").toString();
+        String map = new File(directory, "expected.map").toString();
+        String maternalReference1 = new File(directory, "maternal.1.fa").toString();
+        String paternalReference1 = new File(directory, "paternal.1.fa").toString();
+
+        Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "1_test.vcf");
+        Path outputMaternalReference1Path = Paths.get(wd.getCanonicalPath(), "1_test_maternal.fa");
+        Path outputPaternalReference1Path = Paths.get(wd.getCanonicalPath(), "1_test_paternal.fa");
+
+        VCF2diploid runner = new VCF2diploid();
+        String[] args = new String[]{
+                "-chr", reference, "-outdir", wd.getCanonicalPath(),
+                "-seed", Integer.toString(this.seed), "-id", "test",
+                "-t", "MALE", "-vcf", vcf
+        };
+        runner.run(args);
+        assertTrue(FileUtils.contentEquals(outputVCF1Path.toFile(), new File(expectedVCF1)));
+        assertTrue(FileUtils.contentEquals(outputMaternalReference1Path.toFile(), new File(maternalReference1)));
+        assertTrue(FileUtils.contentEquals(outputPaternalReference1Path.toFile(), new File(paternalReference1)));
+        assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
+    }
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
@@ -309,5 +334,13 @@ public class VCF2diploidTest {
     @Test
     public void unbalancedGainTranslocationIntrachromosomalWithInversion() throws IOException {
         universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainIntrachromosomalTranslocationWithInversion");
+    }
+    @Test
+    public void hom_del_overlap_others() throws IOException {
+        universalTestMethod2("src/test/resources/simulationTests/hom_del_overlap_others");
+    }
+    @Test
+    public void het_del_overlap_others() throws IOException {
+        universalTestMethod2("src/test/resources/simulationTests/het_del_overlap_others");
     }
 }
