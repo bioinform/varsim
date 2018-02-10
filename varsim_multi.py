@@ -83,7 +83,7 @@ def varsim_multi(reference,
             sampled_vcf = "{}.gz".format(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
-            sample_variant_vcfs = (restricted_vcfs if index >= len(samples) else []) + [restricted_sampled_vcf]
+            sample_variant_vcfs = (restricted_vcfs if index < len(samples) else []) + [restricted_sampled_vcf]
         else:
             sample_variant_vcfs = restricted_vcfs
 
