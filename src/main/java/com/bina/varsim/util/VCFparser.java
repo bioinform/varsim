@@ -351,8 +351,7 @@ public class VCFparser extends GzFileParser<Variant> {
         try {
             alts = string2Alt(ALT);
         } catch (IllegalArgumentException e) {
-            log.warn(e.getMessage());
-            log.warn(line);
+            log.warn("ALT column is malformated: " + e.getMessage() + "\nOffending line: " + line);
             return null;
         }
 
