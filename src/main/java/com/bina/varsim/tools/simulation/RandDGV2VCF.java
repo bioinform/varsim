@@ -27,6 +27,10 @@ public class RandDGV2VCF extends RandVCFgenerator {
     static final int MAX_LEN_ARG = 1000000;
     static final double PROP_HET_ARG = 0.6;
     private final static Logger log = Logger.getLogger(RandDGV2VCF.class.getName());
+    /*
+    -all option will override -num_ins, -num_del, -num_dup, -num_inv
+    -novel, -min_len, -max_len, -ins, -prop_het, -gender are independent of -all
+     */
     @Option(name = "-all", usage = "Output all variants, don't sample")
     boolean outputAll;
     @Option(name = "-num_ins", usage = "Number of insertion SV to sample [" + NUM_INS_ARG + "]")
@@ -51,7 +55,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
     String dgvFilename;
     @Option(name = "-t", usage = "Gender of individual [MALE]")
     GenderType gender = GenderType.MALE;
-    @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
+    @Option(name = "-prop_het", usage = "Ratio of heterozygous variants[" + PROP_HET_ARG + "]")
     double propHet = PROP_HET_ARG;
     @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
     String outFilename = null;
