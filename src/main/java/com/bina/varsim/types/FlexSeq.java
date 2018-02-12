@@ -2,6 +2,10 @@ package com.bina.varsim.types;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This can represent a byte[] or a more flexible sequence such as insertion with unknown contents, dup, inv, etc...
@@ -12,6 +16,10 @@ import java.util.Arrays;
 
 public final class FlexSeq {
     //TODO make all fields final if possible
+    public static Set<Byte> LEGAL_SEQUENCE_CHARS =
+            Stream.of((byte)'A',(byte)'T',(byte)'C',(byte)'G',
+                    (byte)'a',(byte)'t',(byte)'c',(byte)'g',
+                    (byte)'N',(byte)'n').collect(Collectors.toCollection(HashSet<Byte>::new));
     Type type;
     int length;
     int copyNumber = 1;
@@ -89,6 +97,7 @@ public final class FlexSeq {
         this.length = b.length;
         this.copyNumber = b.copyNumber;
         this.sequence = b.sequence;
+        checkSequence(sequence);
         this.variantId = b.variantId;
         this.chr2 = b.chr2;
         this.pos2 = b.pos2;
@@ -115,6 +124,7 @@ public final class FlexSeq {
         // regular byte array
         sequence = new byte[1];
         sequence[0] = seq;
+        checkSequence(sequence);
         type = Type.SEQ;
         length = 1;
     }
@@ -127,6 +137,7 @@ public final class FlexSeq {
     public FlexSeq(final byte[] seq) {
         // regular byte array
         sequence = seq.clone();
+        checkSequence(sequence);
         type = Type.SEQ;
         length = seq.length;
     }
@@ -172,6 +183,7 @@ public final class FlexSeq {
         } else {
             sequence = b.sequence.clone();
         }
+        checkSequence(sequence);
     }
 
     /**
@@ -224,6 +236,22 @@ public final class FlexSeq {
             return length * copyNumber;
         }
         return length;
+    }
+
+    /**
+     * check if sequence contains illegal characters
+     * only ATCGatcgNn are allowed
+     * @param s
+     * @return
+     */
+    private void checkSequence(byte[] s) {
+       if (s != null) {
+           for (byte b : s) {
+               if (!LEGAL_SEQUENCE_CHARS.contains(b)) {
+                   throw new IllegalArgumentException("Found illegal character: " + b);
+               }
+           }
+       }
     }
 
     @Override

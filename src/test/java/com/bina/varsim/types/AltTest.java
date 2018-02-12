@@ -30,6 +30,10 @@ public class AltTest {
   public void altTest() {
     assertTrue(Alt.altFactory("<DUP:TANDEM>").getSymbolicAllele().toString().equals("<DUP:TANDEM>"));
     assertTrue(Alt.altFactory("ANTCCC[X:123[").getBreakend().toString().equals("ANTCCC[X:123["));
-    assertTrue(Alt.altFactory("ATCCGD").getSeq().toString().equals("ATCCGD"));
+    assertTrue(Alt.altFactory("ATCCG").getSeq().toString().equals("ATCCG"));
+  }
+  @Test(expected = IllegalArgumentException.class)
+  public void illegalCharTest() {
+    Alt.altFactory("ATCCGD");
   }
 }

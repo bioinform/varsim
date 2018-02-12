@@ -90,4 +90,9 @@ public class VCFparserTest {
         Variant	v	=	parser.processLine("1	111	rs770821123	C	A	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
         assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	SVLEN=1	GT	1|1"));
     }
+    @Test
+    public void illegalSymbolicAllele() throws UnexpectedException {
+        Variant	v	=	parser.processLine("1	111	rs770821123	C	DUP:TANDEM>	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
+        assertTrue(v == null);
+    }
 }

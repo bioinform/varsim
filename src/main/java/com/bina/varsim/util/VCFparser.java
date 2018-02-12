@@ -347,7 +347,13 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
             }
         }
-        Alt[] alts = string2Alt(ALT);
+        Alt[] alts = null;
+        try {
+            alts = string2Alt(ALT);
+        } catch (IllegalArgumentException e) {
+            log.warn("ALT column is malformated: " + e.getMessage() + "\nOffending line: " + line);
+            return null;
+        }
 
       if (alts[0].getSymbolicAllele() != null) {
           int[] end = info.getValue("END", int[].class);
