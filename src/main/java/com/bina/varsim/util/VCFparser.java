@@ -352,6 +352,7 @@ public class VCFparser extends GzFileParser<Variant> {
             alts = string2Alt(ALT);
         } catch (IllegalArgumentException e) {
             log.warn(e.getMessage());
+            log.warn(line);
             return null;
         }
 
