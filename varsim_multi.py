@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import copy
 import sys
 import subprocess
 import logging
@@ -15,7 +16,7 @@ import re
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf
+from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf, run_randdgv, randdgv_options2randvcf_options
 import pybedtools
 import pysam
 
@@ -56,16 +57,32 @@ def varsim_multi(reference,
     restricted_dir = os.path.join(out_dir, "restricted")
 
     restricted_reference, restricted_vcfs = gen_restricted_ref_and_vcfs(reference, variant_vcfs, regions, samples, restricted_dir, flank=0, short_contig_names=False)
+    dgv_vcf = None
 
-    merged_bedtool = pybedtools.BedTool(regions).merge() if regions else None
+    if dgv_file:
+        assert sv_insert_seq, "SV insertion sequence file is required."
+        dgv_vcf_dir = os.path.join(out_dir,"tmp")
+        makedirs([dgv_vcf_dir])
+        dgv_vcf = os.path.join(dgv_vcf_dir, "dgv.vcf")
+        makedirs([os.path.join(out_dir, "log")])
+        dgv_err_file = os.path.join(out_dir, "log", "dgv2vcf.err")
+        randdgv_options2vcf = copy.copy(randdgv_options)
+        randdgv_options2vcf.output_all = "-all"
+        with open(dgv_vcf, "w") as dgv2vcf_out, open(dgv_err_file, "w") as dgv2vcf_log:
+            run_randdgv(dgv_file, dgv2vcf_out, dgv2vcf_log, seed, sex, randdgv_options2vcf, reference, sv_insert_seq).wait()
 
-    if regions and sampling_vcf:
+    if regions:
         merged_bed = os.path.join(out_dir, "merged.bed")
-        merged_bedtool = pybedtools.BedTool(regions).merge().saveas(merged_bed)
-        _, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], merged_bed, [], os.path.join(out_dir, "region_restricted"), flank=0)
-        # Now lift over the restricted_sampling_vcf to get the region-limited VCF
-        sampling_vcf = lift_vcfs([restricted_sampling_vcf], os.path.join(out_dir, "region_restricted", "region-restricted-sampling.vcf"), reference)
-        
+        restricted_dir = os.path.join(out_dir, "region_restricted")
+        if sampling_vcf:
+            _, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], merged_bed, [], restricted_dir , flank=0)
+            # Now lift over the restricted_sampling_vcf to get the region-limited VCF
+            sampling_vcf = lift_vcfs([restricted_sampling_vcf], os.path.join(restricted_dir, "region-restricted-sampling.vcf"), reference)
+        if dgv_vcf:
+            _, [restricted_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [dgv_vcf], merged_bed, [], restricted_dir , flank=0)
+            # Now lift over the restricted_dgv_vcf to get the region-limited VCF
+            dgv_vcf = lift_vcfs([restricted_dgv_vcf], os.path.join(restricted_dir, "region-restricted-dgv.vcf"), reference)
+
     all_samples = samples + ["VarSim%d" % i for i in xrange(samples_random)]
 
     for index, (sample, coverage) in enumerate(zip(all_samples, total_coverage)):
@@ -73,9 +90,10 @@ def varsim_multi(reference,
         sample_seed = seed + 1000 * index
         makedirs([sample_dir])
         logger.info("Simulating sample {} in {}".format(sample, sample_dir))
+        sample_variant_vcfs = list(restricted_vcfs if index < len(samples) else [])
 
         # Run RandVCF first to get the sampled variants for the sample
-        if randvcf_options:
+        if randvcf_options and sampling_vcf:
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
                 run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference).wait()
@@ -83,9 +101,18 @@ def varsim_multi(reference,
             sampled_vcf = "{}.gz".format(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
-            sample_variant_vcfs = (restricted_vcfs if index < len(samples) else []) + [restricted_sampled_vcf]
-        else:
-            sample_variant_vcfs = restricted_vcfs
+            sample_variant_vcfs = sample_variant_vcfs + [restricted_sampled_vcf]
+
+        if randdgv_options and dgv_vcf:
+            sampled_dgv_vcf = os.path.join(sample_dir, "randdgvvcf.vcf")
+            randdgvvcf_options = randdgv_options2randvcf_options(randdgv_options)
+            with open(sampled_dgv_vcf, "w") as randdgvvcf_out, open(os.path.join(sample_dir, "randdgvvcf.err"), "w") as randdgvvcf_log:
+                run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference).wait()
+            pysam.tabix_index(sampled_dgv_vcf, force=True, preset='vcf')
+            sampled_dgv_vcf = "{}.gz".format(sampled_dgv_vcf)
+            # Now generate the restricted sampled dgv VCF for the sample
+            _, [restricted_sampled_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_dgv_vcf], regions, [], os.path.join(sample_dir, "restricted_randdgvvcf"), flank=0)
+            sample_variant_vcfs = sample_variant_vcfs + [restricted_sampled_dgv_vcf]
 
         varsim_main(restricted_reference,
                     simulator,
@@ -207,6 +234,9 @@ if __name__ == "__main__":
                                 required=False)
     rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants",
                                 required=False)
+    rand_dgv_group.add_argument("--sv_prop_het", metavar="FLOAT", help="Proportion of heterozygous structural variants",
+                                default=0.6,
+                                type=float)
 
     args = main_parser.parse_args()
 
@@ -222,7 +252,7 @@ if __name__ == "__main__":
 
     simulator = None if args.disable_sim else args.simulator
     randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
-    randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
+    randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim, args.sv_prop_het)
 
     num_samples = len(args.samples) + args.samples_random
     total_coverage = map(float, args.total_coverage)

@@ -202,11 +202,13 @@ def run_vcfstats(vcfs, out_dir, log_dir):
 
 
 class RandVCFOptions:
-    def __init__(self, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, prop_het):
+    def __init__(self, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, prop_het, num_dup = 0, num_inv = 0):
         self.num_snp = num_snp
         self.num_ins = num_ins
         self.num_del = num_del
         self.num_mnp = num_mnp
+        self.num_dup = num_dup
+        self.num_inv = num_inv
         self.num_complex = num_complex
         self.percent_novel = percent_novel
         self.min_length = min_length
@@ -214,7 +216,7 @@ class RandVCFOptions:
         self.prop_het = prop_het
 
 class RandDGVOptions:
-    def __init__(self, num_ins, num_del, num_dup, num_inv, percent_novel, min_length, max_length):
+    def __init__(self, num_ins, num_del, num_dup, num_inv, percent_novel, min_length, max_length, prop_het, output_all = " "):
         self.num_ins = num_ins
         self.num_del = num_del
         self.num_dup = num_dup
@@ -222,7 +224,28 @@ class RandDGVOptions:
         self.percent_novel = percent_novel
         self.min_length = min_length
         self.max_length = max_length
+        self.prop_het = prop_het
+        self.output_all = output_all
 
+def randdgv_options2randvcf_options(randdgv_options):
+    '''
+    automatically set up shared fields between RandVCFOptions and RandDGVOptions
+    :param randdgv_options:
+    :return: RandVCFOptions instance
+    '''
+    return RandVCFOptions(
+        num_snp= 0,
+        num_ins = randdgv_options.num_ins,
+        num_del = randdgv_options.num_del,
+        num_mnp = 0,
+        num_complex = 0,
+        percent_novel= randdgv_options.percent_novel,
+        min_length = randdgv_options.min_length,
+        max_length = randdgv_options.max_length,
+        prop_het=randdgv_options.prop_het,
+        num_dup = randdgv_options.num_dup,
+        num_inv = randdgv_options.num_inv
+    )
 
 def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference):
     logger = logging.getLogger(run_randvcf.__name__)
@@ -235,6 +258,8 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
                         "-num_del", str(randvcf_options.num_del),
                         "-num_mnp", str(randvcf_options.num_mnp),
                         "-num_complex", str(randvcf_options.num_complex),
+                        "-num_dup", str(randvcf_options.num_dup),
+                        "-num_inv", str(randvcf_options.num_inv),
                         "-novel", str(randvcf_options.percent_novel),
                         "-min_len", str(randvcf_options.min_length),
                         "-max_len", str(randvcf_options.max_length),
@@ -254,6 +279,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
                         "-t", sex,
                         "-seed", str(seed),
+                        options.output_all,
                         "-num_ins", str(options.num_ins),
                         "-num_del", str(options.num_del),
                         "-num_dup", str(options.num_dup),
@@ -261,6 +287,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-novel", str(options.percent_novel),
                         "-min_len", str(options.min_length),
                         "-max_len", str(options.max_length),
+                        "-prop_het", str(options.prop_het),
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
                         "-dgv", os.path.realpath(dgv_file)]
