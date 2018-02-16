@@ -45,7 +45,7 @@ public class VCFparserTest {
         ref: A CAAAAGAAATGATCATGTTTGTAGGT
         alt: A A AAAGAAATGATCATGTTTGTAGGT
         */
-        assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tSVTYPE=DEL;SVLEN=-1\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-1\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 1); //[C]
         assertTrue(v.getAlt(1).length() == 0); //""
@@ -53,7 +53,7 @@ public class VCFparserTest {
     @Test
     public void insertionParsingTest() throws UnexpectedException {
         Variant v = parser.processLine("12\t29557990\t.\tCTTT\tCGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        assertTrue(v.toString().equals("12\t29557990\t.\tC\tCGT\t.\tPASS\tSVLEN=2\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557990\t.\tC\tCGT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=2\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 2); //"GT"
@@ -61,7 +61,7 @@ public class VCFparserTest {
     @Test
     public void homopolymerInsertionParsingTest() throws UnexpectedException {
         Variant v = parser.processLine("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        assertTrue(v.toString().equals("12\t29557989\t.\tA\tAAAA\t.\tPASS\tSVLEN=3\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557989\t.\tA\tAAAA\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=3\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 3); //"GT"
@@ -77,18 +77,18 @@ public class VCFparserTest {
     @Test
     public void addExtraBaseForInsertion() throws UnexpectedException {
         Variant v = parser.processLine("1	3	.	T	TTTT	.	PASS	SVLEN=3	GT:CN	0|1:2|3");
-        assertTrue(v.toString().equals("1	3	.	T	TTTT	.	PASS	SVLEN=3	GT	0|1"));
+        assertTrue(v.toString().equals("1	3	.	T	TTTT	.	PASS	VARIANT_OVERALL_TYPE=Insertion;SVLEN=3	GT	0|1"));
     }
     @Test
     public void addExtraBaseForDeletion() throws UnexpectedException {
         Variant v = parser.processLine("1	3	.	TTTT	T	.	PASS	SVLEN=-3	GT:CN	0|1:2|3");
-        assertTrue(v.toString().equals("1	3	.	TTTT	T	.	PASS	SVTYPE=DEL;SVLEN=-3	GT	0|1"));
+        assertTrue(v.toString().equals("1	3	.	TTTT	T	.	PASS	VARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-3	GT	0|1"));
     }
     @Test
     public void vcfinfoTestDefaultBoolean() throws UnexpectedException {
         //for unrecognized flags, return boolen type
         Variant	v	=	parser.processLine("1	111	rs770821123	C	A	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
-        assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	SVLEN=1	GT	1|1"));
+        assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	VARIANT_OVERALL_TYPE=SNP;SVLEN=1	GT	1|1"));
     }
     @Test
     public void illegalSymbolicAllele() throws UnexpectedException {

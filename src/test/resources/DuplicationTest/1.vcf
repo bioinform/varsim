@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.3
-##reference=src/test/resources/MNPTest/oneMNPTest.fa
+##reference=src/test/resources/DuplicationTest/reference.fa
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
@@ -20,4 +20,4 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-1	3	.	CG	TT	.	.	SVLEN=2	GT	0|1
+1	3	.	T	<DUP:TANDEM>,<DUP:TANDEM>	.	PASS	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=4,4	GT:CN	1|2:2|3

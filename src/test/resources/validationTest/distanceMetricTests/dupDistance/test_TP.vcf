@@ -1,1 +1,1 @@
-MT	23345	.	N	<DUP:TANDEM>	.	.	SVTYPE=DUP;SVLEN=1000;3PrimeDistance=10;5PrimeDistance=10;LengthDifference=0	GT:CN	0|1:1|2
+MT	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=10;5PrimeDistance=10;LengthDifference=0	GT:CN	0|1:1|2
