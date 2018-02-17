@@ -16,6 +16,7 @@ import pysam
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
+from utils import makedirs, run_shell_command
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
@@ -98,18 +99,6 @@ def check_java():
     if LooseVersion(jv) < LooseVersion("1.8"):
         logger.error("VarSim requires Java 1.8 to be on the path.")
         raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
-
-
-def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
-    subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
-    retcode = subproc.wait()
-    sys.exit(retcode)
-
-
-def makedirs(dirs):
-    for d in dirs:
-        if not os.path.exists(d):
-            os.makedirs(d)
 
 
 def monitor_processes(processes):

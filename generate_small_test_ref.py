@@ -8,7 +8,7 @@ import vcf
 import pybedtools
 import logging
 from collections import defaultdict, OrderedDict
-from varsim import makedirs
+from utils import makedirs
 
 def uint(value):
   if not value.isdigit(): raise argparse.ArgumentTypeError("%s is not digit-only" % value)
