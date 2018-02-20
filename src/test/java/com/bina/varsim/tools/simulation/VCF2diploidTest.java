@@ -7,8 +7,10 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
@@ -18,6 +20,7 @@ import static org.junit.Assert.fail;
  * test various methods in VCF2diploid class
  */
 public class VCF2diploidTest {
+    private static boolean updateVCF = false;
     private int seed = 11;
     public void universalTestMethod(String directory) throws IOException {
         File wd = tmpFolder.newFolder("tmp");
@@ -45,9 +48,10 @@ public class VCF2diploidTest {
                 "-t", "MALE", "-vcf", vcf
         };
         runner.run(args);
-        //Files.copy(outputVCF1Path, Paths.get(expectedVCF1), StandardCopyOption.REPLACE_EXISTING);
-        //Files.copy(outputVCF2Path, Paths.get(expectedVCF2), StandardCopyOption.REPLACE_EXISTING);
-
+        if (updateVCF) {
+            Files.copy(outputVCF1Path, Paths.get(expectedVCF1), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(outputVCF2Path, Paths.get(expectedVCF2), StandardCopyOption.REPLACE_EXISTING);
+        }
         assertTrue(FileUtils.contentEquals(outputVCF1Path.toFile(), new File(expectedVCF1)));
         assertTrue(FileUtils.contentEquals(outputVCF2Path.toFile(), new File(expectedVCF2)));
         assertTrue(FileUtils.contentEquals(outputMaternalReference1Path.toFile(), new File(maternalReference1)));
@@ -76,7 +80,9 @@ public class VCF2diploidTest {
                 "-t", "MALE", "-vcf", vcf
         };
         runner.run(args);
-        //Files.copy(outputVCF1Path, Paths.get(expectedVCF1), StandardCopyOption.REPLACE_EXISTING);
+        if (updateVCF) {
+            Files.copy(outputVCF1Path, Paths.get(expectedVCF1), StandardCopyOption.REPLACE_EXISTING);
+        }
         assertTrue(FileUtils.contentEquals(outputVCF1Path.toFile(), new File(expectedVCF1)));
         assertTrue(FileUtils.contentEquals(outputMaternalReference1Path.toFile(), new File(maternalReference1)));
         assertTrue(FileUtils.contentEquals(outputPaternalReference1Path.toFile(), new File(paternalReference1)));
