@@ -255,7 +255,8 @@ public class Variant implements Comparable<Variant>{
      */
     public ChrString getChr() {
         if (chr == null) {
-            throw new UnsupportedOperationException("ERROR: no legitimate chromosome name available for variant (" + this.toString() + ")!");
+            log.error("ERROR: no legitimate chromosome name available for variant (" + this.toString() + ")!");
+            return new ChrString("NA");
         }
         return chr;
     }
