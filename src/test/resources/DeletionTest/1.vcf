@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.3
-##reference=src/test/resources/TranslocationTest/BalancedReciprocalTranslocationTest/balancedReciprocalTranslocationInterchromosomal/reference.fa
+##reference=src/test/resources/DeletionTest/reference.fa
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
@@ -20,5 +20,4 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-2	6	.	T	<DEL:TRA>	.	PASS	VARIANT_OVERALL_TYPE=TransDel;SVTYPE=DEL;TRAID=1;SVLEN=-4	GT	1|1
-2	6	.	T	<DUP:TRA>	.	PASS	VARIANT_OVERALL_TYPE=TransDup;SVTYPE=DUP;TRAID=2;SVLEN=3;CHR2=1;POS2=9;END2=11	GT	1|1
+1	4	.	CTCCT	CT,C	.	.	VARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-3,-4	GT	1|2

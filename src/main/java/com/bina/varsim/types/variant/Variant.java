@@ -1088,6 +1088,7 @@ public class Variant implements Comparable<Variant>{
         // pass label
         sbStr.append(filter);
         sbStr.append("\t");
+        sbStr.append("VARIANT_OVERALL_TYPE=" + getType() + ";");
         // INFO
         if (t == VariantOverallType.TandemDup) {
             sbStr.append("SVTYPE=DUP;");
