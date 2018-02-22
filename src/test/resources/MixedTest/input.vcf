@@ -20,4 +20,4 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-1	5	.	TCCT	T,TCCTAG	.	.	SVLEN=-3,5	GT	1|2
+1	5	.	TCCT	T,TCCTAG	.	.	SVLEN=-3,2	GT	1|2
