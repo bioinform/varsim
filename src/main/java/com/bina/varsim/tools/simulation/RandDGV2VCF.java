@@ -184,11 +184,11 @@ public class RandDGV2VCF extends RandVCFgenerator {
             genoIdx++;
 
             if (prevVar.getPos() >= 0 && var.getPos() >= 0 &&
-                    prevVar.getChr().equals(var.getChr()) &&
+                    prevVar.getChr() != null && prevVar.getChr().equals(var.getChr()) &&
                     (prevVar.getPos() > var.getPos())) {
                 throw new IllegalArgumentException("input must be sorted by position in ascending order.");
             }
-            if (prevVar.getChr().equals(var.getChr()) && prevVar.getPos() == var.getPos()) {
+            if (prevVar.getChr() != null && prevVar.getChr().equals(var.getChr()) && prevVar.getPos() == var.getPos()) {
                 // duplicate
                 continue;
             }

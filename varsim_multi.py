@@ -73,6 +73,7 @@ def varsim_multi(reference,
 
     if regions:
         merged_bed = os.path.join(out_dir, "merged.bed")
+        pybedtools.BedTool(regions).merge().saveas(merged_bed)
         restricted_dir = os.path.join(out_dir, "region_restricted")
         if sampling_vcf:
             _, [restricted_sampling_vcf] = gen_restricted_ref_and_vcfs(reference, [sampling_vcf], merged_bed, [], restricted_dir , flank=0)

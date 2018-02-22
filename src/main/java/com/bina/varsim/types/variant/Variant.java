@@ -254,10 +254,6 @@ public class Variant implements Comparable<Variant>{
      * @return Chromosome variant is on
      */
     public ChrString getChr() {
-        if (chr == null) {
-            log.error("ERROR: no legitimate chromosome name available for variant (" + this.toString() + ")!");
-            return new ChrString("NA");
-        }
         return chr;
     }
 
@@ -384,15 +380,15 @@ public class Variant implements Comparable<Variant>{
     }
 
     public ChrString[] getAllChr2() {
-        return this.chr2;
+        return this.chr2 == null ? new ChrString[0] : this.chr2;
     }
 
     public int[] getAllPos2() {
-        return this.pos2;
+        return this.pos2 == null ? new int[0] : this.pos2;
     }
 
     public int[] getAllEnd2() {
-        return this.end2;
+        return this.end2 == null ? new int[0] : this.end2;
     }
 
     /**
@@ -416,7 +412,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public String getTraid() {
-        return traid;
+        return traid == null ? "." : traid;
     }
 
     /**
@@ -810,7 +806,7 @@ public class Variant implements Comparable<Variant>{
 
     public String getReferenceString() {
         try {
-            return refDeleted + new String(ref, "US-ASCII");
+            return (refDeleted == null ? "" : refDeleted) + (ref == null ? "" : new String(ref, "US-ASCII"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return "";
@@ -822,6 +818,9 @@ public class Variant implements Comparable<Variant>{
     }
 
     public int getCN(final int ind) {
+        if (alts == null) {
+          return 0;
+        }
         return (ind <= 0 || ind > alts.length) ? 1 : alts[ind - 1].getCopyNumber();
     }
 
@@ -829,6 +828,9 @@ public class Variant implements Comparable<Variant>{
      * @return true if any of the alternate alleles has copy number greater than 1
      */
     public boolean hasCN() {
+        if (alts == null) {
+            return false;
+        }
         boolean isCopyNumberPositive = false;
         for (Alt alt : alts) {
             if (alt.getCopyNumber() > 1) {
@@ -841,6 +843,9 @@ public class Variant implements Comparable<Variant>{
 
     public String alternativeAlleleString() {
         StringBuilder sbStr = new StringBuilder();
+        if (alts == null) {
+            return ".";
+        }
         for (int i = 0; i < alts.length; i++) {
             //if (i > 0 && alts[i].getSeq().toString().equals(alts[i - 1].toString())) {
                 /*Marghoob suggested that two identical symbolic alternative alleles are
@@ -1000,6 +1005,9 @@ public class Variant implements Comparable<Variant>{
     public String getLengthString() {
         StringBuilder len = new StringBuilder();
 
+        if (alts == null) {
+            return ".";
+        }
         for (int i = 0; i < alts.length; i++) {
             if (i > 0) {
                 len.append(',');
@@ -1060,10 +1068,10 @@ public class Variant implements Comparable<Variant>{
         VariantOverallType t = getType();
 
         // chromosome name
-        sbStr.append(chr.toString());
+        sbStr.append(chr == null ? "NA" : chr.toString());
         sbStr.append("\t");
         // start position
-        sbStr.append(pos - refDeleted.length());
+        sbStr.append(pos - (refDeleted == null ? 0 : refDeleted.length()));
         sbStr.append('\t');
         // variant id
         sbStr.append(varId);
