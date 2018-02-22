@@ -88,11 +88,24 @@ public class VCFparserTest {
     public void vcfinfoTestDefaultBoolean() throws UnexpectedException {
         //for unrecognized flags, return boolen type
         Variant	v	=	parser.processLine("1	111	rs770821123	C	A	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
-        assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	VARIANT_OVERALL_TYPE=SNP;SVLEN=1	GT	1|1"));
+        assertTrue(v.toString().equals("1	111	rs770821123	C	A	.	.	VARIANT_OVERALL_TYPE=SNP	GT	1|1"));
     }
     @Test
     public void illegalSymbolicAllele() throws UnexpectedException {
         Variant	v	=	parser.processLine("1	111	rs770821123	C	DUP:TANDEM>	.	.	RS=770821123;RSPOS=10000111;VP=0x050000080005000002000100;dbSNPBuildID=144;SAO=0;SSR=0;WGT=1;VC=SNV;INT;ASP");
         assertTrue(v == null);
+    }
+    /*
+    SVLEN tests
+     */
+    @Test
+    public void multiAllelicSVLEN() throws UnexpectedException {
+        Variant	v	=	parser.processLine("chr17\t43059469\t.\tCACA\tCACAACA,C\t.\tPASS\t.\tGT\t1|2");
+        assertTrue(v.toString().compareTo("chr17	43059469	.	CACA	CACAACA,C	.	PASS	VARIANT_OVERALL_TYPE=Complex;SVLEN=3,-3	GT	1|2") == 0);
+    }
+    @Test
+    public void multiAllelicDELSVLEN() throws UnexpectedException {
+        Variant	v	=	parser.processLine("chr17\t43059469\t.\tC\t<DEL>\t.\tPASS\tSVLEN=-300\tGT\t1|0");
+        assertTrue(v.toString().compareTo("chr17\t43059469\t.\tC\t<DEL>\t.\tPASS\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-300\tGT\t1|0") == 0);
     }
 }

@@ -389,6 +389,10 @@ public class VCFparser extends GzFileParser<Variant> {
               // inversion SV
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
+                      if (i > 0 && svlen[i] != svlen[i - 1]) {
+                          log.warn("Right now VarSim does not support multiple SVLEN for <INV>: " + line);
+                          return null;
+                      }
                       int alternativeAlleleLength = Math.max(Math.abs(svlen[i]), 1);
                       alts[i].setSeq(new FlexSeq(FlexSeq.Type.INV, alternativeAlleleLength));
                   }
@@ -414,6 +418,10 @@ public class VCFparser extends GzFileParser<Variant> {
                      alts[0].getSymbolicAllele().getMinor() == Alt.SVType.SVSubtype.TANDEM)) {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
+                      if (i > 0 && svlen[i] != svlen[i - 1]) {
+                          log.warn("Right now VarSim does not handle multiple SVLEN for <DUP> " + line);
+                          return null;
+                      }
                       // TODO this is temporary, how to encode copy number?
                       int currentCopyNumber = 2;
                       for (int j = 0; j < 2; j++) {
@@ -477,6 +485,10 @@ public class VCFparser extends GzFileParser<Variant> {
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
+                      if (i > 0 && svlen[i] != svlen[i-1]) {
+                          log.warn("Right now VarSim does not handle multiple SVLEN for <DEL>: " + line);
+                          return null;
+                      }
                       // deletion has no alt
                       if (Alt.SVType.SVSubtype.TRA == alts[i].getSymbolicAllele().getMinor()) {
                           alts[i].setSeq(new FlexSeq(FlexSeq.Type.TRA_DEL, svlen[i]));

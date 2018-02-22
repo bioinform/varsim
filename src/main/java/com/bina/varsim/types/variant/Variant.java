@@ -12,8 +12,10 @@ import org.apache.log4j.Logger;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Character.getType;
+import static java.lang.Math.abs;
 
 public class Variant implements Comparable<Variant>{
     private final static Logger log = Logger.getLogger(Variant.class.getName());
@@ -997,32 +999,38 @@ public class Variant implements Comparable<Variant>{
     }
 
     public String getLengthString() {
-        StringBuilder len = new StringBuilder();
+        List<Integer> svlens = new ArrayList<Integer>();
 
         for (int i = 0; i < alts.length; i++) {
-            if (i > 0) {
-                len.append(',');
-            }
-
             VariantType t = getType(i + 1);
+            int altLen = abs(alts[i].length());
+            int svlen = 0;
 
-            if (VariantType.Deletion.equals(t)) {
-                len.append(-referenceAlleleLength + alts[i].length()); // negative for deletions
+            if (VariantType.Deletion.equals(t) || VariantType.Complex.equals(t) || VariantType.Insertion.equals(t)) {
+                svlen = -referenceAlleleLength + altLen; // negative for deletions
+            } else if (VariantType.MNP.equals(t) || VariantType.SNP.equals(t) || VariantType.Composite.equals(t)) {
+                //composite variant contains more than 1 variant, no way to present as a regular variant
+                svlen = 0;
             } else if (VariantType.Translocation_Deletion.equals(t)) {
-                len.append(-referenceAlleleLength); // negative for deletions
-            } else if (VariantType.Complex.equals(t)) {
-                int alt_len = alts[i].length();
-                if (referenceAlleleLength > alt_len) {
-                    len.append(-referenceAlleleLength);
-                } else {
-                    len.append(alt_len);
-                }
+                svlen = -abs(altLen);
             } else {
-                len.append(alts[i].length());
+                //VariantType.Translocation_Duplication
+                //VariantType.Inversion.equals(t)
+//                VariantType.Interspersed_Duplication
+//                VariantType.Tandem_Duplication
+//                VariantType.Interspersed_Duplication
+                svlen = altLen;
+            }
+            if (svlen != 0) {
+                svlens.add(svlen);
             }
         }
 
-        return len.toString();
+        if (svlens.isEmpty()) {
+            return "";
+        } else {
+            return "SVLEN=" + String.join(",", svlens.stream().map(s -> String.valueOf(s)).collect(Collectors.toList())) + ";";
+        }
     }
 
     public void calculateExtraBase(final Sequence refSeq) {
@@ -1083,19 +1091,16 @@ public class Variant implements Comparable<Variant>{
         // INFO
         if (t == VariantOverallType.TandemDup) {
             sbStr.append("SVTYPE=DUP;");
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
             if(isInversed()) {
-                sbStr.append(";ISINV");
+                sbStr.append("ISINV;");
             }
         } else if (t == VariantOverallType.TransDup || t == VariantOverallType.InterDup) {
             sbStr.append("SVTYPE=DUP;");
             if (getTraid() != null) {
                 sbStr.append("TRAID=" + getTraid() + ";");
             }
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
-            sbStr.append(";");
             //chr2,pos2,end2
             sbStr.append("CHR2=");
             sbStr.append(StringUtilities.concatenateArray(getAllChr2(), ","));
@@ -1106,25 +1111,21 @@ public class Variant implements Comparable<Variant>{
             sbStr.append("END2=");
             sbStr.append(StringUtilities.concatenateArray(getAllEnd2(), ","));
             if(isInversed()) {
-                sbStr.append(";ISINV");
+                sbStr.append(";ISINV;");
             }
         } else if (t == VariantOverallType.Deletion) {
             sbStr.append("SVTYPE=DEL;");
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else if (t == VariantOverallType.TransDel) {
             sbStr.append("SVTYPE=DEL;");
             if (getTraid() != null) {
                 sbStr.append("TRAID=" + getTraid() + ";");
             }
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else if (t == VariantOverallType.Inversion) {
             sbStr.append("SVTYPE=INV;");
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         } else {
-            sbStr.append("SVLEN=");
             sbStr.append(getLengthString());
         }
         /*
@@ -1136,14 +1137,17 @@ public class Variant implements Comparable<Variant>{
         if (threePrimeDistance != -1) {
             sbStr.append(";3PrimeDistance=");
             sbStr.append(threePrimeDistance);
+            sbStr.append(";");
         }
         if (fivePrimeDistance != -1) {
             sbStr.append(";5PrimeDistance=");
             sbStr.append(fivePrimeDistance);
+            sbStr.append(";");
         }
         if (lengthDifference != -1) {
             sbStr.append(";LengthDifference=");
             sbStr.append(lengthDifference);
+            sbStr.append(";");
         }
         sbStr.append("\t");
 
@@ -1177,7 +1181,7 @@ public class Variant implements Comparable<Variant>{
                 sbStr.append(String.valueOf(getCN(maternal)));
             }
         }
-        return sbStr.toString();
+        return sbStr.toString().replaceAll(";+",";").replaceAll(";\t","\t").replaceAll("\t;","\t");
     }
 
     /**
