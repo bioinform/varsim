@@ -1,0 +1,3 @@
+[submodule "rtg-tools"]
+	path = rtg-tools
+	url = https://github.com/RealTimeGenomics/rtg-tools
