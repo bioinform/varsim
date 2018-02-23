@@ -998,7 +998,7 @@ public class Variant implements Comparable<Variant>{
         return getPos() - getRef_deleted().length - (other.getPos() - other.getRef_deleted().length);
     }
 
-    public String getLengthString() {
+    public List<Integer> getSVLEN() {
         List<Integer> svlens = new ArrayList<Integer>();
 
         for (int i = 0; i < alts.length; i++) {
@@ -1025,6 +1025,11 @@ public class Variant implements Comparable<Variant>{
                 svlens.add(svlen);
             }
         }
+        return svlens;
+    }
+
+    public String getLengthString() {
+        List<Integer> svlens = getSVLEN();
 
         if (svlens.isEmpty()) {
             return "";
