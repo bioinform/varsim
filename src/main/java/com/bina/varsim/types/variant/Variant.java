@@ -414,7 +414,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public String getTraid() {
-        return traid == null ? "." : traid;
+        return traid;
     }
 
     /**
@@ -1008,7 +1008,7 @@ public class Variant implements Comparable<Variant>{
         List<Integer> svlens = new ArrayList<Integer>();
 
         if (alts == null) {
-            return ".";
+            return svlens;
         }
         for (int i = 0; i < alts.length; i++) {
             VariantType t = getType(i + 1);
