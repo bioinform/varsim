@@ -16,10 +16,11 @@ import pysam
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from utils import makedirs, run_shell_command
+from utils import makedirs, run_shell_command, versatile_open
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
+SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
@@ -46,7 +47,7 @@ def convertCN(filenames, operation):
     two2one = operation == "two2one"
     delimiter = re.compile('[/|]')
     for name in filenames:
-        with open(name, 'r') as file_fd:
+        with versatile_open(name, 'r') as file_fd:
             output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
             for l in file_fd:
                 l = l.rstrip()
@@ -67,8 +68,8 @@ def convertCN(filenames, operation):
                         sampleInfo = fields[sampleIndex].split(':')
                         if two2one:
                             cn = delimiter.split(sampleInfo[cnIndex])
-			    #here cn is list of strings
-			    sampleInfo[cnIndex] = str(max(map(int, cn)))
+                            #here cn is list of strings
+                            sampleInfo[cnIndex] = str(max(map(int, cn)))
                         elif len(delimiter.split(sampleInfo[cnIndex])) == 1:
                             #only split when there is only one number
                             gt = delimiter.split(sampleInfo[gtIndex])
@@ -287,10 +288,28 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
 
     return p_rand_dgv
 
+def run_bgzip(vcf):
+    '''
+    sort and compress vcf and return compressed filename
+    :param vcf:
+    :return:
+    '''
+    logger = logging.getLogger(run_bgzip.__name__)
+    gz_vcf = "{}.gz".format(vcf)
+    sorted_vcf = "{}.sorted".format(vcf)
+
+    sort_command = [SORT_VCF, vcf]
+    with open(sorted_vcf, "w") as sorted_out:
+        logger.info("Executing command " + " ".join(sort_command))
+        p_sort = subprocess.Popen(sort_command, stdout=sorted_out)
+        logger.info(" with pid " + str(p_sort.pid))
+        p_sort.wait()
+    os.rename(sorted_vcf, vcf)
+    pysam.tabix_index(vcf, force=True, preset='vcf')
+    return gz_vcf
 
 def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
-
 
 def varsim_main(reference,
                 simulator, # use None to disable simulation

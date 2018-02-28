@@ -13,3 +13,16 @@ def makedirs(dirs):
     for d in dirs:
         if not os.path.exists(d):
             os.makedirs(d)
+
+def versatile_open(filename, mode):
+    '''
+    open regular file, gzipped files
+    :param filename: filename string
+    :param mode: mode string
+    :return: file handle
+    '''
+    if filename.endswith('.gz'):
+        import gzip
+        return gzip.open(filename, mode)
+    else:
+        return open(filename, mode)
