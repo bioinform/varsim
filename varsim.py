@@ -15,7 +15,7 @@ import re
 import pysam
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from utils import makedirs, run_shell_command, versatile_open
+from utils import makedirs, run_shell_command, versatile_open, get_loglevel
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
@@ -23,16 +23,6 @@ SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
 DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
 REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
 if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
-
-def get_loglevel(string):
-    if string == "info":
-        return logging.INFO
-    if string == "warn":
-        return logging.WARN
-    if string == "debug":
-        return logging.DEBUG
-    return logging.INFO
-
 
 def convertCN(filenames, operation):
     """

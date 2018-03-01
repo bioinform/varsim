@@ -63,3 +63,18 @@ def check_simulator_opts(simulator, simulator_opts):
             raise NotImplementedError("simulator {0} is not supported".format(simulator))
     else:
         return
+
+def get_loglevel(string):
+    '''
+    take literal loglevel
+    return loglevel defined in logging module
+    :param string:
+    :return:
+    '''
+    if string == "info":
+        return logging.INFO
+    if string == "warn":
+        return logging.WARN
+    if string == "debug":
+        return logging.DEBUG
+    return logging.INFO
