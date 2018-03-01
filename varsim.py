@@ -13,7 +13,6 @@ import glob
 import tempfile
 import re
 import pysam
-from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 
@@ -90,15 +89,6 @@ def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
     return contigs
-
-# Check java version to make sure it is Java 8
-def check_java():
-    logger = logging.getLogger(check_java.__name__)
-    jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
-    if LooseVersion(jv) < LooseVersion("1.8"):
-        logger.error("VarSim requires Java 1.8 to be on the path.")
-        raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
-
 
 def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
@@ -270,10 +260,6 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     logger.info(" with pid " + str(p_rand_dgv.pid))
 
     return p_rand_dgv
-
-
-def get_version():
-    return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
 
 def varsim_main(reference,
