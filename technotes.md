@@ -119,3 +119,4 @@ Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination a
 Because of the linkage established by `TRAID`, the number of variants reported as `TP` in `json` might differ from that in `VCF` because each translocation is counted once in statistics but has two underly records in `VCF`.
 
 The lengths of a translocation are represented by the maximum length of underlying variants.
+
