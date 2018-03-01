@@ -34,12 +34,13 @@ def check_simulator_opts(simulator, simulator_opts):
     :param opts:
     :return:
     '''
+    #TODO: we need to check if the options are really required
     required_opts = {
-        dwgsim : ['-e', '-E', '-d', '-s', '-1', '-2'],
-        art : ['-1','-2','-p','-l','-m','-s'],
-        longislnd_required_opts : ['--fasta']
+        'dwgsim' : ['-e', '-E', '-d', '-s', '-1', '-2'],
+        'art' : ['-p','-l','-m','-s'],
+        'longislnd' : []
     }
-    if simulator and simulator_opts:
+    if simulator:
         if simulator in required_opts:
             for i in required_opts[simulator]:
                 if not (i in simulator_opts):

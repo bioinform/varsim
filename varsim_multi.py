@@ -162,7 +162,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", choices=["art", "dwgsim", "longislnd"], default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen")
-    main_parser.add_argument("--simulator_options", help="Simulator options", required=False, default="")
+    main_parser.add_argument("--simulator_options", help="Simulator options other than coverage, random seed, and reference file", required=False, default="")
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
                              default=1, type=int)
