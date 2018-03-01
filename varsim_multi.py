@@ -19,6 +19,7 @@ from generate_small_test_ref import gen_restricted_ref_and_vcfs
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf, run_randdgv, randdgv_options2randvcf_options, run_bgzip, convertCN
 import pybedtools
 import pysam
+from utils import check_simulator_opts
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
@@ -161,16 +162,11 @@ if __name__ == "__main__":
     main_parser.add_argument("--simulator", metavar="SIMULATOR", help="Read simulator to use", choices=["art", "dwgsim", "longislnd"], default="art")
     main_parser.add_argument("--simulator_executable", metavar="PATH",
                              help="Path to the executable of the read simulator chosen")
-    main_parser.add_argument("--simulator_options", help="Simulator options", required=False, default="")
-    main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
+    main_parser.add_argument("--simulator_options", help="Simulator options other than coverage, random seed, and reference file", required=False, default="")
     main_parser.add_argument("--nlanes", metavar="INTEGER",
                              help="Number of lanes to generate, coverage will be divided evenly over the lanes. Simulation is parallized over lanes. Each lane will have its own pair of files",
                              default=1, type=int)
     main_parser.add_argument("--total_coverage", metavar="FLOAT", help="Total coverage to simulate", default=[1.0], nargs="+")
-    main_parser.add_argument("--mean_fragment_size", metavar="INT", help="Mean fragment size to simulate", default=350,
-                             type=int)
-    main_parser.add_argument("--sd_fragment_size", metavar="INT", help="Standard deviation of fragment size to simulate",
-                             default=50, type=int)
     main_parser.add_argument("--vcfs", metavar="VCF",
                              help="Addtional list of VCFs to insert into genome, priority is lowest ... highest", nargs="+",
                              default=[])
@@ -244,24 +240,6 @@ if __name__ == "__main__":
     rand_dgv_group.add_argument("--sv_prop_het", metavar="FLOAT", help="Proportion of heterozygous structural variants",
                                 default=0.6,
                                 type=float)
-    dwgsim_group = main_parser.add_argument_group("DWGSIM options")
-    dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base",
-                              default=0.0001, type=float)
-    dwgsim_group.add_argument("--dwgsim_end_e", metavar="last_base_error_rate", help="Error rate on the last base",
-                              default=0.0015, type=float)
-    dwgsim_group.add_argument("--dwgsim_options", help="DWGSIM command-line options", default="", required=False)
-
-    art_group = main_parser.add_argument_group("ART options")
-    art_group.add_argument("--profile_1", metavar="profile_file1", help="ART error profile for first end", default="")
-    art_group.add_argument("--profile_2", metavar="profile_file2", help="ART error profile for second end", default="")
-    art_group.add_argument("--art_options", help="ART command-line options", default="")
-
-    pbsim_group = main_parser.add_argument_group("PBSIM options")
-    pbsim_group.add_argument("--model_qc", metavar="model_qc", help="PBSIM QC model", default=None, type=str)
-
-    longislnd_group = main_parser.add_argument_group("LongISLND options")
-    longislnd_group.add_argument("--longislnd_options", help="LongISLND options", default="")
-
 
     args = main_parser.parse_args()
 
@@ -277,16 +255,7 @@ if __name__ == "__main__":
 
     simulator = None if args.disable_sim else args.simulator
     simulator_opts = args.simulator_options
-    if not simulator_opts:
-        if args.simulator == "dwgsim":
-            simulator_opts = "-e {1},{2} -E {1},{2} -d {3} -s {4} -1 {5} -2 {5} {6}".format(args.dwgsim_start_e, args.dwgsim_end_e, args.mean_fragment_size, args.sd_fragment_size, args.read_length, args.dwgsim_options)
-        elif args.simulator == "art":
-            profile_opts = "-1 {} -2 {}".format(args.profile_1, args.profile_2) if (args.profile_1 and args.profile_2) else ""
-            simulator_opts = "-p -l {} -m {} -s {} {} {}".format(args.read_length, args.mean_fragment_size, args.sd_fragment_size, profile_opts, args.art_options)
-        elif args.simulator == "longislnd":
-            simulator_opts = args.longislnd_options
-        elif args.simulator == "pbsim":
-            raise NotImplementedError("pbsim is no longer supported")
+    check_simulator_opts(simulator, simulator_opts)
 
     randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
     randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim, args.sv_prop_het)
