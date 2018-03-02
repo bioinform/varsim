@@ -209,7 +209,7 @@ def process(args):
     vcfeval_prefix = os.path.join(args.out_dir, 'vcfeval_compare_results')
     if os.path.exists(vcfeval_prefix):
         LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
-        os.removedirs(vcfeval_prefix)
+        shutil.rmtree(vcfeval_prefix)
     vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = utils.run_bgzip(varsim_fn), reference = sdf,
                                           regions = args.regions,
                                             sample = args.sample, vcfs = [utils.run_bgzip(varsim_fp)],
