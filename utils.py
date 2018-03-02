@@ -2,11 +2,13 @@ import logging
 import subprocess
 import os
 import sys
+import pysam
 from distutils.version import LooseVersion
 # Check java version to make sure it is Java 8
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
+SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
 
 def check_java():
     logger = logging.getLogger(check_java.__name__)
@@ -32,7 +34,10 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
         cmd = ' '.join(cmd)
     logger.info('running ' + cmd)
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
+    logger.info('PID ' + str(subproc.pid))
     retcode = subproc.wait()
+    if retcode != 0:
+        raise Exception('{0} failed'.format(cmd))
     return(retcode)
 
 def makedirs(dirs):
@@ -94,3 +99,19 @@ def get_loglevel(string):
     if string == "debug":
         return logging.DEBUG
     return logging.INFO
+
+def run_bgzip(vcf):
+    '''
+    sort and compress vcf and return compressed filename
+    :param vcf:
+    :return:
+    '''
+    gz_vcf = "{}.gz".format(vcf)
+    sorted_vcf = "{}.sorted".format(vcf)
+
+    sort_command = [SORT_VCF, vcf]
+    with open(sorted_vcf, "w") as sorted_out:
+        run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+    os.rename(sorted_vcf, vcf)
+    pysam.tabix_index(vcf, force=True, preset='vcf')
+    return gz_vcf
