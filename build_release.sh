@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 version=$(git describe | sed 's/^v//')
 cwd=`pwd`
@@ -7,6 +8,8 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$version
 
 mvn package
 
+git submodule init
+git submodule update
 pushd rtg-tools
 rm -rf rtg-tools-*
 ant zip-nojre
