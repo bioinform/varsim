@@ -20,5 +20,5 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	truth
 chr7	999	.	N	<INV>	.	.	VARIANT_OVERALL_TYPE=Inversion;SVTYPE=INV;SVLEN=200;3PrimeDistance=1000;5PrimeDistance=1100;LengthDifference=100	GT	1|1

@@ -20,6 +20,6 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
 1	996	rs35493185	AAT	A	.	.	VARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-2	GT	0|1
 1	999	rs35493185	G	C	.	.	VARIANT_OVERALL_TYPE=SNP	GT	0|1

@@ -20,5 +20,5 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
 HXB2	2363	.	T	G	.	PASS	VARIANT_OVERALL_TYPE=SNP	GT	1|1
