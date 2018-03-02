@@ -1,10 +1,12 @@
 import logging
 import subprocess
 import os
+import sys
 from distutils.version import LooseVersion
 # Check java version to make sure it is Java 8
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
+RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 
 def check_java():
     logger = logging.getLogger(check_java.__name__)
@@ -16,17 +18,31 @@ def check_java():
 def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
 
-
 def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
+    '''
+    run command (list of str or str), redirect stdout, stderr to user-specified file handles
+    :param cmd:
+    :param cmd_stdout:
+    :param cmd_stderr:
+    :param cmd_dir:
+    :return:
+    '''
+    logger = logging.getLogger(run_shell_command.__name__)
+    if type(cmd) == list:
+        cmd = ' '.join(cmd)
+    logger.info('running ' + cmd)
     subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
     retcode = subproc.wait()
-    sys.exit(retcode)
-
+    return(retcode)
 
 def makedirs(dirs):
-    for d in dirs:
-        if not os.path.exists(d):
-            os.makedirs(d)
+    if type(dirs) == list:
+        for d in dirs:
+            if not os.path.exists(d):
+                os.makedirs(d)
+    else:
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
 
 def versatile_open(filename, mode):
     '''
