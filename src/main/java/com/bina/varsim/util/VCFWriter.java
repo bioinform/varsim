@@ -1,5 +1,7 @@
 package com.bina.varsim.util;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -22,7 +24,7 @@ public class VCFWriter {
    * @param sampleNames list of sample names
    * @return
    */
-  public static String generateVCFHeader(final String referenceFileName, final List<String> sampleNames) {
+  public static String generateVCFHeader(final String referenceFileName, final ImmutableList<String> sampleNames) {
     String VCFHeader = "##fileformat=VCFv4.3\n" +
             "##reference=" + referenceFileName + "\n" +
                 /*

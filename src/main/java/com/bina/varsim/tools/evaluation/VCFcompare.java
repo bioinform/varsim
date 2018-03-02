@@ -17,6 +17,8 @@ import com.bina.varsim.util.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
@@ -32,6 +34,7 @@ import java.util.*;
 import static com.bina.varsim.constants.Constant.DISTANCE_METRIC_BIN_COUNT;
 import static com.bina.varsim.constants.Constant.MAX_BIN_CAPACITY;
 import static com.bina.varsim.types.ComparisonResultWriter.*;
+import static com.bina.varsim.util.VCFWriter.generateVCFHeader;
 
 
 /**
@@ -933,6 +936,18 @@ public class VCFcompare extends VarSimTool {
             PrintWriter fnWriter = FN_WRITER.getWriter(outPrefix);
             PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
 
+          //print VCF header
+            ImmutableList<String> sampleList = null;
+            if (sampleName == null) {
+                sampleList = new ImmutableList.Builder<String>().build();
+            } else {
+                sampleList = new ImmutableList.Builder<String>().add(sampleName).build();
+            }
+            tpWriter.write(generateVCFHeader(reference, sampleList));
+            unknownTpWriter.write(generateVCFHeader(reference, sampleList));
+            fpWriter.write(generateVCFHeader(reference, sampleList));
+            unknownFpWriter.write(generateVCFHeader(reference, sampleList));
+            fnWriter.write(generateVCFHeader(reference, sampleList));
 
         // for this case we add to false positives if the variant is not validated.
         // However, do don't add to true positives, those that computed later

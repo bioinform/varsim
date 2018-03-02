@@ -12,6 +12,7 @@ import com.bina.varsim.util.SimpleReference;
 import com.bina.varsim.util.StringUtilities;
 import com.bina.varsim.util.VCFWriter;
 import com.bina.varsim.util.VCFparser;
+import com.google.common.collect.ImmutableList;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -673,7 +674,7 @@ public class VCF2diploid extends VarSimTool {
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            bw.write(VCFWriter.generateVCFHeader(chrfiles.get(0), idList));
+            bw.write(VCFWriter.generateVCFHeader(chrfiles.get(0), new ImmutableList.Builder<String>().addAll(idList).build()));
 
             int num_vars = varList.size();
 
