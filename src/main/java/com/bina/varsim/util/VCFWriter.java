@@ -40,6 +40,7 @@ public class VCFWriter {
             "##INFO=<ID=ISINV,Number=1,Type=Flag,Description=\"whether a duplication is inverted\">\n" +
             "##INFO=<ID=TRAID,Number=1,Type=String,Description=\"translocation ID\">\n" +
             "##INFO=<ID=IMPRECISE_LENGTH,Number=1,Type=Flag,Description=\"SVLEN is imprecise\">\n" +
+            "##INFO=<ID=VARIANT_OVERALL_TYPE,Number=1,Type=String,Description=\"Overall variant type\">\n" +
             "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
                 /*CN is defined as Integer in VCF4.1,4.3, making it impossible to specify multiple CN values
                 here we changed it to String to allow such behavior.
@@ -62,4 +63,3 @@ public class VCFWriter {
             (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
   }
 }
-            //"##INFO=<ID=VARIANT_OVERALL_TYPE,Number=1,Type=String,Description=\"Overall variant type\">\n" +

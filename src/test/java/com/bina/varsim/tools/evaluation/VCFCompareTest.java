@@ -9,9 +9,12 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
+import static com.bina.varsim.GlobalTestingOptions.updateVCF;
 import static htsjdk.samtools.SAMFileHeader.GroupOrder.reference;
 import static junit.framework.TestCase.assertTrue;
 
@@ -49,6 +52,13 @@ public class VCFCompareTest {
             vcfForCompare
     };
     VCFcompare.main(ArrayUtils.addAll(args, additionalArgs));
+    if (updateVCF) {
+      Files.copy(outputFalseNegative, Paths.get(expectedFalseNegative), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(outputFalsePositive, Paths.get(expectedFalsePositive), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(outputTruePositive, Paths.get(expectedTruePositive), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(outputUnknownTruePositive, Paths.get(expectedUnknownTruePositive), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(outputUnknownFalsePositive, Paths.get(expectedUnknownFalsePositive), StandardCopyOption.REPLACE_EXISTING);
+    }
     assertTrue(FileUtils.contentEquals(outputFalseNegative.toFile(), new File(expectedFalseNegative)));
     assertTrue(FileUtils.contentEquals(outputFalsePositive.toFile(), new File(expectedFalsePositive)));
     assertTrue(FileUtils.contentEquals(outputTruePositive.toFile(), new File(expectedTruePositive)));

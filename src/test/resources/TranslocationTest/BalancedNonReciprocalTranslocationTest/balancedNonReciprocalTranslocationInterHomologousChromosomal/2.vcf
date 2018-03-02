@@ -9,6 +9,7 @@
 ##INFO=<ID=ISINV,Number=1,Type=Flag,Description="whether a duplication is inverted">
 ##INFO=<ID=TRAID,Number=1,Type=String,Description="translocation ID">
 ##INFO=<ID=IMPRECISE_LENGTH,Number=1,Type=Flag,Description="SVLEN is imprecise">
+##INFO=<ID=VARIANT_OVERALL_TYPE,Number=1,Type=String,Description="Overall variant type">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype.">
 ##ALT=<ID=DEL,Description="Deletion">
