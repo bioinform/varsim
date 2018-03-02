@@ -8,6 +8,7 @@ import com.bina.varsim.types.VCFInfo;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -26,6 +27,11 @@ public class VCFparser extends GzFileParser<Variant> {
     private Random random = null;
 
     private int sampleIndex = -1;
+
+    public String getSampleId() {
+        return sampleId;
+    }
+
     private String sampleId = null;
     private boolean isPassFilterRequired = false;
     private boolean chromLineSeen = false;
@@ -214,7 +220,7 @@ public class VCFparser extends GzFileParser<Variant> {
     public Variant processLine(String line) throws UnexpectedException {
 
         // try to determine the column we should read for the genotype
-        Iterable<String> toks = Splitter.on('\t').split(line);
+        List<String> toks = Lists.newArrayList(Splitter.on('\t').split(line));
         if (line.startsWith("#")) {
             if (sampleId != null && line.startsWith("#CHROM")) {
                 chromLineSeen = true;
@@ -226,6 +232,9 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
             } else if (sampleId == null) {
                 sampleIndex = 10; // the first sample
+                if (line.startsWith("#CHROM") && toks.size() >= sampleIndex) {
+                    sampleId = toks.get(sampleIndex - 1);
+                }
             }
             return null;
         }

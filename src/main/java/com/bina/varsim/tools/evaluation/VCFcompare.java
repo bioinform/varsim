@@ -936,18 +936,8 @@ public class VCFcompare extends VarSimTool {
             PrintWriter fnWriter = FN_WRITER.getWriter(outPrefix);
             PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
 
-          //print VCF header
-            ImmutableList<String> sampleList = null;
-            if (sampleName == null) {
-                sampleList = new ImmutableList.Builder<String>().build();
-            } else {
-                sampleList = new ImmutableList.Builder<String>().add(sampleName).build();
-            }
-            tpWriter.write(generateVCFHeader(reference, sampleList));
-            unknownTpWriter.write(generateVCFHeader(reference, sampleList));
-            fpWriter.write(generateVCFHeader(reference, sampleList));
-            unknownFpWriter.write(generateVCFHeader(reference, sampleList));
-            fnWriter.write(generateVCFHeader(reference, sampleList));
+            //print VCF header
+            printVCFHeader(tpWriter, unknownTpWriter, fpWriter, unknownFpWriter, fnWriter);
 
         // for this case we add to false positives if the variant is not validated.
         // However, do don't add to true positives, those that computed later
@@ -1570,6 +1560,60 @@ public class VCFcompare extends VarSimTool {
 
             return maxTrueVarianLength;
         }
+    }
+
+    /**
+     * wrapper for dirty VCF header (sample name recognition) writing code
+     * @param tpWriter
+     * @param unknownTpWriter
+     * @param fpWriter
+     * @param unknownFpWriter
+     * @param fnWriter
+     */
+    private void printVCFHeader(PrintWriter tpWriter, PrintWriter unknownTpWriter,PrintWriter  fpWriter,PrintWriter  unknownFpWriter,PrintWriter  fnWriter) {
+      //set default sample name
+        ImmutableList<String> truthSampleList = new ImmutableList.Builder<String>().add("truth").build(); //truth is default sample name for truth VCF
+        ImmutableList<String> predictSampleList = new ImmutableList.Builder<String>().add("predict").build(); //add default sample name
+
+        //identity user input sample names in truth and predictions, respectively
+        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false);
+        while (trueVcfParser.hasMoreInput()) {
+            Variant variant = trueVcfParser.parseLine();
+            if (variant != null) {
+                //assume header lines come before variants
+                break;
+            }
+        }
+
+        if (sampleName == null) {
+            if (trueVcfParser.getSampleId() != null) {
+                truthSampleList = new ImmutableList.Builder<String>().add(trueVcfParser.getSampleId()).build();
+            }
+        } else {
+            truthSampleList = new ImmutableList.Builder<String>().add(sampleName).build();
+        }
+        tpWriter.write(generateVCFHeader(reference, truthSampleList));
+        unknownTpWriter.write(generateVCFHeader(reference, truthSampleList));
+        fnWriter.write(generateVCFHeader(reference, truthSampleList));
+        Set<String> predictSampleUniqueNames = new HashSet<>();
+        for (String currentVcfFile : newVcfFilename) {
+            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
+            while (newParser.hasMoreInput()) {
+                Variant variant = newParser.parseLine();
+                if (newParser.getSampleId() != null) {
+                    predictSampleUniqueNames.add(newParser.getSampleId());
+                }
+                if (variant != null) {
+                    //assume header lines come before variants
+                    break;
+                }
+            }
+        }
+        if (predictSampleUniqueNames.size() == 1) {
+            predictSampleList = new ImmutableList.Builder<String>().add(predictSampleUniqueNames.iterator().next()).build();
+        }//for 0 or more than 1 unique sample names, use default
+        fpWriter.write(generateVCFHeader(reference, predictSampleList));
+        unknownFpWriter.write(generateVCFHeader(reference, predictSampleList));
     }
     private String getSummaryStats(List<Integer> list) {
         if (list == null || list.isEmpty()) {
