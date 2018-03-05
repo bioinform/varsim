@@ -10,6 +10,10 @@ VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
 
+COMBINE_KEEP_ALL_DUPLICATE = 1
+COMBINE_KEEP_FIRST_DUPLICATE = 2
+COMBINE_KEEP_NO_DUPLICATE = 3
+
 def check_java():
     logger = logging.getLogger(check_java.__name__)
     jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
@@ -99,6 +103,56 @@ def get_loglevel(string):
     if string == "debug":
         return logging.DEBUG
     return logging.INFO
+
+def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_DUPLICATE):
+    '''
+    combine multiple VCFs, sort, optionally remove duplicate
+    :param combined_vcf:
+    :param vcfs:
+    :param rm_duplicate: if true, remove duplicate variants (by chr+pos+ref+alt)
+    :return:
+    '''
+    if not vcfs or len(vcfs) < 2:
+        raise ValueError('at least 2 VCFs required')
+
+    sort_command = [SORT_VCF]
+    sort_command.extend(vcfs)
+    gz_vcf = "{}.gz".format(combined_vcf)
+    with open(combined_vcf, "w") as sorted_out:
+        run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+    if duplicate_handling_mode == COMBINE_KEEP_FIRST_DUPLICATE or duplicate_handling_mode == COMBINE_KEEP_NO_DUPLICATE:
+        previous_line = None
+        current_count = 0
+        uniq_vcf = combined_vcf + '.uniq'
+        with open(combined_vcf, "r") as input, open(uniq_vcf, 'w') as output:
+            for l in input:
+                if l.startswith('#'):
+                    output.write(l)
+                elif previous_line:
+                    #assume no empty field
+                    chr0, pos0, id0, ref0, alt0 = previous_line.rstrip().split()[0:5]
+                    chr1, pos1, id1, ref1, alt1 = l.rstrip().split()[0:5]
+                    if (chr0, pos0, ref0, alt0) == (chr1, pos1, ref1, alt1):
+                        #duplicate
+                        current_count += 1
+                    else:
+                        if duplicate_handling_mode == COMBINE_KEEP_FIRST_DUPLICATE or\
+                                (duplicate_handling_mode == COMBINE_KEEP_NO_DUPLICATE and current_count == 1):
+                            output.write(previous_line)
+                        previous_line = l
+                        current_count = 1
+                else:
+                    previous_line = l
+                    current_count = 1
+            #process last variant record
+            if previous_line:
+                if duplicate_handling_mode == COMBINE_KEEP_FIRST_DUPLICATE or \
+                    (duplicate_handling_mode == COMBINE_KEEP_NO_DUPLICATE and current_count == 1):
+                    output.write(previous_line)
+        os.rename(uniq_vcf, combined_vcf)
+    pysam.tabix_index(combined_vcf, force=True, preset='vcf')
+    return gz_vcf
+
 
 def run_bgzip(vcf):
     '''
