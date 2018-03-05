@@ -104,7 +104,7 @@ def get_loglevel(string):
         return logging.DEBUG
     return logging.INFO
 
-def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_DUPLICATE):
+def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_DUPLICATE, gzip = True):
     '''
     combine multiple VCFs, sort, optionally remove duplicate
     :param combined_vcf:
@@ -112,6 +112,8 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
     :param rm_duplicate: if true, remove duplicate variants (by chr+pos+ref+alt)
     :return:
     '''
+    logger = logging.getLogger(combine_vcf.__name__)
+    logger.info("Merging {0}".format(" ".join(map(str, vcfs))))
     if not vcfs or len(vcfs) < 2:
         raise ValueError('at least 2 VCFs required')
 
@@ -139,6 +141,8 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
                         if duplicate_handling_mode == COMBINE_KEEP_FIRST_DUPLICATE or\
                                 (duplicate_handling_mode == COMBINE_KEEP_NO_DUPLICATE and current_count == 1):
                             output.write(previous_line)
+                        elif current_count > 1:
+                            logger.debug('{0} duplicated {1} times, are discarded'.format(previous_line, current_count))
                         previous_line = l
                         current_count = 1
                 else:
@@ -150,8 +154,11 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
                     (duplicate_handling_mode == COMBINE_KEEP_NO_DUPLICATE and current_count == 1):
                     output.write(previous_line)
         os.rename(uniq_vcf, combined_vcf)
-    pysam.tabix_index(combined_vcf, force=True, preset='vcf')
-    return gz_vcf
+    if gzip:
+        pysam.tabix_index(combined_vcf, force=True, preset='vcf')
+        return gz_vcf
+    else:
+        return combined_vcf
 
 
 def run_bgzip(vcf):
