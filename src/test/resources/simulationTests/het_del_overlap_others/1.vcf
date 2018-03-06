@@ -20,6 +20,7 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
+##contig=<ID=1,length=640>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
 1	4	SV_22	N	<DEL>	.	.	VARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-460	GT	0|1
 1	6	small_1345	G	GGGTAGCAACGGTGCTATGCCTAGTAGACTGAGAAGGTATATTG	.	.	VARIANT_OVERALL_TYPE=Insertion;SVLEN=43	GT	1|0

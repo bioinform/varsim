@@ -1,5 +1,6 @@
 package com.bina.varsim.util;
 
+import com.bina.varsim.types.ChrString;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
@@ -25,7 +26,8 @@ public class VCFWriter {
    * @return
    */
   public static String generateVCFHeader(final String referenceFileName, final ImmutableList<String> sampleNames) {
-    String VCFHeader = "##fileformat=VCFv4.3\n" +
+    StringBuilder VCFHeader = new StringBuilder();
+    VCFHeader.append("##fileformat=VCFv4.3\n" +
             "##reference=" + referenceFileName + "\n" +
                 /*
                 SVLEN is for alternative allele in truth VCF
@@ -56,12 +58,19 @@ public class VCFWriter {
             "##ALT=<ID=DUP:ISP,Description=\"Interspersed duplication\">\n" +
             "##ALT=<ID=DUP:TRA,Description=\"Duplication in translocation\">\n" +
             "##ALT=<ID=INS,Description=\"Insertion of novel sequence\">\n" +
-            "##ALT=<ID=INV,Description=\"Inversion\">\n";
+            "##ALT=<ID=INV,Description=\"Inversion\">\n");
+    if (referenceFileName != null) {
+      SimpleReference ref = new SimpleReference(referenceFileName);
+      for (ChrString contig : ref.keySet()) {
+        VCFHeader.append("##contig=<ID=" + contig + ",length=" + ref.getRefLen(contig) + ">\n");
+      }
+    }
     StringJoiner joiner = new StringJoiner("\t");
     for (String id : sampleNames) {
       joiner.add(id);
     }
-    return VCFHeader + "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
-            (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n";
+    VCFHeader.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
+            (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n");
+    return VCFHeader.toString();
   }
 }

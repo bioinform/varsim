@@ -20,6 +20,8 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
+##contig=<ID=1,length=12>
+##contig=<ID=2,length=17>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
 2	6	.	T	<DEL:TRA>	.	PASS	VARIANT_OVERALL_TYPE=TransDel;SVTYPE=DEL;TRAID=1;SVLEN=-4	GT	1|1
 2	6	.	T	<DUP:TRA>	.	PASS	VARIANT_OVERALL_TYPE=TransDup;SVTYPE=DUP;TRAID=2;SVLEN=3;CHR2=1;POS2=9;END2=11;ISINV	GT	1|1
