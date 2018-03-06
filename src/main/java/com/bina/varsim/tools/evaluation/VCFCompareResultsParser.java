@@ -29,11 +29,10 @@ import static com.bina.varsim.types.ComparisonResultWriter.*;
 
 
 /**
- * Compare two VCF files, output the TPR and FDR for various bins and variant types
+ * counts TP, FN, FP and generate reports
  * <p>
- * TODO: this file needs massive refactoring
  *
- * @author johnmu
+ * @author Yunfei Guo
  */
 
 // TODO this class does not yet compare the contents of the larger variants
