@@ -15,14 +15,10 @@ import re
 import pysam
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from utils import makedirs, run_shell_command, versatile_open, get_loglevel
+from utils import makedirs, run_shell_command, versatile_open, get_loglevel, check_java, MY_DIR, VARSIMJAR
 
-MY_DIR = os.path.dirname(os.path.realpath(__file__))
-VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
-DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
-REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
+REQUIRE_VARSIMJAR = not os.path.isfile(VARSIMJAR)
+if REQUIRE_VARSIMJAR: VARSIMJAR = None
 
 def convertCN(filenames, operation):
     """
@@ -268,26 +264,6 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     logger.info(" with pid " + str(p_rand_dgv.pid))
 
     return p_rand_dgv
-
-def run_bgzip(vcf):
-    '''
-    sort and compress vcf and return compressed filename
-    :param vcf:
-    :return:
-    '''
-    logger = logging.getLogger(run_bgzip.__name__)
-    gz_vcf = "{}.gz".format(vcf)
-    sorted_vcf = "{}.sorted".format(vcf)
-
-    sort_command = [SORT_VCF, vcf]
-    with open(sorted_vcf, "w") as sorted_out:
-        logger.info("Executing command " + " ".join(sort_command))
-        p_sort = subprocess.Popen(sort_command, stdout=sorted_out)
-        logger.info(" with pid " + str(p_sort.pid))
-        p_sort.wait()
-    os.rename(sorted_vcf, vcf)
-    pysam.tabix_index(vcf, force=True, preset='vcf')
-    return gz_vcf
 
 def varsim_main(reference,
                 simulator, # use None to disable simulation
@@ -579,7 +555,7 @@ if __name__ == "__main__":
                              help="Path to the executable of the read simulator chosen"
                              , required=True)
     main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)",
-                             default=DEFAULT_VARSIMJAR,
+                             default=VARSIMJAR,
                              required=False)
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INTEGER",

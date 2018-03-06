@@ -16,17 +16,10 @@ import re
 from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions, run_randvcf, run_randdgv, randdgv_options2randvcf_options, run_bgzip, convertCN
+from varsim import varsim_main, RandVCFOptions, RandDGVOptions, run_randvcf, run_randdgv, randdgv_options2randvcf_options, convertCN
 import pybedtools
 import pysam
-from utils import check_simulator_opts
-
-MY_DIR = os.path.dirname(os.path.realpath(__file__))
-VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
-REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
-
+from utils import check_simulator_opts, sort_and_compress, get_version, get_loglevel, makedirs, check_java
 
 def varsim_multi(reference,
                  simulator,
@@ -82,7 +75,7 @@ def varsim_multi(reference,
             sampling_vcf = lift_vcfs([restricted_sampling_vcf], os.path.join(restricted_dir, "region-restricted-sampling.vcf"), reference)
         if dgv_vcf:
             convertCN([dgv_vcf], "two2one")
-            dgv_vcf = run_bgzip(dgv_vcf)
+            dgv_vcf = sort_and_compress(dgv_vcf)
             _, [restricted_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [dgv_vcf], merged_bed, [], restricted_dir , flank=0)
             # Now lift over the restricted_dgv_vcf to get the region-limited VCF
             dgv_vcf = lift_vcfs([restricted_dgv_vcf], os.path.join(restricted_dir, "region-restricted-dgv.vcf"), reference)
@@ -101,7 +94,7 @@ def varsim_multi(reference,
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
                 run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference).wait()
-            sampled_vcf = run_bgzip(sampled_vcf)
+            sampled_vcf = sort_and_compress(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
             sample_variant_vcfs = sample_variant_vcfs + [restricted_sampled_vcf]
@@ -111,7 +104,7 @@ def varsim_multi(reference,
             randdgvvcf_options = randdgv_options2randvcf_options(randdgv_options)
             with open(sampled_dgv_vcf, "w") as randdgvvcf_out, open(os.path.join(sample_dir, "randdgvvcf.err"), "w") as randdgvvcf_log:
                 run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference).wait()
-            sampled_dgv_vcf = run_bgzip(sampled_dgv_vcf)
+            sampled_dgv_vcf = sort_and_compress(sampled_dgv_vcf)
             # Now generate the restricted sampled dgv VCF for the sample
             _, [restricted_sampled_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_dgv_vcf], regions, [], os.path.join(sample_dir, "restricted_randdgvvcf"), flank=0)
             convertCN([restricted_sampled_dgv_vcf], "one2two")

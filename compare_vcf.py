@@ -238,9 +238,9 @@ def process(args):
                exclude_filtered = args.exclude_filtered,
                match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options)
     varsim_tp, varsim_fn, varsim_fp = varsim_comparator.get_tp(), varsim_comparator.get_fn(), varsim_comparator.get_fp()
-    varsim_tp = utils.run_bgzip(varsim_tp)
-    varsim_fn = utils.run_bgzip(varsim_fn)
-    varsim_fp = utils.run_bgzip(varsim_fp)
+    varsim_tp = utils.sort_and_compress(varsim_tp)
+    varsim_fn = utils.sort_and_compress(varsim_fn)
+    varsim_fp = utils.sort_and_compress(varsim_fp)
     #run vcfeval
     sdf = args.sdf
     if not sdf:

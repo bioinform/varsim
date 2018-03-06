@@ -161,7 +161,7 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
         return combined_vcf
 
 
-def run_bgzip(vcf):
+def sort_and_compress(vcf):
     '''
     sort and compress vcf and return compressed filename
     :param vcf:
