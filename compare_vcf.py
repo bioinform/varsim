@@ -3,14 +3,9 @@
 import argparse
 import os
 import sys
-import subprocess
+import json
 import logging
 import shutil
-import time
-import signal
-import tempfile
-import pybedtools
-import pysam
 import utils
 LOGGER = None
 
@@ -275,7 +270,56 @@ def process(args):
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
-    #summarize_results(augmented_tp, augmented_fn, augmented_fp)
+    summarize_results(os.path.join(args.out_dir,"augmetned"),augmented_tp, augmented_fn, augmented_fp)
+
+
+def print_stats(stats):
+    print ("{0: <15}\t{1: <10}\t{2: <10}\t{3: <10}\t{4: <5}\t{5: <5}\t{6: <5}".format("VariantType","Recall","Precision","F1", "TP","T", "FP"))
+    for vartype, value in stats.iteritems():
+        try:
+            recall = value['tp'] / float(value['t']) if float(value['t']) != 0 else float('NaN')
+            precision = float(value['tp']) / (value['tp'] + value['fp']) if value['tp'] + value['fp'] != 0 else float('NaN')
+            f1 = 'NA' if recall == float('NaN') or precision == float('NaN') or (recall + precision) == 0 else 2 * recall * precision / (recall + precision)
+        except ValueError:
+            sys.stderr.write("invalide values\n")
+        print ("{0: <15}\t{1:.10f}\t{2:.10f}\t{3:.10f}\t{4:<5}\t{5:<5}\t{6: <5}".format(vartype, recall, precision, f1, value['tp'], value['t'], value['fp']))
+
+def parse_jsons(jsonfile, stats, include_sv = False):
+    var_types = stats.keys()
+    metrics = stats[var_types[0]].keys()
+    with utils.versatile_open(jsonfile, 'r') as fh:
+        data = json.load(fh)
+        for vt in var_types:
+            if vt in data['num_true_correct']['data']:
+                for mt in metrics:
+                    try:
+                        stats[vt][mt] += data['num_true_correct']['data'][vt]['sum_count'][mt]
+                        if include_sv:
+                            stats[vt][mt] -= data['num_true_correct']['data'][vt]['svSumCount'][mt]
+                    except KeyError as err:
+                        print ("error in {}. No {} field".format(jsonfile, err))
+                        stats[vt][mt] += 0
+
+def summarize_results(prefix, tp, fn, fp):
+    '''
+    count variants by type and tabulate
+    :param augmented_tp:
+    :param augmented_fn:
+    :param augmented_fp:
+    :return:
+    '''
+    cmd = ['java', '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
+           '-prefix', prefix, '-tp',tp,
+           '-fn', fn, '-fp', fp,
+           ]
+    utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
+    jsonfile = "{0}_report.json".format(prefix)
+    var_types = ['SNP', 'Deletion', 'Insertion', 'Complex']
+    metrics = ['tp', 'fp', 't', 'fn']
+    stats = {k: {ii: 0 for ii in metrics} for k in var_types}
+    parse_jsons(jsonfile, stats, include_sv=False)
+    print_stats(stats)
+    return
 
 
 if __name__ == "__main__":
