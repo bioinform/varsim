@@ -674,7 +674,8 @@ public class VCF2diploid extends VarSimTool {
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            bw.write(VCFWriter.generateVCFHeader(chrfiles.get(0), new ImmutableList.Builder<String>().addAll(idList).build()));
+            SimpleReference reference = new SimpleReference(chrfiles.get(0));
+            bw.write(VCFWriter.generateVCFHeader(reference, new ImmutableList.Builder<String>().addAll(idList).build()));
 
             int num_vars = varList.size();
 
