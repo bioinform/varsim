@@ -8,8 +8,7 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.Sequence;
-import htsjdk.samtools.reference.FastaSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.*;
 import htsjdk.tribble.FeatureCodec;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
@@ -20,8 +19,11 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +35,7 @@ public class SimpleReference {
 
     // chr_idx -> reference_string
     private final Map<ChrString, Sequence> data = new HashMap<>();
+    private String referenceFileName = null;
 
     public SimpleReference() {
     }
@@ -42,13 +45,17 @@ public class SimpleReference {
      */
     public SimpleReference(String filename) {
         addReference(filename);
+        referenceFileName = filename;
     }
 
     public SimpleReference(final Collection<String> filenames) {
         if (filenames != null) {
+            StringBuilder stringBuilder = new StringBuilder();
             for (final String filename : filenames) {
                 addReference(filename);
+                stringBuilder.append(filename);
             }
+            referenceFileName = stringBuilder.toString();
         }
     }
 
@@ -57,27 +64,37 @@ public class SimpleReference {
      *
      * @param filename FASTA file with fai index
      */
-    public void addReference(String filename) {
+    private void addReference(String filename) {
         File f = new File(filename);
-        FastaSequenceFile fa = new FastaSequenceFile(f, true);
-        ReferenceSequence seq = fa.nextSequence();
-        while (seq != null) {
-            ChrString name = new ChrString(seq.getName());
-            byte[] seq_bytes = seq.getBases();
-
-            if (seq_bytes == null) {
-                log.error("Contig error: " + seq.getName());
-            } else {
-                log.info("Read ref: " + seq.getName() + ":" + name);
-                if (!data.containsKey(name)) {
-                    Sequence contig = new Sequence(seq.getName(),
-                            seq_bytes, seq_bytes.length);
-                    data.put(name, contig);
-                } else {
-                    log.warn("Duplicate Key!");
-                }
+        Path indexFile = ReferenceSequenceFileFactory.getFastaIndexFileName(Paths.get(filename));
+        try {
+            if (!Files.exists(indexFile, new LinkOption[0])) {
+                FastaSequenceIndexCreator.create(Paths.get(filename), false);
             }
-            seq = fa.nextSequence();
+            IndexedFastaSequenceFile fa = new IndexedFastaSequenceFile(f);
+            ReferenceSequence seq = fa.nextSequence();
+            while (seq != null) {
+                ChrString name = new ChrString(seq.getName());
+                byte[] seq_bytes = seq.getBases();
+
+                if (seq_bytes == null) {
+                    log.error("Contig error: " + seq.getName());
+                } else {
+                    log.info("Read ref: " + seq.getName() + ":" + name);
+                    if (!data.containsKey(name)) {
+                        Sequence contig = new Sequence(seq.getName(),
+                                seq_bytes, seq_bytes.length);
+                        data.put(name, contig);
+                    } else {
+                        log.warn("Duplicate Key!");
+                    }
+                }
+                seq = fa.nextSequence();
+            }
+        } catch (IOException e) {
+            log.error(filename + " not found.");
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -186,5 +203,12 @@ public class SimpleReference {
      */
     public Set<ChrString> keySet() {
         return data.keySet();
+    }
+
+    /**
+     * @return referenceFileName name(s) read
+     */
+    public String getReferenceFileName() {
+        return referenceFileName;
     }
 }
