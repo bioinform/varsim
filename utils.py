@@ -14,6 +14,19 @@ COMBINE_KEEP_ALL_DUPLICATE = 1
 COMBINE_KEEP_FIRST_DUPLICATE = 2
 COMBINE_KEEP_NO_DUPLICATE = 3
 
+def count_variants(vcf):
+    '''
+    count number of variants
+    :param vcf:
+    :return:
+    '''
+    count = 0
+    with versatile_open(vcf, 'r') as fh:
+        for l in fh:
+            if l.rstrip() and (not l.startswith('#')):
+                count += 1
+    return count
+
 def check_java():
     logger = logging.getLogger(check_java.__name__)
     jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
