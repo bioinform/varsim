@@ -270,7 +270,8 @@ def process(args):
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
-    summarize_results(os.path.join(args.out_dir,"augmetned"),augmented_tp, augmented_fn, augmented_fp)
+    summarize_results(os.path.join(args.out_dir,"augmetned"),augmented_tp, augmented_fn, augmented_fp, include_sv = args.include_sv,
+                      var_types= args.var_types)
 
 
 def print_stats(stats):
@@ -300,7 +301,7 @@ def parse_jsons(jsonfile, stats, include_sv = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp):
+def summarize_results(prefix, tp, fn, fp, include_sv = False, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex']):
     '''
     count variants by type and tabulate
     :param augmented_tp:
@@ -314,7 +315,6 @@ def summarize_results(prefix, tp, fn, fp):
            ]
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
     jsonfile = "{0}_report.json".format(prefix)
-    var_types = ['SNP', 'Deletion', 'Insertion', 'Complex']
     metrics = ['tp', 'fp', 't', 'fn']
     stats = {k: {ii: 0 for ii in metrics} for k in var_types}
     parse_jsons(jsonfile, stats, include_sv=False)
@@ -331,11 +331,16 @@ if __name__ == "__main__":
     main_parser.add_argument("--sdf", metavar="SDF", help="SDF formatted reference folder", required=False, type=str, default='')
     main_parser.add_argument("--out_dir", metavar="OUTDIR", help="output folder", required=True, type=str)
     main_parser.add_argument("--vcfs", metavar="VCF", help="variant calls to be evaluated", nargs="+", default=[], required = True)
+    main_parser.add_argument("--var_types", metavar="VARTYPE", help="variant types", nargs="+",
+                             default=['SNP','Insertion','Complex','Deletion'],
+                             choices = ['SNP', 'Deletion', 'Insertion', 'Inversion', 'TandemDup',
+                                       'Complex', 'TransDup', 'TansDel', 'InterDup', 'Translocation'], required = False)
     main_parser.add_argument("--true_vcf", metavar="VCF", help="Input small variant sampling VCF, usually dbSNP", required = True)
     main_parser.add_argument("--regions", help="BED file to restrict analysis [Optional]", required = False, type=str)
     main_parser.add_argument("--sample", metavar = "SAMPLE", help="sample name", required = False, type=str)
     main_parser.add_argument("--exclude_filtered", action = 'store_true', help="only consider variants with PASS or . in FILTER column", required = False)
     main_parser.add_argument("--match_geno", action = 'store_true', help="compare genotype in addition to alleles", required = False)
+    main_parser.add_argument("--include_sv", action = 'store_true', help="include SV stats", required = False)
     main_parser.add_argument('--version', action='version', version=utils.get_version())
     main_parser.add_argument("--log_to_file", metavar="LOGFILE", help="logfile. If not specified, log to stderr", required=False, type=str, default="")
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
