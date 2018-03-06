@@ -29,7 +29,7 @@ public class VCFWriter {
   public static String generateVCFHeader(final SimpleReference reference, final ImmutableList<String> sampleNames) {
     StringBuilder VCFHeader = new StringBuilder();
     VCFHeader.append("##fileformat=VCFv4.3\n" +
-            "##reference=" + reference.getReferenceFileName() + "\n" +
+            "##reference=" + (reference == null ? null : reference.getReferenceFileName()) + "\n" +
             "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles. No SVLEN for 0. One SVLEN for each ALT allele.\">\n" +
             "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n" +
             "##INFO=<ID=POS2,Number=1,Type=Integer,Description=\"1-based start position of source sequence." +
