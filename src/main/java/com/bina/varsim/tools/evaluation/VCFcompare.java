@@ -113,6 +113,10 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-con", usage = "One or more constraints on the accuracy of the output", metaVar = "CONSTRAINT")
     List<String> constraintArgs = null;
 
+    @Option(name = "-sv_length", usage = "SV length cutoff", metaVar = "SVLEN")
+    int SVLEN = Constant.SVLEN;
+
+
     public VCFcompare(final String command, final String description) {
         super(command, description);
     }
@@ -833,7 +837,7 @@ public class VCFcompare extends VarSimTool {
 
         // For each true variant, if the number of bases validated is over a certain threshold
         // call it correct
-        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>());
+        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN));
 
         // For called variants, break down into canonical ones and count based on that
         // if any called variant overlaps a complex variant or MNP, count it as "complex"
@@ -894,7 +898,7 @@ public class VCFcompare extends VarSimTool {
                 numAddedSplitVariant++;
             }
 
-            if (totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength && canonicalVariantList.size() > 1) {
+            if (totalLength >= this.SVLEN && maxLength >= overlapRatio * totalLength && canonicalVariantList.size() > 1) {
                 // in this case we break down the variant into canoical forms since
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant currentVariant : canonicalVariantList) {
@@ -1001,7 +1005,7 @@ public class VCFcompare extends VarSimTool {
                 // split up variants that are basically one big variant and one small one
                 //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
                 //is longer than certain proportion of sum of lengths of all canonicalized variants.
-                boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
+                boolean computeAsSplit = totalLength >= this.SVLEN && maxLength >= overlapRatio * totalLength  &&
                     canonicalVariantList.size() > 1;
 
                 for (Variant currentVariant : canonicalVariantList) {

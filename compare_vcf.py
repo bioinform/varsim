@@ -279,8 +279,8 @@ def process(args):
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
-    summarize_results(os.path.join(args.out_dir,"augmetned"),augmented_tp, augmented_fn, augmented_fp, include_sv = args.include_sv,
-                      var_types= args.var_types)
+    summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp,
+                      var_types= args.var_types, sv_length= args.sv_length)
 
 
 def print_stats(stats):
@@ -294,7 +294,15 @@ def print_stats(stats):
             sys.stderr.write("invalide values\n")
         print ("{0: <15}\t{1:.10f}\t{2:.10f}\t{3:.10f}\t{4:<5}\t{5:<5}\t{6: <5}".format(vartype, recall, precision, f1, value['tp'], value['t'], value['fp']))
 
-def parse_jsons(jsonfile, stats, include_sv = False):
+def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
+    '''
+    parse json, extract T, TP, FP stats for various variant types
+    :param jsonfile:
+    :param stats:
+    :param count_sv:
+    :param count_all:
+    :return:
+    '''
     var_types = stats.keys()
     metrics = stats[var_types[0]].keys()
     with utils.versatile_open(jsonfile, 'r') as fh:
@@ -303,14 +311,18 @@ def parse_jsons(jsonfile, stats, include_sv = False):
             if vt in data['num_true_correct']['data']:
                 for mt in metrics:
                     try:
-                        stats[vt][mt] += data['num_true_correct']['data'][vt]['sum_count'][mt]
-                        if include_sv:
+                        if count_all:
+                            stats[vt][mt] += data['num_true_correct']['data'][vt]['sum_count'][mt]
+                        elif count_sv:
+                            stats[vt][mt] += data['num_true_correct']['data'][vt]['svSumCount'][mt]
+                        else:
+                            stats[vt][mt] += data['num_true_correct']['data'][vt]['sum_count'][mt]
                             stats[vt][mt] -= data['num_true_correct']['data'][vt]['svSumCount'][mt]
                     except KeyError as err:
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, include_sv = False, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex']):
+def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100):
     '''
     count variants by type and tabulate
     :param augmented_tp:
@@ -321,13 +333,23 @@ def summarize_results(prefix, tp, fn, fp, include_sv = False, var_types = ['SNP'
     cmd = ['java', '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
            '-prefix', prefix, '-tp',tp,
            '-fn', fn, '-fp', fp,
+           '-sv_length', str(sv_length),
            ]
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
     jsonfile = "{0}_report.json".format(prefix)
     metrics = ['tp', 'fp', 't', 'fn']
     stats = {k: {ii: 0 for ii in metrics} for k in var_types}
-    parse_jsons(jsonfile, stats, include_sv=False)
+    parse_jsons(jsonfile, stats)
+    print("Non-SV stats")
     print_stats(stats)
+    sv_stats = {k: {ii: 0 for ii in metrics} for k in var_types}
+    parse_jsons(jsonfile, sv_stats, count_sv=True)
+    print("SV stats")
+    print_stats(sv_stats)
+    all_stats = {k: {ii: 0 for ii in metrics} for k in var_types}
+    parse_jsons(jsonfile, all_stats, count_all=True)
+    print("Overall stats")
+    print_stats(all_stats)
     return
 
 
@@ -349,7 +371,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--sample", metavar = "SAMPLE", help="sample name", required = False, type=str)
     main_parser.add_argument("--exclude_filtered", action = 'store_true', help="only consider variants with PASS or . in FILTER column", required = False)
     main_parser.add_argument("--match_geno", action = 'store_true', help="compare genotype in addition to alleles", required = False)
-    main_parser.add_argument("--include_sv", action = 'store_true', help="include SV stats", required = False)
+    main_parser.add_argument("--sv_length", type = int, help="length cutoff for SV (only effective for counting, not comparison). For comparison, please add -sv_length to --vcfcompare_options.", required = False, default = 100)
     main_parser.add_argument('--version', action='version', version=utils.get_version())
     main_parser.add_argument("--log_to_file", metavar="LOGFILE", help="logfile. If not specified, log to stderr", required=False, type=str, default="")
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")

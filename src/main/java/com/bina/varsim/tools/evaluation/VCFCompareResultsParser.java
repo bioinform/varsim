@@ -55,6 +55,9 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-html", usage = "Insert JSON to HTML file [Optional, internal]", metaVar = "HTML_file", hidden = true)
     File htmlFile = null;
 
+    @Option(name = "-sv_length", usage = "SV length cutoff", metaVar = "SVLEN", hidden = false)
+    public int SVLEN = Constant.SVLEN;
+
     public VCFCompareResultsParser(final String command, final String description) {
         super(command, description);
     }
@@ -81,7 +84,7 @@ public class VCFCompareResultsParser extends VarSimTool {
         VCFparser tpVcfParser = new VCFparser(tpVcfFilename, null, false);
         VCFparser fnVcfParser = new VCFparser(fnVcfFilename, null, false);
         VCFparser fpVcfParser = new VCFparser(fpVcfFilename, null, false);
-        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>());
+        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN));
 
         // store true variants as canonical ones, but remember original form
         while (fpVcfParser.hasMoreInput()) {
