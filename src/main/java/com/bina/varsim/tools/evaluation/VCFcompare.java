@@ -1507,6 +1507,10 @@ public class VCFcompare extends VarSimTool {
                 }
             } else {
                 // Non-SNPs
+                if ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
+                    intervalForCompare.right - intervalForCompare.left < Constant.SVLEN) {
+                  wiggle = 0;
+                }
                 SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
 
