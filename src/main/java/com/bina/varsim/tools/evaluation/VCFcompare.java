@@ -68,7 +68,7 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-over", usage = "Reciprocal overlap ratio allowance in validation [" + OVERLAP_ARG + "]")
     double overlapRatio = OVERLAP_ARG;
 
-    @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]")
+    @Option(name = "-wig", usage = "Wiggle allowance in validation [" + WIGGLE_ARG + "]. Note that it is only used for SV")
     int wiggle = WIGGLE_ARG;
 
     @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
@@ -1508,7 +1508,7 @@ public class VCFcompare extends VarSimTool {
             } else {
                 // Non-SNPs
                 if ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
-                    intervalForCompare.right - intervalForCompare.left < Constant.SVLEN) {
+                    intervalForCompare.right - intervalForCompare.left + 1 < Constant.SVLEN) {
                   wiggle = 0;
                 }
                 SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
