@@ -628,6 +628,7 @@ public class VCFparser extends GzFileParser<Variant> {
             // TODO this needs to be done
             // but if we want to preserve the original VCF record, then this
             // needs modification
+            String clippedSequence = "";
             if (REF.length() > 0) {
                 int referenceAlleleLength = REF.length();
 
@@ -660,8 +661,13 @@ public class VCFparser extends GzFileParser<Variant> {
                  make sure length after subtracting clip is nonnegative
                  */
                 if (minClipLength > 0) {
+                    clippedSequence = REF.substring(referenceAlleleLength - minClipLength, referenceAlleleLength);
                     REF = REF.substring(0, Math.max(0, referenceAlleleLength - minClipLength));
                     for (int i = 0; i < alts.length; i++) {
+                        if (!clippedSequence.equals(new String(alts[i].getSeq().substring(alts[i].getSeq().length() - minClipLength, alts[i].getSeq().length())))) {
+                            log.warn("Right clipping is initiated, but the clipped sequences are different for REF, ALT: " + line);
+                            return null;
+                        }
                         alts[i].setSeq(new FlexSeq(alts[i].getSeq().substring(0,
                                 Math.max(0, alts[i].length() - minClipLength))));
                     }
@@ -681,7 +687,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(refs.length).
                     ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
                     varId(variantId).filter(FILTER).refDeleted(deletedReference).
-                    randomNumberGenerator(random).build();
+                    randomNumberGenerator(random).clippedSequence(clippedSequence).build();
         } else {
           // breakend
           log.warn("breakend is not handled directly now: " + line);

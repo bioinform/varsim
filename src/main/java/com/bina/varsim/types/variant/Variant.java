@@ -38,6 +38,7 @@ public class Variant implements Comparable<Variant>{
     //so refDeleted.length() <= 1 is always true?
     private String refDeleted;
     private String extraBase = "";
+    private String clippedSequence = "";
     private ChrString[] chr2;
     private int[] pos2;
     private int[] end2;
@@ -94,6 +95,7 @@ public class Variant implements Comparable<Variant>{
         // if ite same as the first alt base
         //so refd.length() <= 1 is always true?
         private String refDeleted;
+        private String clippedSequence = "";
         private String extraBase = "";
         private ChrString[] chr2;
         private int[] pos2;
@@ -184,6 +186,10 @@ public class Variant implements Comparable<Variant>{
             this.compositions = compositions;
             return this;
         }
+        public Builder clippedSequence(final String clippedSequence) {
+            this.clippedSequence = clippedSequence;
+            return this;
+        }
         public Variant build() {
             return new Variant(this);
         }
@@ -198,6 +204,7 @@ public class Variant implements Comparable<Variant>{
 
         this.ref = builder.ref;
         this.refDeleted = builder.refDeleted;
+        this.clippedSequence = builder.clippedSequence;
         this.alts = builder.alts;
         this.chr2 = builder.chr2;
         this.pos2 = builder.pos2;
@@ -228,6 +235,7 @@ public class Variant implements Comparable<Variant>{
         referenceAlleleLength = var.referenceAlleleLength;
         ref = var.ref == null ? null : var.ref.clone();
         refDeleted = var.refDeleted;
+        clippedSequence = var.clippedSequence;
         if (var.alts != null) {
             alts = new Alt[var.alts.length];
             for (int i = 0; i < var.alts.length; i++) {
@@ -1091,10 +1099,11 @@ public class Variant implements Comparable<Variant>{
         sbStr.append("\t");
         // ref allele
 	String ref = getReferenceString() + extraBase;
+      ref = ref + clippedSequence;
         sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
         // alt alleles
-        sbStr.append(alternativeAlleleString().toUpperCase());
+        sbStr.append(alternativeAlleleString().toUpperCase() + clippedSequence.toUpperCase());
         sbStr.append("\t");
         // variant quality
         sbStr.append(".\t");
