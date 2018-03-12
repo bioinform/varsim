@@ -284,12 +284,16 @@ def process(args):
 
 
 def print_stats(stats):
+    '''
+    print nice stats
+    adapted from Roger Liu's code.
+    '''
     print ("{0: <15}\t{1: <10}\t{2: <10}\t{3: <10}\t{4: <5}\t{5: <5}\t{6: <5}".format("VariantType","Recall","Precision","F1", "TP","T", "FP"))
     for vartype, value in stats.iteritems():
         try:
             recall = value['tp'] / float(value['t']) if float(value['t']) != 0 else float('NaN')
             precision = float(value['tp']) / (value['tp'] + value['fp']) if value['tp'] + value['fp'] != 0 else float('NaN')
-            f1 = 'NA' if recall == float('NaN') or precision == float('NaN') or (recall + precision) == 0 else 2 * recall * precision / (recall + precision)
+            f1 = float('NaN') if recall == float('NaN') or precision == float('NaN') or (recall + precision) == 0 else 2 * recall * precision / (recall + precision)
         except ValueError:
             sys.stderr.write("invalide values\n")
         print ("{0: <15}\t{1:.10f}\t{2:.10f}\t{3:.10f}\t{4:<5}\t{5:<5}\t{6: <5}".format(vartype, recall, precision, f1, value['tp'], value['t'], value['fp']))
@@ -297,6 +301,8 @@ def print_stats(stats):
 def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
     '''
     parse json, extract T, TP, FP stats for various variant types
+    
+    adapted from Roger Liu's code.
     :param jsonfile:
     :param stats:
     :param count_sv:
