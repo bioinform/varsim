@@ -960,7 +960,6 @@ public class VCFcompare extends VarSimTool {
                 //TODO: wrap variant comparison into a method for easier reading
                 if (variant == null ||
                    (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName()))) {
-                    log.info("skip line");
                     continue;
                 }
 
