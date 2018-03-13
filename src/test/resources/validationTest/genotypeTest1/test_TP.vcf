@@ -21,4 +21,4 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
-1	993	rs35493185	C	CA	.	.	VARIANT_OVERALL_TYPE=Insertion;SVLEN=1	GT	0|1
+1	993	rs35493185	C	CA	.	.	VARIANT_OVERALL_TYPE=Insertion;SVLEN=1	GT	0/1

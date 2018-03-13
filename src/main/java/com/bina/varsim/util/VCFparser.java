@@ -304,11 +304,12 @@ public class VCFparser extends GzFileParser<Variant> {
 
 
         if (genotypeIndex >= 0 && genotypeArray[0] == 0 && genotypeArray[1] == 0) {
+            log.warn("All ALT alleles are reference sequences." + line);
             return null; // reference alleles... ignore them for now....
         }
 
         if (!REF.matches("[ATCGNatcgn]+")) {
-            log.warn("only ATCGN (case-insensitive) allowed for REF column");
+            log.warn("only ATCGN (case-insensitive) allowed for REF column." + line);
             return null; //
         }
 

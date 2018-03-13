@@ -299,15 +299,15 @@ public class VCFcompare extends VarSimTool {
             noSplit = true;
         }
         //paternal allele is not reference or sequence
-        if (variant.getGoodPaternal() != 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodPaternal()).getSeqType())) {
+        if (variant.getGoodPaternal() > 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodPaternal()).getSeqType())) {
             noSplit = true;
         }
         //maternal allele is not reference or sequence
-        if (variant.getGoodMaternal() != 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodMaternal()).getSeqType())) {
+        if (variant.getGoodMaternal() > 0 && !canonicalizableFlexSeqTypes.contains(variant.getAlt(variant.getGoodMaternal()).getSeqType())) {
             noSplit = true;
         }
         //paternal allele is not reference and has zero-length allele and reference sequence
-        if (variant.getGoodPaternal() != 0 && variant.getAlt(variant.getGoodPaternal()).length() == 0 && variant.getReference().length == 0) {
+        if (variant.getGoodPaternal() > 0 && variant.getAlt(variant.getGoodPaternal()).length() == 0 && variant.getReference().length == 0) {
             noSplit = true;
         }
         //maternal allele is not reference and has zero-length allele and reference sequence

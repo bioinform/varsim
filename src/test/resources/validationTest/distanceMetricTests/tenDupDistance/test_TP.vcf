@@ -21,7 +21,7 @@
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	truth
-MT	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=10;5PrimeDistance=10;LengthDifference=0	GT:CN	0|1:1|2
+MT	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=10;5PrimeDistance=10;LengthDifference=0	GT:CN	1:2
 1	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=9;5PrimeDistance=9;LengthDifference=0	GT:CN	1|1:2|2
 2	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=8;5PrimeDistance=8;LengthDifference=0	GT:CN	1|1:2|2
 3	23345	.	N	<DUP:TANDEM>	.	.	VARIANT_OVERALL_TYPE=TandemDup;SVTYPE=DUP;SVLEN=1000;3PrimeDistance=7;5PrimeDistance=7;LengthDifference=0	GT:CN	1|1:2|2

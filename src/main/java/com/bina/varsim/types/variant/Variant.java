@@ -538,7 +538,15 @@ public class Variant implements Comparable<Variant>{
     }
 
     public SimpleInterval1D getGenotypeUnionVariantInterval() {
-        return getVariantInterval(getGoodPaternal()).union(getVariantInterval(getGoodMaternal()));
+      if (getGoodPaternal() == -1 && getGoodMaternal() == -1) {
+          throw new RuntimeException("Both maternal and paternal genotypes are missing for " + this.toString());
+      } else if (getGoodPaternal() == -1) {
+          return getVariantInterval(getGoodMaternal());
+      } else if (getGoodMaternal() == -1) {
+          return getVariantInterval(getGoodPaternal());
+      } else {
+          return getVariantInterval(getGoodPaternal()).union(getVariantInterval(getGoodMaternal()));
+      }
     }
 
     public Genotypes getGenotypes() {
@@ -605,7 +613,7 @@ public class Variant implements Comparable<Variant>{
      * @return type of allele at index ind
      */
     public VariantType getType(final int ind) {
-        if (ind == 0) {
+        if (ind <= 0) {
             return VariantType.Reference;
         }
 
@@ -891,6 +899,7 @@ public class Variant implements Comparable<Variant>{
             System.exit(1);
         }
 
+        isPhased = true;
         if (rand.nextDouble() > 0.5) {
             return;
         }
@@ -914,6 +923,7 @@ public class Variant implements Comparable<Variant>{
         Genotypes g = new Genotypes(chr, gender, alts.length, rand);
         paternal = g.geno[0];
         maternal = g.geno[1];
+        isPhased = true;
     }
 
 
@@ -1184,7 +1194,7 @@ public class Variant implements Comparable<Variant>{
         // for this one we need to work out which one is added
         if (paternal != -1 && maternal != -1) {
             sbStr.append(paternal);
-            sbStr.append("|");
+            sbStr.append(this.isPhased() || paternal == maternal? "|" : "/");
             sbStr.append(maternal);
         } else if (paternal != -1){
             sbStr.append(paternal);
@@ -1196,7 +1206,7 @@ public class Variant implements Comparable<Variant>{
             sbStr.append(":");
             if (paternal != -1 && maternal != -1) {
                 sbStr.append(String.valueOf(getCN(paternal)));
-                sbStr.append("|");
+                sbStr.append(this.isPhased() || paternal == maternal? "|" : "/");
                 sbStr.append(String.valueOf(getCN(maternal)));
             } else if (paternal != -1) {
                 sbStr.append(String.valueOf(getCN(paternal)));
@@ -1242,11 +1252,13 @@ public class Variant implements Comparable<Variant>{
         if (paternal >= 0)
             return paternal; //not missing
         //missing
-        //male does not have MT chromosome
-        if (chr.isMT()) {
-            return (byte) 0;
+        //paternal genome does not have MT or X chromosome
+        //works for male
+        //TODO: for female, X is diploid, should not return -1
+        if (chr.isMT() || chr.isX()) {
+            return (byte) -1;
         }
-        /*when chr=X,Y,or autosomal
+        /*when Y or autosomal
         we try return a correct one
         however there is no guarantee that only one ALT is present
          */
@@ -1278,9 +1290,9 @@ public class Variant implements Comparable<Variant>{
         if (chr.isMT()) {
           return (byte) (Math.min(1, alts.length));
         }
-        //female does not have Y chromosome
+        //maternal genome does not have Y chromosome
         if (chr.isY()) {
-            return (byte) 0;
+            return (byte) -1;
         }
         /*chr=X or autosomal
         we try to return a correct one
