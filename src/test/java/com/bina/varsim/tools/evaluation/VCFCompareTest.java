@@ -3,6 +3,7 @@ package com.bina.varsim.tools.evaluation;
 import com.bina.varsim.tools.simulation.VCF2diploid;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -303,8 +304,8 @@ public class VCFCompareTest {
    * wiggle=50bp, both DEL in compare can match, but we only match the closest one
    */
   @Test
-  public void distanceMultipleMatchingTest() throws IOException {
+  @Ignore public void distanceMultipleMatchingTest() throws IOException {
     //disabled until global matching is implemented
-    //universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-output_distance_metric"});
+    universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-output_distance_metric"});
   }
 }
