@@ -120,4 +120,9 @@ public class VCFparserTest {
         Variant	v	=	parser.processLine("chr12\t24150060\t.\tT\tTGAGAGA\t.\tPASS\tSVLEN=6\tGT\t1/1");
         assertTrue(v.toString().equals("chr12\t24150060\t.\tT\tTGAGAGA\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=6\tGT\t1|1"));
     }
+    @Test
+    public void multiallelicTrimming() throws UnexpectedException {
+        Variant	v	=	parser.processLine("chr12\t24150060\t.\tCTTTTT\tCTTTTTTTTT,CTTTCTTTTTTT\t.\tPASS\t.\tGT\t1/2");
+        assertTrue(v.toString().equals("chr12\t24150063\t.\tTTT\tTTTTTTT,TCTTTTTTT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=4,6\tGT\t1/2"));
+    }
 }
