@@ -881,6 +881,7 @@ public class Variant implements Comparable<Variant>{
                     sbStr.append(alts[i].getSeq().toString());
                 }
             }
+            sbStr.append(clippedSequence);
         }
         return sbStr.toString();
     }
@@ -1113,7 +1114,7 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
         // alt alleles
-        sbStr.append(alternativeAlleleString().toUpperCase() + clippedSequence.toUpperCase());
+        sbStr.append(alternativeAlleleString().toUpperCase());
         sbStr.append("\t");
         // variant quality
         sbStr.append(".\t");
