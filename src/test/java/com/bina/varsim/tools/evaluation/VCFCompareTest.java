@@ -299,6 +299,23 @@ public class VCFCompareTest {
   public void distanceTenDUPTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/tenDupDistance", new String[]{"-wig", "20","-over","0.7","-output_distance_metric"});
   }
+
+  /**
+   * same loci, different inserted sequences
+   * @throws IOException
+   */
+  @Test
+  public void sameLociDifferentInsertSeq() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/sameLociDifferentInsertSeq");
+  }
+  /**
+   * same loci, same inserted sequences
+   * @throws IOException
+   */
+  @Test
+  public void sameLociSameInsertSeq() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/sameLociSameInsertSeq");
+  }
   /**
    * 1 DEL in TP, 2 DEL in compare, length the same, distance 30bp,10bp, respectively
    * wiggle=50bp, both DEL in compare can match, but we only match the closest one
