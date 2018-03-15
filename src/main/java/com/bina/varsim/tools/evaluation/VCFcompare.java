@@ -1507,7 +1507,7 @@ public class VCFcompare extends VarSimTool {
             } else {
                 // Non-SNPs
                 boolean isSmallVariant = false;
-                if (variant.isSmallVariant(genotype, Constant.SVLEN, ignoreInsertionLength)) {
+                if (variant.isSmallVariant(genotype, SVLEN, ignoreInsertionLength)) {
                     wiggle = 0;
                     isSmallVariant = true;
                 }
