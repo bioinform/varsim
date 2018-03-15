@@ -1506,9 +1506,10 @@ public class VCFcompare extends VarSimTool {
                 }
             } else {
                 // Non-SNPs
-                if ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
-                    intervalForCompare.right - intervalForCompare.left + 1 < Constant.SVLEN) {
-                  wiggle = 0;
+                boolean isSmallVariant = false;
+                if (variant.isSmallVariant(genotype, SVLEN, ignoreInsertionLength)) {
+                    wiggle = 0;
+                    isSmallVariant = true;
                 }
                 SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
                 Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
@@ -1548,6 +1549,17 @@ public class VCFcompare extends VarSimTool {
                                 Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle);
                         boolean matched = trueVariant.getType(allele) == VariantType.Breakend ? breakendMatch : overlap;
 
+                        if (matched && isSmallVariant) {
+                            //double check POS, REF, ALT sequences for small variants
+                            //require exact matching
+                            matched = matched && variant.getPos() == trueVariant.getPos();
+                            matched = matched && variant.getReferenceAlleleLength() == trueVariant.getReferenceAlleleLength();
+                            byte[] altSequence = variant.getAlt(genotype).getSequence();
+                            byte[] trueAltSequence = trueVariant.getAlt(allele).getSequence();
+                            if (altSequence != null && altSequence != null) {
+                                matched = matched && Arrays.equals(altSequence, trueAltSequence);
+                            }
+                        }
                         if (matched) {
                             if (trueVariant.isHom()) {
                                 homozygousMatches.add(trueVariant);

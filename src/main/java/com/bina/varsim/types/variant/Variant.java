@@ -549,6 +549,19 @@ public class Variant implements Comparable<Variant>{
       }
     }
 
+    /**
+     * decide if this variant is a small variant or not
+     * @param genotype
+     * @param cutoff
+     * @return
+     */
+    public boolean isSmallVariant(int genotype, int cutoff, boolean ignoreInsertionLength) {
+        VariantType type = this.getType(genotype);
+        SimpleInterval1D intervalForCompare = this.getVariantInterval(genotype, ignoreInsertionLength);
+        return ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
+                intervalForCompare.right - intervalForCompare.left + 1 < cutoff);
+    }
+
     public Genotypes getGenotypes() {
         return new Genotypes(getGoodPaternal(), getGoodMaternal());
     }
