@@ -22,12 +22,14 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
     private TreeMap<Value, StatsRatioRecord> data;
     @JsonProperty(value = "all_data")
     private StatsRatioRecord allData; // this records regardless of type
+    final private int svlen;
 
-    public EnumStatsRatioCounter() {
+    public EnumStatsRatioCounter(int svlen) {
         //why TreeMap used rather than HashMap?
         data = new TreeMap<>();
         //instantiate bins(1:1,2:2,...), some objects for stats
-        allData = new StatsRatioRecord();
+        this.svlen = svlen;
+        allData = new StatsRatioRecord(this.svlen);
     }
 
     //TODO: rename incTP to something easier to understand
@@ -36,7 +38,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
         if (count != null) {
             count.addTP(len);
         } else {
-            StatsRatioRecord contents = new StatsRatioRecord();
+            StatsRatioRecord contents = new StatsRatioRecord(svlen);
             contents.addTP(len);
             data.put(a, contents);
         }
@@ -49,7 +51,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
         if (count != null) {
             count.addFP(len);
         } else {
-            StatsRatioRecord contents = new StatsRatioRecord();
+            StatsRatioRecord contents = new StatsRatioRecord(svlen);
             contents.addFP(len);
             data.put(a, contents);
         }
@@ -62,7 +64,7 @@ public class EnumStatsRatioCounter<Value extends Enum & INonReference> {
         if (count != null) {
             count.addT(len, a.isNonReference() ? 0 : len);
         } else {
-            StatsRatioRecord contents = new StatsRatioRecord();
+            StatsRatioRecord contents = new StatsRatioRecord(svlen);
             contents.addT(len, a.isNonReference() ? 0 : len);
             data.put(a, contents);
         }
