@@ -8,7 +8,6 @@ public enum VarSimToolNamespace {
     RandSequenceVCF("randsequencevcf", "Fill in missing insertion sequences by randomly sampling from a sequence file.", com.bina.varsim.tools.simulation.RandSequenceVCF.class),
     VCFStats("vcfstats", "Get stats on variants from a VCF", com.bina.varsim.tools.VCFstats.class),
     VCFCompare("vcfcompare", "Generates a JSON with accuracy statistics of a VCF file relative to a truth", com.bina.varsim.tools.evaluation.VCFcompare.class),
-    VCFCompareResultsParser("vcfcompareresultsparser", "Generates a JSON with accuracy statistics given TP, FN, FP VCFs", com.bina.varsim.tools.evaluation.VCFCompareResultsParser.class),
     SAMCompare("samcompare", "Analyses the accuracy of the alignments in a SAM/BAM file. bed_file restricts the analysis to the bed regions", com.bina.varsim.tools.evaluation.SAMcompare.class),
     FastqLiftover("fastq_liftover", "Lift FASTQs to the right reference", com.bina.varsim.fastqLiftover.FastqLiftOver.class),
     LongISLNDLiftover("longislnd_liftover", "Lift read map files to the right reference", com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver.class),

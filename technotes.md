@@ -119,14 +119,3 @@ Translocation ID is used to link `<DUP:TRA>` and `<DEL:TRA>`, each combination a
 Because of the linkage established by `TRAID`, the number of variants reported as `TP` in `json` might differ from that in `VCF` because each translocation is counted once in statistics but has two underly records in `VCF`.
 
 The lengths of a translocation are represented by the maximum length of underlying variants.
-
-# `compare_vcf.py`
-The new `compare_vcf.py` scripts wraps VarSim's `vcfcompare` and RTG's `vcfeval`. Now we can leverage haplotype-based comparison from `vcfeval` on top of lenient and flexible comparison by VarSim.
-
-## Implementation
-* Run `vcfcompare` inside VarSim to generate TP, FN and FP. 
-* Rescue FN and FP by feeding them into `vcfeval`
-* Combine the results and update numbers.
-
-## references
-* description about `vcfeval` algorithm: https://www.biorxiv.org/content/early/2015/08/03/023754

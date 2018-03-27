@@ -1,17 +1,16 @@
 ##fileformat=VCFv4.3
 ##reference=src/test/resources/simulationTests/hom_del_overlap_others/reference.fa
-##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles. No SVLEN for 0. One SVLEN for each ALT allele.">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
-##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence.if POS2<=END2, then another sequence is inserted at positive strand;if POS2>=END2, then reversed sequence is inserted at negative strand (insert with inversion).">
+##INFO=<ID=POS2,Number=1,Type=Integer,Description="1-based start position of source sequence">
 ##INFO=<ID=END2,Number=1,Type=Integer,Description="1-based end position of source sequence">
 ##INFO=<ID=END,Number=1,Type=Integer,Description="1-based end position of variant">
 ##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome of source sequence">
 ##INFO=<ID=ISINV,Number=1,Type=Flag,Description="whether a duplication is inverted">
 ##INFO=<ID=TRAID,Number=1,Type=String,Description="translocation ID">
 ##INFO=<ID=IMPRECISE_LENGTH,Number=1,Type=Flag,Description="SVLEN is imprecise">
-##INFO=<ID=VARIANT_OVERALL_TYPE,Number=1,Type=String,Description="Overall variant type">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype.CN is defined as Integer in VCF4.1,4.3, making it impossible to specify multiple CN valueshere we changed it to String to allow such behavior.">
+##FORMAT=<ID=CN,Number=1,Type=String,Description="Copy number genotype.">
 ##ALT=<ID=DEL,Description="Deletion">
 ##ALT=<ID=DEL:TRA,Description="Deletion in translocation">
 ##ALT=<ID=DUP,Description="Duplication">
@@ -20,6 +19,5 @@
 ##ALT=<ID=DUP:TRA,Description="Duplication in translocation">
 ##ALT=<ID=INS,Description="Insertion of novel sequence">
 ##ALT=<ID=INV,Description="Inversion">
-##contig=<ID=1,length=640>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test
 1	4	SV_22	N	<DEL>	.	.	VARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-460	GT	1|1
