@@ -38,7 +38,6 @@ public class Variant implements Comparable<Variant>{
     //so refDeleted.length() <= 1 is always true?
     private String refDeleted;
     private String extraBase = "";
-    private String clippedSequence = "";
     private ChrString[] chr2;
     private int[] pos2;
     private int[] end2;
@@ -95,7 +94,6 @@ public class Variant implements Comparable<Variant>{
         // if ite same as the first alt base
         //so refd.length() <= 1 is always true?
         private String refDeleted;
-        private String clippedSequence = "";
         private String extraBase = "";
         private ChrString[] chr2;
         private int[] pos2;
@@ -186,10 +184,6 @@ public class Variant implements Comparable<Variant>{
             this.compositions = compositions;
             return this;
         }
-        public Builder clippedSequence(final String clippedSequence) {
-            this.clippedSequence = clippedSequence;
-            return this;
-        }
         public Variant build() {
             return new Variant(this);
         }
@@ -204,7 +198,6 @@ public class Variant implements Comparable<Variant>{
 
         this.ref = builder.ref;
         this.refDeleted = builder.refDeleted;
-        this.clippedSequence = builder.clippedSequence;
         this.alts = builder.alts;
         this.chr2 = builder.chr2;
         this.pos2 = builder.pos2;
@@ -235,7 +228,6 @@ public class Variant implements Comparable<Variant>{
         referenceAlleleLength = var.referenceAlleleLength;
         ref = var.ref == null ? null : var.ref.clone();
         refDeleted = var.refDeleted;
-        clippedSequence = var.clippedSequence;
         if (var.alts != null) {
             alts = new Alt[var.alts.length];
             for (int i = 0; i < var.alts.length; i++) {
@@ -264,6 +256,9 @@ public class Variant implements Comparable<Variant>{
      * @return Chromosome variant is on
      */
     public ChrString getChr() {
+        if (chr == null) {
+            throw new UnsupportedOperationException("ERROR: no legitimate chromosome name available!");
+        }
         return chr;
     }
 
@@ -390,15 +385,15 @@ public class Variant implements Comparable<Variant>{
     }
 
     public ChrString[] getAllChr2() {
-        return this.chr2 == null ? new ChrString[0] : this.chr2;
+        return this.chr2;
     }
 
     public int[] getAllPos2() {
-        return this.pos2 == null ? new int[0] : this.pos2;
+        return this.pos2;
     }
 
     public int[] getAllEnd2() {
-        return this.end2 == null ? new int[0] : this.end2;
+        return this.end2;
     }
 
     /**
@@ -538,28 +533,7 @@ public class Variant implements Comparable<Variant>{
     }
 
     public SimpleInterval1D getGenotypeUnionVariantInterval() {
-      if (getGoodPaternal() == -1 && getGoodMaternal() == -1) {
-          throw new RuntimeException("Both maternal and paternal genotypes are missing for " + this.toString());
-      } else if (getGoodPaternal() == -1) {
-          return getVariantInterval(getGoodMaternal());
-      } else if (getGoodMaternal() == -1) {
-          return getVariantInterval(getGoodPaternal());
-      } else {
-          return getVariantInterval(getGoodPaternal()).union(getVariantInterval(getGoodMaternal()));
-      }
-    }
-
-    /**
-     * decide if this variant is a small variant or not
-     * @param genotype
-     * @param cutoff
-     * @return
-     */
-    public boolean isSmallVariant(int genotype, int cutoff, boolean ignoreInsertionLength) {
-        VariantType type = this.getType(genotype);
-        SimpleInterval1D intervalForCompare = this.getVariantInterval(genotype, ignoreInsertionLength);
-        return ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
-                intervalForCompare.right - intervalForCompare.left + 1 < cutoff);
+        return getVariantInterval(getGoodPaternal()).union(getVariantInterval(getGoodMaternal()));
     }
 
     public Genotypes getGenotypes() {
@@ -626,7 +600,7 @@ public class Variant implements Comparable<Variant>{
      * @return type of allele at index ind
      */
     public VariantType getType(final int ind) {
-        if (ind <= 0) {
+        if (ind == 0) {
             return VariantType.Reference;
         }
 
@@ -837,7 +811,7 @@ public class Variant implements Comparable<Variant>{
 
     public String getReferenceString() {
         try {
-            return (refDeleted == null ? "" : refDeleted) + (ref == null ? "" : new String(ref, "US-ASCII"));
+            return refDeleted + new String(ref, "US-ASCII");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return "";
@@ -849,9 +823,6 @@ public class Variant implements Comparable<Variant>{
     }
 
     public int getCN(final int ind) {
-        if (alts == null) {
-          return 0;
-        }
         return (ind <= 0 || ind > alts.length) ? 1 : alts[ind - 1].getCopyNumber();
     }
 
@@ -859,9 +830,6 @@ public class Variant implements Comparable<Variant>{
      * @return true if any of the alternate alleles has copy number greater than 1
      */
     public boolean hasCN() {
-        if (alts == null) {
-            return false;
-        }
         boolean isCopyNumberPositive = false;
         for (Alt alt : alts) {
             if (alt.getCopyNumber() > 1) {
@@ -874,9 +842,6 @@ public class Variant implements Comparable<Variant>{
 
     public String alternativeAlleleString() {
         StringBuilder sbStr = new StringBuilder();
-        if (alts == null) {
-            return ".";
-        }
         for (int i = 0; i < alts.length; i++) {
             //if (i > 0 && alts[i].getSeq().toString().equals(alts[i - 1].toString())) {
                 /*Marghoob suggested that two identical symbolic alternative alleles are
@@ -894,7 +859,6 @@ public class Variant implements Comparable<Variant>{
                     sbStr.append(alts[i].getSeq().toString());
                 }
             }
-            sbStr.append(clippedSequence);
         }
         return sbStr.toString();
     }
@@ -913,7 +877,6 @@ public class Variant implements Comparable<Variant>{
             System.exit(1);
         }
 
-        isPhased = true;
         if (rand.nextDouble() > 0.5) {
             return;
         }
@@ -937,7 +900,6 @@ public class Variant implements Comparable<Variant>{
         Genotypes g = new Genotypes(chr, gender, alts.length, rand);
         paternal = g.geno[0];
         maternal = g.geno[1];
-        isPhased = true;
     }
 
 
@@ -1039,9 +1001,6 @@ public class Variant implements Comparable<Variant>{
     public List<Integer> getSVLEN() {
         List<Integer> svlens = new ArrayList<Integer>();
 
-        if (alts == null) {
-            return svlens;
-        }
         for (int i = 0; i < alts.length; i++) {
             VariantType t = getType(i + 1);
             int altLen = abs(alts[i].length());
@@ -1113,17 +1072,16 @@ public class Variant implements Comparable<Variant>{
         VariantOverallType t = getType();
 
         // chromosome name
-        sbStr.append(chr == null ? "NA" : chr.toString());
+        sbStr.append(chr.toString());
         sbStr.append("\t");
         // start position
-        sbStr.append(pos - (refDeleted == null ? 0 : refDeleted.length()));
+        sbStr.append(pos - refDeleted.length());
         sbStr.append('\t');
         // variant id
         sbStr.append(varId);
         sbStr.append("\t");
         // ref allele
 	String ref = getReferenceString() + extraBase;
-      ref = ref + clippedSequence;
         sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
         // alt alleles
@@ -1208,7 +1166,7 @@ public class Variant implements Comparable<Variant>{
         // for this one we need to work out which one is added
         if (paternal != -1 && maternal != -1) {
             sbStr.append(paternal);
-            sbStr.append(this.isPhased() || paternal == maternal? "|" : "/");
+            sbStr.append("|");
             sbStr.append(maternal);
         } else if (paternal != -1){
             sbStr.append(paternal);
@@ -1220,7 +1178,7 @@ public class Variant implements Comparable<Variant>{
             sbStr.append(":");
             if (paternal != -1 && maternal != -1) {
                 sbStr.append(String.valueOf(getCN(paternal)));
-                sbStr.append(this.isPhased() || paternal == maternal? "|" : "/");
+                sbStr.append("|");
                 sbStr.append(String.valueOf(getCN(maternal)));
             } else if (paternal != -1) {
                 sbStr.append(String.valueOf(getCN(paternal)));
@@ -1266,13 +1224,11 @@ public class Variant implements Comparable<Variant>{
         if (paternal >= 0)
             return paternal; //not missing
         //missing
-        //paternal genome does not have MT or X chromosome
-        //works for male
-        //TODO: for female, X is diploid, should not return -1
-        if (chr.isMT() || chr.isX()) {
-            return (byte) -1;
+        //male does not have MT chromosome
+        if (chr.isMT()) {
+            return (byte) 0;
         }
-        /*when Y or autosomal
+        /*when chr=X,Y,or autosomal
         we try return a correct one
         however there is no guarantee that only one ALT is present
          */
@@ -1304,9 +1260,9 @@ public class Variant implements Comparable<Variant>{
         if (chr.isMT()) {
           return (byte) (Math.min(1, alts.length));
         }
-        //maternal genome does not have Y chromosome
+        //female does not have Y chromosome
         if (chr.isY()) {
-            return (byte) -1;
+            return (byte) 0;
         }
         /*chr=X or autosomal
         we try to return a correct one

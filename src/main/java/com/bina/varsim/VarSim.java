@@ -6,7 +6,6 @@ import com.bina.varsim.tools.VCFstats;
 import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
 import com.bina.varsim.tools.evaluation.VCFcompare;
-import com.bina.varsim.tools.evaluation.VCFCompareResultsParser;
 import com.bina.varsim.tools.simulation.*;
 import org.apache.log4j.Logger;
 
@@ -70,9 +69,6 @@ public class VarSim {
                 break;
             case VCFCompare:
                 new VCFcompare(command, description).run(pass_args);
-                break;
-            case VCFCompareResultsParser:
-                new VCFCompareResultsParser(command, description).run(pass_args);
                 break;
             case SAMCompare:
                 new SAMcompare(command, description).run(pass_args);

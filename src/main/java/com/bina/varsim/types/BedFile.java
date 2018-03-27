@@ -67,7 +67,7 @@ public class BedFile {
                 throw new RuntimeException("Malformed BED line (nfe): " + line);
             }
 
-            bedST.put(new ChrString(chr_name), new SimpleInterval1D(start + 1, end));
+            bedST.put(new ChrString(chr_name), new SimpleInterval1D(start, end - 1));
         }
     }
 

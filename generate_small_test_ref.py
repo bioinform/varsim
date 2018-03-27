@@ -8,7 +8,6 @@ import vcf
 import pybedtools
 import logging
 from collections import defaultdict, OrderedDict
-from utils import makedirs
 
 def uint(value):
   if not value.isdigit(): raise argparse.ArgumentTypeError("%s is not digit-only" % value)
@@ -79,10 +78,6 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
         if records is None: continue
         for record in records:
             if record.POS <= region.start + flank or record.POS + len(record.REF) + flank - 1 >= region.end: continue
-            #only process fully-contained variants
-            #right now we only deal with SVLEN, which is agnostic of region start
-            #ignore END in INFO field for now
-            if 'SVTYPE' in record.INFO and record.INFO['SVTYPE'] in ['DEL','INV','DUP'] and record.POS + max(map(abs, record.INFO['SVLEN'])) >= region.end + flank: continue
             record.CHROM = str(region_index) if use_short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
             # record.POS seems to be zero-based, at least in the infinite wisdom of my version of pysam
             record.POS = record.POS - region.start
@@ -111,7 +106,8 @@ def gen_restricted_ref_and_vcfs(reference, invcfs, regions, samples, outdir, fla
     outvcfs = invcfs
 
     if regions:
-        makedirs([outdir])
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         restricted_fasta = os.path.join(outdir, "ref.fa")
         gen_restricted_reference(reference, regions, restricted_fasta, short_contig_names)
