@@ -20,7 +20,8 @@ public class StatsRatioRecord {
     private int[] binBreaks = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 29, 39, 49, 99,
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
 
-    StatsRatioRecord() {
+    final private int svlen;
+    StatsRatioRecord(int svlen) {
         binCounts = new RatioRecord[binBreaks.length + 1];
 
         if (binBreaks.length > 0) {
@@ -40,12 +41,13 @@ public class StatsRatioRecord {
         sumCount = new RatioRecord();
         svSumCount = new RatioRecord();
         sumPerBaseCount = new RatioRecord();
+        this.svlen = svlen;
     }
 
     public void addTP(int val) {
         sumPerBaseCount.incTP(val);
         sumCount.incTP();
-        if (val >= Constant.SVLEN) {
+        if (val >= svlen) {
             svSumCount.incTP();
         }
         for (int i = 0; i < binBreaks.length; i++) {
@@ -60,7 +62,7 @@ public class StatsRatioRecord {
     public void addFP(int val) {
         sumPerBaseCount.incFP(val);
         sumCount.incFP();
-        if (val >= Constant.SVLEN) {
+        if (val >= svlen) {
             svSumCount.incFP();
         }
         for (int i = 0; i < binBreaks.length; i++) {
@@ -75,7 +77,7 @@ public class StatsRatioRecord {
     public void addT(int val, int referenceBases) {
         sumPerBaseCount.incT(referenceBases);
         sumCount.incT();
-        if (val >= Constant.SVLEN) {
+        if (val >= svlen) {
             svSumCount.incT();
         }
         for (int i = 0; i < binBreaks.length; i++) {
@@ -137,7 +139,7 @@ public class StatsRatioRecord {
         sb.append(':');
         sb.append(sumCount);
         sb.append('\n');
-        sb.append("[>=" + Constant.SVLEN + "]");
+        sb.append("[>=" + svlen + "]");
         sb.append(':');
         sb.append(svSumCount);
         sb.append('\n');

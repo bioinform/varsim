@@ -1,8 +1,8 @@
 *.iml
 .idea/*
 target/**
+test/
 *.jar
 *~
 *.pyc
-
 /target/
