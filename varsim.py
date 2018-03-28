@@ -13,25 +13,12 @@ import glob
 import tempfile
 import re
 import pysam
-from distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
+from utils import makedirs, run_shell_command, versatile_open, get_loglevel, check_java, MY_DIR, VARSIMJAR
 
-MY_DIR = os.path.dirname(os.path.realpath(__file__))
-VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-DEFAULT_VARSIMJAR = os.path.join(MY_DIR, "VarSim.jar")
-REQUIRE_VARSIMJAR = not os.path.isfile(DEFAULT_VARSIMJAR)
-if REQUIRE_VARSIMJAR: DEFAULT_VARSIMJAR = None
-
-def get_loglevel(string):
-    if string == "info":
-        return logging.INFO
-    if string == "warn":
-        return logging.WARN
-    if string == "debug":
-        return logging.DEBUG
-    return logging.INFO
-
+REQUIRE_VARSIMJAR = not os.path.isfile(VARSIMJAR)
+if REQUIRE_VARSIMJAR: VARSIMJAR = None
 
 def convertCN(filenames, operation):
     """
@@ -45,7 +32,7 @@ def convertCN(filenames, operation):
     two2one = operation == "two2one"
     delimiter = re.compile('[/|]')
     for name in filenames:
-        with open(name, 'r') as file_fd:
+        with versatile_open(name, 'r') as file_fd:
             output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
             for l in file_fd:
                 l = l.rstrip()
@@ -66,8 +53,8 @@ def convertCN(filenames, operation):
                         sampleInfo = fields[sampleIndex].split(':')
                         if two2one:
                             cn = delimiter.split(sampleInfo[cnIndex])
-			    #here cn is list of strings
-			    sampleInfo[cnIndex] = str(max(map(int, cn)))
+                            #here cn is list of strings
+                            sampleInfo[cnIndex] = str(max(map(int, cn)))
                         elif len(delimiter.split(sampleInfo[cnIndex])) == 1:
                             #only split when there is only one number
                             gt = delimiter.split(sampleInfo[gtIndex])
@@ -90,26 +77,6 @@ def get_contigs_list(reference):
     with open("%s.fai" % (reference)) as fai_file:
         contigs = [line.strip().split()[0] for line in fai_file.readlines()]
     return contigs
-
-# Check java version to make sure it is Java 8
-def check_java():
-    logger = logging.getLogger(check_java.__name__)
-    jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
-    if LooseVersion(jv) < LooseVersion("1.8"):
-        logger.error("VarSim requires Java 1.8 to be on the path.")
-        raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
-
-
-def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
-    subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
-    retcode = subproc.wait()
-    sys.exit(retcode)
-
-
-def makedirs(dirs):
-    for d in dirs:
-        if not os.path.exists(d):
-            os.makedirs(d)
 
 
 def monitor_processes(processes):
@@ -202,11 +169,13 @@ def run_vcfstats(vcfs, out_dir, log_dir):
 
 
 class RandVCFOptions:
-    def __init__(self, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, prop_het):
+    def __init__(self, num_snp, num_ins, num_del, num_mnp, num_complex, percent_novel, min_length, max_length, prop_het, num_dup = 0, num_inv = 0):
         self.num_snp = num_snp
         self.num_ins = num_ins
         self.num_del = num_del
         self.num_mnp = num_mnp
+        self.num_dup = num_dup
+        self.num_inv = num_inv
         self.num_complex = num_complex
         self.percent_novel = percent_novel
         self.min_length = min_length
@@ -214,7 +183,7 @@ class RandVCFOptions:
         self.prop_het = prop_het
 
 class RandDGVOptions:
-    def __init__(self, num_ins, num_del, num_dup, num_inv, percent_novel, min_length, max_length):
+    def __init__(self, num_ins, num_del, num_dup, num_inv, percent_novel, min_length, max_length, prop_het, output_all = " "):
         self.num_ins = num_ins
         self.num_del = num_del
         self.num_dup = num_dup
@@ -222,7 +191,28 @@ class RandDGVOptions:
         self.percent_novel = percent_novel
         self.min_length = min_length
         self.max_length = max_length
+        self.prop_het = prop_het
+        self.output_all = output_all
 
+def randdgv_options2randvcf_options(randdgv_options):
+    '''
+    automatically set up shared fields between RandVCFOptions and RandDGVOptions
+    :param randdgv_options:
+    :return: RandVCFOptions instance
+    '''
+    return RandVCFOptions(
+        num_snp= 0,
+        num_ins = randdgv_options.num_ins,
+        num_del = randdgv_options.num_del,
+        num_mnp = 0,
+        num_complex = 0,
+        percent_novel= randdgv_options.percent_novel,
+        min_length = randdgv_options.min_length,
+        max_length = randdgv_options.max_length,
+        prop_het=randdgv_options.prop_het,
+        num_dup = randdgv_options.num_dup,
+        num_inv = randdgv_options.num_inv
+    )
 
 def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference):
     logger = logging.getLogger(run_randvcf.__name__)
@@ -235,6 +225,8 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
                         "-num_del", str(randvcf_options.num_del),
                         "-num_mnp", str(randvcf_options.num_mnp),
                         "-num_complex", str(randvcf_options.num_complex),
+                        "-num_dup", str(randvcf_options.num_dup),
+                        "-num_inv", str(randvcf_options.num_inv),
                         "-novel", str(randvcf_options.percent_novel),
                         "-min_len", str(randvcf_options.min_length),
                         "-max_len", str(randvcf_options.max_length),
@@ -254,6 +246,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
                         "-t", sex,
                         "-seed", str(seed),
+                        options.output_all,
                         "-num_ins", str(options.num_ins),
                         "-num_del", str(options.num_del),
                         "-num_dup", str(options.num_dup),
@@ -261,6 +254,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-novel", str(options.percent_novel),
                         "-min_len", str(options.min_length),
                         "-max_len", str(options.max_length),
+                        "-prop_het", str(options.prop_het),
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
                         "-dgv", os.path.realpath(dgv_file)]
@@ -270,11 +264,6 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     logger.info(" with pid " + str(p_rand_dgv.pid))
 
     return p_rand_dgv
-
-
-def get_version():
-    return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
-
 
 def varsim_main(reference,
                 simulator, # use None to disable simulation
@@ -566,7 +555,7 @@ if __name__ == "__main__":
                              help="Path to the executable of the read simulator chosen"
                              , required=True)
     main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)",
-                             default=DEFAULT_VARSIMJAR,
+                             default=VARSIMJAR,
                              required=False)
     main_parser.add_argument("--read_length", metavar="LENGTH", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INTEGER",
@@ -649,6 +638,9 @@ if __name__ == "__main__":
                                 required=False)
     rand_dgv_group.add_argument("--sv_dgv", metavar="DGV_FILE", help="DGV file containing structural variants",
                                 required=False)
+    rand_dgv_group.add_argument("--sv_prop_het", metavar="FLOAT", help="Proportion of heterozygous structural variants",
+                                default=0.6,
+                                type=float)
 
     dwgsim_group = main_parser.add_argument_group("DWGSIM options")
     dwgsim_group.add_argument("--dwgsim_start_e", metavar="first_base_error_rate", help="Error rate on the first base",
@@ -693,7 +685,7 @@ if __name__ == "__main__":
         raise NotImplementedError("pbsim is no longer supported")
 
     randvcf_options = None if args.disable_rand_vcf else RandVCFOptions(args.vc_num_snp, args.vc_num_ins, args.vc_num_del, args.vc_num_mnp, args.vc_num_complex, args.vc_percent_novel, args.vc_min_length_lim, args.vc_max_length_lim, args.vc_prop_het)
-    randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim)
+    randdgv_options = None if args.disable_rand_dgv else RandDGVOptions(args.sv_num_ins, args.sv_num_del, args.sv_num_dup, args.sv_num_inv, args.sv_percent_novel, args.sv_min_length_lim, args.sv_max_length_lim, args.sv_prop_het)
 
     logger = logging.getLogger()
     logger.info(str(args))

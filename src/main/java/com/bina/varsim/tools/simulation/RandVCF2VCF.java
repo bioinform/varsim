@@ -29,6 +29,8 @@ public class RandVCF2VCF extends RandVCFgenerator {
     static final int NUM_DEL_ARG = 100000;
     static final int NUM_MNP_ARG = 20000;
     static final int NUM_COMPLEX_ARG = 20000;
+    static final int NUM_DUP_ARG = 500;
+    static final int NUM_INV_ARG = 500;
     static final double NOVEL_RATIO_ARG = 0.01;
     static final int MIN_LEN_ARG = 1;
     static final int MAX_LEN_ARG = Constant.SVLEN - 1;
@@ -45,13 +47,17 @@ public class RandVCF2VCF extends RandVCFgenerator {
     int numMNP = NUM_MNP_ARG;
     @Option(name = "-num_complex", usage = "Number of complex variants (other ones) to sample [" + NUM_COMPLEX_ARG + "]")
     int numComplex = NUM_COMPLEX_ARG;
+    @Option(name = "-num_dup", usage = "Number of complex variants (other ones) to sample [" + NUM_DUP_ARG + "]")
+    int numDup = NUM_DUP_ARG;
+    @Option(name = "-num_inv", usage = "Number of complex variants (other ones) to sample [" + NUM_INV_ARG + "]")
+    int numINV = NUM_INV_ARG;
     @Option(name = "-novel", usage = "Average ratio of novel variants[" + NOVEL_RATIO_ARG + "]")
     double ratioNovel = NOVEL_RATIO_ARG;
     @Option(name = "-min_len", usage = "Minimum variant length [" + MIN_LEN_ARG + "], inclusive")
     int minLengthLim = MIN_LEN_ARG;
     @Option(name = "-max_len", usage = "Maximum variant length [" + MAX_LEN_ARG + "], inclusive")
     int maxLengthLim = MAX_LEN_ARG;
-    @Option(name = "-prop_het", usage = "Average ratio of novel variants[" + PROP_HET_ARG + "]")
+    @Option(name = "-prop_het", usage = "Average ratio of heterozygous variants[" + PROP_HET_ARG + "]")
     double propHet = PROP_HET_ARG;
 
     @Option(name = "-ref", usage = "Reference Genome [Required]", metaVar = "file", required = true)
@@ -67,7 +73,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
     String outFilename = null;
 
     private final Set<VariantType> variantTypes = EnumSet.of(VariantType.SNP, VariantType.Insertion,
-            VariantType.Deletion, VariantType.MNP, VariantType.Complex);
+            VariantType.Deletion, VariantType.MNP, VariantType.Complex, VariantType.Tandem_Duplication, VariantType.Inversion);
 
     int numNovelAdded;
 
@@ -139,6 +145,8 @@ public class RandVCF2VCF extends RandVCFgenerator {
         log.info("total_num_INS: " + variantTypeCounts.get(VariantType.Insertion));
         log.info("total_num_DEL: " + variantTypeCounts.get(VariantType.Deletion));
         log.info("total_num_MNP: " + variantTypeCounts.get(VariantType.MNP));
+        log.info("total_num_DUP: " + variantTypeCounts.get(VariantType.Interspersed_Duplication));
+        log.info("total_num_INV: " + variantTypeCounts.get(VariantType.Inversion));
         log.info("total_num_COMPLEX: " + variantTypeCounts.get(VariantType.Complex));
         log.info("total_num_skipped: " + totalNumOther);
         log.info("total_num: " + totalNum);
@@ -170,6 +178,8 @@ public class RandVCF2VCF extends RandVCFgenerator {
         maxCounts.put(VariantType.Deletion, numDel);
         maxCounts.put(VariantType.MNP, numMNP);
         maxCounts.put(VariantType.Complex, numComplex);
+        maxCounts.put(VariantType.Tandem_Duplication, numDup);
+        maxCounts.put(VariantType.Inversion, numINV);
 
         int genoIdx = 0;
 

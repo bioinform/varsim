@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import static com.bina.varsim.GlobalTestingOptions.updateVCF;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -20,7 +21,6 @@ import static org.junit.Assert.fail;
  * test various methods in VCF2diploid class
  */
 public class VCF2diploidTest {
-    private static boolean updateVCF = false;
     private int seed = 11;
     public void universalTestMethod(String directory) throws IOException {
         File wd = tmpFolder.newFolder("tmp");

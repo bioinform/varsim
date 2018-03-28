@@ -45,7 +45,7 @@ public class VCFparserTest {
         ref: A CAAAAGAAATGATCATGTTTGTAGGT
         alt: A A AAAGAAATGATCATGTTTGTAGGT
         */
-        assertTrue(v.toString().equals("12\t29557989\t.\tAC\tA\t.\tPASS\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-1\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557989\t.\tACAAAAGAAATGATCATGTTTGTAGGT\tAAAAAGAAATGATCATGTTTGTAGGT\t.\tPASS\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-1\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 1); //[C]
         assertTrue(v.getAlt(1).length() == 0); //""
@@ -53,7 +53,7 @@ public class VCFparserTest {
     @Test
     public void insertionParsingTest() throws UnexpectedException {
         Variant v = parser.processLine("12\t29557990\t.\tCTTT\tCGTTTT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        assertTrue(v.toString().equals("12\t29557990\t.\tC\tCGT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=2\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557990\t.\tCTTT\tCGTTTT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=2\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 2); //"GT"
@@ -61,10 +61,17 @@ public class VCFparserTest {
     @Test
     public void homopolymerInsertionParsingTest() throws UnexpectedException {
         Variant v = parser.processLine("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tSVLEN=-26\tGT\t1|1");
-        assertTrue(v.toString().equals("12\t29557989\t.\tA\tAAAA\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=3\tGT\t1|1"));
+        assertTrue(v.toString().equals("12\t29557989\t.\tACT\tAAAACT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=3\tGT\t1|1"));
         assertTrue(v.isPhased());
         assertTrue(v.getReference().length == 0); //[]
         assertTrue(v.getAlt(1).length() == 3); //"GT"
+    }
+    @Test
+    public void TrimmingTest() throws UnexpectedException {
+        Variant v = parser.processLine("chr22\t29904835\t.\tTG\tG\t.\t.\t.\tGT\t0/1");
+        assertTrue(v.toString().equals("chr22\t29904835\t.\tTG\tG\t.\t.\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-1\tGT\t0/1"));
+        assertTrue(v.getReference().length == 1); //[]
+        assertTrue(v.getAlt(1).length() == 0); //"GT"
     }
     @Test(expected = IllegalArgumentException.class)
     public void SymbolicAlleleSVLenTest() throws UnexpectedException {
@@ -107,5 +114,15 @@ public class VCFparserTest {
     public void multiAllelicDELSVLEN() throws UnexpectedException {
         Variant	v	=	parser.processLine("chr17\t43059469\t.\tC\t<DEL>\t.\tPASS\tSVLEN=-300\tGT\t1|0");
         assertTrue(v.toString().compareTo("chr17\t43059469\t.\tC\t<DEL>\t.\tPASS\tVARIANT_OVERALL_TYPE=Deletion;SVTYPE=DEL;SVLEN=-300\tGT\t1|0") == 0);
+    }
+    @Test
+    public void parsingGT() throws UnexpectedException {
+        Variant	v	=	parser.processLine("chr12\t24150060\t.\tT\tTGAGAGA\t.\tPASS\tSVLEN=6\tGT\t1/1");
+        assertTrue(v.toString().equals("chr12\t24150060\t.\tT\tTGAGAGA\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=6\tGT\t1|1"));
+    }
+    @Test
+    public void multiallelicTrimming() throws UnexpectedException {
+        Variant	v	=	parser.processLine("chr12\t24150060\t.\tCTTTTT\tCTTTTTTTTT,CTTTCTTTTTTT\t.\tPASS\t.\tGT\t1/2");
+        assertTrue(v.toString().equals("chr12\t24150063\t.\tTTT\tTTTTTTT,TCTTTTTTT\t.\tPASS\tVARIANT_OVERALL_TYPE=Insertion;SVLEN=4,6\tGT\t1/2"));
     }
 }
