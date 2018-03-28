@@ -15,7 +15,7 @@ import re
 import pysam
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
-from utils import makedirs, run_shell_command, versatile_open, get_loglevel, check_java, MY_DIR, VARSIMJAR
+from utils import makedirs, run_shell_command, versatile_open, get_loglevel, check_java, MY_DIR, VARSIMJAR, get_version
 
 REQUIRE_VARSIMJAR = not os.path.isfile(VARSIMJAR)
 if REQUIRE_VARSIMJAR: VARSIMJAR = None
