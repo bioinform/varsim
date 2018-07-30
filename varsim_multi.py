@@ -138,6 +138,7 @@ def varsim_multi(reference,
 
 
 if __name__ == "__main__":
+    os.environ['PATH'] = str(os.path.dirname(os.path.realpath(__file__))) + '/opt/jdk1.8.0_131/bin:' + os.environ['PATH']
     check_java()
 
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",

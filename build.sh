@@ -20,7 +20,7 @@ wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && sh ${CONDA} -b -p ${PYTHON_DIR}\
     && ${PYTHON_DIR}/bin/pip install -I pysam\
     && ${PYTHON_DIR}/bin/pip install -I pyvcf\
-    && ${PYTHON_DIR}/bin/pip install -I pybedtools\
+    && ${PYTHON_DIR}/bin/conda install --yes -c daler pybedtools bedtools \
     && ${PYTHON_DIR}/bin/pip install -I pandas\
     && ${PYTHON_DIR}/bin/pip install -I numpy\
     && ${PYTHON_DIR}/bin/pip install -I scipy\
