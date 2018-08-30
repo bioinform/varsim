@@ -17,4 +17,4 @@ unzip dist/rtg-tools*.zip
 cp rtg-tools*/RTG.jar $cwd
 popd
 
-tar -cv utils.py compare_vcf.py RTG.jar quickstart.sh VarSim.jar __init__.py liftover_restricted_vcf_map.py generate_small_test_ref.py varsim.py varsim_multi.py varsim_somatic.py varsim_validator.py | gzip > varsim-$version.tar.gz
+tar -cv build.sh utils.py compare_vcf.py RTG.jar quickstart.sh VarSim.jar __init__.py liftover_restricted_vcf_map.py generate_small_test_ref.py varsim.py varsim_multi.py varsim_somatic.py varsim_validator.py | gzip > varsim-$version.tar.gz

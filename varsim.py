@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/bin/sh
+"exec" "`dirname $0`/opt/miniconda2/bin/python" "$0" "$@"
 
 import argparse
 import os
