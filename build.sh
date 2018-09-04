@@ -25,3 +25,21 @@ wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && ${PYTHON_DIR}/bin/pip install -I numpy==1.15.0\
     && ${PYTHON_DIR}/bin/pip install -I scipy==1.1.0\
     && rm -f ${CONDA}
+
+wget -O- http://mirrors.sonic.net/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar zxvf -
+wget -O- https://www.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
+popd
+
+export JAVA_HOME=${OPT_DIR}/jdk1.8.0_131
+version=$(git describe | sed 's/^v//')
+${OPT_DIR}/apache-maven-3.5.4/bin/mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$version
+${OPT_DIR}/apache-maven-3.5.4/bin/mvn package
+
+git submodule init
+git submodule update
+pushd rtg-tools
+rm -rf rtg-tools-*
+${OPT_DIR}/apache-ant-1.9.13/bin/ant zip-nojre
+unzip dist/rtg-tools*.zip
+cp rtg-tools*/RTG.jar $DIR
+popd
