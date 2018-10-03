@@ -29,10 +29,13 @@ def count_variants(vcf):
 
 def check_java():
     logger = logging.getLogger(check_java.__name__)
-    jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
-    if LooseVersion(jv) < LooseVersion("1.8"):
-        logger.error("VarSim requires Java 1.8 to be on the path.")
-        raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
+    try:
+        jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
+        if LooseVersion(jv) < LooseVersion("1.8"):
+            logger.error("VarSim requires Java 1.8 to be on the path.")
+            raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
+    except subprocess.CalledProcessError:
+        raise EnvironmentError("No java (>=1.8) found")
 
 def get_version():
     return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
