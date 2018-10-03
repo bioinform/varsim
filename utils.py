@@ -30,7 +30,10 @@ def count_variants(vcf):
 def check_java():
     logger = logging.getLogger(check_java.__name__)
     try:
-        jv = filter(lambda x: x.startswith("java version"), subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True).split("\n"))[0].split()[2].replace("\"", "")
+        jv = subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True)
+        if "openjdk" in jv or "OpenJDK" in jv:
+            raise EnvironmentError("Please replace OpenJDK with Oracle JDK")
+        jv = filter(lambda x: x.startswith("java version"), jv.split("\n"))[0].split()[2].replace("\"", "")
         if LooseVersion(jv) < LooseVersion("1.8"):
             logger.error("VarSim requires Java 1.8 to be on the path.")
             raise EnvironmentError("VarSim requires Java 1.8 to be on the path")
