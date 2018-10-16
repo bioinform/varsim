@@ -325,4 +325,14 @@ public class VCFCompareTest {
     //disabled until global matching is implemented
     universalTestMethod("src/test/resources/validationTest/distanceMetricTests/multipleMatchingDistance", new String[]{"-wig", "50","-over","0.7","-output_distance_metric"});
   }
+  /**
+   * complex variant
+   * CAAAA -> CAAG 1/1
+   * is called as 1 DEL + 1 SNV
+   * partial matching disallowed (so that rtg can rescue this case)
+   */
+  @Test
+  @Ignore public void complexVariantNoPartialMatchingTest() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/complexVariantTests/noPartialMatchingTest", new String[]{"-disallow_partial_fp"});
+  }
 }

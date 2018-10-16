@@ -96,6 +96,9 @@ class VCFComparator(object):
         return self.fn
 
 class VarSimVCFComparator(VCFComparator):
+    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts):
+        VCFComparator.__init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, match_geno, log_to_file, opts)
+        self.disallow_partial_fp = disallow_partial_fp
     def get_tp_predict(self):
         '''
         varsim does not generate TP based off of predictions
@@ -123,6 +126,8 @@ class VarSimVCFComparator(VCFComparator):
         if self.regions:
             cmd.append('-bed')
             cmd.append(self.regions)
+        if self.disallow_partial_fp:
+            cmd.append('-disallow_partial_fp')
         if self.opts:
             cmd.append(self.opts)
         cmd.extend(self.vcfs)
@@ -245,6 +250,7 @@ def process(args):
                                             regions = args.regions,
                sample = args.sample, vcfs = args.vcfs,
                exclude_filtered = args.exclude_filtered,
+               disallow_partial_fp = args.disallow_partial_fp,
                match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options)
     varsim_tp, varsim_fn, varsim_fp = varsim_comparator.get_tp(), varsim_comparator.get_fn(), varsim_comparator.get_fp()
     varsim_tp = utils.sort_and_compress(varsim_tp)
@@ -376,6 +382,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--regions", help="BED file to restrict analysis [Optional]", required = False, type=str)
     main_parser.add_argument("--sample", metavar = "SAMPLE", help="sample name", required = False, type=str)
     main_parser.add_argument("--exclude_filtered", action = 'store_true', help="only consider variants with PASS or . in FILTER column", required = False)
+    main_parser.add_argument("--disallow_partial_fp", action = 'store_true', help="For a partially-matched false negative variant, output all matching variants as false positive", required = False)
     main_parser.add_argument("--match_geno", action = 'store_true', help="compare genotype in addition to alleles", required = False)
     main_parser.add_argument("--sv_length", type = int, help="length cutoff for SV (only effective for counting, not comparison). For comparison, please add -sv_length to --vcfcompare_options.", required = False, default = 100)
     main_parser.add_argument('--version', action='version', version=utils.get_version())

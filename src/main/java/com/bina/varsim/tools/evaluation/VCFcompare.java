@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
@@ -116,6 +117,8 @@ public class VCFcompare extends VarSimTool {
     @Option(name = "-sv_length", usage = "SV length cutoff", metaVar = "SVLEN")
     int SVLEN = Constant.SVLEN;
 
+    @Option(name = "-disallow_partial_fp", usage = "For a partially-matched false negative variant, output all matching variants as false positive")
+    boolean disallowPartialFP = false;
 
     public VCFcompare(final String command, final String description) {
         super(command, description);
@@ -903,11 +906,13 @@ public class VCFcompare extends VarSimTool {
                 // the original variant was probably a large deletion with a small insertion
                 for (Variant currentVariant : canonicalVariantList) {
                     int currentLength = currentVariant.maxLen();
+                    currentVariant.wholeVariantIndex = numReadOriginalVariant;
                     trueVariantTotalLength.add(currentLength);
                     trueVariantsForOutput.add(currentVariant);
                     numReadOriginalVariant++;
                 }
             } else {
+                trueVariant.wholeVariantIndex = numReadOriginalVariant;
                 trueVariantTotalLength.add(totalLength);
                 trueVariantsForOutput.add(trueVariant);
                 numReadOriginalVariant++;
@@ -947,6 +952,7 @@ public class VCFcompare extends VarSimTool {
 
         log.info("Load New VCF");
         int numberOfNewVariants = 0;
+        List<Pair<Variant,Set<Integer>>> matchingVariantAndMatchedWholeVariants = new ArrayList<>();
         // iterate over new VCF and collect stats
 
         traid2composingVariants.clear();
@@ -1006,6 +1012,7 @@ public class VCFcompare extends VarSimTool {
                 //is longer than certain proportion of sum of lengths of all canonicalized variants.
                 boolean computeAsSplit = totalLength >= this.SVLEN && maxLength >= overlapRatio * totalLength  &&
                     canonicalVariantList.size() > 1;
+                Set<Integer> matchedWholeVariants = new HashSet<>(3);
 
                 for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
@@ -1019,6 +1026,7 @@ public class VCFcompare extends VarSimTool {
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
                         if (dualIdx.isSplitVariantValid()) {
                             // validated
+                            matchedWholeVariants.add(dualIdx.wholeVariantIndex);
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             validatedLengths[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
                             //update 3' distance,5' distance,length difference
@@ -1062,6 +1070,7 @@ public class VCFcompare extends VarSimTool {
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
 
                         if (dualIdx.isSplitVariantValid()) {
+                            matchedWholeVariants.add(dualIdx.wholeVariantIndex);
                             validatedTrue.set(dualIdx.splitVariantIndex);
                             //update 3' distance,5' distance,length difference
                             threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
@@ -1104,6 +1113,7 @@ public class VCFcompare extends VarSimTool {
                     }
                 }
 
+                matchingVariantAndMatchedWholeVariants.add(new Pair<>(variant, matchedWholeVariants));
                 numberOfNewVariants++;
             }
         }
@@ -1115,6 +1125,7 @@ public class VCFcompare extends VarSimTool {
         List<Integer> tpThreePrimeDistance = new ArrayList<>();
         List<Integer> tpFivePrimeDistance = new ArrayList<>();
         List<Integer> tpLengthDifference = new ArrayList<>();
+        Set<Integer> fnVariantsIndexes = new HashSet<>();
         for (Variant var : trueVariantsForOutput) {
 
             boolean isKnown = intersector == null || excludeTprFromBedFiltering;
@@ -1151,6 +1162,7 @@ public class VCFcompare extends VarSimTool {
                     var.output(tpWriter);
                 } else {
                     var.output(fnWriter);
+                    fnVariantsIndexes.add(var.wholeVariantIndex);
                 }
 
                 outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
@@ -1159,6 +1171,27 @@ public class VCFcompare extends VarSimTool {
                 var.output(unknownTpWriter);
             }
             numRead2++;
+        }
+        /*
+        handle matching variants for partially matched False Negative
+
+        a variant can be matched with more than one truth variant
+        if any truth variant is classified as false negative
+        then all the variants matching this false negative should be considered false positive
+        note: the "matching" here is partial matching, otherwise we should not see a false negative
+        at first place.
+         */
+        if (disallowPartialFP) {
+            for (Pair<Variant, Set<Integer>> p : matchingVariantAndMatchedWholeVariants) {
+                Variant v = p.getKey();
+                Set<Integer> matchedWholeVariants = p.getValue();
+                //assume time complexity = O(matchedWholeVariants.size()), which is small in practice
+                matchedWholeVariants.retainAll(fnVariantsIndexes);
+                if (!matchedWholeVariants.isEmpty()) {
+                    outputBlob.getNumberOfTrueCorrect().incFP(v.getType(), v.maxLen());
+                    v.output(fpWriter);
+                }
+            }
         }
 
         if (outputDistanceMetric) {
