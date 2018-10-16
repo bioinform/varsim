@@ -332,7 +332,21 @@ public class VCFCompareTest {
    * partial matching disallowed (so that rtg can rescue this case)
    */
   @Test
-  @Ignore public void complexVariantNoPartialMatchingTest() throws IOException {
+  public void complexVariantNoPartialMatchingTest() throws IOException {
     universalTestMethod("src/test/resources/validationTest/complexVariantTests/noPartialMatchingTest", new String[]{"-disallow_partial_fp"});
+  }
+
+  /**
+   * truth is
+   * 1 DEL + 1 SNV
+   * complex variant is
+   * CAAAA -> CAAG 1/1
+   * partial matching disallowed (so that rtg can rescue this case)
+   *
+   * basically reverse of previous test case
+   */
+  @Test
+  public void complexVariantNoPartialMatchingTest2() throws IOException {
+    universalTestMethod("src/test/resources/validationTest/complexVariantTests/noPartialMatchingTest2", new String[]{"-disallow_partial_fp"});
   }
 }
