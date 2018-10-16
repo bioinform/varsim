@@ -1013,6 +1013,9 @@ public class VCFcompare extends VarSimTool {
                 boolean computeAsSplit = totalLength >= this.SVLEN && maxLength >= overlapRatio * totalLength  &&
                     canonicalVariantList.size() > 1;
                 Set<Integer> matchedWholeVariants = new HashSet<>(3);
+                List<Variant> canonicalVariantsMatched = new ArrayList<>();
+                List<Variant> matchedTrueVariants = new ArrayList<>();
+                List<Integer> matchedLengths = new ArrayList<>();
 
                 for (Variant currentVariant : canonicalVariantList) {
                     // get genotype
@@ -1026,20 +1029,9 @@ public class VCFcompare extends VarSimTool {
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
                         if (dualIdx.isSplitVariantValid()) {
                             // validated
-                            matchedWholeVariants.add(dualIdx.wholeVariantIndex);
-                            validatedTrue.set(dualIdx.splitVariantIndex);
-                            validatedLengths[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
-                            //update 3' distance,5' distance,length difference
-                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
-                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            if (ignoreImpreciseLength &&
-                                    (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise())) {
-                                //if predicted variant or matched true variant has imprecise length, skip length difference calculation
-                                lengthDifference[dualIdx.wholeVariantIndex] = null;
-                            } else {
-                                lengthDifference[dualIdx.wholeVariantIndex] = VarSimMath.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
-                            }
-                            validatedLength += currentVariant.maxLen();
+                            matchedLengths.add(maxTrueLength);
+                            matchedTrueVariants.add(matchedTrueVariant);
+                            canonicalVariantsMatched.add(currentVariant);
                         } else if (computeAsSplit) {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
@@ -1070,20 +1062,9 @@ public class VCFcompare extends VarSimTool {
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
 
                         if (dualIdx.isSplitVariantValid()) {
-                            matchedWholeVariants.add(dualIdx.wholeVariantIndex);
-                            validatedTrue.set(dualIdx.splitVariantIndex);
-                            //update 3' distance,5' distance,length difference
-                            threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
-                            fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
-                            if (ignoreImpreciseLength &&
-                                    (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise())) {
-                                //if predicted variant or matched true variant has imprecise length, skip length difference calculation
-                                lengthDifference[dualIdx.wholeVariantIndex] = null;
-                            } else {
-                                lengthDifference[dualIdx.wholeVariantIndex] = VarSimMath.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
-                            }
-                            validatedLengths[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
-                            validatedLength += currentVariant.maxLen();
+                            matchedLengths.add(currentVariant.maxLen());
+                            matchedTrueVariants.add(matchedTrueVariant);
+                            canonicalVariantsMatched.add(currentVariant);
                         } else if (computeAsSplit) {
                             if (!skipFP) {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
@@ -1096,6 +1077,34 @@ public class VCFcompare extends VarSimTool {
                                 variant.output(unknownFpWriter);
                             }
                         }
+                    }
+                }
+                /*
+                if disallowPartialFP, then we require all canonical variants of a variant to be matched with some truth variants
+                otherwise we do not care
+                 */
+                if (!disallowPartialFP || (canonicalVariantsMatched.size() == canonicalVariantList.size())) {
+                    for (int i = 0; i < canonicalVariantsMatched.size(); i++) {
+                        int matchedLength = matchedLengths.get(i);
+                        Variant currentVariant = canonicalVariantsMatched.get(i);
+                        Variant matchedTrueVariant = matchedTrueVariants.get(i);
+
+                        final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
+
+                        matchedWholeVariants.add(dualIdx.wholeVariantIndex);
+                        validatedTrue.set(dualIdx.splitVariantIndex);
+                        //update 3' distance,5' distance,length difference
+                        threePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getPos() - matchedTrueVariant.getPos()), threePrimeDistance[dualIdx.wholeVariantIndex]);
+                        fivePrimeDistance[dualIdx.wholeVariantIndex] = Math.max(Math.abs(currentVariant.getEnd() - matchedTrueVariant.getEnd()), fivePrimeDistance[dualIdx.wholeVariantIndex]);
+                        if (ignoreImpreciseLength &&
+                                (variant.isLengthImprecise() || matchedTrueVariant.isLengthImprecise())) {
+                            //if predicted variant or matched true variant has imprecise length, skip length difference calculation
+                            lengthDifference[dualIdx.wholeVariantIndex] = null;
+                        } else {
+                            lengthDifference[dualIdx.wholeVariantIndex] = VarSimMath.max(Math.abs(currentVariant.maxLen() - matchedTrueVariant.maxLen()), lengthDifference[dualIdx.wholeVariantIndex]);
+                        }
+                        validatedLengths[dualIdx.wholeVariantIndex] += matchedLength; // this 'should' be overlap len
+                        validatedLength += currentVariant.maxLen();
                     }
                 }
 
