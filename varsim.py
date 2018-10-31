@@ -17,6 +17,7 @@ import pysam
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from utils import makedirs, run_shell_command, versatile_open, get_loglevel, check_java, MY_DIR, VARSIMJAR, get_version
+JAVA_XMX = "-Xmx"
 
 REQUIRE_VARSIMJAR = not os.path.isfile(VARSIMJAR)
 if REQUIRE_VARSIMJAR: VARSIMJAR = None
@@ -146,7 +147,7 @@ def fill_missing_sequences(vcf, id, seq_file, reference, work_dir, log_dir):
         out_vcf = out_vcf[:-3]
     out_log = os.path.join(log_dir, "%s_fill_missing.log" % (os.path.basename(vcf)))
 
-    command = ["java", "-Xmx10g", "-Xms10g", "-jar", VARSIMJAR, "randsequencevcf", "-id", id, "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
+    command = ["java", JAVA_XMX, "-jar", VARSIMJAR, "randsequencevcf", "-id", id, "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
     with open(out_log, "w") as log_fd:
         logger.info("Running command " + " ".join(command))
         subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
@@ -160,7 +161,7 @@ def run_vcfstats(vcfs, out_dir, log_dir):
         out_prefix = os.path.basename(in_vcf)
         vcfstats_stdout = open(os.path.join(out_dir, "%s.stats" % (out_prefix)), "w")
         vcfstats_stderr = open(os.path.join(log_dir, "%s.vcfstats.err" % (out_prefix)), "w")
-        vcfstats_command = ["java", "-Xmx1g", "-Xms1g", "-jar", VARSIMJAR, "vcfstats", "-vcf",
+        vcfstats_command = ["java", JAVA_XMX, "-jar", VARSIMJAR, "vcfstats", "-vcf",
                         in_vcf]
         logger.info("Executing command " + " ".join(vcfstats_command))
         p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
@@ -218,7 +219,7 @@ def randdgv_options2randvcf_options(randdgv_options):
 def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference):
     logger = logging.getLogger(run_randvcf.__name__)
 
-    rand_vcf_command = ["java", "-jar", VARSIMJAR, "randvcf2vcf",
+    rand_vcf_command = ["java", JAVA_XMX, "-jar", VARSIMJAR, "randvcf2vcf",
                         "-seed", str(seed),
                         "-t", sex,
                         "-num_snp", str(randvcf_options.num_snp),
@@ -244,7 +245,7 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
 def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file):
     logger = logging.getLogger(run_randvcf.__name__)
 
-    rand_dgv_command = ["java", "-Xms10g", "-Xmx10g", "-jar", VARSIMJAR, "randdgv2vcf",
+    rand_dgv_command = ["java", JAVA_XMX, "-jar", VARSIMJAR, "randdgv2vcf",
                         "-t", sex,
                         "-seed", str(seed),
                         options.output_all,
@@ -359,7 +360,7 @@ def varsim_main(reference,
         vcf2diploid_stderr = open(os.path.join(log_dir, "vcf2diploid.err"), "w")
         vcf_arg_list = sum([["-vcf", v] for v in variant_vcfs], [])
         filter_arg_list = ["-pass"] if remove_filtered else []
-        vcf2diploid_command = ["java", "-jar", VARSIMJAR, "vcf2diploid",
+        vcf2diploid_command = ["java", JAVA_XMX, "-jar", VARSIMJAR, "vcf2diploid",
                                "-t", sex,
                                "-id", sample_id,
                                "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list
@@ -475,11 +476,12 @@ def varsim_main(reference,
             for i in xrange(nlanes):
                 liftover_stdout = open(os.path.join(log_dir, "lane%d.out" % (i)), "w")
                 liftover_stderr = open(os.path.join(log_dir, "liftover%d.log" % (i)), "w")
-                fastq_liftover_command = "java -server -Xms4g -Xmx4g -jar %s fastq_liftover -map %s -id %d " \
+                fastq_liftover_command = "java -server %s -jar %s fastq_liftover -map %s -id %d " \
                                          "-fastq <(gunzip -c %s/simulated.lane%d.read1.fq.gz) " \
                                          "-fastq <(gunzip -c %s/simulated.lane%d.read2.fq.gz) " \
                                          "-out >(gzip -1 > %s/lane%d.read1.fq.gz) " \
                                          "-out >(gzip -1 > %s/lane%d.read2.fq.gz)" % (
+                                             JAVA_XMX, 
                                              VARSIMJAR, merged_map, i, out_dir, i,
                                              out_dir, i, out_dir, i,
                                              out_dir, i)
@@ -506,7 +508,7 @@ def varsim_main(reference,
             merged_raw_readmap = os.path.join(out_dir, "longislnd_sim", "merged_readmap.bed")
             concatenate_files(read_map_files, merged_raw_readmap)
             read_maps = "-longislnd %s" % merged_raw_readmap 
-            read_map_liftover_command = "java -server -jar %s longislnd_liftover " % VARSIMJAR + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(out_dir, sample_id + ".truth.map"))
+            read_map_liftover_command = "java %s -server -jar %s longislnd_liftover " % (JAVA_XMX, VARSIMJAR) + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(out_dir, sample_id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(log_dir, "longislnd_liftover.err"), "w")
             logger.info("Executing command " + read_map_liftover_command )
             read_map_liftover_p = subprocess.Popen(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
@@ -575,6 +577,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
+    main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     main_parser.add_argument('--version', action='version', version=get_version())
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
@@ -663,6 +666,7 @@ if __name__ == "__main__":
 
     args = main_parser.parse_args()
 
+    JAVA_XMX = JAVA_XMX + args.java_max_mem
     makedirs([args.log_dir, args.out_dir])
 
     # Setup logging

@@ -30,7 +30,7 @@ def count_variants(vcf):
 def check_java():
     logger = logging.getLogger(check_java.__name__)
     try:
-        jv = subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True)
+        jv = subprocess.check_output("java -Xmx100m -version", stderr=subprocess.STDOUT, shell=True)
         if "openjdk" in jv or "OpenJDK" in jv:
             raise EnvironmentError("Please replace OpenJDK with Oracle JDK")
         jv = filter(lambda x: x.startswith("java version"), jv.split("\n"))[0].split()[2].replace("\"", "")
