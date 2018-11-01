@@ -8,7 +8,6 @@ import logging
 import shutil
 import utils
 LOGGER = None
-JAVA_XMX = "-Xmx"
 
 def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
                   varsim_fp, vcfeval_tp_predict):
@@ -112,7 +111,7 @@ class VarSimVCFComparator(VCFComparator):
 
         :return:
         '''
-        cmd = ['java', JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompare',
+        cmd = ['java', utils.JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompare',
            '-prefix', self.prefix, '-true_vcf',
            self.true_vcf,
            '-reference', self.reference,
@@ -155,7 +154,7 @@ class RTGVCFComparator(VCFComparator):
         #command example
         #rtg-tools-3.8.4-bdba5ea_install/rtg vcfeval --baseline truth.vcf.gz \
         #--calls compare1.vcf.gz -o vcfeval_split_snp -t ref.sdf --output-mode=annotate --sample xx --squash-ploidy --regions ?? \
-        cmd = ['java', JAVA_XMX, '-jar', utils.RTGJAR, 'vcfeval',
+        cmd = ['java', utils.JAVA_XMX, '-jar', utils.RTGJAR, 'vcfeval',
                '-o', self.prefix, '--baseline',
                self.true_vcf,
                '-t', self.reference,
@@ -211,7 +210,7 @@ def generate_sdf(reference, log):
         LOGGER.info('{0} exists, doing nothing'.format(sdf))
         LOGGER.info('to rerun SDF generation, please remove or rename {0}'.format(sdf))
         return sdf
-    cmd = ['java', JAVA_XMX, '-jar',utils.RTGJAR,'format',
+    cmd = ['java', utils.JAVA_XMX, '-jar',utils.RTGJAR,'format',
            '-o', sdf, reference]
     if log:
         with utils.versatile_open(log, 'a') as logout:
@@ -242,7 +241,7 @@ def process(args):
     LOGGER = logging.getLogger(__name__)
     LOGGER.info('working hard ...')
 
-    JAVA_XMX = JAVA_XMX + args.java_max_mem
+    utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     args.out_dir = os.path.abspath(args.out_dir)
     args.reference = os.path.abspath(args.reference)
     utils.makedirs([args.out_dir])
@@ -344,7 +343,7 @@ def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Inser
     :param augmented_fp:
     :return:
     '''
-    cmd = ['java', JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
+    cmd = ['java', utils.JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
            '-prefix', prefix, '-tp',tp,
            '-fn', fn, '-fp', fp,
            '-sv_length', str(sv_length),

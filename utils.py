@@ -9,6 +9,7 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
+JAVA_XMX = "-Xmx"
 
 COMBINE_KEEP_ALL_DUPLICATE = 1
 COMBINE_KEEP_FIRST_DUPLICATE = 2

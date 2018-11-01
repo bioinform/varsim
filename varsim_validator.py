@@ -14,11 +14,11 @@ from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions
 import json
+import utils
 from copy import deepcopy
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
-JAVA_XMX = "-Xmx"
 
 ALL_COUNTS = ["fp", "tp", "fn", "tn", "t"]
 
@@ -105,7 +105,7 @@ def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_di
             continue
 
         if not disable_vcfcompare:
-            command = "java {} -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(JAVA_XMX, VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
+            command = "java {} -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(utils.JAVA_XMX, VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
 
             with open(os.path.join(sample_dir, "vcfcompare.out"), "w") as stdout, open(os.path.join(sample_dir, "vcfcompare.err"), "w") as stderr:
                 subprocess.check_call(command, shell=True, stdout=stdout, stderr=stderr)
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     
-    JAVA_XMX = JAVA_XMX + args.java_max_mem
+    utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.out_dir])
 
     # Setup logging

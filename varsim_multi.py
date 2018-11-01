@@ -21,6 +21,7 @@ from varsim import varsim_main, RandVCFOptions, RandDGVOptions, run_randvcf, run
 import pybedtools
 import pysam
 from utils import check_simulator_opts, sort_and_compress, get_version, get_loglevel, makedirs, check_java
+import utils
 
 def varsim_multi(reference,
                  simulator,
@@ -169,6 +170,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants for simulation")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
+    main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     main_parser.add_argument('--version', action='version', version=get_version())
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
@@ -238,6 +240,7 @@ if __name__ == "__main__":
 
     args = main_parser.parse_args()
 
+    utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.out_dir])
 
     # Setup logging
