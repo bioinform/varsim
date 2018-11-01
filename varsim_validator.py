@@ -14,6 +14,7 @@ from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions
 import json
+import utils
 from copy import deepcopy
 
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -104,7 +105,7 @@ def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_di
             continue
 
         if not disable_vcfcompare:
-            command = "java -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
+            command = "java {} -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(utils.JAVA_XMX, VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
 
             with open(os.path.join(sample_dir, "vcfcompare.out"), "w") as stdout, open(os.path.join(sample_dir, "vcfcompare.err"), "w") as stderr:
                 subprocess.check_call(command, shell=True, stdout=stdout, stderr=stderr)
@@ -165,11 +166,14 @@ if __name__ == "__main__":
     parser.add_argument("--variants", help="Root directory of variant calls", required=True, nargs="+")
     parser.add_argument("--vcfcompare_options", help="Other VCFCompare options", default="")
     parser.add_argument("--disable_vcfcompare", action="store_true", help="Do not run VCFcompare if already ran")
+    parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     parser.add_argument('--version', action='version', version=get_version())
     parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     args = parser.parse_args()
 
+    
+    utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.out_dir])
 
     # Setup logging

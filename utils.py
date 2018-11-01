@@ -9,6 +9,7 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
+JAVA_XMX = "-Xmx"
 
 COMBINE_KEEP_ALL_DUPLICATE = 1
 COMBINE_KEEP_FIRST_DUPLICATE = 2
@@ -30,7 +31,7 @@ def count_variants(vcf):
 def check_java():
     logger = logging.getLogger(check_java.__name__)
     try:
-        jv = subprocess.check_output("java -version", stderr=subprocess.STDOUT, shell=True)
+        jv = subprocess.check_output("java -Xmx100m -version", stderr=subprocess.STDOUT, shell=True)
         if "openjdk" in jv or "OpenJDK" in jv:
             raise EnvironmentError("Please replace OpenJDK with Oracle JDK")
         jv = filter(lambda x: x.startswith("java version"), jv.split("\n"))[0].split()[2].replace("\"", "")
