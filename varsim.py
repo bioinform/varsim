@@ -355,7 +355,6 @@ def varsim_main(reference,
     processes = run_vcfstats(variant_vcfs, out_dir, log_dir)
 
     if not disable_vcf2diploid:
-        variant_vcfs.reverse()
         vcf2diploid_stdout = open(os.path.join(out_dir, "vcf2diploid.out"), "w")
         vcf2diploid_stderr = open(os.path.join(log_dir, "vcf2diploid.err"), "w")
         vcf_arg_list = sum([["-vcf", v] for v in variant_vcfs], [])
