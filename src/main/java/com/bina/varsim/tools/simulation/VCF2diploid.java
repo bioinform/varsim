@@ -276,7 +276,7 @@ public class VCF2diploid extends VarSimTool {
             log.info("number of variants: " + varList.size());
 
             //VCF is written on a per-chromosome basis
-            writeVCF(referenceSequence, varList, paternalIsVariantAdded,
+            writeVCF(referenceSequence, allSequences, varList, paternalIsVariantAdded,
                     maternalIsVariantAdded, outputPaternal, outputMaternal);
 
             if (outputPaternal) {
@@ -661,7 +661,7 @@ public class VCF2diploid extends VarSimTool {
      * Writes out the vcf record for all variants that have added_variants =
      * true
      */
-    private void writeVCF(final Sequence refSeq, final List<Variant> varList,
+    private void writeVCF(final Sequence refSeq, final SimpleReference reference, final List<Variant> varList,
                           final List<Boolean> paternalAddedVariants,
                           final List<Boolean> maternalAddedVariants,
                           final boolean outputPaternal, final boolean outputMaternal) {
@@ -674,7 +674,6 @@ public class VCF2diploid extends VarSimTool {
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            SimpleReference reference = new SimpleReference(chrfiles.get(0));
             bw.write(VCFWriter.generateVCFHeader(reference, new ImmutableList.Builder<String>().addAll(idList).build()));
 
             int num_vars = varList.size();
