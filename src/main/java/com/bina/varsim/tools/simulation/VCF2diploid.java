@@ -53,6 +53,8 @@ public class VCF2diploid extends VarSimTool {
     private boolean pass = false;
     @Option(name = "-outdir", usage = "Directory to output results in [current directory]")
     File outDir = new File("").getAbsoluteFile();
+    @Option(name = "-no_contig_id", usage = "suppress writing contig IDs into VCF headers (useful when number of contigs is large)")
+    private boolean noContigID = false;
     private Map<ChrString, List<Variant>> variants = new HashMap<>();
 
     /**
@@ -183,7 +185,7 @@ public class VCF2diploid extends VarSimTool {
         //VCF header will be the same within this call
         List<String> idList = new ArrayList<>();
         idList.add(id);
-        final String header = VCFWriter.generateVCFHeader(allSequences, new ImmutableList.Builder<String>().addAll(idList).build());
+        final String header = VCFWriter.generateVCFHeader(noContigID? null : allSequences, new ImmutableList.Builder<String>().addAll(idList).build());
 
         // This is the loop through each chromosome
         for (ChrString chr : allSequences.keySet()) {
