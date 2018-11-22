@@ -364,7 +364,7 @@ def varsim_main(reference,
         vcf2diploid_command = ["java", utils.JAVA_XMX, "-jar", VARSIMJAR, "vcf2diploid",
                                "-t", sex,
                                "-id", sample_id,
-                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list
+                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list + ["-no_contig_id"]
 
         logger.info("Executing command " + " ".join(vcf2diploid_command))
         subprocess.check_call(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
