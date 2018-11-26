@@ -29,11 +29,14 @@ def convertCN(filenames, operation):
     by default the max number will be kept
     the change is in place
     """
+    logger = logging.getLogger(convertCN.__name__)
+    logger.info("convertCN started")
     if operation != "two2one" and operation != "one2two":
         raise ValueError("Only two2one or one2two allowed")
     two2one = operation == "two2one"
     delimiter = re.compile('[/|]')
     for name in filenames:
+        logger.info("processing {}".format(name))
         with versatile_open(name, 'r') as file_fd:
             output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
             for l in file_fd:
@@ -72,6 +75,7 @@ def convertCN(filenames, operation):
             output.close()
             shutil.copyfile(output.name, name)
             os.remove(output.name)
+    logger.info("convertCN done")
     return
 
 
@@ -351,6 +355,7 @@ def varsim_main(reference,
     processes = run_vcfstats(variant_vcfs, out_dir, log_dir)
 
     if not disable_vcf2diploid:
+        logger.info("vcf2diploid started")
         variant_vcfs.reverse()
         vcf2diploid_stdout = open(os.path.join(out_dir, "vcf2diploid.out"), "w")
         vcf2diploid_stderr = open(os.path.join(log_dir, "vcf2diploid.err"), "w")
@@ -359,7 +364,7 @@ def varsim_main(reference,
         vcf2diploid_command = ["java", utils.JAVA_XMX, "-jar", VARSIMJAR, "vcf2diploid",
                                "-t", sex,
                                "-id", sample_id,
-                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list
+                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list + ["-no_contig_id"]
 
         logger.info("Executing command " + " ".join(vcf2diploid_command))
         subprocess.check_call(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
@@ -382,6 +387,7 @@ def varsim_main(reference,
         concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
 
         monitor_processes(run_vcfstats([merged_truth_vcf], out_dir, log_dir))
+        logger.info("vcf2diploid done")
 
         if lift_ref:
             lifted_dir = os.path.join(out_dir, "lifted")

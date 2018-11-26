@@ -53,6 +53,8 @@ public class VCF2diploid extends VarSimTool {
     private boolean pass = false;
     @Option(name = "-outdir", usage = "Directory to output results in [current directory]")
     File outDir = new File("").getAbsoluteFile();
+    @Option(name = "-no_contig_id", usage = "suppress writing contig IDs into VCF headers (useful when number of contigs is large)")
+    private boolean noContigID = false;
     private Map<ChrString, List<Variant>> variants = new HashMap<>();
 
     /**
@@ -180,6 +182,11 @@ public class VCF2diploid extends VarSimTool {
         // This is the loop if chromosomes exist in separate files
         SimpleReference allSequences = new SimpleReference(chrfiles);
 
+        //VCF header will be the same within this call
+        List<String> idList = new ArrayList<>();
+        idList.add(id);
+        final String header = VCFWriter.generateVCFHeader(noContigID? null : allSequences, new ImmutableList.Builder<String>().addAll(idList).build());
+
         // This is the loop through each chromosome
         for (ChrString chr : allSequences.keySet()) {
             Sequence referenceSequence = allSequences.getSequence(chr);
@@ -276,7 +283,7 @@ public class VCF2diploid extends VarSimTool {
             log.info("number of variants: " + varList.size());
 
             //VCF is written on a per-chromosome basis
-            writeVCF(referenceSequence, varList, paternalIsVariantAdded,
+            writeVCF(referenceSequence, header, varList, paternalIsVariantAdded,
                     maternalIsVariantAdded, outputPaternal, outputMaternal);
 
             if (outputPaternal) {
@@ -661,21 +668,18 @@ public class VCF2diploid extends VarSimTool {
      * Writes out the vcf record for all variants that have added_variants =
      * true
      */
-    private void writeVCF(final Sequence refSeq, final List<Variant> varList,
+    private void writeVCF(final Sequence refSeq, final String header, final List<Variant> varList,
                           final List<Boolean> paternalAddedVariants,
                           final List<Boolean> maternalAddedVariants,
                           final boolean outputPaternal, final boolean outputMaternal) {
         String file_name = refSeq.getName() + "_" + id + ".vcf";
-        List<String> idList = new ArrayList<>();
-        idList.add(id);
         log.info("Writing out the true variants for " + refSeq.getName());
         try {
             FileWriter fw = new FileWriter(new File(outDir, file_name));
             BufferedWriter bw = new BufferedWriter(fw);
 
             // write header
-            SimpleReference reference = new SimpleReference(chrfiles.get(0));
-            bw.write(VCFWriter.generateVCFHeader(reference, new ImmutableList.Builder<String>().addAll(idList).build()));
+            bw.write(header);
 
             int num_vars = varList.size();
 
