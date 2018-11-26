@@ -29,11 +29,14 @@ def convertCN(filenames, operation):
     by default the max number will be kept
     the change is in place
     """
+    logger = logging.getLogger(convertCN.__name__)
+    logger.info("convertCN started")
     if operation != "two2one" and operation != "one2two":
         raise ValueError("Only two2one or one2two allowed")
     two2one = operation == "two2one"
     delimiter = re.compile('[/|]')
     for name in filenames:
+        logger.info("processing {}".format(name))
         with versatile_open(name, 'r') as file_fd:
             output = tempfile.NamedTemporaryFile(mode = 'r+w', delete = False)
             for l in file_fd:
@@ -72,6 +75,7 @@ def convertCN(filenames, operation):
             output.close()
             shutil.copyfile(output.name, name)
             os.remove(output.name)
+    logger.info("convertCN done")
     return
 
 
@@ -164,9 +168,7 @@ def run_vcfstats(vcfs, out_dir, log_dir):
         vcfstats_command = ["java", utils.JAVA_XMX, "-jar", VARSIMJAR, "vcfstats", "-vcf",
                         in_vcf]
         logger.info("Executing command " + " ".join(vcfstats_command))
-        p_vcfstats = subprocess.Popen(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
-        logger.info(" with pid " + str(p_vcfstats.pid))
-        processes.append(p_vcfstats)
+        subprocess.check_call(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
     return processes
 
 
@@ -237,9 +239,8 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
                         "-vcf", sampling_vcf]
 
     logger.info("Executing command " + " ".join(rand_vcf_command))
-    p_rand_vcf = subprocess.Popen(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
-    logger.info(" with pid " + str(p_rand_vcf.pid))
-    return p_rand_vcf
+    subprocess.check_call(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
+    return
 
 
 def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file):
@@ -262,10 +263,9 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-dgv", os.path.realpath(dgv_file)]
 
     logger.info("Executing command " + " ".join(rand_dgv_command))
-    p_rand_dgv = subprocess.Popen(rand_dgv_command, stdout=out_vcf_fd, stderr=log_file_fd)
-    logger.info(" with pid " + str(p_rand_dgv.pid))
+    subprocess.check_call(rand_dgv_command, stdout=out_vcf_fd, stderr=log_file_fd)
 
-    return p_rand_dgv
+    return 
 
 def varsim_main(reference,
                 simulator, # use None to disable simulation
@@ -327,7 +327,7 @@ def varsim_main(reference,
         rand_vcf_out_fd = open(os.path.join(out_dir, "random.vc.vcf"), "w")
         rand_vcf_log_fd = open(os.path.join(log_dir, "RandVCF2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
-        processes.append(run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference))
+        run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference)
         open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
 
     if randdgv_options:
@@ -341,7 +341,7 @@ def varsim_main(reference,
         rand_dgv_stdout = open(os.path.join(out_dir, "random.sv.vcf"), "w")
         rand_dgv_stderr = open(os.path.join(log_dir, "RandDGV2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_dgv_stdout.name))
-        processes.append(run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq))
+        run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq)
         open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
     processes = monitor_processes(processes)
@@ -355,6 +355,7 @@ def varsim_main(reference,
     processes = run_vcfstats(variant_vcfs, out_dir, log_dir)
 
     if not disable_vcf2diploid:
+        logger.info("vcf2diploid started")
         vcf2diploid_stdout = open(os.path.join(out_dir, "vcf2diploid.out"), "w")
         vcf2diploid_stderr = open(os.path.join(log_dir, "vcf2diploid.err"), "w")
         vcf_arg_list = sum([["-vcf", v] for v in variant_vcfs], [])
@@ -362,13 +363,11 @@ def varsim_main(reference,
         vcf2diploid_command = ["java", utils.JAVA_XMX, "-jar", VARSIMJAR, "vcf2diploid",
                                "-t", sex,
                                "-id", sample_id,
-                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list
+                               "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list + ["-no_contig_id"]
 
         logger.info("Executing command " + " ".join(vcf2diploid_command))
-        p_vcf2diploid = subprocess.Popen(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
+        subprocess.check_call(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
                                          cwd=out_dir)
-        logger.info(" with pid " + str(p_vcf2diploid.pid))
-        processes.append(p_vcf2diploid)
 
         processes = monitor_processes(processes)
 
@@ -387,6 +386,7 @@ def varsim_main(reference,
         concatenate_files(vcfs_to_cat, merged_truth_vcf, header_str="#", simple_cat=False, remove_original=True)
 
         monitor_processes(run_vcfstats([merged_truth_vcf], out_dir, log_dir))
+        logger.info("vcf2diploid done")
 
         if lift_ref:
             lifted_dir = os.path.join(out_dir, "lifted")
@@ -497,9 +497,7 @@ def varsim_main(reference,
                                               "-ref %s/simulated.lane%d.ref " % (out_dir, i, out_dir, i)
                 fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
                 logger.info("Executing command " + fastq_liftover_command)
-		liftover_p = subprocess.Popen(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
-                logger.info(" with pid " + str(liftover_p.pid))
-                processes.append(liftover_p)
+                subprocess.check_call(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
                 fastqs.append(os.path.join(out_dir, "lane%d.read%d.fq.gz" % (i, end)))
         else:
             # liftover the read map files
@@ -510,9 +508,7 @@ def varsim_main(reference,
             read_map_liftover_command = "java %s -server -jar %s longislnd_liftover " % (utils.JAVA_XMX, VARSIMJAR) + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(out_dir, sample_id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(log_dir, "longislnd_liftover.err"), "w")
             logger.info("Executing command " + read_map_liftover_command )
-            read_map_liftover_p = subprocess.Popen(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
-            processes.append(read_map_liftover_p)
-            logger.info(" with pid " + str(read_map_liftover_p.pid))
+            subprocess.check_call(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
 
         monitor_processes(processes)
 
