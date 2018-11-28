@@ -100,7 +100,7 @@ public class VCFCompareResultsParser extends VarSimTool {
         // store true variants as canonical ones, but remember original form
         while (fpVcfParser.hasMoreInput()) {
             Variant currentVariant = fpVcfParser.parseLine();
-            if (intersector != null) {
+            if (intersector != null && currentVariant != null) {
                 if (!intersector.containsEndpoints(currentVariant.getChr(),
                         currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
                   currentVariant = null;
@@ -114,7 +114,7 @@ public class VCFCompareResultsParser extends VarSimTool {
         }
         while (tpVcfParser.hasMoreInput()) {
             Variant currentVariant = tpVcfParser.parseLine();
-            if (intersector != null) {
+            if (intersector != null && currentVariant != null) {
                 if (!intersector.containsEndpoints(currentVariant.getChr(),
                         currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
                     currentVariant = null;
@@ -129,7 +129,7 @@ public class VCFCompareResultsParser extends VarSimTool {
         }
         while (fnVcfParser.hasMoreInput()) {
             Variant currentVariant = fnVcfParser.parseLine();
-            if (intersector != null) {
+            if (intersector != null && currentVariant != null) {
                 if (!intersector.containsEndpoints(currentVariant.getChr(),
                         currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
                     currentVariant = null;
