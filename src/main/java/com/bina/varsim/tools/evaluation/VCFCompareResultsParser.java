@@ -5,6 +5,7 @@ import com.bina.intervalTree.ValueInterval1D;
 import com.bina.varsim.VarSimTool;
 import com.bina.varsim.VarSimToolNamespace;
 import com.bina.varsim.constants.Constant;
+import com.bina.varsim.types.BedFile;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.Genotypes;
 import com.bina.varsim.types.constraint.UnsatisfiedConstraintException;
@@ -58,6 +59,12 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-sv_length", usage = "SV length cutoff", metaVar = "SVLEN", hidden = false)
     public int SVLEN = Constant.SVLEN;
 
+    @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
+    String bedFilename = null;
+
+    @Option(name = "-bed_either", usage = "Use either break-end of the variant for filtering instead of both")
+    boolean bedEither;
+
     public VCFCompareResultsParser(final String command, final String description) {
         super(command, description);
     }
@@ -86,9 +93,19 @@ public class VCFCompareResultsParser extends VarSimTool {
         VCFparser fpVcfParser = new VCFparser(fpVcfFilename, null, false);
         outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN));
 
+
+        log.info("Using " + bedFilename + " to intersect");
+        BedFile intersector = bedFilename == null ? null : new BedFile(bedFilename);
+
         // store true variants as canonical ones, but remember original form
         while (fpVcfParser.hasMoreInput()) {
             Variant currentVariant = fpVcfParser.parseLine();
+            if (intersector != null) {
+                if (!intersector.containsEndpoints(currentVariant.getChr(),
+                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                  currentVariant = null;
+                }
+            }
             if (currentVariant == null) {
                 log.info("skip line");
                 continue;
@@ -97,6 +114,12 @@ public class VCFCompareResultsParser extends VarSimTool {
         }
         while (tpVcfParser.hasMoreInput()) {
             Variant currentVariant = tpVcfParser.parseLine();
+            if (intersector != null) {
+                if (!intersector.containsEndpoints(currentVariant.getChr(),
+                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                    currentVariant = null;
+                }
+            }
             if (currentVariant == null) {
                 log.info("skip line");
                 continue;
@@ -106,6 +129,12 @@ public class VCFCompareResultsParser extends VarSimTool {
         }
         while (fnVcfParser.hasMoreInput()) {
             Variant currentVariant = fnVcfParser.parseLine();
+            if (intersector != null) {
+                if (!intersector.containsEndpoints(currentVariant.getChr(),
+                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                    currentVariant = null;
+                }
+            }
             if (currentVariant == null) {
                 log.info("skip line");
                 continue;

@@ -248,7 +248,7 @@ def process(args):
 
     varsim_prefix = os.path.join(args.out_dir, 'varsim_compare_results')
     varsim_comparator = VarSimVCFComparator(prefix=varsim_prefix, true_vcf = args.true_vcf, reference = args.reference,
-                                            regions = args.regions,
+                                            regions = None,
                sample = args.sample, vcfs = args.vcfs,
                exclude_filtered = args.exclude_filtered,
                disallow_partial_fp = args.disallow_partial_fp,
@@ -274,7 +274,7 @@ def process(args):
         LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
         shutil.rmtree(vcfeval_prefix)
     vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = varsim_fn, reference = sdf,
-                                          regions = args.regions,
+                                          regions = None,
                                             sample = args.sample, vcfs = [varsim_fp],
                                             exclude_filtered = args.exclude_filtered,
                                             match_geno = args.match_geno, log_to_file= args.log_to_file,
@@ -287,7 +287,7 @@ def process(args):
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
     summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp,
-                      var_types= args.var_types, sv_length= args.sv_length)
+                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
 
 
 def print_stats(stats):
@@ -335,7 +335,7 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100):
+def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100, regions = None, bed_either = False):
     '''
     count variants by type and tabulate
     :param augmented_tp:
@@ -348,6 +348,10 @@ def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Inser
            '-fn', fn, '-fp', fp,
            '-sv_length', str(sv_length),
            ]
+    if regions:
+        cmd = cmd + ['-bed', regions]
+    if bed_either:
+        cmd = cmd + ['-bed_either']
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
     jsonfile = "{0}_report.json".format(prefix)
     metrics = ['tp', 'fp', 't', 'fn']
@@ -391,6 +395,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
     main_parser.add_argument("--vcfcompare_options", metavar="OPT", help="additional options for VarSim vcfcompare", default="", type = str)
     main_parser.add_argument("--vcfeval_options", metavar="OPT", help="additional options for RTG vcfeval", default="", type = str)
+    main_parser.add_argument("--bed_either", action = 'store_true', help="Use either break-end of the variant for filtering instead of both")
     main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
 
     args = main_parser.parse_args()
