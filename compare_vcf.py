@@ -357,10 +357,10 @@ def summarize_results(prefix, tp, fn, fp, t, var_types = ['SNP', 'Deletion', 'In
         cmd = cmd + ['-bed_either']
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
 
-    tp = os.path.join(prefix,"_tp.vcf")
-    fn = os.path.join(prefix,"_fn.vcf")
-    fp = os.path.join(prefix,"_fp.vcf")
-    t = os.path.join(prefix,"_t.vcf")
+    tp = prefix + "_tp.vcf"
+    fn = prefix + "_fn.vcf"
+    fp = prefix + "_fp.vcf"
+    t = prefix + "_t.vcf"
 
     tp = utils.sort_and_compress(tp)
     fn = utils.sort_and_compress(fn)
