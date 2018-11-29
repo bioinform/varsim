@@ -27,10 +27,10 @@ def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
     #varsim_tp + varsim_fn = T
     #T - augmented_tp = augmented_fn
     #varsim_fp - vcfeval_tp_predict = augmented_fp
-    augmented_tp = os.path.join(outdir, "augmented_tp.vcf")
-    augmented_t = os.path.join(outdir, "augmented_t.vcf")
-    augmented_fn = os.path.join(outdir, "augmented_fn.vcf")
-    augmented_fp = os.path.join(outdir, "augmented_fp.vcf")
+    augmented_tp = os.path.join(outdir, "merge_tp.vcf")
+    augmented_t = os.path.join(outdir, "merge_t.vcf")
+    augmented_fn = os.path.join(outdir, "merge_fn.vcf")
+    augmented_fp = os.path.join(outdir, "merge_fp.vcf")
     augmented_tp = utils.combine_vcf(augmented_tp, [varsim_tp, vcfeval_tp], duplicate_handling_mode=utils.COMBINE_KEEP_FIRST_DUPLICATE)
     augmented_t = utils.combine_vcf(augmented_t, [varsim_tp, varsim_fn], duplicate_handling_mode=utils.COMBINE_KEEP_FIRST_DUPLICATE)
 
@@ -39,7 +39,7 @@ def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
     #assumption: vcfeval_tp_predict is subset of varsim_fp
     augmented_fp = utils.combine_vcf(augmented_fp, [varsim_fp, vcfeval_tp_predict], duplicate_handling_mode=utils.COMBINE_KEEP_NO_DUPLICATE)
 
-    return augmented_tp, augmented_fn, augmented_fp
+    return augmented_tp, augmented_fn, augmented_fp, augmented_t
 
 
 class VCFComparator(object):
@@ -280,14 +280,14 @@ def process(args):
                                             match_geno = args.match_geno, log_to_file= args.log_to_file,
                                           opts = args.vcfeval_options)
     vcfeval_tp, vcfeval_tp_predict = vcfeval_comparator.get_tp(), vcfeval_comparator.get_tp_predict()
-    augmented_tp, augmented_fn, augmented_fp = merge_results(
+    augmented_tp, augmented_fn, augmented_fp, augmented_t = merge_results(
                       outdir = args.out_dir,
                       varsim_tp = varsim_tp, varsim_fn = varsim_fn,
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
+    summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
+                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
-    summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp,
-                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
 
 
 def print_stats(stats):
@@ -335,17 +335,19 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100, regions = None, bed_either = False):
+def summarize_results(prefix, tp, fn, fp, t, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100, regions = None, bed_either = False):
     '''
     count variants by type and tabulate
     :param augmented_tp:
     :param augmented_fn:
     :param augmented_fp:
+    :param augmented_t:
     :return:
     '''
     cmd = ['java', utils.JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
            '-prefix', prefix, '-tp',tp,
            '-fn', fn, '-fp', fp,
+           '-t', t, 
            '-sv_length', str(sv_length),
            ]
     if regions:
