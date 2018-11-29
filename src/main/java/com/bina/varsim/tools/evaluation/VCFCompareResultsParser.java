@@ -187,6 +187,7 @@ public class VCFCompareResultsParser extends VarSimTool {
                 throw new IllegalArgumentException();
             }
         }
+        vcfWriter.close();
     }
 }
 class CompareParams {
