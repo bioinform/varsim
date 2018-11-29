@@ -706,6 +706,7 @@ public class VCFparser extends GzFileParser<Variant> {
         while (line != null && line.startsWith("#")) {
             stringBuilder.append(line);
             stringBuilder.append("\n");
+            readLine();
         }
         try {
             this.bufferedReader.close(); //right now use this naive method to prevent more reading
