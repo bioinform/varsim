@@ -336,7 +336,7 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, t, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100, regions = None, bed_either = False):
+def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False):
     '''
     count variants by type and tabulate
     :param augmented_tp:
