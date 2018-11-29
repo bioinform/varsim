@@ -160,7 +160,7 @@ public class VCFCompareResultsParser extends VarSimTool {
                 e.printStackTrace();
             }
         }
-        vcfWriter.write(VCFWriter.extractHeader(filename));
+        vcfWriter.write(new VCFparser(filename, null, false).extractHeader());
         while (vcfParser.hasMoreInput()) {
             Variant currentVariant = vcfParser.parseLine();
             if (intersector != null && currentVariant != null) {

@@ -73,27 +73,4 @@ public class VCFWriter {
             (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n");
     return VCFHeader.toString();
   }
-
-  /**
-   * extract header from a VCF
-   * @param filename
-   */
-  public static String extractHeader(final String filename) {
-    File file = new File(filename);
-    StringBuilder stringBuilder = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      String l;
-      while ((l = br.readLine()) != null) {
-        if(l.startsWith("#")) {
-          stringBuilder.append(l);
-          stringBuilder.append("\n");
-        } else {
-          break;
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return stringBuilder.toString();
-  }
 }
