@@ -15,7 +15,10 @@ public enum ComparisonResultWriter {
   FP_WRITER("_FP.vcf", FileType.VCF),
   UNKNOWN_FP_WRITER("_unknown_FP.vcf", FileType.VCF),
   FN_WRITER("_FN.vcf", FileType.VCF),
-  JSON_WRITER("_report.json", FileType.JSON);
+  JSON_WRITER("_report.json", FileType.JSON),
+  tp_WRITER("_tp.vcf", FileType.VCF),
+  t_WRITER("_t.vcf", FileType.VCF),
+  fn_WRITER("_fn.vcf", FileType.VCF);
 
   private static final String encoding = "UTF-8";
   private FileType fileType;

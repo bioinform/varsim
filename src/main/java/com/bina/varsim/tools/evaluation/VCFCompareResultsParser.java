@@ -87,60 +87,14 @@ public class VCFCompareResultsParser extends VarSimTool {
 
         outputBlob.setParams(new CompareParams());
         // TODO: make it output the full list if variants in JSON
-
-        VCFparser tpVcfParser = new VCFparser(tpVcfFilename, null, false);
-        VCFparser fnVcfParser = new VCFparser(fnVcfFilename, null, false);
-        VCFparser fpVcfParser = new VCFparser(fpVcfFilename, null, false);
         outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN));
+        log.info("Using " + bedFilename + " to intersect.");
+        BedFile intersector = bedFilename == null ? null : new BedFile(bedFilename, bedEither);
 
+        countVariants(StatsNamespace.TP, tpVcfFilename, outputBlob, intersector);
+        countVariants(StatsNamespace.FP, fpVcfFilename, outputBlob, intersector);
+        countVariants(StatsNamespace.FN, fnVcfFilename, outputBlob, intersector);
 
-        log.info("Using " + bedFilename + " to intersect");
-        BedFile intersector = bedFilename == null ? null : new BedFile(bedFilename);
-
-        // store true variants as canonical ones, but remember original form
-        while (fpVcfParser.hasMoreInput()) {
-            Variant currentVariant = fpVcfParser.parseLine();
-            if (intersector != null && currentVariant != null) {
-                if (!intersector.containsEndpoints(currentVariant.getChr(),
-                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
-                  currentVariant = null;
-                }
-            }
-            if (currentVariant == null) {
-                log.info("skip line");
-                continue;
-            }
-            outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
-        }
-        while (tpVcfParser.hasMoreInput()) {
-            Variant currentVariant = tpVcfParser.parseLine();
-            if (intersector != null && currentVariant != null) {
-                if (!intersector.containsEndpoints(currentVariant.getChr(),
-                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
-                    currentVariant = null;
-                }
-            }
-            if (currentVariant == null) {
-                log.info("skip line");
-                continue;
-            }
-            outputBlob.getNumberOfTrueCorrect().incTP(currentVariant.getType(), currentVariant.maxLen());
-            outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
-        }
-        while (fnVcfParser.hasMoreInput()) {
-            Variant currentVariant = fnVcfParser.parseLine();
-            if (intersector != null && currentVariant != null) {
-                if (!intersector.containsEndpoints(currentVariant.getChr(),
-                        currentVariant.getGenotypeUnionAlternativeInterval(), bedEither)) {
-                    currentVariant = null;
-                }
-            }
-            if (currentVariant == null) {
-                log.info("skip line");
-                continue;
-            }
-            outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
-        }
         try(
                 PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
 
@@ -173,6 +127,58 @@ public class VCFCompareResultsParser extends VarSimTool {
             System.exit(1);
         }
         log.info("Done!"); // used to record the time
+    }
+
+    /**
+     * count variants per resultClass, optionally filter against a BED file if specified
+     *
+     * @param resultClass class of the file, i.e. true positive, false positive or false negative
+     * @param filename VCF containing variants
+     * @param intersector BED file object
+     */
+    private void countVariants(final StatsNamespace resultClass, final String filename, outputClass outputBlob, BedFile intersector) {
+        VCFparser vcfParser = new VCFparser(filename, null, false);
+        PrintWriter vcfWriter = null;
+        if (intersector != null) {
+            try {
+                if (resultClass == StatsNamespace.TP) {
+                    vcfWriter = tp_WRITER.getWriter(outPrefix);
+                } else if (resultClass == StatsNamespace.T) {
+                    vcfWriter = t_WRITER.getWriter(outPrefix);
+                } else if (resultClass == StatsNamespace.FN) {
+                    vcfWriter = fn_WRITER.getWriter(outPrefix);
+                } else {
+                    throw new IllegalArgumentException();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        vcfWriter.write(VCFWriter.extractHeader(filename));
+        while (vcfParser.hasMoreInput()) {
+            Variant currentVariant = vcfParser.parseLine();
+            if (intersector != null && currentVariant != null) {
+                if (intersector.containsEndpoints(currentVariant.getChr(),
+                        currentVariant.getGenotypeUnionAlternativeInterval())) {
+                    vcfWriter.write(currentVariant.toString());
+                } else {
+                    currentVariant = null;
+                }
+            }
+            if (currentVariant == null) {
+                continue;
+            }
+            if (resultClass == StatsNamespace.FP) {
+                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
+            } else if (resultClass == StatsNamespace.TP) {
+                outputBlob.getNumberOfTrueCorrect().incTP(currentVariant.getType(), currentVariant.maxLen());
+                outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
+            } else if (resultClass == StatsNamespace.FN) {
+                outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 }
 class CompareParams {

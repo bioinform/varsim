@@ -3,6 +3,9 @@ package com.bina.varsim.util;
 import com.bina.varsim.types.ChrString;
 import com.google.common.collect.ImmutableList;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
 
@@ -69,5 +72,27 @@ public class VCFWriter {
     VCFHeader.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT" +
             (sampleNames.isEmpty() ? "" : "\t") + joiner.toString() + "\n");
     return VCFHeader.toString();
+  }
+
+  /**
+   * extract header from a VCF
+   * @param filename
+   */
+  public static String extractHeader(final String filename) {
+    File file = new File(filename);
+    StringBuilder stringBuilder = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      String l;
+      while ((l = br.readLine()) != null) {
+        if(l.startsWith("#")) {
+          stringBuilder.append(l);
+        } else {
+          break;
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return stringBuilder.toString();
   }
 }
