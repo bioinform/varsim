@@ -50,6 +50,9 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-fp", usage = "False positive VCF file", metaVar = "file", required = true)
     String fpVcfFilename;
 
+    @Option(name = "-t", usage = "truth VCF file", metaVar = "file", required = true)
+    String tVcfFilename;
+
     @Option(name = "-prefix", usage = "prefix for output", metaVar = "string", required = true)
     String outPrefix = null;
 
@@ -94,6 +97,7 @@ public class VCFCompareResultsParser extends VarSimTool {
         countVariants(StatsNamespace.TP, tpVcfFilename, outputBlob, intersector);
         countVariants(StatsNamespace.FP, fpVcfFilename, outputBlob, intersector);
         countVariants(StatsNamespace.FN, fnVcfFilename, outputBlob, intersector);
+        countVariants(StatsNamespace.T, tVcfFilename, outputBlob, intersector);
 
         try(
                 PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
@@ -147,6 +151,8 @@ public class VCFCompareResultsParser extends VarSimTool {
                     vcfWriter = t_WRITER.getWriter(outPrefix);
                 } else if (resultClass == StatsNamespace.FN) {
                     vcfWriter = fn_WRITER.getWriter(outPrefix);
+                } else if (resultClass == StatsNamespace.FP) {
+                    vcfWriter = fp_WRITER.getWriter(outPrefix);
                 } else {
                     throw new IllegalArgumentException();
                 }
@@ -175,6 +181,8 @@ public class VCFCompareResultsParser extends VarSimTool {
                 outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
             } else if (resultClass == StatsNamespace.FN) {
                 outputBlob.getNumberOfTrueCorrect().incT(currentVariant.getType(), currentVariant.maxLen());
+            } else if (resultClass == StatsNamespace.T) {
+              //do nothing assuming FN+TP=T
             } else {
                 throw new IllegalArgumentException();
             }
