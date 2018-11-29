@@ -3,6 +3,9 @@ package com.bina.varsim.util;
 import com.bina.varsim.types.ChrString;
 import com.google.common.collect.ImmutableList;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
 

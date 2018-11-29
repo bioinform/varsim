@@ -27,10 +27,10 @@ def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
     #varsim_tp + varsim_fn = T
     #T - augmented_tp = augmented_fn
     #varsim_fp - vcfeval_tp_predict = augmented_fp
-    augmented_tp = os.path.join(outdir, "augmented_tp.vcf")
-    augmented_t = os.path.join(outdir, "augmented_t.vcf")
-    augmented_fn = os.path.join(outdir, "augmented_fn.vcf")
-    augmented_fp = os.path.join(outdir, "augmented_fp.vcf")
+    augmented_tp = os.path.join(outdir, "merge_tp.vcf")
+    augmented_t = os.path.join(outdir, "merge_t.vcf")
+    augmented_fn = os.path.join(outdir, "merge_fn.vcf")
+    augmented_fp = os.path.join(outdir, "merge_fp.vcf")
     augmented_tp = utils.combine_vcf(augmented_tp, [varsim_tp, vcfeval_tp], duplicate_handling_mode=utils.COMBINE_KEEP_FIRST_DUPLICATE)
     augmented_t = utils.combine_vcf(augmented_t, [varsim_tp, varsim_fn], duplicate_handling_mode=utils.COMBINE_KEEP_FIRST_DUPLICATE)
 
@@ -39,7 +39,7 @@ def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
     #assumption: vcfeval_tp_predict is subset of varsim_fp
     augmented_fp = utils.combine_vcf(augmented_fp, [varsim_fp, vcfeval_tp_predict], duplicate_handling_mode=utils.COMBINE_KEEP_NO_DUPLICATE)
 
-    return augmented_tp, augmented_fn, augmented_fp
+    return augmented_tp, augmented_fn, augmented_fp, augmented_t
 
 
 class VCFComparator(object):
@@ -248,7 +248,7 @@ def process(args):
 
     varsim_prefix = os.path.join(args.out_dir, 'varsim_compare_results')
     varsim_comparator = VarSimVCFComparator(prefix=varsim_prefix, true_vcf = args.true_vcf, reference = args.reference,
-                                            regions = args.regions,
+                                            regions = None,
                sample = args.sample, vcfs = args.vcfs,
                exclude_filtered = args.exclude_filtered,
                disallow_partial_fp = args.disallow_partial_fp,
@@ -274,20 +274,21 @@ def process(args):
         LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
         shutil.rmtree(vcfeval_prefix)
     vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = varsim_fn, reference = sdf,
-                                          regions = args.regions,
+                                          regions = None,
                                             sample = args.sample, vcfs = [varsim_fp],
                                             exclude_filtered = args.exclude_filtered,
                                             match_geno = args.match_geno, log_to_file= args.log_to_file,
                                           opts = args.vcfeval_options)
     vcfeval_tp, vcfeval_tp_predict = vcfeval_comparator.get_tp(), vcfeval_comparator.get_tp_predict()
-    augmented_tp, augmented_fn, augmented_fp = merge_results(
+    augmented_tp, augmented_fn, augmented_fp, augmented_t = merge_results(
                       outdir = args.out_dir,
                       varsim_tp = varsim_tp, varsim_fn = varsim_fn,
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
+    augmented_tp, augmented_fn, augmented_fp, augmented_t = summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
+                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
+
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
-    summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp,
-                      var_types= args.var_types, sv_length= args.sv_length)
 
 
 def print_stats(stats):
@@ -335,20 +336,37 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Insertion', 'Complex'], sv_length = 100):
+def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False):
     '''
     count variants by type and tabulate
     :param augmented_tp:
     :param augmented_fn:
     :param augmented_fp:
+    :param augmented_t:
     :return:
     '''
     cmd = ['java', utils.JAVA_XMX, '-jar', utils.VARSIMJAR, 'vcfcompareresultsparser',
            '-prefix', prefix, '-tp',tp,
            '-fn', fn, '-fp', fp,
+           '-t', t, 
            '-sv_length', str(sv_length),
            ]
+    if regions:
+        cmd = cmd + ['-bed', regions]
+    if bed_either:
+        cmd = cmd + ['-bed_either']
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
+
+    tp = prefix + "_tp.vcf"
+    fn = prefix + "_fn.vcf"
+    fp = prefix + "_fp.vcf"
+    t = prefix + "_t.vcf"
+
+    tp = utils.sort_and_compress(tp)
+    fn = utils.sort_and_compress(fn)
+    fp = utils.sort_and_compress(fp)
+    t = utils.sort_and_compress(t)
+
     jsonfile = "{0}_report.json".format(prefix)
     metrics = ['tp', 'fp', 't', 'fn']
     stats = {k: {ii: 0 for ii in metrics} for k in var_types}
@@ -363,7 +381,7 @@ def summarize_results(prefix, tp, fn, fp, var_types = ['SNP', 'Deletion', 'Inser
     parse_jsons(jsonfile, all_stats, count_all=True)
     print("Overall stats")
     print_stats(all_stats)
-    return
+    return tp, fn, fp, t
 
 
 if __name__ == "__main__":
@@ -391,6 +409,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
     main_parser.add_argument("--vcfcompare_options", metavar="OPT", help="additional options for VarSim vcfcompare", default="", type = str)
     main_parser.add_argument("--vcfeval_options", metavar="OPT", help="additional options for RTG vcfeval", default="", type = str)
+    main_parser.add_argument("--bed_either", action = 'store_true', help="Use either break-end of the variant for filtering instead of both")
     main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
 
     args = main_parser.parse_args()

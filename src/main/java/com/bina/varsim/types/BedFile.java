@@ -22,6 +22,7 @@ import java.io.IOException;
 public class BedFile {
     String _filename; // file name of the BED file
     chrSearchTree<SimpleInterval1D> bedST; // the interval search tree for bed file
+    boolean bedEither = false;
 
     /**
      * Reads the BED file into a search tree
@@ -36,6 +37,17 @@ public class BedFile {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * reads a BED file into a search tree
+     *
+     * @param filename BED file
+     * @param bedEither use either end to check overlap if true
+     */
+    public BedFile(final String filename, final boolean bedEither) {
+        this(filename);
+        this.bedEither = bedEither;
     }
 
     /**
@@ -114,6 +126,13 @@ public class BedFile {
                         bedST.contains(chr, new SimpleInterval1D(interval.getRight(), interval.getRight()));
             }
         }
+    }
+
+    /**
+     * same as containsEndpoints, but use either from constructor
+     */
+    public boolean containsEndpoints(ChrString chr, SimpleInterval1D interval) {
+        return containsEndpoints(chr, interval, bedEither);
     }
 
 
