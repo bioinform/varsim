@@ -284,8 +284,9 @@ def process(args):
                       outdir = args.out_dir,
                       varsim_tp = varsim_tp, varsim_fn = varsim_fn,
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
-    summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
+    augmented_tp, augmented_fn, augmented_fp, augmented_t = summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
                       var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
+
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
 
@@ -355,6 +356,12 @@ def summarize_results(prefix, tp, fn, fp, t, var_types = ['SNP', 'Deletion', 'In
     if bed_either:
         cmd = cmd + ['-bed_either']
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
+
+    tp = utils.sort_and_compress(tp)
+    fn = utils.sort_and_compress(fn)
+    fp = utils.sort_and_compress(fp)
+    t = utils.sort_and_compress(t)
+
     jsonfile = "{0}_report.json".format(prefix)
     metrics = ['tp', 'fp', 't', 'fn']
     stats = {k: {ii: 0 for ii in metrics} for k in var_types}
@@ -369,7 +376,7 @@ def summarize_results(prefix, tp, fn, fp, t, var_types = ['SNP', 'Deletion', 'In
     parse_jsons(jsonfile, all_stats, count_all=True)
     print("Overall stats")
     print_stats(all_stats)
-    return
+    return tp, fn, fp, t
 
 
 if __name__ == "__main__":
