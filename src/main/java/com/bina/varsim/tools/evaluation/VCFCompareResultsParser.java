@@ -143,22 +143,20 @@ public class VCFCompareResultsParser extends VarSimTool {
     private void countVariants(final StatsNamespace resultClass, final String filename, outputClass outputBlob, BedFile intersector) {
         VCFparser vcfParser = new VCFparser(filename, null, false);
         PrintWriter vcfWriter = null;
-        if (intersector != null) {
-            try {
-                if (resultClass == StatsNamespace.TP) {
-                    vcfWriter = tp_WRITER.getWriter(outPrefix);
-                } else if (resultClass == StatsNamespace.T) {
-                    vcfWriter = t_WRITER.getWriter(outPrefix);
-                } else if (resultClass == StatsNamespace.FN) {
-                    vcfWriter = fn_WRITER.getWriter(outPrefix);
-                } else if (resultClass == StatsNamespace.FP) {
-                    vcfWriter = fp_WRITER.getWriter(outPrefix);
-                } else {
-                    throw new IllegalArgumentException();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            if (resultClass == StatsNamespace.TP) {
+                vcfWriter = tp_WRITER.getWriter(outPrefix);
+            } else if (resultClass == StatsNamespace.T) {
+                vcfWriter = t_WRITER.getWriter(outPrefix);
+            } else if (resultClass == StatsNamespace.FN) {
+                vcfWriter = fn_WRITER.getWriter(outPrefix);
+            } else if (resultClass == StatsNamespace.FP) {
+                vcfWriter = fp_WRITER.getWriter(outPrefix);
+            } else {
+                throw new IllegalArgumentException();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         vcfWriter.write(new VCFparser(filename, null, false).extractHeader());
         while (vcfParser.hasMoreInput()) {
