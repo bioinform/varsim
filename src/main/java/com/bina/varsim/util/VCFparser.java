@@ -696,6 +696,25 @@ public class VCFparser extends GzFileParser<Variant> {
       }
     }
 
+    /**
+     * extract header from a VCF
+     * must be run before parseLine, otherwise may return nothing
+     */
+    public String extractHeader() {
+        readLine();
+        StringBuilder stringBuilder = new StringBuilder();
+        while (line != null && line.startsWith("#")) {
+            stringBuilder.append(line);
+            stringBuilder.append("\n");
+        }
+        try {
+            this.bufferedReader.close(); //right now use this naive method to prevent more reading
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stringBuilder.toString();
+    }
+
     public Variant parseLine() {
         /*
         TODO: line reading should be handled in a loop calling
