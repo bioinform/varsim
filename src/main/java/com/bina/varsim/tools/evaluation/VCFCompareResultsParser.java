@@ -166,7 +166,7 @@ public class VCFCompareResultsParser extends VarSimTool {
             if (intersector != null && currentVariant != null) {
                 if (intersector.containsEndpoints(currentVariant.getChr(),
                         currentVariant.getGenotypeUnionAlternativeInterval())) {
-                    vcfWriter.write(currentVariant.toString());
+                    vcfWriter.write(currentVariant.toString() + "\n");
                 } else {
                     currentVariant = null;
                 }

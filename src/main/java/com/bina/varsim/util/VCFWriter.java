@@ -86,6 +86,7 @@ public class VCFWriter {
       while ((l = br.readLine()) != null) {
         if(l.startsWith("#")) {
           stringBuilder.append(l);
+          stringBuilder.append("\n");
         } else {
           break;
         }
