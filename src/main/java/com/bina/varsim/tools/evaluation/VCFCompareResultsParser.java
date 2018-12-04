@@ -164,7 +164,6 @@ public class VCFCompareResultsParser extends VarSimTool {
             if (intersector != null && currentVariant != null) {
                 if (intersector.containsEndpoints(currentVariant.getChr(),
                         currentVariant.getGenotypeUnionAlternativeInterval())) {
-                    vcfWriter.write(currentVariant.toString() + "\n");
                 } else {
                     currentVariant = null;
                 }
@@ -172,6 +171,7 @@ public class VCFCompareResultsParser extends VarSimTool {
             if (currentVariant == null) {
                 continue;
             }
+            vcfWriter.write(currentVariant.toString() + "\n");
             if (resultClass == StatsNamespace.FP) {
                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
             } else if (resultClass == StatsNamespace.TP) {
