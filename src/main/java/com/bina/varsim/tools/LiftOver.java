@@ -69,12 +69,16 @@ public class LiftOver extends VarSimTool {
             stringBuilder.append(liftedInterval.getStart());
             stringBuilder.append("\t");
             stringBuilder.append(liftedInterval.getEnd());
-            stringBuilder.append("\t");
             // try to write whatever original input file has
-            if (fields.length >= 6) {
+            if (fields.length >= 4) {
+              stringBuilder.append("\t");
               stringBuilder.append(fields[3]);
+            }
+            if (fields.length >= 5) {
               stringBuilder.append("\t");
               stringBuilder.append(fields[4]);
+            }
+            if (fields.length >= 6) {
               stringBuilder.append("\t");
               stringBuilder.append(liftedInterval.getStrand().toString());
             }
