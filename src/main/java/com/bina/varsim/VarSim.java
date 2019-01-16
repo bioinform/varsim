@@ -2,6 +2,7 @@ package com.bina.varsim;
 
 import com.bina.varsim.fastqLiftover.FastqLiftOver;
 import com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver;
+import com.bina.varsim.tools.LiftOver;
 import com.bina.varsim.tools.VCFstats;
 import com.bina.varsim.tools.evaluation.JSONInserter;
 import com.bina.varsim.tools.evaluation.SAMcompare;
@@ -43,6 +44,7 @@ public class VarSim {
                 + "      --= Internal =-- \n"
                 + "       vcf2diploid    -- Enhanced version of vcf2diploid from alleleseq \n"
                 + "       fastq_liftover -- Lifts over simulated FASTQ files to reference coordinates \n"
+                + "       liftover       -- Lifts a file to desired coordinates \n"
                 + "\n";
 
         System.err.println(VarSim.class.getSimpleName() + " " + VERSION);
@@ -91,6 +93,9 @@ public class VarSim {
                 break;
             case RandSequenceVCF:
                 new RandSequenceVCF(command, description).run(pass_args);
+                break;
+            case LiftOver:
+                new LiftOver(command, description).run(pass_args);
                 break;
             case Help:
                 printUsage();
