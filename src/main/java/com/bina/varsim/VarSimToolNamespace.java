@@ -13,7 +13,7 @@ public enum VarSimToolNamespace {
     FastqLiftover("fastq_liftover", "Lift FASTQs to the right reference", com.bina.varsim.fastqLiftover.FastqLiftOver.class),
     LongISLNDLiftover("longislnd_liftover", "Lift read map files to the right reference", com.bina.varsim.fastqLiftover.LongISLNDReadMapLiftOver.class),
     JSONInserter("json_inserter", "Inserts n JSON files to one HTML to create n HTML files", com.bina.varsim.tools.evaluation.JSONInserter.class),
-    LiftOver("liftover", "Lift over a file to desired coordinates", com.bina.varsim.tools.evaluation.VCFcompare.class),
+    LiftOver("liftover", "Lift over a file to desired coordinates", com.bina.varsim.tools.LiftOver.class),
     Help("-help", null, null, new String[]{"-h"}),
     Version("-version", null, null),
     Unknown("", null, null);
