@@ -14,7 +14,7 @@ import java.util.*;
 public class MapBlocks {
     public final static Logger log = Logger.getLogger(MapBlocks.class.getName());
     public final static int MIN_LENGTH_INTERVAL = 10;
-    public Map<ChrString, NavigableSet<MapBlock>> chrBlocks;
+    public Map<ChrString, NavigableMap<MapBlock, List<MapBlock>>> chrBlocks;
 
     public MapBlocks(final File mapFile) throws IOException, IllegalArgumentException {
         MapFileReader mfr = new MapFileReader(mapFile);
@@ -24,9 +24,12 @@ public class MapBlocks {
         while ((mapBlock = mfr.getNext()) != null) {
             final ChrString chromosome = mapBlock.srcLoc.chromosome;
             if (!chrBlocks.containsKey(chromosome)) {
-                chrBlocks.put(chromosome, new TreeSet<MapBlock>());
+                chrBlocks.put(chromosome, new TreeMap<MapBlock, List<MapBlock>>());
             }
-            chrBlocks.get(chromosome).add(mapBlock);
+            if (!chrBlocks.get(chromosome).containsKey(mapBlock)) {
+                chrBlocks.get(chromosome).put(mapBlock, new ArrayList<>());
+            }
+            chrBlocks.get(chromosome).get(mapBlock).add(mapBlock);
         }
     }
 
@@ -40,52 +43,53 @@ public class MapBlocks {
             return liftedLocs;
         }
 
-        final NavigableSet<MapBlock> blocks = chrBlocks.get(chromosome);
-        final NavigableSet<MapBlock> subset = blocks.headSet(keyEnd, true).tailSet(blocks.headSet(keyStart, true).last(), true);
+        final NavigableMap<MapBlock, List<MapBlock>> blocks = chrBlocks.get(chromosome);
+        final NavigableMap<MapBlock, List<MapBlock>> subset = blocks.headMap(keyEnd, true).tailMap(blocks.headMap(keyStart, true).lastKey(), true);
 
-        Iterator<MapBlock> it = subset.iterator();
+        Iterator<List<MapBlock>> it = subset.values().iterator();
         log.trace("Going to lift over " + chromosome + ":[" + start + "," + (end - 1) + "](" + direction + ")");
 
         boolean seenIns = false;
         boolean seenDel = false;
         while (it.hasNext()) {
-            final MapBlock b = it.next();
-            if (b.blockType == MapBlock.BlockType.INS || b.blockType == MapBlock.BlockType.DEL) {
-                if ((b.blockType == MapBlock.BlockType.INS && !seenIns) || (b.blockType == MapBlock.BlockType.DEL && !seenDel)) {
-                    GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
-                    liftedLoc.feature = b.blockType;
-                    liftedLoc.direction = direction;
-                    liftedLocs.add(liftedLoc);
-                    if (b.blockType == MapBlock.BlockType.INS) seenIns = true;
-                    if (b.blockType == MapBlock.BlockType.DEL) seenDel = true;
-                } else {
-                    log.trace("Skipping block " + b + " since it's an INS/DEL");
+            for (MapBlock b : it.next()) {
+                if (b.blockType == MapBlock.BlockType.INS || b.blockType == MapBlock.BlockType.DEL) {
+                    if ((b.blockType == MapBlock.BlockType.INS && !seenIns) || (b.blockType == MapBlock.BlockType.DEL && !seenDel)) {
+                        GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
+                        liftedLoc.feature = b.blockType;
+                        liftedLoc.direction = direction;
+                        liftedLocs.add(liftedLoc);
+                        if (b.blockType == MapBlock.BlockType.INS) seenIns = true;
+                        if (b.blockType == MapBlock.BlockType.DEL) seenDel = true;
+                    } else {
+                        log.trace("Skipping block " + b + " since it's an INS/DEL");
+                    }
+                    continue;
                 }
-                continue;
+
+                int intervalStart = Math.max(start, b.srcLoc.location);
+                int intervalEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
+                int lengthOfInterval = intervalEnd - intervalStart + 1;
+
+                log.trace("intervalStart = " + intervalStart + " intervalEnd = " + intervalEnd + " lengthOfInterval = " + lengthOfInterval);
+
+                if (lengthOfInterval < MIN_LENGTH_INTERVAL) {
+                    log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
+                    continue;
+                }
+
+                GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
+                liftedLoc.feature = b.blockType;
+                if (b.direction == 0) {
+                    liftedLoc.location = b.dstLoc.location + start - b.srcLoc.location;
+                    liftedLoc.direction = direction;
+                } else {
+                    liftedLoc.location = b.dstLoc.location + b.size - (end - (b.srcLoc.location + 1));
+                    liftedLoc.direction = 1 - direction;
+                }
+                log.trace(chromosome + ":[" + intervalStart + "," + intervalEnd + "](" + direction + ") lifted to " + liftedLoc + " using block " + b);
+                liftedLocs.add(liftedLoc);
             }
-
-            int intervalStart = Math.max(start, b.srcLoc.location);
-            int intervalEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
-            int lengthOfInterval = intervalEnd - intervalStart + 1;
-
-            log.trace("intervalStart = " + intervalStart + " intervalEnd = " + intervalEnd + " lengthOfInterval = " + lengthOfInterval);
-
-            if (lengthOfInterval < MIN_LENGTH_INTERVAL) {
-                log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
-                continue;
-            }
-
-            GenomeLocation liftedLoc = new GenomeLocation(b.dstLoc.chromosome, b.dstLoc.location);
-            liftedLoc.feature = b.blockType;
-            if (b.direction == 0) {
-                liftedLoc.location = b.dstLoc.location + start - b.srcLoc.location;
-                liftedLoc.direction = direction;
-            } else {
-                liftedLoc.location = b.dstLoc.location + b.size - (end - (b.srcLoc.location + 1));
-                liftedLoc.direction = 1 - direction;
-            }
-            log.trace(chromosome + ":[" + intervalStart + "," + intervalEnd + "](" + direction + ") lifted to " + liftedLoc + " using block " + b);
-            liftedLocs.add(liftedLoc);
         }
         return liftedLocs;
     }
@@ -104,50 +108,46 @@ public class MapBlocks {
             return readMapBlocks;
         }
 
-        final NavigableSet<MapBlock> blocks = chrBlocks.get(chromosome);
-        final NavigableSet<MapBlock> subset = blocks.headSet(keyEnd, true).tailSet(blocks.headSet(keyStart, true).last(), true);
+        final NavigableMap<MapBlock, List<MapBlock>> blocks = chrBlocks.get(chromosome);
+        final NavigableMap<MapBlock, List<MapBlock>> subset = blocks.headMap(keyEnd, true).tailMap(blocks.headMap(keyStart, true).lastKey(), true);
 
-        Iterator<MapBlock> it = subset.iterator();
+        Iterator<List<MapBlock>> it = subset.values().iterator();
         log.trace("Going to lift over " + interval);
 
         int intervalOffset = 0;
         while (it.hasNext()) {
-            final MapBlock b = it.next();
+            for (MapBlock b : it.next()) {
 
-            int srcStart = Math.max(start, b.srcLoc.location);
-            int srcEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
-            int lengthOfInterval = srcEnd - srcStart + 1;
-            final int lengthOfIntervalOnRead = b.blockType != MapBlock.BlockType.DEL ? lengthOfInterval : 0;
-            final int lengthOfIntervalOnRef = b.blockType != MapBlock.BlockType.INS ? lengthOfInterval : 0;
+                int srcStart = Math.max(start, b.srcLoc.location);
+                int srcEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
+                int lengthOfInterval = srcEnd - srcStart + 1;
+                final int lengthOfIntervalOnRead = b.blockType != MapBlock.BlockType.DEL ? lengthOfInterval : 0;
+                final int lengthOfIntervalOnRef = b.blockType != MapBlock.BlockType.INS ? lengthOfInterval : 0;
 
-            log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
+                log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
 
-            if (lengthOfInterval < minIntervalLength) {
-                log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
-            } else {
-                final GenomeInterval liftedInterval = new GenomeInterval();
-                liftedInterval.chromosome = b.dstLoc.chromosome;
-                liftedInterval.feature = b.blockType;
-                if (b.direction == 0) {
-                    liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location;
-                    liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
-                    liftedInterval.strand = interval.strand;
+                if (lengthOfInterval < minIntervalLength) {
+                    log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
                 } else {
-                    liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd);
-                    liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
-                    liftedInterval.strand = interval.strand == Strand.POSITIVE ? Strand.NEGATIVE : Strand.POSITIVE;
+                    final GenomeInterval liftedInterval = new GenomeInterval();
+                    liftedInterval.chromosome = b.dstLoc.chromosome;
+                    liftedInterval.feature = b.blockType;
+                    if (b.direction == 0) {
+                        liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location;
+                        liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
+                        liftedInterval.strand = interval.strand;
+                    } else {
+                        liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd);
+                        liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
+                        liftedInterval.strand = interval.strand == Strand.POSITIVE ? Strand.NEGATIVE : Strand.POSITIVE;
+                    }
+
+                    readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead, liftedInterval));
                 }
-
-                readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead, liftedInterval));
+                intervalOffset += lengthOfIntervalOnRead;
             }
-            intervalOffset += lengthOfIntervalOnRead;
         }
-
         return readMapBlocks;
-    }
-
-    public Collection<ReadMapBlock> liftOverGenomeInterval(final GenomeInterval interval) {
-        return liftOverGenomeInterval(interval, MIN_LENGTH_INTERVAL);
     }
 
     public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord, final int minIntervalLength) {
@@ -163,9 +163,5 @@ public class MapBlocks {
             liftedReadMaps.add(liftedReadMapBlocks);
         }
         return new ReadMapRecord(readMapRecord.getReadName(), liftedReadMaps);
-    }
-
-    public ReadMapRecord liftOverReadMapRecord(final ReadMapRecord readMapRecord) {
-        return liftOverReadMapRecord(readMapRecord, MIN_LENGTH_INTERVAL);
     }
 }
