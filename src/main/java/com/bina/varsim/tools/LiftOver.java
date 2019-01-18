@@ -58,7 +58,7 @@ public class LiftOver extends VarSimTool {
         String line;
         while ((line = fileToLift.readLine()) != null) {
           String[] fields = line.split("\t");
-          GenomeInterval interval = new GenomeInterval(new ChrString(fields[0]), Integer.parseInt(fields[1]), Integer.parseInt(fields[2]),
+          GenomeInterval interval = new GenomeInterval(new ChrString(fields[0]), Integer.parseInt(fields[1]) + 1, Integer.parseInt(fields[2]),
                   fields.length >= 6 ? Strand.decode(fields[5]) : Strand.FORWARD, MapBlock.BlockType.UNKNOWN);
           Collection<ReadMapBlock> liftedReadMapBlocks = mapBlocks.liftOverGenomeInterval(interval, 1);
           for (ReadMapBlock i : liftedReadMapBlocks) {
@@ -66,7 +66,7 @@ public class LiftOver extends VarSimTool {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(liftedInterval.getChromosome().toString());
             stringBuilder.append("\t");
-            stringBuilder.append(liftedInterval.getStart());
+            stringBuilder.append(liftedInterval.getStart() - 1);
             stringBuilder.append("\t");
             stringBuilder.append(liftedInterval.getEnd());
             // try to write whatever original input file has
