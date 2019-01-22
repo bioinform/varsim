@@ -17,7 +17,9 @@ def process_args(args):
         None
     """
     outfile = args.prefix + ".map"
-    with open(outfile,'w') as fh:
+    outfile_paternal = args.prefix + ".paternal.map"
+    outfile_maternal = args.prefix + ".maternal.map"
+    with open(outfile, 'w') as fh, open(outfile_paternal, 'w') as fh_paternal, open(outfile_maternal, 'w') as fh_maternal:
         for l in args.map:
             fields = l.split("\t")
             # exchange source and destination chromosomes
@@ -29,17 +31,26 @@ def process_args(args):
                 fields[6] = 'INS'
             elif fields[6] == 'INS':
                 fields[6] = 'DEL'
-            fh.write("\t".join(fields))
+            flipped_line = "\t".join(fields)
+            fh.write(flipped_line)
+            if args.split_haplotype:
+                if fields[3].endswith('_paternal'):
+                    fh_paternal.write(flipped_line)
+                if fields[3].endswith('_maternal'):
+                    fh_maternal.write(flipped_line)
     logger.info("{} done.".format(outfile))
+    if args.split_haplotype:
+        logger.info("{} {} done.".format(outfile_paternal, outfile_maternal))
     return
 if __name__ == "__main__":
     INFO_FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
     DEBUG_FORMAT = '%(levelname)s %(asctime)-15s %(name)-15s %(funcName)-20s %(message)s'
 
-    parser = argparse.ArgumentParser(description="Flip map file", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description="Flip map file (for internal use)", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("prefix", type = str, help = 'output prefix')
     parser.add_argument("map", type = argparse.FileType('r'), help = 'VarSim map file')
+    parser.add_argument("--split_haplotype", action = 'store_true', help = 'Split destination (after flipping) *_paternal and *_maternal (if any) chromosomes into separate files')
     parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
     parser.add_argument("--verbose","-v", action = 'count',  help='increase verbosity')
     args = parser.parse_args()
