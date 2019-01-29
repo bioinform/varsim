@@ -18,12 +18,11 @@ PYTHON_DIR=${OPT_DIR}/miniconda2 && rm -rf ${PYTHON_DIR}
 CONDA=Miniconda2-latest-Linux-x86_64.sh
 wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && sh ${CONDA} -b -p ${PYTHON_DIR}\
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install -I pysam==0.15.0\
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install -I pyvcf==0.6.8\
+    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install pysam==0.15.0\
+    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install pyvcf==0.6.8\
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/conda install --yes -c daler pybedtools=0.7.2 bedtools=2.25.0 \
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install -I pandas==0.23.3\
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install -I numpy==1.15.0\
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install -I scipy==1.1.0\
+    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install numpy==1.15.0\
+    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install scipy==1.1.0\
     && rm -f ${CONDA}
 
 wget -O- http://mirrors.sonic.net/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar zxvf -
