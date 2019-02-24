@@ -80,10 +80,11 @@ public class SimpleReference {
                 CreateSequenceDictionary sequenceDictionaryCreator = new CreateSequenceDictionary(filename);
             }
             IndexedFastaSequenceFile fa = new IndexedFastaSequenceFile(f);
-            for (SAMSequenceRecord s : fa.getSequenceDictionary().getSequences()) {
-                ChrString name = new ChrString(s.getSequenceName());
-                if (!name.toString().equals(s.getSequenceName())) {
-                    throw new IllegalArgumentException("Internal name " + name + " is different from name in file (" + filename + "): " + s.getSequenceName());
+            ReferenceSequence s = null;
+            while ( (s = fa.nextSequence()) != null) {
+                ChrString name = new ChrString(s.getName());
+                if (!name.toString().equals(s.getName())) {
+                    throw new IllegalArgumentException("Internal name " + name + " is different from name in file (" + filename + "): " + s.getName());
                 }
                 if (!data.containsKey(name)) {
                     data.put(name, null); //be lazy here
@@ -176,7 +177,7 @@ public class SimpleReference {
      */
     public int getRefLen(ChrString chr_name) {
         if (data.containsKey(chr_name)) {
-            return dataSources.get(chr_name).getSequenceDictionary().getSequence(chr_name.toString()).getSequenceLength();
+            return dataSources.get(chr_name).getSequence(chr_name.toString()).length();
         } else {
             return 0;
         }
