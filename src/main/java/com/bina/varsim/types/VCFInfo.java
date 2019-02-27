@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 
 import java.rmi.UnexpectedException;
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -25,13 +26,13 @@ public class VCFInfo {
         this.info2Value = new HashMap<String, VCFInfoElement>();
         Iterable<String> infos = Splitter.on(';').split(infoString);
         for (String i : infos) {
-            List<String> keyAndValue = newArrayList(Splitter.on('=').split(i));
+            String[] keyAndValue = StreamSupport.stream(Splitter.on('=').split(i).spliterator(), false).toArray(String[]::new);
 
-            if (keyAndValue.size() > 1) {
-                this.info2Value.put(keyAndValue.get(0), new VCFInfoElement(keyAndValue.get(0), keyAndValue.get(1)));
+            if (keyAndValue.length > 1) {
+                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue.get(0), new VCFInfoElement(Boolean.class));
+                this.info2Value.put(keyAndValue[0], new VCFInfoElement(Boolean.class));
             }
         }
     }
@@ -57,7 +58,7 @@ public class VCFInfo {
          */
         public VCFInfoElement(final String id, String vcfIdValue) throws UnexpectedException {
             this.type = getType(id);
-            String[] valueArray = vcfIdValue.split(",");
+            String[] valueArray = StreamSupport.stream(Splitter.on(',').split(vcfIdValue).spliterator(), false).toArray(String[]::new);
             if (type == int[].class) {
                 int[] nums = new int[valueArray.length];
                 for (int i = 0; i < valueArray.length; i++) {
