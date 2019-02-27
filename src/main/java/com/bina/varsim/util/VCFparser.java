@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
 import static com.bina.varsim.types.VCFInfo.getType;
@@ -220,7 +221,7 @@ public class VCFparser extends GzFileParser<Variant> {
     public Variant processLine(String line) throws UnexpectedException {
 
         // try to determine the column we should read for the genotype
-        List<String> toks = Lists.newArrayList(Splitter.on('\t').split(line));
+        String[] toks = StreamSupport.stream(Splitter.on('\t').split(line).spliterator(), false).toArray(String[]::new);
         if (line.startsWith("#")) {
             if (sampleId != null && line.startsWith("#CHROM")) {
                 chromLineSeen = true;
@@ -232,8 +233,8 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
             } else if (sampleId == null) {
                 sampleIndex = 10; // the first sample
-                if (line.startsWith("#CHROM") && toks.size() >= sampleIndex) {
-                    sampleId = toks.get(sampleIndex - 1);
+                if (line.startsWith("#CHROM") && toks.length >= sampleIndex) {
+                    sampleId = toks[sampleIndex - 1];
                 }
             }
             return null;
