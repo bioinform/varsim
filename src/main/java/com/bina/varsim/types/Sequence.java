@@ -33,6 +33,29 @@ public class Sequence {
     }
 
     /**
+     * check if the sequence is normal (consisting of normal characters)
+     * empty sequence is considered false
+     * @param s
+     * @return
+     */
+    public static boolean isNormalSequence(final String s) {
+        if (s.length() == 0) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+          char ch = s.charAt(i);
+          if (ch == A || ch == T || ch == C || ch == G ||
+                  ch == a || ch == t || ch == c || ch == g ||
+                  ch == n || ch == N) {
+              ;
+          } else {
+              return false;
+          }
+        }
+        return true;
+    }
+
+    /**
      * Returns the complement of a single byte.
      * TODO replace this with look-up table
      */
