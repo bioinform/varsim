@@ -1,9 +1,11 @@
 package com.bina.varsim.types;
 
+import com.google.common.base.Splitter;
+
 import java.rmi.UnexpectedException;
 import java.util.*;
-import java.util.concurrent.Exchanger;
-import java.util.function.BooleanSupplier;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Created by guoy28 on 10/5/16.
@@ -21,14 +23,15 @@ public class VCFInfo {
      */
     public VCFInfo(final String infoString) throws UnexpectedException {
         this.info2Value = new HashMap<String, VCFInfoElement>();
-        String[] infos = infoString.split(";");
-        for (int i = 0; i < infos.length; i++) {
-            String[] keyAndValue = infos[i].split("=");
-            if (keyAndValue.length > 1) {
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
+        Iterable<String> infos = Splitter.on(';').split(infoString);
+        for (String i : infos) {
+            List<String> keyAndValue = newArrayList(Splitter.on('=').split(i));
+
+            if (keyAndValue.size() > 1) {
+                this.info2Value.put(keyAndValue.get(0), new VCFInfoElement(keyAndValue.get(0), keyAndValue.get(1)));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement(Boolean.class));
+                this.info2Value.put(keyAndValue.get(0), new VCFInfoElement(Boolean.class));
             }
         }
     }
