@@ -50,7 +50,7 @@ public class VCFInfo {
             String i = infos.nextToken();
             StringTokenizer keyAndValue = new StringTokenizer(i, "=");
             String key = keyAndValue.nextToken();
-            if (keyAndValue.countTokens() >= 1) {
+            if (keyAndValue.hasMoreTokens()) {
                 String value = keyAndValue.nextToken();
                 this.info2Value.put(key, new VCFInfoElement(key, value));
             } else {
