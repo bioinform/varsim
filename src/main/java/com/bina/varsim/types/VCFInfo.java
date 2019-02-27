@@ -21,7 +21,7 @@ public class VCFInfo {
      * @param args
      */
     public static void main(String[] args) {
-        int n = 1000000;
+        int n = 100000000;
         String s = "skdflsd=ksdfkd";
         Long start = System.nanoTime();
         for (int i = 0; i < n; i++) {
@@ -37,6 +37,10 @@ public class VCFInfo {
             }
         }
         System.out.println(System.nanoTime() - start);
+        /*result (one run):
+        17406471500
+        10075541193
+         */
     }
     /**
      * parse INFO field string
