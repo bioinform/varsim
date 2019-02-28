@@ -39,7 +39,7 @@ public class Sequence {
      * @return
      */
     public static boolean isNormalSequence(final String s) {
-        if (s.length() == 0) {
+        if (s == null || s.length() == 0) {
             return false;
         }
         for (int i = 0; i < s.length(); i++) {

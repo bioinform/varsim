@@ -81,7 +81,7 @@ public class StringUtilities {
      * @return
      */
     public static boolean isNonNegativeInteger(final String s) {
-      if (s.length() == 0) {
+      if (s == null || s.length() == 0) {
           return false;
       }
       for (int i = 0; i < s.length(); i++) {
