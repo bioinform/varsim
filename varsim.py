@@ -249,7 +249,6 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
     rand_dgv_command = ["java", utils.JAVA_XMX, "-jar", VARSIMJAR, "randdgv2vcf",
                         "-t", sex,
                         "-seed", str(seed),
-                        options.output_all,
                         "-num_ins", str(options.num_ins),
                         "-num_del", str(options.num_del),
                         "-num_dup", str(options.num_dup),
@@ -261,6 +260,8 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
                         "-dgv", os.path.realpath(dgv_file)]
+    if len(options.output_all.strip()) > 0:
+        rand_dgv_command.append(options.output_all)
 
     logger.info("Executing command " + " ".join(rand_dgv_command))
     subprocess.check_call(rand_dgv_command, stdout=out_vcf_fd, stderr=log_file_fd)
