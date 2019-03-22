@@ -707,6 +707,16 @@ public class VCFparser extends GzFileParser<Variant> {
             stringBuilder.append("\n");
             readLine();
         }
+
+        //readLine automatically close filehandle when no more lines
+        if (line != null) {
+            try {
+                this.bufferedReader.close(); //right now use this naive method to prevent more reading
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         return stringBuilder.toString();
     }
 
