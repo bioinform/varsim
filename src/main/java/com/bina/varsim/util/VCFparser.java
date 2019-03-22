@@ -701,17 +701,11 @@ public class VCFparser extends GzFileParser<Variant> {
      * must be run before parseLine, otherwise may return nothing
      */
     public String extractHeader() {
-        readLine();
         StringBuilder stringBuilder = new StringBuilder();
         while (line != null && line.startsWith("#")) {
             stringBuilder.append(line);
             stringBuilder.append("\n");
             readLine();
-        }
-        try {
-            this.bufferedReader.close(); //right now use this naive method to prevent more reading
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return stringBuilder.toString();
     }
