@@ -1,9 +1,11 @@
 package com.bina.varsim.types;
 
+import com.bina.varsim.util.StringUtilities;
+import com.google.common.base.Splitter;
+
 import java.rmi.UnexpectedException;
 import java.util.*;
-import java.util.concurrent.Exchanger;
-import java.util.function.BooleanSupplier;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by guoy28 on 10/5/16.
@@ -15,20 +17,49 @@ public class VCFInfo {
     final private Map<String, VCFInfoElement> info2Value;
 
     /**
+     * compare speed of different string splitting methods
+     * @param args
+     */
+    public static void main(String[] args) {
+        int n = 100000000;
+        String s = "skdflsd=ksdfkd";
+        Long start = System.nanoTime();
+        for (int i = 0; i < n; i++) {
+           String[] x = StreamSupport.stream(Splitter.on('=').split(s).spliterator(), false).toArray(String[]::new);
+        }
+        System.out.println(System.nanoTime() - start);
+        start = System.nanoTime();
+        for (int i = 0; i < n; i++) {
+            StringTokenizer st = new StringTokenizer(s, "=");
+            String[] x = new String[st.countTokens()];
+            for (int j = 0; j < x.length; j++) {
+                x[j] = st.nextToken();
+            }
+        }
+        System.out.println(System.nanoTime() - start);
+        /*result (one run):
+        17406471500
+        10075541193
+         */
+    }
+    /**
      * parse INFO field string
      * store each key value pair in a map
      * @param infoString
      */
     public VCFInfo(final String infoString) throws UnexpectedException {
         this.info2Value = new HashMap<String, VCFInfoElement>();
-        String[] infos = infoString.split(";");
-        for (int i = 0; i < infos.length; i++) {
-            String[] keyAndValue = infos[i].split("=");
-            if (keyAndValue.length > 1) {
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement(keyAndValue[0], keyAndValue[1]));
+        StringTokenizer infos = new StringTokenizer(infoString, ";");
+        while (infos.hasMoreTokens()) {
+            String i = infos.nextToken();
+            StringTokenizer keyAndValue = new StringTokenizer(i, "=");
+            String key = keyAndValue.nextToken();
+            if (keyAndValue.hasMoreTokens()) {
+                String value = keyAndValue.nextToken();
+                this.info2Value.put(key, new VCFInfoElement(key, value));
             } else {
                 //must be boolean or flag
-                this.info2Value.put(keyAndValue[0], new VCFInfoElement(Boolean.class));
+                this.info2Value.put(key, new VCFInfoElement(Boolean.class));
             }
         }
     }
@@ -54,11 +85,11 @@ public class VCFInfo {
          */
         public VCFInfoElement(final String id, String vcfIdValue) throws UnexpectedException {
             this.type = getType(id);
-            String[] valueArray = vcfIdValue.split(",");
+            String[] valueArray = StringUtilities.fastSplit(vcfIdValue, ",");
             if (type == int[].class) {
                 int[] nums = new int[valueArray.length];
-                for (int i = 0; i < valueArray.length; i++) {
-                    nums[i] = Integer.parseInt(valueArray[i]);
+                for (int i = 0; i < nums.length; i++) {
+                    nums[i] = StringUtilities.parseInt(valueArray[i]);
                 }
                 this.value = type.cast(nums);
             } else if (type == String[].class) {

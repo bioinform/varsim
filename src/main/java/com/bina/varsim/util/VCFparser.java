@@ -4,11 +4,10 @@ package com.bina.varsim.util;
 
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.FlexSeq;
+import com.bina.varsim.types.Sequence;
 import com.bina.varsim.types.VCFInfo;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
 import static com.bina.varsim.types.VCFInfo.getType;
@@ -144,9 +144,10 @@ public class VCFparser extends GzFileParser<Variant> {
 
         geno = geno.trim();
         boolean strangePhase = false;
-        if (geno.matches("^[0-9]+$")) {
+
+        if (StringUtilities.isNonNegativeInteger(geno)) {
             // phase is only a single number, for haploid chromosomes
-            byte val = (byte) Integer.parseInt(geno);
+            byte val = (byte) StringUtilities.parseInt(geno);
             if (chr.isX()) {
                 vals[1] = val; // maternal
                 isPhased = true;
@@ -160,15 +161,15 @@ public class VCFparser extends GzFileParser<Variant> {
                 vals[0] = vals[1] = val;
             }
         } else if (geno.length() >= 3) {
-                    // this is the case where phase looks like "1|0" or "10|4"
-            String[] ll = geno.split("[\\|/]");
+            // this is the case where phase looks like "1|0" or "10|4"
+            String[] ll = StringUtilities.fastSplit(geno, "/|");
             int c1 = -1;
             int c2 = -1;
             char phasing = '/';
             if (ll.length == 2) {
                 try {
-                    c1 = Integer.parseInt(ll[0]);
-                    c2 = Integer.parseInt(ll[1]);
+                    c1 = StringUtilities.parseInt(ll[0]);
+                    c2 = StringUtilities.parseInt(ll[1]);
                     phasing = geno.charAt(ll[0].length());
                 } catch (NumberFormatException e) {
                     strangePhase = true;
@@ -187,7 +188,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 strangePhase = true;
             }
         } else {
-            strangePhase = true;
+                strangePhase = true;
         }
 
         if (strangePhase) {
@@ -220,7 +221,7 @@ public class VCFparser extends GzFileParser<Variant> {
     public Variant processLine(String line) throws UnexpectedException {
 
         // try to determine the column we should read for the genotype
-        List<String> toks = Lists.newArrayList(Splitter.on('\t').split(line));
+        String[] toks = StringUtilities.fastSplit(line, "\t");
         if (line.startsWith("#")) {
             if (sampleId != null && line.startsWith("#CHROM")) {
                 chromLineSeen = true;
@@ -232,8 +233,8 @@ public class VCFparser extends GzFileParser<Variant> {
                 }
             } else if (sampleId == null) {
                 sampleIndex = 10; // the first sample
-                if (line.startsWith("#CHROM") && toks.size() >= sampleIndex) {
-                    sampleId = toks.get(sampleIndex - 1);
+                if (line.startsWith("#CHROM") && toks.length >= sampleIndex) {
+                    sampleId = toks[sampleIndex - 1];
                 }
             }
             return null;
@@ -259,7 +260,7 @@ public class VCFparser extends GzFileParser<Variant> {
             if (index == 1) { // Parsing chromosome
                 chr = new ChrString(tok);
             } else if (index == 2) // Parsing position
-                pos = Integer.parseInt(tok);
+                pos = StringUtilities.parseInt(tok);
             else if (index == 3) // Parsing position
                 variantId = tok;
             else if (index == 4) // Parsing reference allele
@@ -275,7 +276,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 genotypeIndex = getFormatKeyIndex(FORMAT, "GT");
                 copyNumberIndex = getFormatKeyIndex(FORMAT, "CN");
             } else if (index == sampleIndex) { // phased or unphased genotype
-                sampleInfo = tok.split(":");
+                sampleInfo = StringUtilities.fastSplit(tok, ":");
                 if (genotypeIndex >= 0) {
                     phase = sampleInfo[genotypeIndex];
                 }
@@ -308,7 +309,7 @@ public class VCFparser extends GzFileParser<Variant> {
             return null; // reference alleles... ignore them for now....
         }
 
-        if (!REF.matches("[ATCGNatcgn]+")) {
+        if (!Sequence.isNormalSequence(REF)) {
             log.warn("only ATCGN (case-insensitive) allowed for REF column." + line);
             return null; //
         }
@@ -346,7 +347,7 @@ public class VCFparser extends GzFileParser<Variant> {
         with non-symbolic alleles.
          */
         if (ALT.indexOf('<') != -1) {
-            String[] alternativeAlleles = ALT.split(",");
+            String[] alternativeAlleles = StringUtilities.fastSplit(ALT, ",");
             int[] svlen = info.getValue("SVLEN", int[].class);
             if (alternativeAlleles.length != svlen.length) {
                 throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
@@ -759,7 +760,7 @@ public class VCFparser extends GzFileParser<Variant> {
      * @return
      */
     public Alt[] string2Alt(String ALT){
-        String[] altsString = ALT.split(",");
+        String[] altsString = StringUtilities.fastSplit(ALT, ",");
         Alt[] alts = new Alt[altsString.length];
         for (int i = 0; i < alts.length; i++) {
             alts[i] = Alt.altFactory(altsString[i]);
