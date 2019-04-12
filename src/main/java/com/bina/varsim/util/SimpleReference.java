@@ -154,7 +154,7 @@ public class SimpleReference {
      */
     public byte[] byteRange(ChrString chr_name, int start_loc, int end_loc) {
         if (start_loc < 1 || end_loc < 1 || end_loc < start_loc) {
-            log.error("byteRange: Invalid range");
+            log.error("byteRange: Invalid range of " + start_loc + " " + end_loc);
             return null;
         }
 

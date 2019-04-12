@@ -325,6 +325,9 @@ public class Variant implements Comparable<Variant>{
         if (len > 0) {
             try {
                 byte[] deleted_temp = ref.byteRange(chr, pos - len, pos);
+                if (deleted_temp == null) {
+                    throw new IllegalArgumentException("Error record: " + this);
+                }
                 refDeleted = new String(deleted_temp, "US-ASCII");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
