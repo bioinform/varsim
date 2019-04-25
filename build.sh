@@ -43,7 +43,7 @@ samtools_version="1.3.1"
 SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}
 if [[ ! -d $SAMTOOLS_DIR ]]; then
     wget -O- https://github.com/samtools/samtools/releases/download/$samtools_version/samtools-$samtools_version.tar.bz2 | tar xfj -
-    push ${SAMTOOLS_DIR} && make
+    pushd ${SAMTOOLS_DIR} && make
     popd
 fi
 
