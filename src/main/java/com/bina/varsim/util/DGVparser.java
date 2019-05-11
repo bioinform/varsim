@@ -174,17 +174,17 @@ public class DGVparser extends GzFileParser<Variant> {
             alts[0] = new Alt(new FlexSeq());
             break;
           case Insertion:
-            REF = "";
+            REF = "N";
             // TODO this is suspect... should sample from distribution of deletions.. maybe ok for now
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INS, end_loc - start_loc + 1));
             break;
           case Tandem_Duplication:
-            REF = "";
+            REF = "N";
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.TANDEM_DUP, end_loc - start_loc + 1,observedgains+1));
             observedgains = Math.max(2, observedgains);
             break;
           case Inversion:
-            REF = "";
+            REF = "N";
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INV, end_loc - start_loc + 1));
             break;
           default:

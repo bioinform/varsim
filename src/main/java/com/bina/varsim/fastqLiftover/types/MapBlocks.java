@@ -98,11 +98,11 @@ public class MapBlocks {
         final Collection<ReadMapBlock> readMapBlocks = new ArrayList<>();
 
         final ChrString chromosome = interval.chromosome;
-        final int start = interval.start;
+        final int start = interval.start + 1;
         final int end = interval.end;
 
         final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
-        final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end - 1));
+        final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end));
 
         if (!chrBlocks.containsKey(chromosome)) {
             return readMapBlocks;
@@ -114,35 +114,38 @@ public class MapBlocks {
         Iterator<List<MapBlock>> it = subset.values().iterator();
         log.trace("Going to lift over " + interval);
 
-        int intervalOffset = 0;
+        // since intervalOffset is only used for MapBlock, which is 1-based, we need to set the beginning offset to 1
+        int intervalOffset = 1;
         while (it.hasNext()) {
             for (MapBlock b : it.next()) {
 
                 int srcStart = Math.max(start, b.srcLoc.location);
-                int srcEnd = Math.min(end - 1, b.srcLoc.location + b.size - 1);
+                int srcEnd = Math.min(end, b.srcLoc.location + b.size - 1);
                 int lengthOfInterval = srcEnd - srcStart + 1;
                 final int lengthOfIntervalOnRead = b.blockType != MapBlock.BlockType.DEL ? lengthOfInterval : 0;
                 final int lengthOfIntervalOnRef = b.blockType != MapBlock.BlockType.INS ? lengthOfInterval : 0;
 
                 log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
 
-                if (lengthOfInterval < minIntervalLength) {
+                // lengthOfIntervalOnRef is length of the lifted over interval
+                if (lengthOfIntervalOnRef < minIntervalLength) {
                     log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
                 } else {
+                    // 0-based start, 1-based end
                     final GenomeInterval liftedInterval = new GenomeInterval();
                     liftedInterval.chromosome = b.dstLoc.chromosome;
                     liftedInterval.feature = b.blockType;
                     if (b.direction == 0) {
-                        liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location;
+                        liftedInterval.start = b.dstLoc.location + srcStart - b.srcLoc.location - 1;
                         liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
                         liftedInterval.strand = interval.strand;
                     } else {
-                        liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd);
+                        liftedInterval.start = b.dstLoc.location + (b.srcLoc.location + b.size - 1 - srcEnd) - 1;
                         liftedInterval.end = liftedInterval.start + lengthOfIntervalOnRef;
                         liftedInterval.strand = interval.strand == Strand.POSITIVE ? Strand.NEGATIVE : Strand.POSITIVE;
                     }
 
-                    readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead, liftedInterval));
+                    readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead - 1, liftedInterval));
                 }
                 intervalOffset += lengthOfIntervalOnRead;
             }
