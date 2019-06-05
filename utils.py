@@ -130,7 +130,7 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
     :param combined_vcf:
     :param vcfs:
     :param rm_duplicate: if true, remove duplicate variants (by chr+pos+ref+alt)
-    :return:
+    :return: output file name
     '''
     logger = logging.getLogger(combine_vcf.__name__)
     logger.info("Merging {0}".format(" ".join(map(str, vcfs))))
@@ -179,7 +179,6 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
         return gz_vcf
     else:
         return combined_vcf
-
 
 def sort_and_compress(vcf):
     '''
