@@ -9,6 +9,7 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
+BGZIP = os.path.realpath(os.path.join(MY_DIR, "opt","htslib-1.9_install/bin/bgzip"))
 JAVA_XMX = "-Xmx"
 
 COMBINE_KEEP_ALL_DUPLICATE = 1
@@ -175,23 +176,48 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
                     output.write(previous_line)
         os.rename(uniq_vcf, combined_vcf)
     if gzip:
-        pysam.tabix_index(combined_vcf, force=True, preset='vcf')
+        run_shell_command([BGZIP, "--force", combined_vcf], cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
+        index_vcf_gz(gz_vcf)
         return gz_vcf
     else:
         return combined_vcf
 
-def sort_and_compress(vcf):
+def index_vcf_gz(vcf_gz):
+    pysam.tabix_index(vcf_gz, force = True, preset = 'vcf')
+
+def sort_and_compress(vcf, mode = 1):
     '''
     sort and compress vcf and return compressed filename
-    :param vcf:
-    :return:
+    Params:
+        vcf: input
+        mode: 1 for backward compatibility, 2 for more reasonable behavior
+    Returns:
+        gzipped vcf filename
     '''
-    gz_vcf = "{}.gz".format(vcf)
-    sorted_vcf = "{}.sorted".format(vcf)
+    logger = logging.getLogger(sort_and_compress.__name__)
+    if mode == 1:
+        gz_vcf = "{}.gz".format(vcf)
+        sorted_vcf = "{}.sorted".format(vcf)
 
-    sort_command = [SORT_VCF, vcf]
-    with open(sorted_vcf, "w") as sorted_out:
-        run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
-    os.rename(sorted_vcf, vcf)
-    pysam.tabix_index(vcf, force=True, preset='vcf')
-    return gz_vcf
+        sort_command = [SORT_VCF, vcf]
+        with open(sorted_vcf, "w") as sorted_out:
+            run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+        os.rename(sorted_vcf, vcf)
+        pysam.tabix_index(vcf, force=True, preset='vcf')
+        return gz_vcf
+    elif mode == 2:
+        suffix_index = vcf.rfind('.vcf')
+        sorted_vcf = vcf[:suffix_index] + ".sorted" + vcf[suffix_index:]
+        gz_vcf = "{}.gz".format(sorted_vcf)
+
+        sort_command = [SORT_VCF, vcf]
+        logger.info('sorting {}'.format(vcf))
+        with open(sorted_vcf, "w") as sorted_out:
+            run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+        logger.info('compressing {}'.format(sorted_vcf))
+        with open(gz_vcf, "w") as out:
+            run_shell_command([BGZIP, "--force", "--stdout", sorted_vcf], cmd_stdout=out, cmd_stderr=sys.stderr)
+        index_vcf_gz(gz_vcf)
+        return gz_vcf
+    else:
+        raise ValueError
