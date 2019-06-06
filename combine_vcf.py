@@ -23,7 +23,6 @@ def process(args):
     global LOGGER
     LOGGER = logging.getLogger(__name__)
     LOGGER.info('running {}'.format(' '.join(sys.argv)))
-    LOGGER.info('sort-and-index vcfs and then combine')
 
     dup_mode = None
     if args.mode == 'first_duplicate':
@@ -52,7 +51,7 @@ def process(args):
             input_vcfs[i] = current_vcf
         else:
             LOGGER.info('sort and index {}'.format(current_vcf))
-            input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 2)
+            input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 2, overwrite = args.overwrite)
     output_vcf = args.output_prefix + '.vcf'
     output_vcf = utils.combine_vcf(output_vcf, input_vcfs,
             duplicate_handling_mode = dup_mode)
@@ -65,6 +64,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--output_prefix", metavar="PREFIX", help="output prefix", required = True)
     main_parser.add_argument("--vcfs", metavar="VCF", help="variant calls to be evaluated", nargs="+", default=[], required = True)
     main_parser.add_argument("--mode", metavar="MODE", help="mode for duplicates", choices = ['first_duplicate','all_duplicate','no_duplicate'], default = 'first_duplicate')
+    main_parser.add_argument("--overwrite", action = 'store_true', help="overwrite existing files")
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     args = main_parser.parse_args()
