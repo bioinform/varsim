@@ -47,7 +47,7 @@ def process(args):
             input_vcfs[i] = current_vcf
         elif current_vcf.endswith(".gz"):
             LOGGER.info('indexing {}'.format(current_vcf))
-            utils.index_vcf_gz(current_cvf)
+            utils.index_vcf_gz(current_vcf)
             input_vcfs[i] = current_vcf
         else:
             LOGGER.info('sort and index {}'.format(current_vcf))
