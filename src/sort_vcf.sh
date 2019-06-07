@@ -7,14 +7,14 @@ for vcf in $@;do
     fi
 done    
 
-if [[ $1 == *.vcf.gz ]]; then
+if [[ $1 == *.gz ]]; then
     zcat $1 
 else
     cat $1 
 fi | grep "^#"
 
 for vcf in $@;do
-    if [[ $vcf == *.vcf.gz ]]; then
+    if [[ $vcf == *.gz ]]; then
         zcat $vcf
     else
         cat $vcf
