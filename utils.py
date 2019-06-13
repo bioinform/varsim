@@ -9,7 +9,6 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
 RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
-BGZIP = os.path.realpath(os.path.join(MY_DIR, "opt","htslib-1.9_install/bin/bgzip"))
 JAVA_XMX = "-Xmx"
 
 COMBINE_KEEP_ALL_DUPLICATE = 1
@@ -131,7 +130,7 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
     :param combined_vcf:
     :param vcfs:
     :param rm_duplicate: if true, remove duplicate variants (by chr+pos+ref+alt)
-    :return: output file name
+    :return:
     '''
     logger = logging.getLogger(combine_vcf.__name__)
     logger.info("Merging {0}".format(" ".join(map(str, vcfs))))
@@ -176,52 +175,89 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
                     output.write(previous_line)
         os.rename(uniq_vcf, combined_vcf)
     if gzip:
-        run_shell_command([BGZIP, "--force", combined_vcf], cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
-        index_vcf_gz(gz_vcf)
+        pysam.tabix_index(combined_vcf, force=True, preset='vcf')
         return gz_vcf
     else:
         return combined_vcf
 
-def index_vcf_gz(vcf_gz):
-    pysam.tabix_index(vcf_gz, force = True, preset = 'vcf')
 
-def sort_and_compress(vcf, mode = 1, overwrite = False):
+def sort_and_compress(vcf):
     '''
     sort and compress vcf and return compressed filename
-    Params:
-        vcf: input
-        mode: 1 for backward compatibility, 2 for more reasonable behavior
-    Returns:
-        gzipped vcf filename
+    :param vcf:
+    :return:
     '''
-    logger = logging.getLogger(sort_and_compress.__name__)
-    if mode == 1:
-        gz_vcf = "{}.gz".format(vcf)
-        sorted_vcf = "{}.sorted".format(vcf)
+    gz_vcf = "{}.gz".format(vcf)
+    sorted_vcf = "{}.sorted".format(vcf)
 
-        sort_command = [SORT_VCF, vcf]
-        with open(sorted_vcf, "w") as sorted_out:
-            run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
-        os.rename(sorted_vcf, vcf)
-        pysam.tabix_index(vcf, force=True, preset='vcf')
-        return gz_vcf
-    elif mode == 2:
-        suffix_index = vcf.rfind('.vcf')
-        sorted_vcf = vcf[:suffix_index] + ".sorted" + vcf[suffix_index:]
-        gz_vcf = "{}.gz".format(sorted_vcf)
+    sort_command = [SORT_VCF, vcf]
+    with open(sorted_vcf, "w") as sorted_out:
+        run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+    os.rename(sorted_vcf, vcf)
+    pysam.tabix_index(vcf, force=True, preset='vcf')
+    return gz_vcf
 
-        sort_command = [SORT_VCF, vcf]
-        logger.info('sorting {}'.format(vcf))
-        if (not overwrite) and os.path.isfile(sorted_vcf):
-            raise ValueError("{} exists".format(sorted_vcf))
-        with open(sorted_vcf, "w") as sorted_out:
-            run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
-        logger.info('compressing {}'.format(sorted_vcf))
-        if (not overwrite) and os.path.isfile(gz_vcf):
-            raise ValueError("{} exists".format(gz_vcf))
-        with open(gz_vcf, "w") as out:
-            run_shell_command([BGZIP, "--force", "--stdout", sorted_vcf], cmd_stdout=out, cmd_stderr=sys.stderr)
-        index_vcf_gz(gz_vcf)
-        return gz_vcf
-    else:
-        raise ValueError
+
+def write_vcf(lines, vcf):
+    """Create a file from the provided list"""
+
+    with open(vcf, "w") as vcf_handle:
+        vcf_handle.write('\n'.join(lines))
+    return vcf
+
+
+def get_equivalent_variant(variant, vcf):
+    """Return the variant in a vcf closest to a variant"""
+
+    equivalent_variant = None
+
+    with versatile_open(vcf, "r") as vcf_handle:
+        min_dist = 100
+
+        for line in vcf_handle.readlines():
+            line_split = str(line).strip().split()
+
+            if line_split[0][0] == "#":
+                continue
+
+            if line_split[0] == variant[0]:
+                dist = abs(int(line_split[1])-int(variant[1]))
+
+                if dist < min_dist:
+                    min_dist = dist
+                    equivalent_variant = line_split[:]
+
+    return equivalent_variant
+
+
+def make_clean_vcf(vcf, path=None):
+    """Make a clean vcf retaining essential fields"""
+
+    vcf_path = os.path.split(vcf)
+    vcf_base = os.path.splitext(vcf_path[1])
+
+    if not path:
+        path = vcf_path
+
+    clean_vcf = os.path.join(path, vcf_base[0] + ".clean" + vcf_base[1])
+
+    clean_vcf_handle = open(clean_vcf, "w")    
+
+    with versatile_open(vcf, "r") as vcf_handle:
+        for line in vcf_handle.readlines():
+            line_strip = line.strip()
+            line_split = line_strip.split()
+
+            if line_strip[0] == "#":
+                clean_vcf_handle.write(line_strip+'\n')
+                continue
+            else:
+                GT = "0/1" if line_split[-1] == "./." else line_split[-1]
+                clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", ".", line_split[8], GT]) + '\n')
+
+    clean_vcf_handle.close()
+
+    clean_vcf = sort_and_compress(clean_vcf)
+
+    return clean_vcf
+
