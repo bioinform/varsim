@@ -287,8 +287,103 @@ def process(args):
     augmented_tp, augmented_fn, augmented_fp, augmented_t = summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
                       var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either)
 
+
+    if args.master_vcf and args.call_vcf:
+        match_false(augmented_fp, [args.call_vcf, args.master_vcf, augmented_fn], args.out_dir, args.sample, args.log_to_file, args.vcfeval_options, sdf)
+        match_false(augmented_fn, [args.call_vcf], args.out_dir, args.sample, args.log_to_file, args.vcfeval_options, sdf)
+
     LOGGER.info("Variant comparison done.\nTrue positive: {0}\nFalse negative: {1}\nFalse positive: {2}\n".
                 format(augmented_tp, augmented_fn, augmented_fp))
+
+
+def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file, vcfeval_options, sdf):
+    """Try to pair up each false call in a file (augmented_file) with a variant in the other files provided in a list (files_to_pair_with) to create an annotated version of the first file.
+    By default the the first variant in the list is provided to get an AF, the 2nd to determine the simulated variant (for false positives) and the 3rd to determine if a false positive is
+    a pure false positive (not simulated) or not (wrong genotype)"""
+
+    files_to_pair_with_clean = []
+    for item in files_to_pair_with:
+        files_to_pair_with_clean.append(utils.make_clean_vcf(item, out_dir))
+
+    content = []
+    annotated_content = []
+
+    with utils.versatile_open(augmented_file, "rt") as augmented_file_handle:
+        for line in augmented_file_handle.readlines():
+            line_strip = line.strip()
+            line_split = line_strip.split()
+
+            if line_strip[0] == "#":
+                annotated_content.append(line_strip)
+                content.append(line_strip)
+
+            else:
+                if content[-1][0] != "#":
+                    del content[-1]
+                content.append(line_strip)
+
+                single_var_file = utils.write_vcf(content, os.path.join(out_dir, "single.vcf"))
+                single_var_file = utils.sort_and_compress(single_var_file)
+
+                for i, item in enumerate(files_to_pair_with_clean):
+
+                    equivalent_variant = None
+
+                    if item:
+                        vcfeval_prefix = os.path.join(out_dir, 'vcfeval_compare_results_annotate')
+
+                        vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = item, reference = sdf,
+                                         regions = None,
+                                         sample = sample, vcfs = [single_var_file],
+                                         exclude_filtered = False,
+                                         match_geno = False,
+                                         log_to_file= log_to_file,
+                                         opts = vcfeval_options)
+
+                        equivalent_variant = utils.get_equivalent_variant(line_split, vcfeval_comparator.get_tp())
+
+                        #clean up
+                        if os.path.exists(vcfeval_prefix):
+                            LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
+                            shutil.rmtree(vcfeval_prefix)
+
+                    if i == 0:
+                        if equivalent_variant:
+                            try:
+                                AO = int(equivalent_variant[-1].split(':')[4].split(',')[0])
+                                RO = int(equivalent_variant[-1].split(':')[2].split(',')[0])
+                            except:
+                                info = "N/A;"
+                            else:
+                                info = str(float(AO)/(AO+RO)) + ';'
+                        else:
+                            info = "N/A;"
+
+                    elif i == 1:
+                        if equivalent_variant:
+                            info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
+                        else:
+                            info += "N/A;"
+
+                    elif i == 2:
+                        info += "pure;" if not equivalent_variant else "not;"
+
+                line_split[6] = info
+                annotated_content.append('\t'.join(line_split))
+
+                #clean up
+                if os.path.isfile(single_var_file):
+                    os.remove(single_var_file)
+                    os.remove(single_var_file+".tbi")
+
+    annotated_file = utils.write_vcf(annotated_content, os.path.join(args.out_dir, "{}_annotated.vcf".format(os.path.splitext(os.path.splitext(os.path.basename(augmented_file))[0])[0])))
+    annotated_file = utils.sort_and_compress(annotated_file)
+
+    #clean up
+    for item in files_to_pair_with_clean:
+        if item and os.path.isfile(item):
+            os.remove(item)
+            os.remove(item+".tbi")
 
 
 def print_stats(stats):
@@ -398,6 +493,8 @@ if __name__ == "__main__":
                              choices = ['SNP', 'Deletion', 'Insertion', 'Inversion', 'TandemDup',
                                        'Complex', 'TransDup', 'TansDel', 'InterDup', 'Translocation'], required = False)
     main_parser.add_argument("--true_vcf", metavar="VCF", help="Input small variant sampling VCF, usually dbSNP", required = True)
+    main_parser.add_argument("--master_vcf", metavar="MASTER_VCF", help="Master whitelist, if applicable", required = False)
+    main_parser.add_argument("--call_vcf", metavar="CALL_VCF", help="Original, VCF output by variant caller, if applicable", required = False)
     main_parser.add_argument("--regions", help="BED file to restrict analysis [Optional]", required = False, type=str)
     main_parser.add_argument("--sample", metavar = "SAMPLE", help="sample name", required = False, type=str)
     main_parser.add_argument("--exclude_filtered", action = 'store_true', help="only consider variants with PASS or . in FILTER column", required = False)
