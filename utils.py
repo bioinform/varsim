@@ -262,7 +262,11 @@ def make_clean_vcf(vcf, path=None):
     """Make a clean vcf retaining essential fields"""
 
     vcf_path = os.path.split(vcf)
-    vcf_base = os.path.splitext(vcf_path[1])
+
+    if vcf_path[1].endswith('.gz'):
+        vcf_base = os.path.splitext(os.path.splitext(vcf_path[1])[0])
+    else:
+        vcf_base = os.path.splitext(vcf_path[1])
 
     if not path:
         path = vcf_path
