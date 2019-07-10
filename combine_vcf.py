@@ -53,7 +53,18 @@ def process(args):
             LOGGER.info('sort and index {}'.format(current_vcf))
             input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 2, overwrite = args.overwrite)
     output_vcf = args.output_prefix + '.vcf'
-    output_vcf = utils.combine_vcf(output_vcf, input_vcfs,
+    if input_vcfs and len(input_vcfs) == 1:
+        output_vcf = output_vcf + '.gz'
+        output_vcf_idx = output_vcf + '.tbi'
+        if (not args.overwrite) and \
+           (os.path.isfile(output_vcf) or os.path.isfile(output_vcf_idx)):
+            LOGGER.warn('{} or {} exists, use --overwrite otherwise do nothing.'.format(
+                    output_vcf, output_vcf_idx))
+        else:
+            shutil.copyfile(input_vcfs[0], output_vcf)
+            shutil.copyfile(input_vcfs[0], output_vcf_idx)
+    else:
+        output_vcf = utils.combine_vcf(output_vcf, input_vcfs,
             duplicate_handling_mode = dup_mode)
     LOGGER.info('{} done'.format(output_vcf))
     return
