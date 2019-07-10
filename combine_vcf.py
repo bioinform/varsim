@@ -58,10 +58,11 @@ def process(args):
         output_vcf_idx = output_vcf + '.tbi'
         if (not args.overwrite) and \
            (os.path.isfile(output_vcf) or os.path.isfile(output_vcf_idx)):
-            raise IOError('{} or {} exists, use --overwrite'.format(
+            LOGGER.warn('{} or {} exists, use --overwrite otherwise do nothing.'.format(
                     output_vcf, output_vcf_idx))
-        shutil.copyfile(input_vcfs[0], output_vcf)
-        shutil.copyfile(input_vcfs[0], output_vcf_idx)
+        else:
+            shutil.copyfile(input_vcfs[0], output_vcf)
+            shutil.copyfile(input_vcfs[0], output_vcf_idx)
     else:
         output_vcf = utils.combine_vcf(output_vcf, input_vcfs,
             duplicate_handling_mode = dup_mode)
