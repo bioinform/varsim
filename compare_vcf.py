@@ -181,7 +181,8 @@ class RTGVCFComparator(VCFComparator):
         fn = os.path.join(self.prefix, 'fn.vcf.gz')
         fp = os.path.join(self.prefix, 'fp.vcf.gz')
 
-        if utils.count_variants(self.true_vcf) == 0 and utils.count_variants(self.vcfs[0]) == 0:
+        #vcfeval refuses to run if true_vcf contains 0 variants
+        if utils.count_variants(self.true_vcf) == 0:
             #both truth and prediction are empty, do nothing
             utils.makedirs([self.prefix])
             shutil.copyfile(self.true_vcf, tp)
