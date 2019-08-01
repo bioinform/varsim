@@ -8,8 +8,9 @@ import sys
 import subprocess
 import logging
 import time
-from varsim import MY_DIR, VARSIMJAR, DEFAULT_VARSIMJAR, REQUIRE_VARSIMJAR
-from varsim import check_java, makedirs, monitor_processes, check_executable, run_vcfstats, run_randvcf, get_version, RandVCFOptions
+import utils
+from utils import MY_DIR, check_java, makedirs, get_version
+from varsim import monitor_processes, check_executable, run_vcfstats, run_randvcf, RandVCFOptions
 
 VARSIM_PY = os.path.join(MY_DIR, "varsim.py")
 
@@ -36,7 +37,7 @@ def varsim_somatic_main():
                              help="Path to the executable of the read simulator chosen"
                              , required=True, type=file)
     main_parser.add_argument("--varsim_jar", metavar="PATH", help="Path to VarSim.jar (deprecated)", type=file,
-                             default=DEFAULT_VARSIMJAR,
+                             default=None,
                              required=False)
     main_parser.add_argument("--read_length", metavar="INT", help="Length of read to simulate", default=100, type=int)
     main_parser.add_argument("--nlanes", metavar="INT",
@@ -52,6 +53,7 @@ def varsim_somatic_main():
     main_parser.add_argument("--force_five_base_encoding", action="store_true", help="Force bases to be ACTGN")
     main_parser.add_argument("--filter", action="store_true", help="Only use PASS variants")
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
+    main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     main_parser.add_argument('--version', action='version', version=get_version())
 
 
@@ -102,6 +104,7 @@ def varsim_somatic_main():
 
     args = main_parser.parse_args()
 
+    utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.log_dir, args.out_dir])
 
     FORMAT = '%(levelname)s %(asctime)-15s %(name)-20s %(message)s'
@@ -127,7 +130,7 @@ def varsim_somatic_main():
 
         # Not able to support novel yet for COSMIC variants
         randvcf_options = RandVCFOptions(args.som_num_snp, args.som_num_ins, args.som_num_del, args.som_num_mnp, args.som_num_complex, 0, args.som_min_length_lim, args.som_max_length_lim, args.som_prop_het)
-        monitor_processes([run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference.name)])
+        run_randvcf(os.path.realpath(args.cosmic_vcf), rand_vcf_stdout, rand_vcf_stderr, args.seed, args.sex, randvcf_options, args.reference.name)
 
     normal_vcfs = [args.normal_vcf]
     somatic_vcfs = cosmic_sampled_vcfs + args.somatic_vcfs
