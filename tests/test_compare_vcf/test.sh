@@ -10,7 +10,7 @@ time ../../opt/miniconda2/bin/python ../../compare_vcf.py \
 TEST_FAIL=0
 compare() {
     if [[ ($1 == *.gz) && ($2 == *.gz) ]];then
-	if cmp -s <(zcat $1) <(zcat $2);then
+	if cmp -s <(zcat $1 | grep -v '##reference') <(zcat $2 | grep -v '##reference' );then
 	    true
 	else
 	    TEST_FAIL=1
