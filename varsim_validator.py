@@ -78,7 +78,7 @@ def get_quantile(values, quantile=50.0):
     return sorted_values[int(len(values)*(1 - quantile/100.0))] if sorted_values else 0.0
 
 
-def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_dir, vcfcompare_options="", disable_vcfcompare=False):
+def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_dir, vcfcompare_options="", disable_vcfcompare=False, java = "java"):
     logger = logging.getLogger(varsim_multi_validation.__name__)
 
     bed_options = "-bed {}".format(regions) if regions else ""
@@ -105,7 +105,7 @@ def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_di
             continue
 
         if not disable_vcfcompare:
-            command = "java {} -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(utils.JAVA_XMX, VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
+            command = "{} {} -jar {} vcfcompare {} -true_vcf {} -prefix {} {}".format(java, utils.JAVA_XMX, VARSIMJAR, vcfcompare_options, sample_truth, os.path.join(sample_dir, sample), sample_called)
 
             with open(os.path.join(sample_dir, "vcfcompare.out"), "w") as stdout, open(os.path.join(sample_dir, "vcfcompare.err"), "w") as stderr:
                 subprocess.check_call(command, shell=True, stdout=stdout, stderr=stderr)
@@ -152,8 +152,6 @@ def varsim_multi_validation(regions, samples, varsim_dirs, variants_dirs, out_di
 
 
 if __name__ == "__main__":
-    check_java()
-
     parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--out_dir", metavar="DIR",
@@ -167,12 +165,14 @@ if __name__ == "__main__":
     parser.add_argument("--vcfcompare_options", help="Other VCFCompare options", default="")
     parser.add_argument("--disable_vcfcompare", action="store_true", help="Do not run VCFcompare if already ran")
     parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
+    parser.add_argument("--java", metavar="PATH", help="path to java", default="java", type = str)
     parser.add_argument('--version', action='version', version=get_version())
     parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
 
     args = parser.parse_args()
 
-    
+    args.java = utils.get_java(args.java)
+    check_java(args.java)
     utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.out_dir])
 
@@ -182,4 +182,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=loglevel, format=FORMAT)
 
     args.vcfcompare_options = "-reference {} {}".format(args.reference, args.vcfcompare_options) if args.reference else args.vcfcompare_options
-    varsim_multi_validation(args.regions, args.samples, args.varsim, args.variants, args.out_dir, args.vcfcompare_options, args.disable_vcfcompare)
+    varsim_multi_validation(args.regions, args.samples, args.varsim, args.variants, args.out_dir, args.vcfcompare_options, args.disable_vcfcompare, args.java)
