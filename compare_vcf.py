@@ -183,12 +183,23 @@ class RTGVCFComparator(VCFComparator):
 
         #vcfeval refuses to run if true_vcf contains 0 variants
         if utils.count_variants(self.true_vcf) == 0:
-            #both truth and prediction are empty, do nothing
             utils.makedirs([self.prefix])
+            #because there is 0 ground truth variants, TP and FN will be empty
             shutil.copyfile(self.true_vcf, tp)
             shutil.copyfile(self.true_vcf, fn)
-            shutil.copyfile(self.vcfs[0], tp_predict)
-            shutil.copyfile(self.vcfs[0], fp)
+            if utils.count_variants(self.vcfs[0]) == 0:
+                #if calls are empty, then TP_PREDICT and FP will for sure be empty
+                shutil.copyfile(self.vcfs[0], tp_predict)
+                shutil.copyfile(self.vcfs[0], fp)
+            else:
+                #if calls are not empty, then all calls will be FP due to 0 ground truth, TP_PREDICT will be empty
+                shutil.copyfile(self.vcfs[0], fp)
+                with utils.versatile_open(tp_predict, "w") as output, utils.versatile_open(self.vcfs[0], "r") as input:
+                    for i in input:
+                        if i.startswith('#'):
+                            output.write(i)
+                        else:
+                            break
         else:
             if self.log_to_file:
                 with utils.versatile_open(self.log_to_file, 'a') as logout:
