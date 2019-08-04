@@ -52,6 +52,7 @@ def varsim_somatic_main():
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files")
     main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     main_parser.add_argument("--java", metavar="PATH", help="path to java", default="java", type = str)
+    main_parser.add_argument("--python", metavar="PATH", help="path to python", default="python", type = str)
     main_parser.add_argument('--version', action='version', version=get_version())
 
 
@@ -178,7 +179,8 @@ def varsim_somatic_main():
     elif args.simulator == "art" and args.art_options:
         other_varsim_opts += ["--art_options", args.art_options]
 
-    varsim_command = ["python", os.path.realpath(VARSIM_PY),
+    args.python = utils.get_python(args.python)
+    varsim_command = [args.python, os.path.realpath(VARSIM_PY),
                       "--out_dir", str(os.path.realpath(args.out_dir)),
                       "--work_dir", str(os.path.realpath(args.work_dir)),
                       "--log_dir", str(os.path.realpath(os.path.join(args.log_dir, "varsim"))),

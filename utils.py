@@ -13,6 +13,7 @@ BGZIP = os.path.realpath(os.path.join(MY_DIR, "opt","htslib-1.9_install/bin/bgzi
 JAVA_XMX = "-Xmx"
 DEFAULT_JAVA = os.path.realpath(os.path.join(MY_DIR, "opt",
                                 "jdk1.8.0_131", "bin", "java"))
+DEFAULT_PYTHON = os.path.realpath(os.path.join(MY_DIR, "opt", "miniconda2", "bin", "python"))
 COMBINE_KEEP_ALL_DUPLICATE = 1
 COMBINE_KEEP_FIRST_DUPLICATE = 2
 COMBINE_KEEP_NO_DUPLICATE = 3
@@ -24,6 +25,14 @@ def get_java(java = "java"):
     if os.path.isfile(DEFAULT_JAVA):
         return DEFAULT_JAVA
     return java
+
+def get_python(python = "python"):
+    '''
+    return default python if it exists
+    '''
+    if os.path.isfile(DEFAULT_PYTHON):
+        return DEFAULT_PYTHON
+    return python
 
 def count_variants(vcf):
     '''
