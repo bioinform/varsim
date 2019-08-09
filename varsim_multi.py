@@ -45,7 +45,8 @@ def varsim_multi(reference,
                  force_five_base_encoding=False,
                  lift_ref=False,
                  disable_vcf2diploid=False,
-                 samples_random=0):
+                 samples_random=0,
+                 java = "java"):
     logger = logging.getLogger(varsim_multi.__name__)
 
     makedirs([out_dir])
@@ -65,7 +66,7 @@ def varsim_multi(reference,
         randdgv_options2vcf = copy.copy(randdgv_options)
         randdgv_options2vcf.output_all = "-all"
         with open(dgv_vcf, "w") as dgv2vcf_out, open(dgv_err_file, "w") as dgv2vcf_log:
-            run_randdgv(dgv_file, dgv2vcf_out, dgv2vcf_log, seed, sex, randdgv_options2vcf, reference, sv_insert_seq)
+            run_randdgv(dgv_file, dgv2vcf_out, dgv2vcf_log, seed, sex, randdgv_options2vcf, reference, sv_insert_seq, java)
 
     if regions:
         merged_bed = os.path.join(out_dir, "merged.bed")
@@ -95,7 +96,7 @@ def varsim_multi(reference,
         if randvcf_options and sampling_vcf:
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
-                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference)
+                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference, java)
             sampled_vcf = sort_and_compress(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
@@ -105,7 +106,7 @@ def varsim_multi(reference,
             sampled_dgv_vcf = os.path.join(sample_dir, "randdgvvcf.vcf")
             randdgvvcf_options = randdgv_options2randvcf_options(randdgv_options)
             with open(sampled_dgv_vcf, "w") as randdgvvcf_out, open(os.path.join(sample_dir, "randdgvvcf.err"), "w") as randdgvvcf_log:
-                run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference)
+                run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference, java)
             sampled_dgv_vcf = sort_and_compress(sampled_dgv_vcf)
             # Now generate the restricted sampled dgv VCF for the sample
             _, [restricted_sampled_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_dgv_vcf], regions, [], os.path.join(sample_dir, "restricted_randdgvvcf"), flank=0)
@@ -133,16 +134,14 @@ def varsim_multi(reference,
                     keep_temp,
                     force_five_base_encoding,
                     lift_ref,
-                    disable_vcf2diploid)
+                    disable_vcf2diploid,
+                    java = java)
 
     with open(os.path.join(out_dir, "samples.txt"), "w") as samples_fd:
         samples_fd.write("\n".join(all_samples))
 
 
 if __name__ == "__main__":
-    os.environ['PATH'] = str(os.path.dirname(os.path.realpath(__file__))) + '/opt/jdk1.8.0_131/bin:' + os.environ['PATH']
-    check_java()
-
     main_parser = argparse.ArgumentParser(description="VarSim: A high-fidelity simulation validation framework",
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     main_parser.add_argument("--out_dir", metavar="DIR",
@@ -171,6 +170,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--keep_temp", action="store_true", help="Keep temporary files after simulation")
     main_parser.add_argument("--lift_ref", action="store_true", help="Liftover chromosome names from restricted reference")
     main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
+    main_parser.add_argument("--java", metavar="PATH", help="path to java", default="java", type = str)
     main_parser.add_argument('--version', action='version', version=get_version())
     main_parser.add_argument('--log_to_stderr', action='store_true', help='Output log to stderr instead of log_dir/varsim.log')
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")
@@ -239,6 +239,8 @@ if __name__ == "__main__":
                                 type=float)
 
     args = main_parser.parse_args()
+    args.java = utils.get_java(args.java)
+    check_java(args.java)
 
     utils.JAVA_XMX = utils.JAVA_XMX + args.java_max_mem
     makedirs([args.out_dir])
@@ -287,4 +289,5 @@ if __name__ == "__main__":
                  force_five_base_encoding=args.force_five_base_encoding,
                  lift_ref=args.lift_ref,
                  disable_vcf2diploid=args.disable_vcf2diploid,
-                 samples_random=args.samples_random)
+                 samples_random=args.samples_random,
+                 java = args.java)

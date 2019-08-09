@@ -11,10 +11,28 @@ RTGJAR = os.path.realpath(os.path.join(MY_DIR, "RTG.jar"))
 SORT_VCF = os.path.realpath(os.path.join(MY_DIR, "src","sort_vcf.sh"))
 BGZIP = os.path.realpath(os.path.join(MY_DIR, "opt","htslib-1.9_install/bin/bgzip"))
 JAVA_XMX = "-Xmx"
-
+DEFAULT_JAVA = os.path.realpath(os.path.join(MY_DIR, "opt",
+                                "jdk1.8.0_131", "bin", "java"))
+DEFAULT_PYTHON = os.path.realpath(os.path.join(MY_DIR, "opt", "miniconda2", "bin", "python"))
 COMBINE_KEEP_ALL_DUPLICATE = 1
 COMBINE_KEEP_FIRST_DUPLICATE = 2
 COMBINE_KEEP_NO_DUPLICATE = 3
+
+def get_java(java = "java"):
+    '''
+    return default java if it exists, otherwise use user-specificed version
+    '''
+    if os.path.isfile(DEFAULT_JAVA):
+        return DEFAULT_JAVA
+    return java
+
+def get_python(python = "python"):
+    '''
+    return default python if it exists
+    '''
+    if os.path.isfile(DEFAULT_PYTHON):
+        return DEFAULT_PYTHON
+    return python
 
 def count_variants(vcf):
     '''
@@ -29,10 +47,10 @@ def count_variants(vcf):
                 count += 1
     return count
 
-def check_java():
+def check_java(java="java"):
     logger = logging.getLogger(check_java.__name__)
     try:
-        jv = subprocess.check_output("java -Xmx100m -version", stderr=subprocess.STDOUT, shell=True)
+        jv = subprocess.check_output("{} -Xmx100m -version".format(java), stderr=subprocess.STDOUT, shell=True)
         if "openjdk" in jv or "OpenJDK" in jv:
             raise EnvironmentError("Please replace OpenJDK with Oracle JDK")
         jv = filter(lambda x: x.startswith("java version"), jv.split("\n"))[0].split()[2].replace("\"", "")
@@ -42,8 +60,9 @@ def check_java():
     except subprocess.CalledProcessError:
         raise EnvironmentError("No java (>=1.8) found")
 
-def get_version():
-    return subprocess.check_output("java -jar {} -version".format(VARSIMJAR), shell=True).strip()
+def get_version(java="java"):
+    java = get_java(java)
+    return subprocess.check_output("{} -jar {} -version".format(java, VARSIMJAR), shell=True).strip()
 
 def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     '''
