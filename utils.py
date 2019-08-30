@@ -277,7 +277,7 @@ def get_equivalent_variant(variant, vcf):
     with versatile_open(vcf, "r") as vcf_handle:
         min_dist = 100
 
-        for line in vcf_handle.readlines():
+        for line in vcf_handle:
             line_split = str(line).strip().split()
 
             if line_split[0][0] == "#":
