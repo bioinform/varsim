@@ -316,7 +316,6 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
     """Try to pair up each false call in a file (augmented_file) with a variant in the other files provided in a list (files_to_pair_with) to create an annotated version of the first file.
     By default the the first variant in the list is provided to get an AF, the 2nd to determine the simulated variant (for false positives) and the 3rd to determine if a false positive is
     a pure false positive (not simulated) or not (wrong genotype)"""
-    out_file = open("out.out", "w")
     files_to_pair_with_clean = []
     for item in files_to_pair_with:
         files_to_pair_with_clean.append(utils.make_clean_vcf(item, out_dir))
@@ -370,14 +369,12 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
 
                     if i == 0:
                         if equivalent_variant:
-                            out_file.write(' '.join(equivalent_variant)+'\n')
                             AO_RO_DP = {"AO": None, "RO": None, "DP": None}
 
                             for entry in AO_RO_DP:
                                 try:
                                     #Loop backwards through fields to preferentially extract AO and RO from SAMPLE over INFO
                                     for field in equivalent_variant[::-1]:
-                                        out_file.write(field + '\n')
                                         found = re.search("['\t', ':']{}['\t', ':']".format(entry), field)
                                         if found:
                                             field_split = field.split(':')
@@ -398,7 +395,6 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                                 info = "N/A;"
 
                             info += "N/A;" if not AO_RO_DP["DP"] else str(AO_RO_DP["DP"]) + ';'
-                            out_file.write(info+'\n')
                     elif i == 1:
                         if equivalent_variant:
                             info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
@@ -425,7 +421,6 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
         if item and os.path.isfile(item):
             os.remove(item)
             os.remove(item+".tbi")
-    out_file.close()
 
 def print_stats(stats):
     '''
