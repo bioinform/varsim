@@ -341,6 +341,7 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                 single_var_file = utils.sort_and_compress(single_var_file)
 
                 single_var_chr = line_split[0]
+                info = ''
 
                 for i, item in enumerate(files_to_pair_with_clean):
 
