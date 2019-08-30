@@ -320,7 +320,7 @@ def make_clean_vcf(vcf, path=None):
                 continue
             else:
                 GT = "0/1" if line_split[-1] == "./." else line_split[-1]
-                info_entries = [line_split[7].split('=')[0] for x in line_split[7].split(';')]
+                info_entries = [x.split('=')[0] for x in line_split[7].split(';')]
                 info = "." if len(set(info_entries)) < len(info_entries) else line_split[7]
                 clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", info, line_split[8], GT]) + '\n')
 
