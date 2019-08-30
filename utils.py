@@ -253,6 +253,22 @@ def write_vcf(lines, vcf):
     return vcf
 
 
+def write_filtered_vcf(vcf, chrm, out_vcf):
+
+    content = []
+
+    with versatile_open(vcf, "r") as vcf_handle:
+
+        for line in vcf_handle.readlines():
+            line_strip = line.strip()
+            line_split = line_strip.split()
+
+            if line_split[0][0] == "#" or line_split[0] == chrm:
+                content.append(line_strip)
+
+    return write_vcf(content, out_vcf)
+
+
 def get_equivalent_variant(variant, vcf):
     """Return the variant in a vcf closest to a variant"""
 
@@ -304,7 +320,9 @@ def make_clean_vcf(vcf, path=None):
                 continue
             else:
                 GT = "0/1" if line_split[-1] == "./." else line_split[-1]
-                clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", ".", line_split[8], GT]) + '\n')
+                info_entries = [line_split[7].split('=')[0] for x in line_split[7].split(';')]
+                info = "." if len(set(info_entries)) < len(info_entries) else line_split[7]
+                clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", info, line_split[8], GT]) + '\n')
 
     clean_vcf_handle.close()
 
