@@ -254,6 +254,7 @@ def write_vcf(lines, vcf):
 
 
 def write_filtered_vcf(vcf, chrm, out_vcf):
+    """Extract from a vcf file only variants that are located in a specified chromosome"""
 
     content = []
 
