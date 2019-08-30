@@ -259,7 +259,7 @@ def write_filtered_vcf(vcf, chrm, out_vcf):
 
     with versatile_open(vcf, "r") as vcf_handle:
 
-        for line in vcf_handle.readlines():
+        for line in vcf_handle:
             line_strip = line.strip()
             line_split = line_strip.split()
 
@@ -311,7 +311,7 @@ def make_clean_vcf(vcf, path=None):
     clean_vcf_handle = open(clean_vcf, "w")
 
     with versatile_open(vcf, "r") as vcf_handle:
-        for line in vcf_handle.readlines():
+        for line in vcf_handle:
             line_strip = line.strip()
             line_split = line_strip.split()
 
