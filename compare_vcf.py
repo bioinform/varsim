@@ -369,9 +369,8 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                             shutil.rmtree(vcfeval_prefix)
 
                     if i == 0:
+                        AO_RO_DP = {"AO": None, "RO": None, "DP": None}
                         if equivalent_variant:
-                            AO_RO_DP = {"AO": None, "RO": None, "DP": None}
-
                             for entry in AO_RO_DP:
                                 try:
                                     #Loop backwards through fields to preferentially extract AO and RO from SAMPLE over INFO
@@ -390,12 +389,12 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                                             break
                                 except:
                                     pass
-                            if AO_RO_DP["AO"] and AO_RO_DP["RO"]:
-                                info = str(float(AO_RO_DP["AO"])/(AO_RO_DP["AO"]+AO_RO_DP["RO"])) + ';'
-                            else:
-                                info = "N/A;"
+                        if AO_RO_DP["AO"] and AO_RO_DP["RO"]:
+                            info = str(float(AO_RO_DP["AO"])/(AO_RO_DP["AO"]+AO_RO_DP["RO"])) + ';'
+                        else:
+                            info = "N/A;"
 
-                            info += "N/A;" if not AO_RO_DP["DP"] else str(AO_RO_DP["DP"]) + ';'
+                        info += "N/A;" if not AO_RO_DP["DP"] else str(AO_RO_DP["DP"]) + ';'
                     elif i == 1:
                         if equivalent_variant:
                             info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
