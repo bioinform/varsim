@@ -4,6 +4,7 @@ set -e
 version=$(git describe | sed 's/^v//')
 cwd=`pwd`
 
+git checkout -- pom.xml
 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$version
 
 mvn package
@@ -17,4 +18,5 @@ unzip dist/rtg-tools*.zip
 cp rtg-tools*/RTG.jar $cwd
 popd
 
-tar -cv build.sh utils.py compare_vcf.py RTG.jar quickstart.sh VarSim.jar __init__.py liftover_restricted_vcf_map.py generate_small_test_ref.py varsim.py varsim_multi.py varsim_somatic.py varsim_validator.py | gzip > varsim-$version.tar.gz
+git checkout -- pom.xml
+tar -cv pom.xml tests/quickstart_test/quickstart.sh build.sh utils.py compare_vcf.py RTG.jar VarSim.jar __init__.py liftover_restricted_vcf_map.py generate_small_test_ref.py varsim.py varsim_multi.py varsim_somatic.py varsim_validator.py | gzip > varsim-$version.tar.gz
