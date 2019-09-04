@@ -21,7 +21,7 @@ ${OPT_DIR}/samtools-1.9_install/samtools faidx hs37d5.fa
 
 # Test run varsim to generate 1x coverage data
 export PATH=${OPT_DIR}/jdk1.8.0_131/bin:$PATH
-../../varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
+${DIR}/../../varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
 --sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
 --reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
 --vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
