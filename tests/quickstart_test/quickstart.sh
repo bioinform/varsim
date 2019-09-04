@@ -12,10 +12,18 @@ b37_source="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_
 dbsnp_source="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b150_GRCh37p13/VCF/All_20170710.vcf.gz"
 
 ## Download reference and variant databases 
-wget $b37_source -O - | gunzip -c > hs37d5.fa
-wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
-wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
-wget $dbsnp_source -O All.vcf.gz
+if [[ ! -f hs37d5.fa ]];then
+    wget $b37_source -O - | gunzip -c > hs37d5.fa
+fi
+if [[ ! -f insert_seq.txt ]];then
+    wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
+fi
+if [[ ! -f GRCh37_hg19_supportingvariants_2013-07-23.txt ]];then
+    wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
+fi
+if [[ ! -f All.vcf.gz ]];then
+    wget $dbsnp_source -O All.vcf.gz
+fi
 
 ${OPT_DIR}/samtools-1.9_install/samtools faidx hs37d5.fa
 
