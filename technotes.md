@@ -127,6 +127,8 @@ The new `compare_vcf.py` scripts wraps VarSim's `vcfcompare` and RTG's `vcfeval`
 * Run `vcfcompare` inside VarSim to generate TP, FN and FP. 
 * Rescue FN and FP by feeding them into `vcfeval`
 * Combine the results and update numbers.
+* the following diagram illustrates how it works on a high level
+![compare_vcf.py diagram](web_assets/img/varsim_vcfeval_illustration_20190904.png)
 
 ## Known issues
 * VarSim used to prioritize VCFs in the **reverse** order of arguments. This issue has been fixed. This issue only affects overlapping variants.
