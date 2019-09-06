@@ -46,7 +46,7 @@ wget -O- http://mirrors.sonic.net/apache/maven/maven-3/3.5.4/binaries/apache-mav
 fi
 ANT_DIR=${OPT_DIR}/apache-ant-1.9.13
 if [[ ! -d ${ANT_DIR} ]]; then
-wget -O- https://www.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
+wget -O- https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
 fi
 
 # Download ART
