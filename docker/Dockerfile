@@ -1,6 +1,7 @@
 FROM centos:7.2.1511
 		
-ENV VARSIM_VERSION master
+ARG branch_of_interest		
+ENV VARSIM_VERSION $branch_of_interest
 
 RUN yum update -y
 RUN yum install -y centos-release-scl
