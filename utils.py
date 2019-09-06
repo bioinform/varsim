@@ -2,6 +2,7 @@ import logging
 import subprocess
 import os
 import sys
+import re
 import pysam
 from distutils.version import LooseVersion
 # Check java version to make sure it is Java 8
@@ -294,9 +295,36 @@ def get_equivalent_variant(variant, vcf):
     return equivalent_variant
 
 
+def get_info(var, entry):
+    """Return a value for a user selected field in a line from a vcf (provided as a list split by whitespace)"""
+
+    ret_val = None
+
+    try:
+        #Loop through vcf fields backwards
+        for field in var[::-1]:
+            #First try fields seperated with an ':' e.g. GT:AO	0/1:23
+            found = re.search("['\t', ':']{}['\t', ':']".format(entry), field)
+            if found:
+                field_split = field.split(':')
+                entry_index = field_split.index('{}'.format(entry))
+                field_index = var.index(field)
+                ret_val = var[field_index+1].split(':')[entry_index]
+                break
+
+            #Second try fields with an '=' e.g. AO=23;RO=45
+            found = re.search("['\t', ';']{}=".format(entry), field)
+            if found:
+                ret_val = re.split("['\t', ';']{}=".format(entry), field)[1].split(';')[0]
+                break
+    except:
+        pass
+
+    return ret_val
+
+
 def make_clean_vcf(vcf, path=None):
     """Make a clean vcf retaining essential fields"""
-
     vcf_path = os.path.split(vcf)
 
     if vcf_path[1].endswith('.gz'):
@@ -321,8 +349,11 @@ def make_clean_vcf(vcf, path=None):
                 continue
             else:
                 GT = "0/1" if line_split[-1] == "./." else line_split[-1]
-                info_entries = [x.split('=')[0] for x in line_split[7].split(';')]
-                info = "." if len(set(info_entries)) < len(info_entries) else line_split[7]
+                if len(line_split) > 7:
+                    info_entries = [x.split('=')[0] for x in line_split[7].split(';')]
+                    info = "." if len(set(info_entries)) < len(info_entries) else line_split[7]
+                else:
+                    info = "."
                 clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", info, line_split[8], GT]) + '\n')
 
     clean_vcf_handle.close()

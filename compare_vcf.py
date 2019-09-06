@@ -369,32 +369,25 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                             shutil.rmtree(vcfeval_prefix)
 
                     if i == 0:
-                        AO_RO_DP = {"AO": None, "RO": None, "DP": None}
+                        AO_RO_DP_AD = {"AO": None, "RO": None, "DP": None, "AD": None}
                         if equivalent_variant:
-                            for entry in AO_RO_DP:
-                                try:
-                                    #Loop backwards through fields to preferentially extract AO and RO from SAMPLE over INFO
-                                    for field in equivalent_variant[::-1]:
-                                        found = re.search("['\t', ':']{}['\t', ':']".format(entry), field)
-                                        if found:
-                                            field_split = field.split(':')
-                                            entry_index = field_split.index('{}'.format(entry))
-                                            field_index = equivalent_variant.index(field)
-                                            AO_RO_DP[entry] = int(equivalent_variant[field_index+1].split(':')[entry_index])
-                                            break
+                            for entry in AO_RO_DP_AD:
+                                AO_RO_DP_AD[entry] = utils.get_info(equivalent_variant, entry)
 
-                                        found = re.search("['\t', ';']{}=".format(entry), field)
-                                        if found:
-                                            AO_RO_DP[entry] = int(re.split("['\t', ';']{}=".format(entry), field)[1].split(';')[0])
-                                            break
-                                except:
-                                    pass
-                        if AO_RO_DP["AO"] and AO_RO_DP["RO"]:
-                            info = str(float(AO_RO_DP["AO"])/(AO_RO_DP["AO"]+AO_RO_DP["RO"])) + ';'
+                        # gatk4 format
+                        if AO_RO_DP_AD["AD"]:
+                            AD_split = AO_RO_DP_AD["AD"].split(',')
+                            AO = int(AD_split[1])
+                            RO = int(AD_split[0])
+                            info += "0.0;" if AO+RO == 0 else str(float(AO)/(AO+RO)) + ';'
+                        #freebayes
+                        elif AO_RO_DP_AD["AO"] and AO_RO_DP_AD["RO"]:
+                            denominator = int(AO_RO_DP_AD["AO"].split(',')[0])+int(AO_RO_DP_AD["RO"].split(',')[0])
+                            info += "0.0;" if denominator == 0 else str(float(AO_RO_DP_AD["AO"].split(',')[0])/denominator) + ';'
                         else:
-                            info = "N/A;"
+                            info += "N/A;"
 
-                        info += "N/A;" if not AO_RO_DP["DP"] else str(AO_RO_DP["DP"]) + ';'
+                        info += "N/A;" if not AO_RO_DP_AD["DP"] else str(AO_RO_DP_AD["DP"]) + ';'
                     elif i == 1:
                         if equivalent_variant:
                             info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
@@ -421,6 +414,7 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
         if item and os.path.isfile(item):
             os.remove(item)
             os.remove(item+".tbi")
+
 
 def print_stats(stats):
     '''
