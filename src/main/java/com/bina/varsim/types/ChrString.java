@@ -1,6 +1,7 @@
 package com.bina.varsim.types;
 
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Used to represent the chromosome name, able to useful things like determine sex
@@ -9,6 +10,9 @@ import java.util.logging.Logger;
  */
 public class ChrString implements Comparable<ChrString>{
     private final static Logger log = Logger.getLogger(ChrString.class.getName());
+    private final static Pattern restrictedChrX = Pattern.compile("(chr)?X_\\d+_\\d+");
+    private final static Pattern restrictedChrY = Pattern.compile("(chr)?Y_\\d+_\\d+");
+    private final static Pattern restrictedChrMT = Pattern.compile("(MT|chrM)_\\d+_\\d+");
     final String name;
 
     public ChrString(final String name) {
@@ -59,10 +63,9 @@ public class ChrString implements Comparable<ChrString>{
     public boolean isX() {
         if (name.equals("X") || name.equals("chrX")) {
             return true;
-        } else if (name.startsWith("X") || name.startsWith("chrX")) {
-            //TODO: handle restricted X chromosome (say X_1_1000)
-            log.warning("Prefix looks like chromosome X, but might be treated as diploid genome.");
-            return false;
+        } else if (restrictedChrX.matcher(name).matches()) {
+            log.warning("Treating " + name + " as restricted genome.");
+            return true;
         }
         return false;
     }
@@ -70,10 +73,9 @@ public class ChrString implements Comparable<ChrString>{
     public boolean isY() {
         if (name.equals("Y") || name.equals("chrY")) {
             return true;
-        } else if (name.startsWith("Y") || name.startsWith("chrY")) {
-            //TODO: handle restricted Y chromosome (say Y_1_1000)
-            log.warning("Prefix looks like chromosome Y, but might be treated as diploid genome.");
-            return false;
+        } else if (restrictedChrY.matcher(name).matches()) {
+            log.warning("Treating " + name + " as restricted genome.");
+            return true;
         }
         return false;
     }
@@ -81,10 +83,9 @@ public class ChrString implements Comparable<ChrString>{
     public boolean isMT() {
         if (name.equals("MT") || name.equals("chrM")) {
             return true;
-        } else if (name.startsWith("MT") || name.startsWith("chrM")) {
-            //TODO: handle restricted MT chromosome (say chrM_1_1000)
-            log.warning("Prefix looks like chromosome MT, but might be treated as diploid genome.");
-            return false;
+        } else if (restrictedChrMT.matcher(name).matches()) {
+            log.warning("Treating " + name + " as restricted genome.");
+            return true;
         }
         return false;
     }
