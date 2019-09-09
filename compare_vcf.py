@@ -377,17 +377,31 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                         # gatk4 format
                         if AO_RO_DP_AD["AD"]:
                             AD_split = AO_RO_DP_AD["AD"].split(',')
-                            AO = int(AD_split[1])
+                            AO = list(map(int, AD_split[1:]))
                             RO = int(AD_split[0])
-                            info += "0.0;" if AO+RO == 0 else str(float(AO)/(AO+RO)) + ';'
+                            for i, item in enumerate(AO):
+                                comma = ',' if i < len(AO)-1 else ''
+                                if item+RO == 0:
+                                    info += "0.0" + comma
+
+                                else:
+                                    info += str(float(item)/(item+RO)) + comma
                         #freebayes
                         elif AO_RO_DP_AD["AO"] and AO_RO_DP_AD["RO"]:
-                            denominator = int(AO_RO_DP_AD["AO"].split(',')[0])+int(AO_RO_DP_AD["RO"].split(',')[0])
-                            info += "0.0;" if denominator == 0 else str(float(AO_RO_DP_AD["AO"].split(',')[0])/denominator) + ';'
-                        else:
-                            info += "N/A;"
+                            for i, item in enumerate(AO_RO_DP_AD["AO"].split(',')):
+                                comma = ',' if i < len(AO_RO_DP_AD["AO"].split(','))-1 else ''
+                                denominator = int(item)+int(AO_RO_DP_AD["RO"])
+                                if denominator == 0:
+                                    info += "0.0" + comma
 
-                        info += "N/A;" if not AO_RO_DP_AD["DP"] else str(AO_RO_DP_AD["DP"]) + ';'
+                                else:
+                                    info += str(float(item)/denominator) + comma
+                        else:
+                            info += "N/A"
+
+                        info += ';'
+                        info += "N/A" if not AO_RO_DP_AD["DP"] else str(AO_RO_DP_AD["DP"])
+                        info += ';'
                     elif i == 1:
                         if equivalent_variant:
                             info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
