@@ -198,11 +198,11 @@ public class VCF2diploidTest {
         universalTestMethod("src/test/resources/TranslocationTest/UnbalancedGainTranslocationTest/UnbalancedGainIntrachromosomalTranslocationWithInversion");
     }
     @Test
-    public void hom_del_overlap_others() throws IOException {
-        universalTestMethod2("src/test/resources/simulationTests/hom_del_overlap_others");
+    public void homDelOverlapOthers() throws IOException {
+        universalTestMethod2("src/test/resources/simulationTests/homDelOverlapOthers");
     }
     @Test
-    public void het_del_overlap_others() throws IOException {
-        universalTestMethod2("src/test/resources/simulationTests/het_del_overlap_others");
+    public void hetDelOverlapOthers() throws IOException {
+        universalTestMethod2("src/test/resources/simulationTests/hetDelOverlapOthers");
     }
 }
