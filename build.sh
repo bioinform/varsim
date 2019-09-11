@@ -21,6 +21,7 @@ PYTHON_DIR=${OPT_DIR}/miniconda2
 CONDA=Miniconda2-latest-Linux-x86_64.sh
 samtools_version="1.9"
 SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}_install
+HTSLIB_DIR=${OPT_DIR}/htslib-1.9_install
 
 if [[ ! -d ${PYTHON_DIR} ]]; then
 wget -q https://repo.continuum.io/miniconda/${CONDA}\
@@ -33,9 +34,16 @@ wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && rm -f ${CONDA}
 
     if [[ ! -d $SAMTOOLS_DIR ]]; then
-        mkdir -p ${SAMTOOLS_DIR}
+        mkdir -p ${SAMTOOLS_DIR}/bin/
         for i in samtools bgzip tabix;do
-            ln -sf ${PYTHON_DIR}/bin/${i} ${SAMTOOLS_DIR}/
+            ln -sf ${PYTHON_DIR}/bin/${i} ${SAMTOOLS_DIR}/bin/
+        done
+    fi
+
+    if [[ ! -d $HTSLIB_DIR ]]; then
+        mkdir -p ${HTSLIB_DIR}/bin/
+        for i in bgzip htsfile tabix;do
+            ln -sf ${PYTHON_DIR}/bin/${i} ${HTSLIB_DIR}/bin/
         done
     fi
 fi
@@ -49,12 +57,20 @@ if [[ ! -d ${ANT_DIR} ]]; then
 wget -O- https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
 fi
 
+BZIP_DIR=${OPT_DIR}/bzip2-1.0.6
+if [[ ! -d ${BZIP_DIR} ]]; then
+    wget -O- https://www.sourceware.org/pub/bzip2/bzip2-1.0.6.tar.gz | tar zxvf -
+    pushd ${BZIP_DIR}
+    make install PREFIX=${BZIP_DIR}_install CFLAGS=" -fPIC"
+    popd
+fi
+
 # Download ART
 ART_DIR=${OPT_DIR}/ART
 if [[ ! -d ${ART_DIR} ]]; then
     mkdir -p ${ART_DIR}
     pushd ${ART_DIR}
-    wget -O- http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz | tar xfz -
+    wget --no-check-certificate -O- http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz | tar xfz -
     popd
 fi
 
