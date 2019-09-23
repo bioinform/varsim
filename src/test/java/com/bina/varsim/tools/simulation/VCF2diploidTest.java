@@ -88,6 +88,39 @@ public class VCF2diploidTest {
         assertTrue(FileUtils.contentEquals(outputPaternalReference1Path.toFile(), new File(paternalReference1)));
         assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
     }
+
+    /**
+     * test male sample with variants on X chromosome
+     * @param directory
+     * @throws IOException
+     */
+    public void universalTestMethod3(String directory) throws IOException {
+        File wd = tmpFolder.newFolder("tmp");
+        String reference = new File(directory, "reference.fa").toString();
+        String vcf = new File(directory, "input.vcf").toString();
+        String expectedVCF1 = new File(directory, "expected.vcf").toString();
+        String map = new File(directory, "expected.map").toString();
+        String maternalReference1 = new File(directory, "chrX_maternal.fa").toString();
+
+        Path outputVCF1Path = Paths.get(wd.getCanonicalPath(), "chrX_test.vcf");
+        Path outputMaternalReferencePath = Paths.get(wd.getCanonicalPath(), "chrX_test_maternal.fa");
+        Path outputPaternalReferencePath = Paths.get(wd.getCanonicalPath(), "chrX_test_paternal.fa");
+
+        VCF2diploid runner = new VCF2diploid();
+        String[] args = new String[]{
+                "-chr", reference, "-outdir", wd.getCanonicalPath(),
+                "-seed", Integer.toString(this.seed), "-id", "test",
+                "-t", "MALE", "-vcf", vcf
+        };
+        runner.run(args);
+        if (updateVCF) {
+            Files.copy(outputVCF1Path, Paths.get(expectedVCF1), StandardCopyOption.REPLACE_EXISTING);
+        }
+        assertTrue(FileUtils.contentEquals(outputVCF1Path.toFile(), new File(expectedVCF1)));
+        assertTrue(FileUtils.contentEquals(outputMaternalReferencePath.toFile(), new File(maternalReference1)));
+        assertTrue(Files.notExists(outputPaternalReferencePath));
+        assertTrue(FileUtils.contentEquals(runner.getOutputMap(), new File(map)));
+    }
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
@@ -204,5 +237,9 @@ public class VCF2diploidTest {
     @Test
     public void hetDelOverlapOthers() throws IOException {
         universalTestMethod2("src/test/resources/simulationTests/hetDelOverlapOthers");
+    }
+    @Test
+    public void maleChrXHet() throws IOException {
+        universalTestMethod3("src/test/resources/simulationTests/maleChrXHet");
     }
 }

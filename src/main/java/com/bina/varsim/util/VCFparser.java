@@ -149,12 +149,15 @@ public class VCFparser extends GzFileParser<Variant> {
             // phase is only a single number, for haploid chromosomes
             byte val = (byte) StringUtilities.parseInt(geno);
             if (chr.isX()) {
+                vals[0] = -1; //paternal missing
                 vals[1] = val; // maternal
                 isPhased = true;
             } else if (chr.isY()) {
                 vals[0] = val; // paternal
+                vals[1] = -1; //maternal missing
                 isPhased = true;
             } else if (chr.isMT()) {
+                vals[0] = -1; //paternal missing
                 vals[1] = val;
                 isPhased = true;
             } else {
