@@ -875,10 +875,15 @@ public class Variant implements Comparable<Variant>{
         return isCopyNumberPositive;
     }
 
+    /**
+     *
+     * @return . if ALT field is empty or unknown
+     */
     public String alternativeAlleleString() {
         StringBuilder sbStr = new StringBuilder();
+        String defaultResult = ".";
         if (alts == null) {
-            return ".";
+            return defaultResult;
         }
         for (int i = 0; i < alts.length; i++) {
             //if (i > 0 && alts[i].getSeq().toString().equals(alts[i - 1].toString())) {
@@ -899,7 +904,11 @@ public class Variant implements Comparable<Variant>{
             }
             sbStr.append(clippedSequence);
         }
-        return sbStr.toString();
+        String result = sbStr.toString();
+        if (result.length() == 0) {
+            result = defaultResult;
+        }
+        return result;
     }
 
     public int getNumberOfAlternativeAlleles() {
@@ -1127,6 +1136,9 @@ public class Variant implements Comparable<Variant>{
         // ref allele
 	String ref = getReferenceString() + extraBase;
       ref = ref + clippedSequence;
+        if (ref.length() == 0) {
+            ref = "."; //make sure this field is not empty
+        }
         sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
         // alt alleles
