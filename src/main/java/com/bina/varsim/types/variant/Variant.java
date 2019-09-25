@@ -881,7 +881,7 @@ public class Variant implements Comparable<Variant>{
      */
     public String alternativeAlleleString() {
         StringBuilder sbStr = new StringBuilder();
-        String defaultResult = ".";
+        String defaultResult = "N";
         if (alts == null) {
             return defaultResult;
         }
@@ -906,7 +906,7 @@ public class Variant implements Comparable<Variant>{
         }
         String result = sbStr.toString();
         if (result.length() == 0) {
-            result = defaultResult;
+            result = "<DEL>"; //most likely it's a deletion where all REF bases have been deleted (after trimming)
         }
         return result;
     }
@@ -1137,7 +1137,7 @@ public class Variant implements Comparable<Variant>{
 	String ref = getReferenceString() + extraBase;
       ref = ref + clippedSequence;
         if (ref.length() == 0) {
-            ref = "."; //make sure this field is not empty
+            ref = "N"; //make sure this field is not empty
         }
         sbStr.append(ref.toUpperCase());
         sbStr.append("\t");
