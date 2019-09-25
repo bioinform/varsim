@@ -98,9 +98,10 @@ class VCFComparator(object):
         return self.fn
 
 class VarSimVCFComparator(VCFComparator):
-    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java'):
+    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java', sv_length = 100):
         VCFComparator.__init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, match_geno, log_to_file, opts, java)
         self.disallow_partial_fp = disallow_partial_fp
+        self.sv_length = sv_length
     def get_tp_predict(self):
         '''
         varsim does not generate TP based off of predictions
@@ -130,6 +131,8 @@ class VarSimVCFComparator(VCFComparator):
             cmd.append(self.regions)
         if self.disallow_partial_fp:
             cmd.append('-disallow_partial_fp')
+        if str(self.sv_length):
+            cmd.append('-sv_length {}'.format(self.sv_length))
         if self.opts:
             cmd.append(self.opts)
         cmd.extend(self.vcfs)
@@ -268,7 +271,8 @@ def process(args):
                sample = args.sample, vcfs = args.vcfs,
                exclude_filtered = args.exclude_filtered,
                disallow_partial_fp = args.disallow_partial_fp,
-               match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options, java = args.java)
+               match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options, java = args.java,
+                                            sv_length=args.sv_length)
     varsim_tp, varsim_fn, varsim_fp = varsim_comparator.get_tp(), varsim_comparator.get_fn(), varsim_comparator.get_fp()
     varsim_tp = utils.sort_and_compress(varsim_tp)
     varsim_fn = utils.sort_and_compress(varsim_fn)
