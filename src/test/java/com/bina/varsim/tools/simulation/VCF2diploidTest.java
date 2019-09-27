@@ -242,4 +242,8 @@ public class VCF2diploidTest {
     public void maleChrXHet() throws IOException {
         universalTestMethod3("src/test/resources/simulationTests/maleChrXHet");
     }
+    @Test
+    public void cnvTest() throws IOException {
+        universalTestMethod("src/test/resources/simulationTests/cnvTest");
+    }
 }
