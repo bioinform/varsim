@@ -29,7 +29,7 @@ import java.util.*;
  */
 
 public class VCF2diploid extends VarSimTool {
-    final int LineWidth = 50; // this is default for FASTA files
+    final int LineWidth = 1000000000; // this is default for FASTA files
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
     public final static char DELETED_BASE = '~';
@@ -634,6 +634,7 @@ public class VCF2diploid extends VarSimTool {
     private void writeGenome(final BufferedWriter bw, final String name, final byte[] genome,
                              final Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
 
+        int count = 0;
         // write header
         bw.write(">" + name);
         bw.newLine();
@@ -651,6 +652,10 @@ public class VCF2diploid extends VarSimTool {
                 line.append((char) genome[p]);
             }
             while (line.length() >= LineWidth) {
+                count++;
+                if (count % 1000 == 0) {
+                    System.out.println("writeGenome: " + count);
+                }
                 bw.write(line.toString(), 0, LineWidth);
                 bw.newLine();
                 line.delete(0, LineWidth);
