@@ -51,6 +51,19 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     contigs = list(zip(reference_handle.references, reference_handle.lengths))
     reference_handle.close()
 
+
+    logger.warning("Setting CN to be String type (not standard VCF spec)...")
+    vcf.parser.RESERVED_FORMAT = {
+    'GT': 'String', 'DP': 'Integer', 'FT': 'String', 'GL': 'Float',
+    'GLE': 'String', 'PL': 'Integer', 'GP': 'Float', 'GQ': 'Integer',
+    'HQ': 'Integer', 'PS': 'Integer', 'PQ': 'Integer', 'EC': 'Integer',
+    'MQ': 'Integer',
+
+    # Keys used for structural variants
+    'CN': 'String', 'CNQ': 'Float', 'CNL': 'Float', 'NQ': 'Integer',
+    'HAP': 'Integer', 'AHAP': 'Integer'
+    }
+
     # get the base name and use it in the output
     vcf_template_reader = vcf.Reader(open(in_vcf, "r"))
     vcf_template_reader.metadata["reference"] = restricted_reference
