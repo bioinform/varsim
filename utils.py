@@ -295,6 +295,25 @@ def get_equivalent_variant(variant, vcf):
     return equivalent_variant
 
 
+def get_matching_alt_ref(variant, vcf):
+    """Return the variant in a vcf at the same position with matching alt and ref"""
+
+    matching_alt_ref = None
+
+    with versatile_open(vcf, "r") as vcf_handle:
+        for line in vcf_handle:
+            line_split = str(line).strip().split()
+
+            if line_split[0][0] == "#":
+                continue
+
+            if variant[0] == line_split[0] and variant[1] == line_split[1] and variant[3] == line_split[3] and variant[4] == line_split[4]:
+                matching_alt_ref = line_split[:]
+                break
+
+    return matching_alt_ref
+
+
 def get_info(var, entry):
     """Return a value for a user selected field in a line from a vcf (provided as a list split by whitespace)"""
 

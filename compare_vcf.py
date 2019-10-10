@@ -367,6 +367,11 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                                          opts = vcfeval_options, java = java)
 
                         equivalent_variant = utils.get_equivalent_variant(line_split, vcfeval_comparator.get_tp())
+
+                        #if not equivalent_variant, check for matching alt and ref at the same position. Example of when this could be applicable is a 0/0 call
+                        if not equivalent_variant:
+                            equivalent_variant = utils.get_matching_alt_ref(line_split, filtered_true_vcf)
+
                         #clean up
                         if os.path.exists(vcfeval_prefix):
                             LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
