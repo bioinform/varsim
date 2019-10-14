@@ -9,7 +9,6 @@ WD=$1
 echo running in $WD
 pushd $WD
 b37_source="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz"
-dbsnp_source="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b150_GRCh37p13/VCF/All_20170710.vcf.gz"
 
 ## Download reference and variant databases 
 if [[ ! -f hs37d5.fa ]];then
@@ -21,18 +20,15 @@ fi
 if [[ ! -f GRCh37_hg19_supportingvariants_2013-07-23.txt ]];then
     wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
 fi
-if [[ ! -f All.vcf.gz ]];then
-    wget $dbsnp_source -O All.vcf.gz
-fi
 
 ${OPT_DIR}/samtools-1.9_install/samtools faidx hs37d5.fa
 
 # Test run varsim to generate 1x coverage data
 export PATH=${OPT_DIR}/jdk1.8.0_131/bin:$PATH
-${DIR}/../../varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
+${DIR}/../../varsim.py --vc_in_vcf 21_5_10Mb.vcf.gz --sv_insert_seq insert_seq.txt \
 --sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
---reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
---vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
+--reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 300 --vc_num_ins 10 \
+--vc_num_del 10 --vc_num_mnp 5 --vc_num_complex 5 --sv_num_ins 2000 \
 --sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
 --vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
 --vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
