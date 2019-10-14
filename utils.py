@@ -271,10 +271,10 @@ def write_filtered_vcf(vcf, chrm, out_vcf):
     return write_vcf(content, out_vcf)
 
 
-def get_equivalent_variant(variant, vcf):
+def get_closest_variant(variant, vcf):
     """Return the variant in a vcf closest to a variant"""
 
-    equivalent_variant = None
+    closest_variant = None
 
     with versatile_open(vcf, "r") as vcf_handle:
         min_dist = 100
@@ -290,9 +290,9 @@ def get_equivalent_variant(variant, vcf):
 
                 if dist < min_dist:
                     min_dist = dist
-                    equivalent_variant = line_split[:]
+                    closest_variant = line_split[:]
 
-    return equivalent_variant
+    return closest_variant
 
 
 def get_matching_alt_ref(variant, vcf):
