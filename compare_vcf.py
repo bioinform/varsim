@@ -349,7 +349,7 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
 
                 for i, item in enumerate(files_to_pair_with_clean):
 
-                    equivalent_variant = None
+                    nonmatching_gt_variant = None
 
                     if item:
                         vcfeval_prefix = os.path.join(out_dir, 'vcfeval_compare_results_annotate')
@@ -366,7 +366,12 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                                          log_to_file= log_to_file,
                                          opts = vcfeval_options, java = java)
 
-                        equivalent_variant = utils.get_equivalent_variant(line_split, vcfeval_comparator.get_tp())
+                        nonmatching_gt_variant = utils.get_closest_variant(line_split, vcfeval_comparator.get_tp())
+
+                        #if not nonmatching_gt_variant, check for matching alt and ref at the same position. Example of when this could be applicable is a 0/0 call when vcfeval will not pair up variants at the same locus with the same alt and ref even with match_geno=False
+                        if not nonmatching_gt_variant:
+                            nonmatching_gt_variant = utils.get_matching_alt_ref(line_split, filtered_true_vcf)
+
                         #clean up
                         if os.path.exists(vcfeval_prefix):
                             LOGGER.warn('{0} exists, removing ...'.format(vcfeval_prefix))
@@ -374,9 +379,9 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
 
                     if i == 0:
                         AO_RO_DP_AD = {"AO": None, "RO": None, "DP": None, "AD": None}
-                        if equivalent_variant:
+                        if nonmatching_gt_variant:
                             for entry in AO_RO_DP_AD:
-                                AO_RO_DP_AD[entry] = utils.get_info(equivalent_variant, entry)
+                                AO_RO_DP_AD[entry] = utils.get_info(nonmatching_gt_variant, entry)
 
                         # gatk4 format
                         if AO_RO_DP_AD["AD"]:
@@ -407,13 +412,13 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                         info += "N/A" if not AO_RO_DP_AD["DP"] else str(AO_RO_DP_AD["DP"])
                         info += ';'
                     elif i == 1:
-                        if equivalent_variant:
-                            info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
+                        if nonmatching_gt_variant:
+                            info += nonmatching_gt_variant[0]+'_'+nonmatching_gt_variant[1]+'_'+nonmatching_gt_variant[3]+'_'+nonmatching_gt_variant[4]+'_'+nonmatching_gt_variant[-1] + ";"
                         else:
                             info += "N/A;"
 
                     elif i == 2:
-                        info += "pure;" if not equivalent_variant else "not;"
+                        info += "pure;" if not nonmatching_gt_variant else "not;"
 
                 line_split[6] = info
                 annotated_content.append('\t'.join(line_split))
