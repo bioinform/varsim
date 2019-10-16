@@ -634,7 +634,6 @@ public class VCF2diploid extends VarSimTool {
     private void writeGenome(final BufferedWriter bw, final String name, final byte[] genome,
                              final Hashtable<Integer, FlexSeq> insertPosition2Sequence) throws IOException {
 
-        int count = 0;
         // write header
         bw.write(">" + name);
         bw.newLine();
@@ -652,10 +651,6 @@ public class VCF2diploid extends VarSimTool {
                 line.append((char) genome[p]);
             }
             while (line.length() >= LineWidth) {
-                count++;
-                if (count % 1000 == 0) {
-                    System.out.println("writeGenome: " + count);
-                }
                 bw.write(line.toString(), 0, LineWidth);
                 bw.newLine();
                 line.delete(0, LineWidth);
