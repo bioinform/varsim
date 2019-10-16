@@ -21,7 +21,7 @@ public class SimpleInterval1D implements Comparable<Interval1D>, Interval1D {
      * @param right Right end-point (inclusive)
      */
     public SimpleInterval1D(long left, long right) {
-        if ((left <= right) && ((((right / 2) + 1) - ((left / 2) - 1)) < (Long.MAX_VALUE / 2))) {
+        if ((left - 1 <= right) && ((((right / 2) + 1) - ((left / 2) - 1)) < (Long.MAX_VALUE / 2))) {
             this.left = left;
             this.right = right;
         } else {
