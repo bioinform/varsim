@@ -1,0 +1,8 @@
+12	1_paternal	1	1	1	+	SEQ	.
+4	1_maternal	1	1	1	+	SEQ	.
+4	1_maternal	5	1	4	+	DUP_TANDEM	SV_22
+4	1_maternal	9	1	4	+	DUP_TANDEM	SV_22
+4	1_maternal	13	1	4	+	DUP_TANDEM	SV_22
+4	1_maternal	16	1	5	+	DEL	SV_22
+4	1_maternal	17	1	9	+	SEQ	.
+

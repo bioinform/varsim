@@ -51,6 +51,19 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     contigs = list(zip(reference_handle.references, reference_handle.lengths))
     reference_handle.close()
 
+
+    logger.warning("Setting CN to be String type (not standard VCF spec)...")
+    vcf.parser.RESERVED_FORMAT = {
+    'GT': 'String', 'DP': 'Integer', 'FT': 'String', 'GL': 'Float',
+    'GLE': 'String', 'PL': 'Integer', 'GP': 'Float', 'GQ': 'Integer',
+    'HQ': 'Integer', 'PS': 'Integer', 'PQ': 'Integer', 'EC': 'Integer',
+    'MQ': 'Integer',
+
+    # Keys used for structural variants
+    'CN': 'String', 'CNQ': 'Float', 'CNL': 'Float', 'NQ': 'Integer',
+    'HAP': 'Integer', 'AHAP': 'Integer'
+    }
+
     # get the base name and use it in the output
     vcf_template_reader = vcf.Reader(open(in_vcf, "r"))
     vcf_template_reader.metadata["reference"] = restricted_reference
@@ -72,6 +85,9 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
     info_warned = False
     regions_bedtool = pybedtools.BedTool(regions_bed)
 
+    logger.warning("only process fully-contained variants")
+    logger.warning("right now we only deal with SVLEN, which is agnostic of region start")
+    logger.warning("ignore END in INFO field for now")
     for region_index, region in enumerate(regions_bedtool, start=1):
         records = None
         try: records = vcf_template_reader.fetch(chrom=str(region.chrom), start=region.start, end=region.end)
@@ -79,9 +95,6 @@ def gen_restricted_vcf(in_vcf, regions_bed, out_vcf, restricted_reference, targe
         if records is None: continue
         for record in records:
             if record.POS <= region.start + flank or record.POS + len(record.REF) + flank - 1 >= region.end: continue
-            #only process fully-contained variants
-            #right now we only deal with SVLEN, which is agnostic of region start
-            #ignore END in INFO field for now
             if 'SVTYPE' in record.INFO and record.INFO['SVTYPE'] in ['DEL','INV','DUP'] and record.POS + max(map(abs, record.INFO['SVLEN'])) >= region.end + flank: continue
             record.CHROM = str(region_index) if use_short_contig_names else ("%s_%d_%d" % (str(region.chrom), region.start, region.end))
             # record.POS seems to be zero-based, at least in the infinite wisdom of my version of pysam
