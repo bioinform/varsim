@@ -84,6 +84,9 @@ public class chrSearchTree<K extends Interval1D> {
      * Search functions
      */
 
+    public boolean containsKey(final ChrString chr) {
+        return data.containsKey(chr);
+    }
 
     public Iterable<K> getOverlaps(ChrString chrname, Interval1D key) {
         return getOverlaps(chrname, key, 0, 0);

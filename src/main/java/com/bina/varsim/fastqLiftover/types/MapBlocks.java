@@ -1,9 +1,12 @@
 package com.bina.varsim.fastqLiftover.types;
 
+import com.bina.intervalTree.SimpleInterval1D;
+import com.bina.intervalTree.ValueInterval1D;
 import com.bina.varsim.fastqLiftover.readers.MapFileReader;
 import com.bina.varsim.types.ChrString;
 import com.bina.varsim.types.ReadMapBlock;
 import com.bina.varsim.types.ReadMapRecord;
+import com.bina.varsim.util.chrSearchTree;
 import htsjdk.tribble.annotation.Strand;
 import org.apache.log4j.Logger;
 
@@ -15,14 +18,18 @@ public class MapBlocks {
     public final static Logger log = Logger.getLogger(MapBlocks.class.getName());
     public final static int MIN_LENGTH_INTERVAL = 10;
     public Map<ChrString, NavigableMap<MapBlock, List<MapBlock>>> chrBlocks;
+    public chrSearchTree<ValueInterval1D<MapBlock>> blockIntervalTree;
 
     public MapBlocks(final File mapFile) throws IOException, IllegalArgumentException {
         MapFileReader mfr = new MapFileReader(mapFile);
 
         MapBlock mapBlock;
         chrBlocks = new HashMap<>();
+        blockIntervalTree = new chrSearchTree<>(true);
         while ((mapBlock = mfr.getNext()) != null) {
             final ChrString chromosome = mapBlock.srcLoc.chromosome;
+            final long start = mapBlock.srcLoc.location;
+            final long end = start + mapBlock.size - 1;
             if (!chrBlocks.containsKey(chromosome)) {
                 chrBlocks.put(chromosome, new TreeMap<MapBlock, List<MapBlock>>());
             }
@@ -30,6 +37,7 @@ public class MapBlocks {
                 chrBlocks.get(chromosome).put(mapBlock, new ArrayList<>());
             }
             chrBlocks.get(chromosome).get(mapBlock).add(mapBlock);
+            blockIntervalTree.put(chromosome, new ValueInterval1D<>(start, end, mapBlock));
         }
     }
 
@@ -98,26 +106,20 @@ public class MapBlocks {
         final Collection<ReadMapBlock> readMapBlocks = new ArrayList<>();
 
         final ChrString chromosome = interval.chromosome;
-        final int start = interval.start + 1;
-        final int end = interval.end;
+        final int start = interval.start + 1; //convert to 1-based start
+        final int end = interval.end; //1-based end
 
-        final MapBlock keyStart = new MapBlock(new GenomeLocation(chromosome, start));
-        final MapBlock keyEnd = new MapBlock(new GenomeLocation(chromosome, end));
-
-        if (!chrBlocks.containsKey(chromosome)) {
+        if (!blockIntervalTree.containsKey(chromosome)) {
             return readMapBlocks;
         }
 
-        final NavigableMap<MapBlock, List<MapBlock>> blocks = chrBlocks.get(chromosome);
-        final NavigableMap<MapBlock, List<MapBlock>> subset = blocks.headMap(keyEnd, true).tailMap(blocks.headMap(keyStart, true).lastKey(), true);
+        final List<MapBlock> subset = findIntersectingBlocks(blockIntervalTree, chromosome, start, end);
 
-        Iterator<List<MapBlock>> it = subset.values().iterator();
         log.trace("Going to lift over " + interval);
 
         // since intervalOffset is only used for MapBlock, which is 1-based, we need to set the beginning offset to 1
         int intervalOffset = 1;
-        while (it.hasNext()) {
-            for (MapBlock b : it.next()) {
+        for (MapBlock b : subset) {
 
                 int srcStart = Math.max(start, b.srcLoc.location);
                 int srcEnd = Math.min(end, b.srcLoc.location + b.size - 1);
@@ -129,7 +131,7 @@ public class MapBlocks {
 
                 // lengthOfIntervalOnRef is length of the lifted over interval
                 if (lengthOfIntervalOnRef < minIntervalLength) {
-                    log.trace("Skipping block " + b + " since the overlap is too small ( < " + MIN_LENGTH_INTERVAL + ")");
+                    log.trace("Skipping block " + b + " since the overlap is too small ( < " + minIntervalLength + ")");
                 } else {
                     // 0-based start, 1-based end
                     final GenomeInterval liftedInterval = new GenomeInterval();
@@ -148,7 +150,6 @@ public class MapBlocks {
                     readMapBlocks.add(new ReadMapBlock(intervalOffset, intervalOffset + lengthOfIntervalOnRead - 1, liftedInterval));
                 }
                 intervalOffset += lengthOfIntervalOnRead;
-            }
         }
         return readMapBlocks;
     }
@@ -166,5 +167,18 @@ public class MapBlocks {
             liftedReadMaps.add(liftedReadMapBlocks);
         }
         return new ReadMapRecord(readMapRecord.getReadName(), liftedReadMaps);
+    }
+
+    private List<MapBlock> findIntersectingBlocks(final chrSearchTree chrSearchTree, final ChrString chr, final int start, final int end) {
+        List<MapBlock> overlappingMapBlocks = new ArrayList<>();
+        Iterable<ValueInterval1D<MapBlock>> overlaps = chrSearchTree.getOverlaps(chr, new SimpleInterval1D(start, end));
+        if (overlaps == null) {
+            // nothing found
+            return overlappingMapBlocks;
+        }
+        for (ValueInterval1D<MapBlock> i : overlaps) {
+            overlappingMapBlocks.add(i.getContent());
+        }
+        return overlappingMapBlocks;
     }
 }
