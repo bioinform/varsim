@@ -29,7 +29,7 @@ import java.util.*;
  */
 
 public class VCF2diploid extends VarSimTool {
-    final int LineWidth = 50; // this is default for FASTA files
+    final int LineWidth = 1000000000; // this is default for FASTA files
     static final long SEED_ARG = 3333;
     private final static Logger log = Logger.getLogger(VCF2diploid.class.getName());
     public final static char DELETED_BASE = '~';

@@ -7,6 +7,7 @@ import json
 import logging
 import shutil
 import utils
+import re
 LOGGER = None
 
 def merge_results(outdir, varsim_tp, varsim_fn, vcfeval_tp,
@@ -97,9 +98,10 @@ class VCFComparator(object):
         return self.fn
 
 class VarSimVCFComparator(VCFComparator):
-    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java'):
+    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java', sv_length = 100):
         VCFComparator.__init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, match_geno, log_to_file, opts, java)
         self.disallow_partial_fp = disallow_partial_fp
+        self.sv_length = sv_length
     def get_tp_predict(self):
         '''
         varsim does not generate TP based off of predictions
@@ -129,6 +131,8 @@ class VarSimVCFComparator(VCFComparator):
             cmd.append(self.regions)
         if self.disallow_partial_fp:
             cmd.append('-disallow_partial_fp')
+        if str(self.sv_length):
+            cmd.append('-sv_length {}'.format(self.sv_length))
         if self.opts:
             cmd.append(self.opts)
         cmd.extend(self.vcfs)
@@ -267,7 +271,8 @@ def process(args):
                sample = args.sample, vcfs = args.vcfs,
                exclude_filtered = args.exclude_filtered,
                disallow_partial_fp = args.disallow_partial_fp,
-               match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options, java = args.java)
+               match_geno = args.match_geno, log_to_file= args.log_to_file, opts = args.vcfcompare_options, java = args.java,
+                                            sv_length=args.sv_length)
     varsim_tp, varsim_fn, varsim_fp = varsim_comparator.get_tp(), varsim_comparator.get_fn(), varsim_comparator.get_fp()
     varsim_tp = utils.sort_and_compress(varsim_tp)
     varsim_fn = utils.sort_and_compress(varsim_fn)
@@ -315,7 +320,6 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
     """Try to pair up each false call in a file (augmented_file) with a variant in the other files provided in a list (files_to_pair_with) to create an annotated version of the first file.
     By default the the first variant in the list is provided to get an AF, the 2nd to determine the simulated variant (for false positives) and the 3rd to determine if a false positive is
     a pure false positive (not simulated) or not (wrong genotype)"""
-
     files_to_pair_with_clean = []
     for item in files_to_pair_with:
         files_to_pair_with_clean.append(utils.make_clean_vcf(item, out_dir))
@@ -340,14 +344,21 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                 single_var_file = utils.write_vcf(content, os.path.join(out_dir, "single.vcf"))
                 single_var_file = utils.sort_and_compress(single_var_file)
 
+                single_var_chr = line_split[0]
+                info = ''
+
                 for i, item in enumerate(files_to_pair_with_clean):
 
-                    equivalent_variant = None
+                    nonmatching_gt_variant = None
 
                     if item:
                         vcfeval_prefix = os.path.join(out_dir, 'vcfeval_compare_results_annotate')
 
-                        vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = item, reference = sdf,
+                        #Restrict the comparison to just the chromosome of the single variant by creating a filtered comparison file
+                        filtered_true_vcf = utils.write_filtered_vcf(item, single_var_chr, os.path.join(out_dir, "filtered.vcf"))
+                        filtered_true_vcf = utils.sort_and_compress(filtered_true_vcf)
+
+                        vcfeval_comparator = RTGVCFComparator(prefix=vcfeval_prefix, true_vcf = filtered_true_vcf, reference = sdf,
                                          regions = None,
                                          sample = sample, vcfs = [single_var_file],
                                          exclude_filtered = False,
@@ -355,7 +366,11 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                                          log_to_file= log_to_file,
                                          opts = vcfeval_options, java = java)
 
-                        equivalent_variant = utils.get_equivalent_variant(line_split, vcfeval_comparator.get_tp())
+                        nonmatching_gt_variant = utils.get_closest_variant(line_split, vcfeval_comparator.get_tp())
+
+                        #if not nonmatching_gt_variant, check for matching alt and ref at the same position. Example of when this could be applicable is a 0/0 call when vcfeval will not pair up variants at the same locus with the same alt and ref even with match_geno=False
+                        if not nonmatching_gt_variant:
+                            nonmatching_gt_variant = utils.get_matching_alt_ref(line_split, filtered_true_vcf)
 
                         #clean up
                         if os.path.exists(vcfeval_prefix):
@@ -363,33 +378,56 @@ def match_false(augmented_file, files_to_pair_with, out_dir, sample, log_to_file
                             shutil.rmtree(vcfeval_prefix)
 
                     if i == 0:
-                        if equivalent_variant:
-                            try:
-                                AO = int(equivalent_variant[-1].split(':')[4].split(',')[0])
-                                RO = int(equivalent_variant[-1].split(':')[2].split(',')[0])
-                            except:
-                                info = "N/A;"
-                            else:
-                                info = str(float(AO)/(AO+RO)) + ';'
-                        else:
-                            info = "N/A;"
+                        AO_RO_DP_AD = {"AO": None, "RO": None, "DP": None, "AD": None}
+                        if nonmatching_gt_variant:
+                            for entry in AO_RO_DP_AD:
+                                AO_RO_DP_AD[entry] = utils.get_info(nonmatching_gt_variant, entry)
 
+                        # gatk4 format
+                        if AO_RO_DP_AD["AD"]:
+                            AD_split = AO_RO_DP_AD["AD"].split(',')
+                            AO = list(map(int, AD_split[1:]))
+                            RO = int(AD_split[0])
+                            for i, item in enumerate(AO):
+                                comma = ',' if i < len(AO)-1 else ''
+                                if item+RO == 0:
+                                    info += "0.0" + comma
+
+                                else:
+                                    info += str(float(item)/(item+RO)) + comma
+                        #freebayes
+                        elif AO_RO_DP_AD["AO"] and AO_RO_DP_AD["RO"]:
+                            for i, item in enumerate(AO_RO_DP_AD["AO"].split(',')):
+                                comma = ',' if i < len(AO_RO_DP_AD["AO"].split(','))-1 else ''
+                                denominator = int(item)+int(AO_RO_DP_AD["RO"])
+                                if denominator == 0:
+                                    info += "0.0" + comma
+
+                                else:
+                                    info += str(float(item)/denominator) + comma
+                        else:
+                            info += "N/A"
+
+                        info += ';'
+                        info += "N/A" if not AO_RO_DP_AD["DP"] else str(AO_RO_DP_AD["DP"])
+                        info += ';'
                     elif i == 1:
-                        if equivalent_variant:
-                            info += equivalent_variant[0]+'_'+equivalent_variant[1]+'_'+equivalent_variant[3]+'_'+equivalent_variant[4]+'_'+equivalent_variant[-1] + ";"
+                        if nonmatching_gt_variant:
+                            info += nonmatching_gt_variant[0]+'_'+nonmatching_gt_variant[1]+'_'+nonmatching_gt_variant[3]+'_'+nonmatching_gt_variant[4]+'_'+nonmatching_gt_variant[-1] + ";"
                         else:
                             info += "N/A;"
 
                     elif i == 2:
-                        info += "pure;" if not equivalent_variant else "not;"
+                        info += "pure;" if not nonmatching_gt_variant else "not;"
 
                 line_split[6] = info
                 annotated_content.append('\t'.join(line_split))
 
                 #clean up
-                if os.path.isfile(single_var_file):
-                    os.remove(single_var_file)
-                    os.remove(single_var_file+".tbi")
+                for fil in [single_var_file, filtered_true_vcf]:
+                    if os.path.isfile(fil):
+                        os.remove(fil)
+                        os.remove(fil+".tbi")
 
     annotated_file = utils.write_vcf(annotated_content, os.path.join(args.out_dir, "{}_annotated.vcf".format(os.path.splitext(os.path.splitext(os.path.basename(augmented_file))[0])[0])))
     annotated_file = utils.sort_and_compress(annotated_file)
