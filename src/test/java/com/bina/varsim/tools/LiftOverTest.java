@@ -45,4 +45,13 @@ public class LiftOverTest {
   public void firstSimpleTest() throws IOException {
     universalTestMethod("src/test/resources/LiftOverTest/simpleTest");
   }
+
+  /**
+   * lift over tandem duplications
+   * @throws IOException
+   */
+  @Test
+  public void tandemDupTest() throws IOException {
+    universalTestMethod("src/test/resources/LiftOverTest/tandemDupTest");
+  }
 }
