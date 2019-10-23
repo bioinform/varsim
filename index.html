@@ -223,149 +223,54 @@ w.addEventListener ? w.addEventListener("load",function(){document.body.addEvent
         Then generate reads from this genome with ART. Finally, results of analysis on the output of secondary analysis
         is plotted.
     </p>
-    <p><mark>
-		20190410 update: some of the documentation might be obsolete, please run <code>./build.sh</code>
-	    inside varsim folder to build varsim executables, and third-party software (e.g. ART, SAMtools), then
-	    go to <code>tests/quickstart_test</code> and run <code>./quickstart.sh</code>
-	    </mark>
-	</p>
 
     <p>
-        <b>Step 1:</b> Create a directory <code>varsim_run</code>
-    </p>
-
-    Download varsim to <code>varsim_run</code>
-
-<pre>
-wget https://github.com/bioinform/varsim/releases/download/v0.7.1/varsim-0.7.1.tar.gz
-tar xfz varsim-0.7.1.tar.gz
-</pre>
-
-    <p>
-        <b>Step 2:</b> Download the following files to <code>varsim_run</code>:
-    </p>
-
-    <ol>
-        <li>Reference genome in FASTA format <a href='ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz'>[hs37d5.fa.gz]</a></li>
-        <li>Concatented insert sequences as <a href='http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt'>[insert_seq.txt]</a>
-        </li>
-        <li>DGV annotations <a
-                href='http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt'>[GRCh37_hg19_supportingvariants_2013-07-23.txt]</a>
-        </li>
-        <li>dbSNP 141 file <a href='ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b147_GRCh37p13/VCF/All_20160601.vcf.gz'>[All.vcf.gz]</a></li>
-        <li>(optional) Extra variants to include in simulation variants.vcf</li>
-    </ol>
-
-    <p>
-        by running the following commands
-    </p>
-
-<pre>
-wget http://goo.gl/lgT18V
-wget http://web.stanford.edu/group/wonglab/varsim/insert_seq.txt
-wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
-wget http://goo.gl/sq4mOE
-gunzip hs37d5.fa.gz
-</pre>
-
-    <p>
-        <b>Step 3:</b> Download Samtools to index the reference genome
-    </p>
-
-<pre>
-mkdir samtools
-cd samtools
-wget http://sourceforge.net/projects/samtools/files/samtools/1.0/samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
-tar xfj samtools-bcftools-htslib-1.0_x64-linux.tar.bz2
-cd ..
-samtools/samtools-bcftools-htslib-1.0_x64-linux/bin/samtools faidx hs37d5.fa
-</pre>
-
-    <p>
-        <b>Step 4:</b> Dowload ART to <code>varsim_run</code> under an the directory ART by running
-
+    <b> Step 1: </b> Download and install VarSim and auxillary programs
     <p>
 
 <pre>
-mkdir ART
-cd ART
-wget http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz
-tar xfz artbinvanillaicecream031114linux64tgz.tgz
-cd ..
+git clone https://github.com/bioinform/varsim.git
+cd varsim
+./build.sh
 </pre>
 
+
     <p>
-        The structure of <code>varsim_run</code> should look like
+        <b>Step 2:</b> Run the following command to generate the simulated genome and reads.
+        Replace the values in square brackets with the appropriate values. This will take a few minutes to run.
     </p>
 
 <pre>
-\varsim_run
-- All.vcf.gz  
-- \ART  
-- - \art_bin_VanillaIceCream  
-- - - ART files ...
-- - artbinvanillaicecream031114linux64tgz.tgz
-- GRCh37_hg19_supportingvariants_2013-07-23.txt	
-- hs37d5.fa  
-- hs37d5.fa.fai  
-- insert_seq.txt  
-- \samtools  
-- - samtools files...
-- VarSim.jar
-- varsim.py
-- varsim_somatic.py
-- varsim-0.7.1.tar.gz
+		
+	    <code>cd tests/quickstart_test
+	    </code> 
+	    <code>./quickstart.sh</code>
 </pre>
 
     <p>
-        <b>Step 5:</b> Run the following command to generate the simulated genome and reads to 30x depth.
-        Replace the values in square brackets with the appropriate values. This will take a few hours to run.
-        The last <code>--vcfs</code> option is optional and only required if you want to add additional variants to the
-        simluation.
-        It is recommended to run GATK LeftAlignAndTrimVariants on any VCF file that is used as input.
-    </p>
-
-<pre>
-./varsim.py --vc_in_vcf All.vcf.gz --sv_insert_seq insert_seq.txt \
---sv_dgv GRCh37_hg19_supportingvariants_2013-07-23.txt \
---reference hs37d5.fa --id simu --read_length 100 --vc_num_snp 3000000 --vc_num_ins 100000 \
---vc_num_del 100000 --vc_num_mnp 50000 --vc_num_complex 50000 --sv_num_ins 2000 \
---sv_num_del 2000 --sv_num_dup 200 --sv_num_inv 1000 --sv_percent_novel 0.01 \
---vc_percent_novel 0.01 --mean_fragment_size 350 --sd_fragment_size 50 \
---vc_min_length_lim 0 --vc_max_length_lim 49 --sv_min_length_lim 50 \
---sv_max_length_lim 1000000 --nlanes 5 --total_coverage 1 \
---simulator_executable ART/art_bin_VanillaIceCream/art_illumina --out_dir out --log_dir log --work_dir work \
---simulator art  \
---vcfs [Optional VCF file to include, variants.vcf]
-</pre>
-
-    <p>
-        The reads will be generated in the <code>out</code> directory. A script <code>quickstart.sh</code> is also
-        provided which
-        runs the above steps and generates reads for 1X coverage. Run the secondary analysis tools (alignment and
-        variant calling) on those.
-        The ground truth VCF file is also in the <code>out</code> directory called <code>simu.truth.vcf</code>
+    The reads as well as the ground truth VCF will be generated in the <code>out</code> directory, i.e. <code>out/lane*.fq.gz</code> and <code>out/simu.truth.vcf</code>.
+    By default, <code>quickstart.sh</code> generates very low coverage data, to increase coverage, adjust <code>--total_coverage</code> option. Afterwards, alignment and variant caller can be run to generate variant calls.
     </p>
 
     <p>
-        <b>Step 6:</b> After running the alignment and variant calling we can evaluate the results. In order to validate
+        <b>Step 3:</b> After running the alignment and variant calling we can evaluate the results. In order to validate
         the variants run the following command:
     </p>
 
 <pre>
-java -jar VarSim.jar vcfcompare -true_vcf simu.truth.vcf -prefix simu [VCF from result of secondary analysis] 
+#assume you are in quickstart_test folder
+../../opt/miniconda2/bin/python ../../compare_vcf.py --true_vcf out/simu.truth.vcf --out_dir validation --reference hs37d5.fa --vcfs [VCF from result of secondary analysis] 
 </pre>
 
     <p>
-        This will output a JSON file that can be used as input to the VCF Compare webapp [<a
+    This will output a JSON file (<code>validation/augmented_report.json</code>) that can be used as input to the VCF Compare webapp [<a
             href="http://bioinform.github.io/varsim/webapp/variant_compare.html"
             onclick="trackOutboundLink('webapp/variant_compare.html'); return false;">http://bioinform.github.io/varsim/webapp/variant_compare.html</a>]
-    </p>
-    <p>NOTE: for better results, please use compare_vcf.py which leverages both VarSim and RTG vcfeval.
+    True positive calls are in <code>validation/augmented_tp.vcf.gz</code>; false negative calls in <code>validation/augmented_fn.vcf.gz</code>; false positive calls in <code>validation/augmented_fp.vcf.gz</code>.
     </p>
 
     <p>
-        <b>Step 7:</b> In order to validate the alignments run the following command:
+        <b>Step 4:</b> In order to validate the alignments run the following command:
     </p>
 
 <pre>
@@ -379,7 +284,7 @@ java -jar VarSim.jar samcompare -prefix simu [BAM files from result of secondary
     </p>
 
 
-    <h2>Quick Start Guide for Somatic Simulation [in writing]</h2>
+    <h2>Quick Start Guide for Somatic Simulation [under construction]</h2>
     <p>
         <b>Step 1:</b> Make sure you have already gone through the Quick Start Guide for germline simulation
     </p>
