@@ -452,7 +452,8 @@ def print_stats(stats):
             f1 = float('NaN') if recall == float('NaN') or precision == float('NaN') or (recall + precision) == 0 else 2 * recall * precision / (recall + precision)
         except ValueError:
             sys.stderr.write("invalide values\n")
-        print ("{0: <15}\t{1:.10f}\t{2:.10f}\t{3:.10f}\t{4:<5}\t{5:<5}\t{6: <5}".format(vartype, recall, precision, f1, value['tp'], value['t'], value['fp']))
+        #precision 00.00000% to handle (in worst case) 1 out of 3 million mutations in human genome
+        print ("{0: <15}\t{1:.5%}\t{2:.5%}\t{3:.5%}\t{4:<5}\t{5:<5}\t{6: <5}".format(vartype, recall, precision, f1, value['tp'], value['t'], value['fp']))
 
 def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
     '''
