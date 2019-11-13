@@ -18,7 +18,7 @@ fi
 export PATH=${JDK8_DIR}/bin:${PATH}
 
 PYTHON_DIR=${OPT_DIR}/miniconda2
-CONDA=Miniconda2-latest-Linux-x86_64.sh
+CONDA=Miniconda2-4.6.14-Linux-x86_64.sh
 samtools_version="1.9"
 SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}_install
 HTSLIB_DIR=${OPT_DIR}/htslib-1.9_install
