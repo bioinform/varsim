@@ -146,9 +146,12 @@ public class DGVparser extends GzFileParser<Variant> {
         VariantType type = getVariantType(ll[5].toLowerCase());
 
         // TODO right now we treat all gains as tandem duplications
-	if (ll[15].length() == 0)
-	    throw new RuntimeException("no observedgain");
-        int observedgains = Integer.parseInt(ll[15]);
+        int observedgains = 0;
+	    if (ll[15].length() == 0) {
+            log.warn("no observedgain, set to 0");
+        } else {
+            observedgains = Integer.parseInt(ll[15]);
+        }
 
         String REF;
         Alt[] alts = new Alt[1];
