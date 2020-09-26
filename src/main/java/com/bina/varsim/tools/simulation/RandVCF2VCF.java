@@ -72,6 +72,9 @@ public class RandVCF2VCF extends RandVCFgenerator {
     @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
     String outFilename = null;
 
+    @Option(name = "-id", usage = "Sample ID")
+    String sampleID = "sv";
+
     private final Set<VariantType> variantTypes = EnumSet.of(VariantType.SNP, VariantType.Insertion,
             VariantType.Deletion, VariantType.MNP, VariantType.Complex, VariantType.Tandem_Duplication, VariantType.Inversion);
 
@@ -99,7 +102,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
             variantTypeCounts.put(variantType, 0);
         }
 
-        VCFparser vcfParser = new VCFparser(vcfFilename, null, false, rand);
+        VCFparser vcfParser = new VCFparser(vcfFilename, this.sampleID, false, rand);
         Variant prevVar = new Variant(rand);
 
         // read though once to count the totals, this is so we don't have
@@ -162,7 +165,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
 
         final String VCF_HEADER = "##fileformat=VCFv4.0\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n";
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + this.sampleID + "\n";
 
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
         out.write(VCF_HEADER);
@@ -183,7 +186,7 @@ public class RandVCF2VCF extends RandVCFgenerator {
 
         int genoIdx = 0;
 
-        final VCFparser vcfParser = new VCFparser(samplingVCF, null, false, rand);
+        final VCFparser vcfParser = new VCFparser(samplingVCF, this.sampleID, false, rand);
         Variant prevVar = new Variant(rand);
 
         // Read through it a second time, this time we do the sampling

@@ -218,7 +218,7 @@ def randdgv_options2randvcf_options(randdgv_options):
         num_inv = randdgv_options.num_inv
     )
 
-def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference, java = "java"):
+def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference, sample_id, java = "java"):
     logger = logging.getLogger(run_randvcf.__name__)
 
     rand_vcf_command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "randvcf2vcf",
@@ -236,6 +236,7 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
                         "-max_len", str(randvcf_options.max_length),
                         "-prop_het", str(randvcf_options.prop_het),
                         "-ref", os.path.realpath(reference),
+                        "-id", "'" + str(sample_id) + "'",
                         "-vcf", sampling_vcf]
 
     logger.info("Executing command " + " ".join(rand_vcf_command))
@@ -243,7 +244,7 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
     return
 
 
-def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file, java = "java"):
+def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file, sample_id, java = "java"):
     logger = logging.getLogger(run_randdgv.__name__)
 
     rand_dgv_command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "randdgv2vcf",
@@ -259,6 +260,7 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-prop_het", str(options.prop_het),
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
+                        "-id", "'" + str(sample_id) + "'", # allow empty string ID
                         "-dgv", os.path.realpath(dgv_file)]
     if len(options.output_all.strip()) > 0:
         rand_dgv_command.append(options.output_all)
@@ -330,7 +332,7 @@ def varsim_main(reference,
         rand_vcf_out_fd = open(os.path.join(out_dir, "random.vc.vcf"), "w")
         rand_vcf_log_fd = open(os.path.join(log_dir, "RandVCF2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
-        run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference, java)
+        run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference, sample_id, java)
         open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
 
     if randdgv_options:
@@ -344,7 +346,7 @@ def varsim_main(reference,
         rand_dgv_stdout = open(os.path.join(out_dir, "random.sv.vcf"), "w")
         rand_dgv_stderr = open(os.path.join(log_dir, "RandDGV2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_dgv_stdout.name))
-        run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq, java)
+        run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq, sample_id, java)
         open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
     processes = monitor_processes(processes)
