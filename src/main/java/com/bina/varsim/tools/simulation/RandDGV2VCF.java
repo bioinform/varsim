@@ -59,6 +59,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
     double propHet = PROP_HET_ARG;
     @Option(name = "-out_vcf", usage = "Output VCF to generate [stdout]")
     String outFilename = null;
+    @Option(name = "-id", usage = "Sample ID")
+    String sampleID = "sv";
 
     private final Set<VariantType> variantTypesInDGV = EnumSet.of(VariantType.Insertion, VariantType.Deletion,
             VariantType.Tandem_Duplication, VariantType.Inversion);
@@ -155,7 +157,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
 
         final String VCF_HEADER = "##fileformat=VCFv4.0\n" +
                 "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsv\n";
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + this.sampleID + "\n";
         out.write(VCF_HEADER);
 
         final Map<VariantType, SampleParams> variantParams = new EnumMap(VariantType.class);
