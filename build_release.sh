@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-version=$(git describe | sed 's/^v//')
+version=$(git describe --tags | sed 's/^v//')
 cwd=`pwd`
 
 git checkout -- pom.xml
