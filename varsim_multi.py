@@ -66,7 +66,8 @@ def varsim_multi(reference,
         randdgv_options2vcf = copy.copy(randdgv_options)
         randdgv_options2vcf.output_all = "-all"
         with open(dgv_vcf, "w") as dgv2vcf_out, open(dgv_err_file, "w") as dgv2vcf_log:
-            run_randdgv(dgv_file, dgv2vcf_out, dgv2vcf_log, seed, sex, randdgv_options2vcf, reference, sv_insert_seq, java)
+            # set sample ID to empty string such that it can be used with arbitrary sample name in randvcf
+            run_randdgv(dgv_file, dgv2vcf_out, dgv2vcf_log, seed, sex, randdgv_options2vcf, reference, sv_insert_seq, "", java)
 
     if regions:
         merged_bed = os.path.join(out_dir, "merged.bed")
@@ -96,7 +97,7 @@ def varsim_multi(reference,
         if randvcf_options and sampling_vcf:
             sampled_vcf = os.path.join(sample_dir, "randvcf.vcf")
             with open(sampled_vcf, "w") as randvcf_out, open(os.path.join(sample_dir, "randvcf.err"), "w") as randvcf_log:
-                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference, java)
+                run_randvcf(sampling_vcf, randvcf_out, randvcf_log, sample_seed, sex, randvcf_options, reference, sample, java)
             sampled_vcf = sort_and_compress(sampled_vcf)
             # Now generate the restricted sampled VCF for the sample
             _, [restricted_sampled_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_vcf], regions, [], os.path.join(sample_dir, "restricted_randvcf"), flank=0)
@@ -106,7 +107,7 @@ def varsim_multi(reference,
             sampled_dgv_vcf = os.path.join(sample_dir, "randdgvvcf.vcf")
             randdgvvcf_options = randdgv_options2randvcf_options(randdgv_options)
             with open(sampled_dgv_vcf, "w") as randdgvvcf_out, open(os.path.join(sample_dir, "randdgvvcf.err"), "w") as randdgvvcf_log:
-                run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference, java)
+                run_randvcf(dgv_vcf, randdgvvcf_out, randdgvvcf_log, sample_seed, sex, randdgvvcf_options, reference, sample, java)
             sampled_dgv_vcf = sort_and_compress(sampled_dgv_vcf)
             # Now generate the restricted sampled dgv VCF for the sample
             _, [restricted_sampled_dgv_vcf] = gen_restricted_ref_and_vcfs(reference, [sampled_dgv_vcf], regions, [], os.path.join(sample_dir, "restricted_randdgvvcf"), flank=0)

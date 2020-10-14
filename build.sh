@@ -18,7 +18,7 @@ fi
 export PATH=${JDK8_DIR}/bin:${PATH}
 
 PYTHON_DIR=${OPT_DIR}/miniconda2
-CONDA=Miniconda2-latest-Linux-x86_64.sh
+CONDA=Miniconda2-4.6.14-Linux-x86_64.sh
 samtools_version="1.9"
 SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}_install
 HTSLIB_DIR=${OPT_DIR}/htslib-1.9_install
@@ -70,7 +70,8 @@ ART_DIR=${OPT_DIR}/ART
 if [[ ! -d ${ART_DIR} ]]; then
     mkdir -p ${ART_DIR}
     pushd ${ART_DIR}
-    wget --no-check-certificate -O- http://www.niehs.nih.gov/research/resources/assets/docs/artbinvanillaicecream031114linux64tgz.tgz | tar xfz -
+    wget --no-check-certificate -O- https://github.com/bioinform/varsim/files/4156868/art_bin_VanillaIceCream.zip > art_bin_VanillaIceCream.zip
+    unzip art_bin_VanillaIceCream.zip && rm -f art_bin_VanillaIceCream.zip
     popd
 fi
 

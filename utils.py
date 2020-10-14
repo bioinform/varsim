@@ -77,10 +77,16 @@ def run_shell_command(cmd, cmd_stdout, cmd_stderr, cmd_dir="."):
     logger = logging.getLogger(run_shell_command.__name__)
     if type(cmd) == list:
         cmd = ' '.join(cmd)
-    logger.info('running ' + cmd)
-    subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid)
-    logger.info('PID ' + str(subproc.pid))
-    retcode = subproc.wait()
+    logger.info('running ' + cmd + '\n')
+    subproc = subprocess.Popen(cmd, stdout=cmd_stdout, stderr=cmd_stderr, cwd=cmd_dir, shell=True, preexec_fn=os.setsid, close_fds=True)
+    logger.info('PID ' + str(subproc.pid) + '\n')
+    try:
+        retcode = subproc.wait()
+    except KeyboardInterrupt:
+        logger.warning('receiving SIGINT ...')
+        os.killpg(os.getpgid(subproc.pid), signal.SIGINT)
+        subproc.wait()
+        sys.exit(1)
     if retcode != 0:
         raise Exception('{0} failed'.format(cmd))
     return(retcode)

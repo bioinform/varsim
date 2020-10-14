@@ -90,8 +90,9 @@ def lift_maps(maps, out_map):
             continue
           fields = line.strip().split("\t")
           ref_fields = fields[3].split("_")
-          offset = int(ref_fields[1])
-          out_fd.write("\t".join(fields[:3] + [ref_fields[0], str(int(fields[4]) + offset)] + fields[5:]) + "\n")
+          offset = int(ref_fields[-2])
+          original_ref = "_".join(ref_fields[:-2]) #in case _ is in original contig names
+          out_fd.write("\t".join(fields[:3] + [original_ref, str(int(fields[4]) + offset)] + fields[5:]) + "\n")
 
   return out_map
 

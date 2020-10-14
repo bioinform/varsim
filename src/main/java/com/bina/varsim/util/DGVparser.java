@@ -146,15 +146,12 @@ public class DGVparser extends GzFileParser<Variant> {
         VariantType type = getVariantType(ll[5].toLowerCase());
 
         // TODO right now we treat all gains as tandem duplications
-	if (ll[15].length() == 0)
-	    throw new RuntimeException("no observedgain");
-        int observedgains = Integer.parseInt(ll[15]);
-	if (observedgains == 0)
-	    throw new RuntimeException("observedgains = 0, not a variant, skipping");
-
-        // TODO right now we treat any number of losses as a complete loss (ie.
-        // deletion)
-        // int observedlosses = Integer.parseInt(ll[16]);
+        int observedgains = 0;
+	    if (ll[15].length() == 0) {
+            log.warn("no observedgain, set to 0");
+        } else {
+            observedgains = Integer.parseInt(ll[15]);
+        }
 
         String REF;
         Alt[] alts = new Alt[1];
@@ -181,7 +178,6 @@ public class DGVparser extends GzFileParser<Variant> {
           case Tandem_Duplication:
             REF = "N";
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.TANDEM_DUP, end_loc - start_loc + 1,observedgains+1));
-            observedgains = Math.max(2, observedgains);
             break;
           case Inversion:
             REF = "N";
