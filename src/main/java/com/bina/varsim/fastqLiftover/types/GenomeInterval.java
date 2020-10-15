@@ -4,6 +4,9 @@ import com.bina.varsim.types.ChrString;
 import com.google.common.base.Joiner;
 import htsjdk.tribble.annotation.Strand;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GenomeInterval implements Comparable<GenomeInterval> {
     public static final String SEPARATOR = ",";
     private static final Joiner joiner = Joiner.on(SEPARATOR).skipNulls();
@@ -76,5 +79,42 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
 
     public MapBlock.BlockType getFeature() {
         return feature;
+    }
+
+    /**
+     * strand, MapBlock information will be lost
+     *
+     * @param unmergedGenomeInterval sorted genome intervals to merge
+     * @return merged genome intervals
+     */
+        public static List<GenomeInterval> merge(final List<GenomeInterval> unmergedGenomeInterval) {
+            /*
+            |--------->
+                      |------->
+                        |--->
+                                 |---------->
+             */
+            if (unmergedGenomeInterval.size() <= 1) {
+                return unmergedGenomeInterval;
+            }
+            int currentStart = unmergedGenomeInterval.get(0).getStart();
+            int currentEnd = unmergedGenomeInterval.get(0).getEnd();
+            ChrString currentChr = unmergedGenomeInterval.get(0).getChromosome();
+            List<GenomeInterval> mergedIntervals = new ArrayList<>();
+            for (int i = 1; i < unmergedGenomeInterval.size(); i++) {
+                GenomeInterval nextInterval = unmergedGenomeInterval.get(i);
+                if (nextInterval.getChromosome() == currentChr && nextInterval.getStart() >= currentStart && nextInterval.getEnd() <= currentEnd) {
+                    ; // do nothing for fully contained interval
+                } else if (nextInterval.getChromosome() == currentChr && currentEnd >= nextInterval.getStart() && currentEnd <= nextInterval.getEnd()) {
+                    currentEnd = nextInterval.getEnd(); // expand due to overlapping
+                } else {
+                    mergedIntervals.add(new GenomeInterval(currentChr, currentStart, currentEnd, Strand.NONE, MapBlock.BlockType.UNKNOWN));
+                    currentChr = nextInterval.getChromosome();
+                    currentStart = nextInterval.getStart();
+                    currentEnd = nextInterval.getEnd();
+                }
+            }
+            mergedIntervals.add(new GenomeInterval(currentChr, currentStart, currentEnd, Strand.NONE, MapBlock.BlockType.UNKNOWN));
+        return mergedIntervals;
     }
 }
