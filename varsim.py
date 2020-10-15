@@ -154,7 +154,7 @@ def fill_missing_sequences(vcf, id, seq_file, reference, work_dir, log_dir, java
     command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "randsequencevcf", "-id", id, "-in_vcf", vcf, "-seq", seq_file, "-out_vcf", out_vcf, "-ref", reference]
     with open(out_log, "w") as log_fd:
         logger.info("Running command " + " ".join(command))
-        subprocess.check_call(" ".join(command), shell=True, stderr=log_fd)
+        run_shell_command(" ".join(command), cmd_stdout=None, cmd_stderr=log_fd)
     return out_vcf
         
 
@@ -168,7 +168,7 @@ def run_vcfstats(vcfs, out_dir, log_dir, java = "java"):
         vcfstats_command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "vcfstats", "-vcf",
                         in_vcf]
         logger.info("Executing command " + " ".join(vcfstats_command))
-        subprocess.check_call(vcfstats_command, stdout=vcfstats_stdout, stderr=vcfstats_stderr)
+        run_shell_command(vcfstats_command, cmd_stdout=vcfstats_stdout, cmd_stderr=vcfstats_stderr)
     return processes
 
 
@@ -218,7 +218,7 @@ def randdgv_options2randvcf_options(randdgv_options):
         num_inv = randdgv_options.num_inv
     )
 
-def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference, java = "java"):
+def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_options, reference, sample_id, java = "java"):
     logger = logging.getLogger(run_randvcf.__name__)
 
     rand_vcf_command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "randvcf2vcf",
@@ -236,14 +236,15 @@ def run_randvcf(sampling_vcf, out_vcf_fd, log_file_fd, seed, sex, randvcf_option
                         "-max_len", str(randvcf_options.max_length),
                         "-prop_het", str(randvcf_options.prop_het),
                         "-ref", os.path.realpath(reference),
+                        "-id", "'" + str(sample_id) + "'",
                         "-vcf", sampling_vcf]
 
     logger.info("Executing command " + " ".join(rand_vcf_command))
-    subprocess.check_call(rand_vcf_command, stdout=out_vcf_fd, stderr=log_file_fd)
+    run_shell_command(rand_vcf_command, cmd_stdout=out_vcf_fd, cmd_stderr=log_file_fd)
     return
 
 
-def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file, java = "java"):
+def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference, insert_seq_file, sample_id, java = "java"):
     logger = logging.getLogger(run_randdgv.__name__)
 
     rand_dgv_command = [java, utils.JAVA_XMX, "-jar", VARSIMJAR, "randdgv2vcf",
@@ -259,12 +260,13 @@ def run_randdgv(dgv_file, out_vcf_fd, log_file_fd, seed, sex, options, reference
                         "-prop_het", str(options.prop_het),
                         "-ref", os.path.realpath(reference),
                         "-ins", os.path.realpath(insert_seq_file),
+                        "-id", "'" + str(sample_id) + "'", # allow empty string ID
                         "-dgv", os.path.realpath(dgv_file)]
     if len(options.output_all.strip()) > 0:
         rand_dgv_command.append(options.output_all)
 
     logger.info("Executing command " + " ".join(rand_dgv_command))
-    subprocess.check_call(rand_dgv_command, stdout=out_vcf_fd, stderr=log_file_fd)
+    run_shell_command(rand_dgv_command, cmd_stdout=out_vcf_fd, cmd_stderr=log_file_fd)
 
     return 
 
@@ -330,7 +332,7 @@ def varsim_main(reference,
         rand_vcf_out_fd = open(os.path.join(out_dir, "random.vc.vcf"), "w")
         rand_vcf_log_fd = open(os.path.join(log_dir, "RandVCF2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_vcf_out_fd.name))
-        run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference, java)
+        run_randvcf(os.path.realpath(sampling_vcf), rand_vcf_out_fd, rand_vcf_log_fd, seed, sex, randvcf_options, reference, sample_id, java)
         open_fds += [rand_vcf_out_fd, rand_vcf_log_fd]
 
     if randdgv_options:
@@ -344,7 +346,7 @@ def varsim_main(reference,
         rand_dgv_stdout = open(os.path.join(out_dir, "random.sv.vcf"), "w")
         rand_dgv_stderr = open(os.path.join(log_dir, "RandDGV2VCF.err"), "w")
         variant_vcfs.append(os.path.realpath(rand_dgv_stdout.name))
-        run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq, java)
+        run_randdgv(dgv_file, rand_dgv_stdout, rand_dgv_stderr, seed, sex, randdgv_options, reference, sv_insert_seq, sample_id, java)
         open_fds += [rand_dgv_stdout, rand_dgv_stderr]
 
     processes = monitor_processes(processes)
@@ -369,8 +371,8 @@ def varsim_main(reference,
                                "-chr", os.path.realpath(reference)] + filter_arg_list + vcf_arg_list + ["-no_contig_id"]
 
         logger.info("Executing command " + " ".join(vcf2diploid_command))
-        subprocess.check_call(vcf2diploid_command, stdout=vcf2diploid_stdout, stderr=vcf2diploid_stderr,
-                                         cwd=out_dir)
+        run_shell_command(vcf2diploid_command, cmd_stdout=vcf2diploid_stdout, cmd_stderr=vcf2diploid_stderr,
+                                         cmd_dir=out_dir)
 
         processes = monitor_processes(processes)
 
@@ -501,7 +503,7 @@ def varsim_main(reference,
                                               "-ref %s/simulated.lane%d.ref " % (out_dir, i, out_dir, i)
                 fastq_liftover_command = "bash -c \"%s\"" % (fastq_liftover_command)
                 logger.info("Executing command " + fastq_liftover_command)
-                subprocess.check_call(fastq_liftover_command, stdout = liftover_stdout, stderr = liftover_stderr, shell = True)
+                run_shell_command(fastq_liftover_command, cmd_stdout = liftover_stdout, cmd_stderr = liftover_stderr)
                 fastqs.append(os.path.join(out_dir, "lane%d.read%d.fq.gz" % (i, end)))
         else:
             # liftover the read map files
@@ -512,7 +514,7 @@ def varsim_main(reference,
             read_map_liftover_command = "%s %s -server -jar %s longislnd_liftover " % (java, utils.JAVA_XMX, VARSIMJAR) + read_maps + " -map %s " % merged_map + " -out %s" % (os.path.join(out_dir, sample_id + ".truth.map"))
             read_map_liftover_stderr = open(os.path.join(log_dir, "longislnd_liftover.err"), "w")
             logger.info("Executing command " + read_map_liftover_command )
-            subprocess.check_call(read_map_liftover_command, stdout = None, stderr = read_map_liftover_stderr, shell = True)
+            run_shell_command(read_map_liftover_command, cmd_stdout = None, cmd_stderr = read_map_liftover_stderr)
 
         monitor_processes(processes)
 

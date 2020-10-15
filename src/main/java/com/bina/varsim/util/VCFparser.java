@@ -8,6 +8,7 @@ import com.bina.varsim.types.Sequence;
 import com.bina.varsim.types.VCFInfo;
 import com.bina.varsim.types.variant.Variant;
 import com.bina.varsim.types.variant.alt.Alt;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -15,7 +16,6 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
 import static com.bina.varsim.types.VCFInfo.getType;
@@ -66,7 +66,7 @@ public class VCFparser extends GzFileParser<Variant> {
         sampleId = id;
         isPassFilterRequired = pass;
 
-        if (sampleId == null) {
+        if (StringUtils.isEmpty(sampleId)) {
             sampleIndex = 10; // the first sample
         }
     }
@@ -226,7 +226,7 @@ public class VCFparser extends GzFileParser<Variant> {
         // try to determine the column we should read for the genotype
         String[] toks = StringUtilities.fastSplit(line, "\t");
         if (line.startsWith("#")) {
-            if (sampleId != null && line.startsWith("#CHROM")) {
+            if (!StringUtils.isEmpty(sampleId) && line.startsWith("#CHROM")) {
                 chromLineSeen = true;
                 int index = 0;
                 for (String tok : toks) {
@@ -234,7 +234,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     if (tok.equals(sampleId))
                         sampleIndex = index;
                 }
-            } else if (sampleId == null) {
+            } else if (StringUtils.isEmpty(sampleId)) {
                 sampleIndex = 10; // the first sample
                 if (line.startsWith("#CHROM") && toks.length >= sampleIndex) {
                     sampleId = toks[sampleIndex - 1];

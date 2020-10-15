@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
@@ -1122,7 +1123,7 @@ public class VCFcompare extends VarSimTool {
                     }
                 }
 
-                matchingVariantAndMatchedWholeVariants.add(new Pair<>(variant, matchedWholeVariants));
+                matchingVariantAndMatchedWholeVariants.add(new ImmutablePair<>(variant, matchedWholeVariants));
                 numberOfNewVariants++;
             }
         }
