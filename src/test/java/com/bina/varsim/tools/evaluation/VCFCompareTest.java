@@ -1,6 +1,5 @@
 package com.bina.varsim.tools.evaluation;
 
-import com.bina.varsim.tools.simulation.VCF2diploid;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Ignore;
@@ -16,7 +15,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import static com.bina.varsim.GlobalTestingOptions.updateVCF;
-import static htsjdk.samtools.SAMFileHeader.GroupOrder.reference;
 import static junit.framework.TestCase.assertTrue;
 
 /**

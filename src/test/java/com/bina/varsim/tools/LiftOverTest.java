@@ -54,4 +54,13 @@ public class LiftOverTest {
   public void tandemDupTest() throws IOException {
     universalTestMethod("src/test/resources/LiftOverTest/tandemDupTest");
   }
+
+  /**
+   * lift over large insertion
+   * @throws IOException
+   */
+  @Test
+  public void largeInsertionTest() throws IOException {
+    universalTestMethod("src/test/resources/LiftOverTest/largeInsertionTest");
+  }
 }

@@ -122,12 +122,22 @@ public class MapBlocks {
         for (MapBlock b : subset) {
 
                 int srcStart = Math.max(start, b.srcLoc.location);
-                int srcEnd = Math.min(end, b.srcLoc.location + b.size - 1);
-                int lengthOfInterval = srcEnd - srcStart + 1;
-                final int lengthOfIntervalOnRead = b.blockType != MapBlock.BlockType.DEL ? lengthOfInterval : 0;
-                final int lengthOfIntervalOnRef = b.blockType != MapBlock.BlockType.INS ? lengthOfInterval : 0;
+                int srcEnd = Math.min(end, b.srcLoc.location + (
+                        b.blockType != MapBlock.BlockType.DEL? b.size: 0) - 1);
+                final int lengthOfIntervalOnRead = srcEnd - srcStart + 1;
+                int dstStart = b.dstLoc.location + srcStart - b.srcLoc.location; //1-based start on destination (ref)
+                int dstEnd = dstStart - 1;
+                if (b.blockType == MapBlock.BlockType.DEL) {
+                    dstEnd += b.size;
+                } else if (b.blockType == MapBlock.BlockType.INS) {
+                    dstEnd += 0;
+                } else {
+                    dstEnd = Math.min(dstStart + lengthOfIntervalOnRead - 1,
+                                    b.dstLoc.location + b.size - 1);
+                }
+                final int lengthOfIntervalOnRef = dstEnd - dstStart + 1;
 
-                log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfInterval);
+                log.trace("intervalStart = " + srcStart + " intervalEnd = " + srcEnd + " lengthOfInterval = " + lengthOfIntervalOnRead);
 
                 // lengthOfIntervalOnRef is length of the lifted over interval
                 if (lengthOfIntervalOnRef < minIntervalLength) {
