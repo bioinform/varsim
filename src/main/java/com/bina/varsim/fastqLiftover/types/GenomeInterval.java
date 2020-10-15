@@ -103,9 +103,9 @@ public class GenomeInterval implements Comparable<GenomeInterval> {
             List<GenomeInterval> mergedIntervals = new ArrayList<>();
             for (int i = 1; i < unmergedGenomeInterval.size(); i++) {
                 GenomeInterval nextInterval = unmergedGenomeInterval.get(i);
-                if (nextInterval.getChromosome() == currentChr && nextInterval.getStart() >= currentStart && nextInterval.getEnd() <= currentEnd) {
+                if (nextInterval.getChromosome().equals(currentChr) && nextInterval.getStart() >= currentStart && nextInterval.getEnd() <= currentEnd) {
                     ; // do nothing for fully contained interval
-                } else if (nextInterval.getChromosome() == currentChr && currentEnd >= nextInterval.getStart() && currentEnd <= nextInterval.getEnd()) {
+                } else if (nextInterval.getChromosome().equals(currentChr) && currentEnd >= nextInterval.getStart() && currentEnd <= nextInterval.getEnd()) {
                     currentEnd = nextInterval.getEnd(); // expand due to overlapping
                 } else {
                     mergedIntervals.add(new GenomeInterval(currentChr, currentStart, currentEnd, Strand.NONE, MapBlock.BlockType.UNKNOWN));
