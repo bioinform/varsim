@@ -3,6 +3,7 @@ import subprocess
 import os
 import sys
 import re
+import warnings
 import pysam
 from distutils.version import LooseVersion
 # Check java version to make sure it is Java 8
@@ -379,7 +380,10 @@ def make_clean_vcf(vcf, path=None):
                     info = "." if len(set(info_entries)) < len(info_entries) else line_split[7]
                 else:
                     info = "."
-                clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", info, line_split[8], GT]) + '\n')
+                if len(line_split) >= 9:
+                    clean_vcf_handle.write('\t'.join([line_split[0], line_split[1], ".", line_split[3], line_split[4], ".", ".", info, line_split[8], GT]) + '\n')
+                else:
+                    warnings.warn("line {} has <9 fields".format(line_strip), RuntimeWarning)
 
     clean_vcf_handle.close()
 
