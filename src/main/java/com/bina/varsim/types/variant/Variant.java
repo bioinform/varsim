@@ -32,6 +32,7 @@ public class Variant implements Comparable<Variant>{
     private byte maternal = 0, paternal = 0; // -1 for not avaliable
     private boolean isPhased = false; // Phasing
     private String filter;
+    private String info;
     private String varId;
     // this is when the reference base is deleted
     // if it is the same as the first alt base
@@ -42,7 +43,6 @@ public class Variant implements Comparable<Variant>{
     private ChrString[] chr2;
     private int[] pos2;
     private int[] end2;
-    private int end;
     private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
     private String traid; //translocation ID
     private volatile int hashCode; //caching hashcode
@@ -90,13 +90,13 @@ public class Variant implements Comparable<Variant>{
         private byte maternal = 0, paternal = 0; // -1 for not avaliable
         private boolean isPhased = false; // Phasing
         private String filter;
+        private String info;
         private String varId;
         // this n the reference base is deleted
         // if ite same as the first alt base
         //so refd.length() <= 1 is always true?
         private String refDeleted;
         private String clippedSequence = "";
-        private String extraBase = "";
         private ChrString[] chr2;
         private int[] pos2;
         private int[] end2;
@@ -148,6 +148,10 @@ public class Variant implements Comparable<Variant>{
         }
         public Builder filter(final String filter) {
             this.filter = filter;
+            return this;
+        }
+        public Builder info(final String info) {
+            this.filter = info;
             return this;
         }
         public Builder refDeleted(final String refDeleted) {
@@ -229,6 +233,7 @@ public class Variant implements Comparable<Variant>{
 
     public Variant(final Variant var) {
         filter = var.filter;
+        info = var.info;
         varId = var.varId;
         chr = var.chr;
         pos = var.pos;
@@ -1211,6 +1216,7 @@ public class Variant implements Comparable<Variant>{
             sbStr.append(lengthDifference);
             sbStr.append(";");
         }
+        sbStr.append(info);
         sbStr.append("\t");
 
         // label (GT)

@@ -691,7 +691,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     */
             return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(refs.length).
                     ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                    varId(variantId).filter(FILTER).refDeleted(deletedReference).
+                    varId(variantId).filter(FILTER).info(infoString).refDeleted(deletedReference).
                     randomNumberGenerator(random).clippedSequence(clippedSequence).build();
         } else {
           // breakend
