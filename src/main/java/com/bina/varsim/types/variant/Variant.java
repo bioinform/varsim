@@ -151,7 +151,7 @@ public class Variant implements Comparable<Variant>{
             return this;
         }
         public Builder info(final String info) {
-            this.filter = info;
+            this.info = info;
             return this;
         }
         public Builder refDeleted(final String refDeleted) {
@@ -202,6 +202,7 @@ public class Variant implements Comparable<Variant>{
         this.rand = builder.rand;
         this.varId = builder.varId;
         this.filter = builder.filter;
+        this.info = builder.info;
         this.chr = builder.chr;
         this.pos = builder.pos;
         this.referenceAlleleLength = builder.referenceAlleleLength;
@@ -827,6 +828,10 @@ public class Variant implements Comparable<Variant>{
         return filter;
     }
 
+    public String getInfo() {
+        return info;
+    }
+
     public boolean isPhased() {
         return isPhased;
     }
@@ -1006,6 +1011,7 @@ public class Variant implements Comparable<Variant>{
         if (!Arrays.equals(alts, variant.alts)) return false;
         if (chr != null ? !chr.equals(variant.chr) : variant.chr != null) return false;
         if (filter != null ? !filter.equals(variant.filter) : variant.filter != null) return false;
+        if (info != null ? !info.equals(variant.info) : variant.info != null) return false;
         if (rand != null ? !rand.equals(variant.rand) : variant.rand != null) return false;
         if (!Arrays.equals(ref, variant.ref)) return false;
         if (refDeleted != null ? !refDeleted.equals(variant.refDeleted) : variant.refDeleted != null)
@@ -1037,6 +1043,7 @@ public class Variant implements Comparable<Variant>{
         result = 31 * result + (int) paternal;
         result = 31 * result + (isPhased ? 1 : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
+        result = 31 * result + (info != null ? info.hashCode() : 0);
         result = 31 * result + (varId != null ? varId.hashCode() : 0);
         result = 31 * result + (refDeleted != null ? refDeleted.hashCode() : 0);
         hashCode = result;
@@ -1216,7 +1223,9 @@ public class Variant implements Comparable<Variant>{
             sbStr.append(lengthDifference);
             sbStr.append(";");
         }
-        sbStr.append(info);
+	if (info != null) {
+            sbStr.append(info);
+	}
         sbStr.append("\t");
 
         // label (GT)
