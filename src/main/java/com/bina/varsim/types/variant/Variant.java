@@ -32,6 +32,7 @@ public class Variant implements Comparable<Variant>{
     private byte maternal = 0, paternal = 0; // -1 for not avaliable
     private boolean isPhased = false; // Phasing
     private String filter;
+    private String info;
     private String varId;
     // this is when the reference base is deleted
     // if it is the same as the first alt base
@@ -42,7 +43,6 @@ public class Variant implements Comparable<Variant>{
     private ChrString[] chr2;
     private int[] pos2;
     private int[] end2;
-    private int end;
     private Boolean isinv; //is sequence inverted? useful for interspersed dup, translocation dup
     private String traid; //translocation ID
     private volatile int hashCode; //caching hashcode
@@ -90,13 +90,13 @@ public class Variant implements Comparable<Variant>{
         private byte maternal = 0, paternal = 0; // -1 for not avaliable
         private boolean isPhased = false; // Phasing
         private String filter;
+        private String info;
         private String varId;
         // this n the reference base is deleted
         // if ite same as the first alt base
         //so refd.length() <= 1 is always true?
         private String refDeleted;
         private String clippedSequence = "";
-        private String extraBase = "";
         private ChrString[] chr2;
         private int[] pos2;
         private int[] end2;
@@ -150,6 +150,10 @@ public class Variant implements Comparable<Variant>{
             this.filter = filter;
             return this;
         }
+        public Builder info(final String info) {
+            this.info = info;
+            return this;
+        }
         public Builder refDeleted(final String refDeleted) {
             this.refDeleted = refDeleted;
             return this;
@@ -198,6 +202,7 @@ public class Variant implements Comparable<Variant>{
         this.rand = builder.rand;
         this.varId = builder.varId;
         this.filter = builder.filter;
+        this.info = builder.info;
         this.chr = builder.chr;
         this.pos = builder.pos;
         this.referenceAlleleLength = builder.referenceAlleleLength;
@@ -229,6 +234,7 @@ public class Variant implements Comparable<Variant>{
 
     public Variant(final Variant var) {
         filter = var.filter;
+        info = var.info;
         varId = var.varId;
         chr = var.chr;
         pos = var.pos;
@@ -822,6 +828,10 @@ public class Variant implements Comparable<Variant>{
         return filter;
     }
 
+    public String getInfo() {
+        return info;
+    }
+
     public boolean isPhased() {
         return isPhased;
     }
@@ -1001,6 +1011,7 @@ public class Variant implements Comparable<Variant>{
         if (!Arrays.equals(alts, variant.alts)) return false;
         if (chr != null ? !chr.equals(variant.chr) : variant.chr != null) return false;
         if (filter != null ? !filter.equals(variant.filter) : variant.filter != null) return false;
+        if (info != null ? !info.equals(variant.info) : variant.info != null) return false;
         if (rand != null ? !rand.equals(variant.rand) : variant.rand != null) return false;
         if (!Arrays.equals(ref, variant.ref)) return false;
         if (refDeleted != null ? !refDeleted.equals(variant.refDeleted) : variant.refDeleted != null)
@@ -1032,6 +1043,7 @@ public class Variant implements Comparable<Variant>{
         result = 31 * result + (int) paternal;
         result = 31 * result + (isPhased ? 1 : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
+        result = 31 * result + (info != null ? info.hashCode() : 0);
         result = 31 * result + (varId != null ? varId.hashCode() : 0);
         result = 31 * result + (refDeleted != null ? refDeleted.hashCode() : 0);
         hashCode = result;
@@ -1087,7 +1099,7 @@ public class Variant implements Comparable<Variant>{
         if (svlens.isEmpty()) {
             return "";
         } else {
-            return "SVLEN=" + String.join(",", svlens.stream().map(s -> String.valueOf(s)).collect(Collectors.toList())) + ";";
+            return "SVLEN=" + String.join(",", svlens.stream().map(s -> String.valueOf(s)).collect(Collectors.toList()));
         }
     }
 
@@ -1149,46 +1161,47 @@ public class Variant implements Comparable<Variant>{
         // pass label
         sbStr.append(filter);
         sbStr.append("\t");
-        sbStr.append("VARIANT_OVERALL_TYPE=" + getType() + ";");
         // INFO
+        List<String> infoFields = new ArrayList<String>();
+        if (info != null) {
+            // add original info fields before VarSim info fields
+            // when duplicates are removed, original fields will be prioritized
+            infoFields.addAll(Arrays.asList(info.split(";")));
+        }
+        infoFields.add("VARIANT_OVERALL_TYPE=" + getType());
         if (t == VariantOverallType.TandemDup) {
-            sbStr.append("SVTYPE=DUP;");
-            sbStr.append(getLengthString());
+            infoFields.add("SVTYPE=DUP");
+            infoFields.add(getLengthString());
             if(isInversed()) {
-                sbStr.append("ISINV;");
+                infoFields.add("ISINV");
             }
         } else if (t == VariantOverallType.TransDup || t == VariantOverallType.InterDup) {
-            sbStr.append("SVTYPE=DUP;");
+            infoFields.add("SVTYPE=DUP");
             if (getTraid() != null) {
-                sbStr.append("TRAID=" + getTraid() + ";");
+                infoFields.add("TRAID=" + getTraid());
             }
-            sbStr.append(getLengthString());
+            infoFields.add(getLengthString());
             //chr2,pos2,end2
-            sbStr.append("CHR2=");
-            sbStr.append(StringUtilities.concatenateArray(getAllChr2(), ","));
-            sbStr.append(";");
-            sbStr.append("POS2=");
-            sbStr.append(StringUtilities.concatenateArray(getAllPos2(), ","));
-            sbStr.append(";");
-            sbStr.append("END2=");
-            sbStr.append(StringUtilities.concatenateArray(getAllEnd2(), ","));
+            infoFields.add(String.format("CHR2=%s", StringUtilities.concatenateArray(getAllChr2(), ",")));
+            infoFields.add(String.format("POS2=%s", StringUtilities.concatenateArray(getAllPos2(), ",")));
+            infoFields.add(String.format("END2=%s", StringUtilities.concatenateArray(getAllEnd2(), ",")));
             if(isInversed()) {
-                sbStr.append(";ISINV;");
+                infoFields.add("ISINV");
             }
         } else if (t == VariantOverallType.Deletion) {
-            sbStr.append("SVTYPE=DEL;");
-            sbStr.append(getLengthString());
+            infoFields.add("SVTYPE=DEL");
+            infoFields.add(getLengthString());
         } else if (t == VariantOverallType.TransDel) {
-            sbStr.append("SVTYPE=DEL;");
+            infoFields.add("SVTYPE=DEL");
             if (getTraid() != null) {
-                sbStr.append("TRAID=" + getTraid() + ";");
+                infoFields.add("TRAID=" + getTraid());
             }
-            sbStr.append(getLengthString());
+            infoFields.add(getLengthString());
         } else if (t == VariantOverallType.Inversion) {
-            sbStr.append("SVTYPE=INV;");
-            sbStr.append(getLengthString());
+            infoFields.add("SVTYPE=INV");
+            infoFields.add(getLengthString());
         } else {
-            sbStr.append(getLengthString());
+            infoFields.add(getLengthString());
         }
         /*
         checking -1 is for backward compatibility
@@ -1197,22 +1210,16 @@ public class Variant implements Comparable<Variant>{
         nor reported.
          */
         if (threePrimeDistance != -1) {
-            sbStr.append(";3PrimeDistance=");
-            sbStr.append(threePrimeDistance);
-            sbStr.append(";");
+            infoFields.add(String.format("3PrimeDistance=%d", threePrimeDistance));
         }
         if (fivePrimeDistance != -1) {
-            sbStr.append(";5PrimeDistance=");
-            sbStr.append(fivePrimeDistance);
-            sbStr.append(";");
+            infoFields.add(String.format("5PrimeDistance=%d", fivePrimeDistance));
         }
         if (lengthDifference != -1) {
-            sbStr.append(";LengthDifference=");
-            sbStr.append(lengthDifference);
-            sbStr.append(";");
+            infoFields.add(String.format("LengthDifference=%d", lengthDifference));
         }
+	    sbStr.append(String.join(";", rmDupInfo(infoFields)));
         sbStr.append("\t");
-
         // label (GT)
         if (hasCN()) {
             sbStr.append("GT:CN\t");
@@ -1246,6 +1253,29 @@ public class Variant implements Comparable<Variant>{
         return sbStr.toString().replaceAll(";+",";").replaceAll(";\t","\t").replaceAll("\t;","\t");
     }
 
+    /**
+     * remove duplicate and empty fields in info
+     * first duplicate will be kept
+     * duplicate is based on fieldname (before =), not on name=value pair
+     * @param fields
+     * @return
+     */
+    private List<String> rmDupInfo(List<String> fields) {
+        Set<String> seen = new HashSet<>();
+        List<String> uniqueNonEmptyFields = new ArrayList<>();
+        for (String i : fields) {
+            if (i.isEmpty() || i.equals(".")) {
+                continue;
+            } else {
+                String fieldName = i.split("=")[0];
+                if (!seen.contains(fieldName)) {
+                    uniqueNonEmptyFields.add(i);
+                    seen.add(fieldName);
+                }
+            }
+        }
+        return uniqueNonEmptyFields;
+    }
     /**
      * write variant to a writer or write its compositions
      * to the writer using java8 streams
