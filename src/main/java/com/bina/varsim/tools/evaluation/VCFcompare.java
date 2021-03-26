@@ -1155,7 +1155,8 @@ public class VCFcompare extends VarSimTool {
                 //will be carried out on a per-variant basis. An original variant will
                 //be considered a match only if the sum of lengths of all its VALIDATED
                 //canonicalized variants is larger than overlapRatio * totalLength
-                if (validatedLength >= (overlapRatio * totalLength)) {
+                // there are cases where both validatedLength and totalLength are zeros
+                if (validatedLength > 0 && (validatedLength >= (overlapRatio * totalLength))) {
                     // validated
                     outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
                     validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
