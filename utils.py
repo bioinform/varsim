@@ -212,7 +212,7 @@ def combine_vcf(combined_vcf, vcfs, duplicate_handling_mode = COMBINE_KEEP_ALL_D
 def index_vcf_gz(vcf_gz):
     pysam.tabix_index(vcf_gz, force = True, preset = 'vcf')
 
-def sort_and_compress(vcf, mode = 1, overwrite = False):
+def sort_and_compress(vcf, output_prefix = None, mode = 1, overwrite = False):
     '''
     sort and compress vcf and return compressed filename
     Params:
@@ -235,6 +235,25 @@ def sort_and_compress(vcf, mode = 1, overwrite = False):
     elif mode == 2:
         suffix_index = vcf.rfind('.vcf')
         sorted_vcf = vcf[:suffix_index] + ".sorted" + vcf[suffix_index:]
+        gz_vcf = "{}.gz".format(sorted_vcf)
+
+        sort_command = [SORT_VCF, vcf]
+        logger.info('sorting {}'.format(vcf))
+        if (not overwrite) and os.path.isfile(sorted_vcf):
+            raise ValueError("{} exists".format(sorted_vcf))
+        with open(sorted_vcf, "w") as sorted_out:
+            run_shell_command(sort_command, cmd_stdout=sorted_out, cmd_stderr=sys.stderr)
+        logger.info('compressing {}'.format(sorted_vcf))
+        if (not overwrite) and os.path.isfile(gz_vcf):
+            raise ValueError("{} exists".format(gz_vcf))
+        with open(gz_vcf, "w") as out:
+            run_shell_command([BGZIP, "--force", "--stdout", sorted_vcf], cmd_stdout=out, cmd_stderr=sys.stderr)
+        index_vcf_gz(gz_vcf)
+        return gz_vcf
+    elif mode == 3:
+        if output_prefix is None:
+            raise ValueError('Expecting output_prefix for this mode')
+        sorted_vcf = output_prefix + ".sorted.vcf"
         gz_vcf = "{}.gz".format(sorted_vcf)
 
         sort_command = [SORT_VCF, vcf]

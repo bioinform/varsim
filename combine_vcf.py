@@ -51,7 +51,7 @@ def process(args):
             input_vcfs[i] = current_vcf
         else:
             LOGGER.info('sort and index {}'.format(current_vcf))
-            input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 2, overwrite = args.overwrite)
+            input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 3, overwrite = args.overwrite)
     output_vcf = args.output_prefix + '.vcf'
     if input_vcfs and len(input_vcfs) == 1:
         output_vcf = output_vcf + '.gz'
