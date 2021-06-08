@@ -41,6 +41,7 @@ def process(args):
     vcf.gz + vcf.gz.tbi
     """
     input_vcfs = args.vcfs
+    temp_files = []
     for i in range(len(args.vcfs)):
         current_vcf = args.vcfs[i]
         if current_vcf.endswith(".gz") and os.path.isfile(current_vcf + ".tbi"):
@@ -51,7 +52,9 @@ def process(args):
             input_vcfs[i] = current_vcf
         else:
             LOGGER.info('sort and index {}'.format(current_vcf))
-            input_vcfs[i] = utils.sort_and_compress(current_vcf, mode = 2, overwrite = args.overwrite)
+            input_vcfs[i] = utils.sort_and_compress(current_vcf,
+                    '{}.tmp.{}'.format(args.output_prefix, i), mode = 3, overwrite = args.overwrite)
+            temp_files.append(input_vcfs[i])
     output_vcf = args.output_prefix + '.vcf'
     if input_vcfs and len(input_vcfs) == 1:
         output_vcf = output_vcf + '.gz'
@@ -66,6 +69,14 @@ def process(args):
     else:
         output_vcf = utils.combine_vcf(output_vcf, input_vcfs,
             duplicate_handling_mode = dup_mode)
+    for i in temp_files:
+        if not os.path.exists(i):
+            continue
+        LOGGER.info('removing temp file {}'.format(i))
+        os.remove(i)
+        if os.path.exists('{}.tbi'.format(i)):
+            os.remove('{}.tbi'.format(i))
+
     LOGGER.info('{} done'.format(output_vcf))
     return
 
