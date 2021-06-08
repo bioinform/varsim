@@ -217,7 +217,8 @@ def sort_and_compress(vcf, output_prefix = None, mode = 1, overwrite = False):
     sort and compress vcf and return compressed filename
     Params:
         vcf: input
-        mode: 1 for backward compatibility, 2 for more reasonable behavior
+        mode: 1 for backward compatibility, 2 for more reasonable behavior,
+              3 for saving temp files based on output_prefix
     Returns:
         gzipped vcf filename
     '''
@@ -266,7 +267,7 @@ def sort_and_compress(vcf, output_prefix = None, mode = 1, overwrite = False):
         if (not overwrite) and os.path.isfile(gz_vcf):
             raise ValueError("{} exists".format(gz_vcf))
         with open(gz_vcf, "w") as out:
-            run_shell_command([BGZIP, "--force", "--stdout", sorted_vcf], cmd_stdout=out, cmd_stderr=sys.stderr)
+            run_shell_command([BGZIP, "--force", sorted_vcf], cmd_stdout=out, cmd_stderr=sys.stderr)
         index_vcf_gz(gz_vcf)
         return gz_vcf
     else:
