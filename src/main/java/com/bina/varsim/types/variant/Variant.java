@@ -32,6 +32,7 @@ public class Variant implements Comparable<Variant>{
     private byte maternal = 0, paternal = 0; // -1 for not avaliable
     private boolean isPhased = false; // Phasing
     private String filter;
+    private String qual = ".";
     private String info;
     private String varId;
     // this is when the reference base is deleted
@@ -90,6 +91,7 @@ public class Variant implements Comparable<Variant>{
         private byte maternal = 0, paternal = 0; // -1 for not avaliable
         private boolean isPhased = false; // Phasing
         private String filter;
+        private String qual = ".";
         private String info;
         private String varId;
         // this n the reference base is deleted
@@ -150,6 +152,10 @@ public class Variant implements Comparable<Variant>{
             this.filter = filter;
             return this;
         }
+        public Builder qual(final String qual) {
+            this.qual = qual;
+            return this;
+        }
         public Builder info(final String info) {
             this.info = info;
             return this;
@@ -202,6 +208,7 @@ public class Variant implements Comparable<Variant>{
         this.rand = builder.rand;
         this.varId = builder.varId;
         this.filter = builder.filter;
+        this.qual = builder.qual;
         this.info = builder.info;
         this.chr = builder.chr;
         this.pos = builder.pos;
@@ -234,6 +241,7 @@ public class Variant implements Comparable<Variant>{
 
     public Variant(final Variant var) {
         filter = var.filter;
+        qual = var.qual;
         info = var.info;
         varId = var.varId;
         chr = var.chr;
@@ -828,6 +836,10 @@ public class Variant implements Comparable<Variant>{
         return filter;
     }
 
+    public String getQual() {
+        return qual;
+    }
+
     public String getInfo() {
         return info;
     }
@@ -1157,7 +1169,8 @@ public class Variant implements Comparable<Variant>{
         sbStr.append(alternativeAlleleString().toUpperCase());
         sbStr.append("\t");
         // variant quality
-        sbStr.append(".\t");
+        sbStr.append(qual);
+        sbStr.append("\t");
         // pass label
         sbStr.append(filter);
         sbStr.append("\t");

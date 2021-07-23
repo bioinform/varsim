@@ -256,6 +256,7 @@ public class VCFparser extends GzFileParser<Variant> {
         int pos = -1;
         ChrString chr = null;
         String REF = "", FILTER = "", ALT = "", variantId = "";
+        String QUAL = ".";
         String phase = ".", copyNumber = "0/0", infoString = "", FORMAT;
         String[] sampleInfo;
         for (String tok : toks) {
@@ -270,6 +271,8 @@ public class VCFparser extends GzFileParser<Variant> {
                 REF = tok;
             else if (index == 5) // Parsing alternative allele
                 ALT = tok;
+            else if (index == 6) // Parsing alternative allele
+                QUAL = tok;
             else if (index == 7) // FILTER field
                 FILTER = tok;
             else if (index == 8) // INFO field
@@ -691,7 +694,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     */
             return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(refs.length).
                     ref(refs).alts(alts).phase(genotypeArray).isPhased(isGenotypePhased).
-                    varId(variantId).filter(FILTER).info(infoString).refDeleted(deletedReference).
+                    varId(variantId).filter(FILTER).qual(QUAL).info(infoString).refDeleted(deletedReference).
                     randomNumberGenerator(random).clippedSequence(clippedSequence).build();
         } else {
           // breakend
