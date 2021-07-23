@@ -32,7 +32,7 @@ public class Variant implements Comparable<Variant>{
     private byte maternal = 0, paternal = 0; // -1 for not avaliable
     private boolean isPhased = false; // Phasing
     private String filter;
-    private String qual;
+    private String qual = ".";
     private String info;
     private String varId;
     // this is when the reference base is deleted
@@ -91,7 +91,7 @@ public class Variant implements Comparable<Variant>{
         private byte maternal = 0, paternal = 0; // -1 for not avaliable
         private boolean isPhased = false; // Phasing
         private String filter;
-        private String qual;
+        private String qual = ".";
         private String info;
         private String varId;
         // this n the reference base is deleted
