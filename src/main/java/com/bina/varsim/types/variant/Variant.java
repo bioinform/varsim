@@ -517,6 +517,9 @@ public class Variant implements Comparable<Variant>{
                 return new SimpleInterval1D(pos, pos);
             }
 
+            if (getType(ind) == VariantType.Insertion) {
+                return new SimpleInterval1D((long) (pos-0.5*maxLen(ind)), (long) (pos+0.5*maxLen(ind)-1));
+            }
             // TODO hmm unsafe
             if (maxLen(ind) == Integer.MAX_VALUE) {
                 return new SimpleInterval1D(pos, pos);
