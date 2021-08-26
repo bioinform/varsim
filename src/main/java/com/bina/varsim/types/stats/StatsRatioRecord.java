@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class StatsRatioRecord {
     @JsonProperty(value = "bin_counts")
     private RatioRecord[] binCounts; // the last bin is for anything larger, this is the number correct
+    @JsonProperty(value = "sv_bin_counts")
+    private RatioRecord[] svBinCounts; // the last bin is for anything larger, this is the number correct
     @JsonProperty(value = "sum_count")
     private RatioRecord sumCount;
     @JsonProperty(value = "svSumCount")
@@ -21,7 +23,10 @@ public class StatsRatioRecord {
             199, 399, 799, 1599, 3199, 6399, 12799, 25599, 51199, 102399, 500000, 1000000};
 
     final private int svlen;
-    StatsRatioRecord(int svlen) {
+    StatsRatioRecord(int svlen, int[] passInBinBreaks) {
+        if (passInBinBreaks != null){
+            this.binBreaks = passInBinBreaks;
+        }
         binCounts = new RatioRecord[binBreaks.length + 1];
 
         if (binBreaks.length > 0) {
@@ -38,6 +43,12 @@ public class StatsRatioRecord {
             }
         }
 
+        // svBincounts initiated the same with binCounts
+        svBinCounts = new RatioRecord[binBreaks.length + 1];
+        for (int i = 0; i < svBinCounts.length; i++) {
+            svBinCounts[i] = new RatioRecord(binCounts[i]);
+        }
+
         sumCount = new RatioRecord();
         svSumCount = new RatioRecord();
         sumPerBaseCount = new RatioRecord();
@@ -49,6 +60,19 @@ public class StatsRatioRecord {
         sumCount.incTP();
         if (val >= svlen) {
             svSumCount.incTP();
+
+            boolean addedToSvBinCounts = false;
+            for (int i = 0; i < binBreaks.length; i++) {
+
+                if (val <= binBreaks[i]) {
+                    svBinCounts[i].incTP();
+                    addedToSvBinCounts = true;
+                    break;
+                }
+            }
+            if (!addedToSvBinCounts){
+                svBinCounts[binBreaks.length].incTP();
+            }
         }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {
@@ -64,6 +88,18 @@ public class StatsRatioRecord {
         sumCount.incFP();
         if (val >= svlen) {
             svSumCount.incFP();
+
+            boolean addedToSvBinCounts = false;
+            for (int i = 0; i < binBreaks.length; i++) {
+                if (val <= binBreaks[i]) {
+                    svBinCounts[i].incFP();
+                    addedToSvBinCounts = true;
+                    break;
+                }
+            }
+            if (!addedToSvBinCounts){
+                svBinCounts[binBreaks.length].incFP();
+            }
         }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {
@@ -79,6 +115,18 @@ public class StatsRatioRecord {
         sumCount.incT();
         if (val >= svlen) {
             svSumCount.incT();
+
+            boolean addedToSvBinCounts = false;
+            for (int i = 0; i < binBreaks.length; i++) {
+                if (val <= binBreaks[i]) {
+                    svBinCounts[i].incT();
+                    addedToSvBinCounts = true;
+                    break;
+                }
+            }
+            if (!addedToSvBinCounts){
+                svBinCounts[binBreaks.length].incT();
+            }
         }
         for (int i = 0; i < binBreaks.length; i++) {
             if (val <= binBreaks[i]) {

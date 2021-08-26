@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.bina.varsim.types.ComparisonResultWriter.*;
 
@@ -68,8 +69,18 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-bed_either", usage = "Use either break-end of the variant for filtering instead of both")
     boolean bedEither;
 
+    @Option(name = "-bin_breaks", usage = "Bin breaks passed by user")
+    String binBreaksStr = null;
+
+    int[] BIN_BREAKS = null;
+
     public VCFCompareResultsParser(final String command, final String description) {
         super(command, description);
+    }
+
+    public static int[] StringArrayToIntArray(String[] stringArray)
+    {
+        return Stream.of(stringArray).mapToInt(Integer::parseInt).toArray();
     }
 
     public static void main(String[] args) {
@@ -86,11 +97,16 @@ public class VCFCompareResultsParser extends VarSimTool {
         if (!parseArguments(args)) {
             return;
         }
+
+        if (binBreaksStr != null){
+            this.BIN_BREAKS = StringArrayToIntArray(binBreaksStr.split(","));
+        }
+
         outputClass outputBlob = new outputClass();
 
         outputBlob.setParams(new CompareParams());
         // TODO: make it output the full list if variants in JSON
-        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN));
+        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>(this.SVLEN,this.BIN_BREAKS));
         log.info("Using " + bedFilename + " to intersect.");
         BedFile intersector = bedFilename == null ? null : new BedFile(bedFilename, bedEither);
 
