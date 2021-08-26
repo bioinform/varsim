@@ -178,7 +178,7 @@ public class VCFCompareTest {
    */
   @Test
   public void insertionVsInsertionTest() throws IOException {
-    universalTestMethod("src/test/resources/validationTest/insertionVsInsertionTest", new String[]{"-wig", "20", "-over", "0.2"});
+    universalTestMethod("src/test/resources/validationTest/insertionVsInsertionTest", new String[]{"-wig", "20", "-over", "0.1"});
   }
   /**
    * compare two VCFs with 2 translocations, same source of duplication, different insertion positions
