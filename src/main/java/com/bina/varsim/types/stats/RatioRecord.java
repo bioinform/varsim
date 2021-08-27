@@ -32,6 +32,16 @@ public class RatioRecord {
         this.upper = upper;
     }
 
+    public RatioRecord(RatioRecord anotherRatioRecord){
+        this.FN = anotherRatioRecord.FN;
+        this.TP = anotherRatioRecord.TP;
+        this.TN = anotherRatioRecord.TN;
+        this.FP = anotherRatioRecord.FP;
+        this.T = anotherRatioRecord.T;
+        this.lower = anotherRatioRecord.lower;
+        this.upper = anotherRatioRecord.upper;
+    }
+
     public void incTP() {
         TP++;
     }
