@@ -69,7 +69,7 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-bed_either", usage = "Use either break-end of the variant for filtering instead of both")
     boolean bedEither;
 
-    @Option(name = "-bin_breaks", usage = "Bin breaks passed by user")
+    @Option(name = "-bin_breaks", usage = "Bin breaks passed by user, for example pass in '500,1000' as bin_breaks. Then bins wil be 0-500,500-1000, gt1000")
     String binBreaksStr = null;
 
     int[] BIN_BREAKS = null;
