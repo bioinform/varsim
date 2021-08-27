@@ -98,7 +98,7 @@ public class VCFCompareResultsParser extends VarSimTool {
             return;
         }
 
-        if (binBreaksStr != null){
+        if (binBreaksStr != null && !binBreaksStr.equals("")){
             this.BIN_BREAKS = StringArrayToIntArray(binBreaksStr.split(","));
         }
 

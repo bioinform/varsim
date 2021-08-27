@@ -305,7 +305,7 @@ def process(args):
                       varsim_tp = varsim_tp, varsim_fn = varsim_fn,
                       vcfeval_tp = vcfeval_tp, varsim_fp = varsim_fp, vcfeval_tp_predict = vcfeval_tp_predict)
     augmented_tp, augmented_fn, augmented_fp, augmented_t = summarize_results(os.path.join(args.out_dir,"augmented"), augmented_tp, augmented_fn, augmented_fp, augmented_t,
-                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either, java = args.java)
+                      var_types= args.var_types, sv_length= args.sv_length, regions = args.regions, bed_either = args.bed_either, java = args.java, bin_breaks = args.bin_breaks)
 
 
     if args.master_vcf and args.call_vcf:
