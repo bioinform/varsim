@@ -485,7 +485,7 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False, java = 'java'):
+def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False, java = 'java', bin_breaks = None):
     '''
     count variants by type and tabulate
     :param augmented_tp:
@@ -504,6 +504,8 @@ def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions
         cmd = cmd + ['-bed', regions]
     if bed_either:
         cmd = cmd + ['-bed_either']
+    if bin_breaks:
+            cmd = cmd + ['-bin_breaks', bin_breaks]
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
 
     tp = prefix + "_tp.vcf"
@@ -561,6 +563,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--bed_either", action = 'store_true', help="Use either break-end of the variant for filtering instead of both")
     main_parser.add_argument("--java_max_mem", metavar="XMX", help="max java memory", default="10g", type = str)
     main_parser.add_argument("--java", metavar="PATH", help="path to java", default="java", type = str)
+    main_parser.add_argument("--bin_breaks", metavar="INPUT_STR", help="user defined bin breaks", required = False, type = str)
 
     args = main_parser.parse_args()
     process(args)
