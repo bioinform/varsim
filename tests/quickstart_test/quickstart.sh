@@ -21,7 +21,7 @@ if [[ ! -f GRCh37_hg19_supportingvariants_2013-07-23.txt ]];then
     wget http://web.stanford.edu/group/wonglab/varsim/GRCh37_hg19_supportingvariants_2013-07-23.txt
 fi
 
-${OPT_DIR}/samtools-1.9_install/samtools faidx hs37d5.fa
+${OPT_DIR}/samtools-1.9_install/bin/samtools faidx hs37d5.fa
 
 # Test run varsim to generate 1x coverage data
 export PATH=${OPT_DIR}/jdk1.8.0_131/bin:$PATH
