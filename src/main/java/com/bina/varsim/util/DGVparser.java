@@ -85,9 +85,9 @@ public class DGVparser extends GzFileParser<Variant> {
         case "duplication":
           return VariantType.Tandem_Duplication;
         case "insertion":
-            return VariantType.Insertion;
+          return VariantType.Insertion;
         case "mobile element insertion":
-            return VariantType.Insertion;
+          return VariantType.Insertion;
         case "novel sequence insertion":
           return VariantType.Insertion;
         case "deletion":
