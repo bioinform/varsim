@@ -144,10 +144,11 @@ public class VCFparser extends GzFileParser<Variant> {
 
         geno = geno.trim();
         boolean strangePhase = false;
+        String[] ll = StringUtilities.fastSplit(geno, "/|");
 
-        if (StringUtilities.isNonNegativeInteger(geno)) {
+        if (ll.length == 1) {
             // phase is only a single number, for haploid chromosomes
-            byte val = (byte) StringUtilities.parseInt(geno);
+            byte val = (byte) (ll[0] == "." ? -1 : StringUtilities.parseInt(ll[0]));
             if (chr.isX()) {
                 vals[0] = -1; //paternal missing
                 vals[1] = val; // maternal
@@ -163,30 +164,24 @@ public class VCFparser extends GzFileParser<Variant> {
             } else {
                 vals[0] = vals[1] = val;
             }
-        } else if (geno.length() >= 3) {
+        } else if (ll.length == 2) {
             // this is the case where phase looks like "1|0" or "10|4"
-            String[] ll = StringUtilities.fastSplit(geno, "/|");
             int c1 = -1;
             int c2 = -1;
-            char phasing = '/';
-            if (ll.length == 2) {
-                try {
-                    c1 = StringUtilities.parseInt(ll[0]);
-                    c2 = StringUtilities.parseInt(ll[1]);
-                    phasing = geno.charAt(ll[0].length());
-                } catch (NumberFormatException e) {
-                    strangePhase = true;
-                }
-            } else {
+            char phasing = geno.charAt(ll[0].length());
+            try {
+                c1 = ll[0] == "." ? -1 : StringUtilities.parseInt(ll[0]);
+                c2 = ll[1] == "." ? -1 : StringUtilities.parseInt(ll[1]);
+            } catch (NumberFormatException e) {
                 strangePhase = true;
             }
 
-            if (c1 >= 0 && c2 >= 0) {
+            if (phasing == '|') {
+                isPhased = true;
+            }
+            if ((c1 >= 0) == (c2 >= 0)) {
                 vals[0] = (byte) c1;
                 vals[1] = (byte) c2;
-                if (phasing == '|') {
-                    isPhased = true;
-                }
             } else {
                 strangePhase = true;
             }
@@ -297,12 +292,12 @@ public class VCFparser extends GzFileParser<Variant> {
         // unknown chromosome
         // TODO: throw an exception for unknown chromosome name
         if (chr == null) {
-            log.warn("Bad chromosome name: " + line);
+            log.warn("Bad chromosome name.");
             return null;
         }
 
         if (isPassFilterRequired && !(FILTER.contains("PASS") || FILTER.equals(DEFAULT_FILTER))) {
-            log.warn("line is filtered out: " + line);
+            log.warn("line is filtered out.");
             return null; // Filtered out
         }
         // parse the phased or unphased genotype
@@ -311,12 +306,12 @@ public class VCFparser extends GzFileParser<Variant> {
 
 
         if (genotypeIndex >= 0 && genotypeArray[0] == 0 && genotypeArray[1] == 0) {
-            log.warn("All ALT alleles are reference sequences." + line);
+            log.warn("All ALT alleles are reference sequences.");
             return null; // reference alleles... ignore them for now....
         }
 
         if (!Sequence.isNormalSequence(REF)) {
-            log.warn("only ATCGN (case-insensitive) allowed for REF column." + line);
+            log.warn("only ATCGN (case-insensitive) allowed for REF column.");
             return null; //
         }
 
@@ -330,8 +325,7 @@ public class VCFparser extends GzFileParser<Variant> {
             if (isCopyNumberPhased != isGenotypePhased) {
                 // TODO maybe don't throw error, this is not standard format
                 // anyways
-                log.warn("Inconsistent copy number:");
-                log.warn("line: " + line);
+                log.warn("Inconsistent copy number.");
                 return null;
             }
         }
@@ -368,7 +362,7 @@ public class VCFparser extends GzFileParser<Variant> {
         try {
             alts = string2Alt(ALT);
         } catch (IllegalArgumentException e) {
-            log.warn("ALT column is malformated: " + e.getMessage() + "\nOffending line: " + line);
+            log.warn("ALT column is malformated: " + e.getMessage());
             return null;
         }
 
@@ -407,7 +401,7 @@ public class VCFparser extends GzFileParser<Variant> {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       if (i > 0 && svlen[i] != svlen[i - 1]) {
-                          log.warn("Right now VarSim does not support multiple SVLEN for <INV>: " + line);
+                          log.warn("Right now VarSim does not support multiple SVLEN for <INV>.");
                           return null;
                       }
                       int alternativeAlleleLength = Math.max(Math.abs(svlen[i]), 1);
@@ -423,9 +417,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
                   return template.referenceAlleleLength(alternativeAlleleLength).alts(alts).build();
               } else {
-                  log.error("No length information for INV:");
-                  log.error(line);
-                  log.error("skipping...");
+                  log.error("No length information for INV, skipping...");
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DUP &&
@@ -436,7 +428,7 @@ public class VCFparser extends GzFileParser<Variant> {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       if (i > 0 && svlen[i] != svlen[i - 1]) {
-                          log.warn("Right now VarSim does not handle multiple SVLEN for <DUP> " + line);
+                          log.warn("Right now VarSim does not handle multiple SVLEN for <DUP>.");
                           return null;
                       }
                       // TODO this is temporary, how to encode copy number?
@@ -469,9 +461,7 @@ public class VCFparser extends GzFileParser<Variant> {
 
                   return template.referenceAlleleLength(alternativeAlleleLength).alts(alts).build();
               } else {
-                  log.error("No length information for DUP:TANDEM:");
-                  log.error(line);
-                  log.error("skipping...");
+                  log.error("No length information for DUP:TANDEM, skipping...");
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INS) {
@@ -490,9 +480,7 @@ public class VCFparser extends GzFileParser<Variant> {
                   alts[0].setSeq(new FlexSeq(FlexSeq.Type.INS, alternativeAlleleLength));
                   return template.referenceAlleleLength(0).alts(alts).build();
               } else {
-                  log.error("No length information for INS:");
-                  log.error(line);
-                  log.error("skipping...");
+                  log.error("No length information for INS, skipping...");
                   return null;
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.DEL) {
@@ -503,7 +491,7 @@ public class VCFparser extends GzFileParser<Variant> {
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {
                       if (i > 0 && svlen[i] != svlen[i-1]) {
-                          log.warn("Right now VarSim does not handle multiple SVLEN for <DEL>: " + line);
+                          log.warn("Right now VarSim does not handle multiple SVLEN for <DEL>.");
                           return null;
                       }
                       // deletion has no alt
@@ -525,9 +513,7 @@ public class VCFparser extends GzFileParser<Variant> {
                   }
                   return template.alts(alts).referenceAlleleLength(alternativeAlleleLength).build();
               } else {
-                  log.error("No length information for DEL:");
-                  log.error(line);
-                  log.error("skipping...");
+                  log.error("No length information for DEL, skipping...");
                   return null;
               }
               //TODO major SVTYPE actually does not allow TRA
@@ -577,14 +563,12 @@ public class VCFparser extends GzFileParser<Variant> {
                           chr2(ChrString.string2ChrString(chr2)).pos2(pos2).end2(end2).isinv(isinv).traid(traid == null? null : traid[0]).build();
                   //TODO: this assumes only one alt, which might not be true
               } else {
-                  log.error("No length information for DUP:TRA or DUP:ISP:");
-                  log.error(line);
-                  log.error("skipping...");
+                  log.error("No length information for DUP:TRA or DUP:ISP, skipping...");
                   return null;
               }
           } else {
               // imprecise variant
-              log.warn("Imprecise line: " + line);
+              log.warn("Imprecise variant.");
               return null;
           }
       } else if (alts[0].getSeq() != null){
@@ -594,7 +578,7 @@ public class VCFparser extends GzFileParser<Variant> {
                 if (REF.length() == 1 && alts[i].length() == 1) {
                     // SNP
                 } else if (REF.length() == 0 || alts[i].length() == 0) {
-                    log.warn("Skipping invalid record:" + line);
+                    log.warn("Skipping invalid record.");
                     return null;
                 }
             }
@@ -673,7 +657,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     REF = REF.substring(0, Math.max(0, referenceAlleleLength - minClipLength));
                     for (int i = 0; i < alts.length; i++) {
                         if (!clippedSequence.equals(new String(alts[i].getSeq().substring(alts[i].getSeq().length() - minClipLength, alts[i].getSeq().length())))) {
-                            log.warn("Right clipping is initiated, but the clipped sequences are different for REF, ALT: " + line);
+                            log.warn("Right clipping is initiated, but the clipped sequences are different for REF, ALT.");
                             return null;
                         }
                         alts[i].setSeq(new FlexSeq(alts[i].getSeq().substring(0,
@@ -698,7 +682,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     randomNumberGenerator(random).clippedSequence(clippedSequence).build();
         } else {
           // breakend
-          log.warn("breakend is not handled directly now: " + line);
+          log.warn("breakend is not handled directly now.");
           return null;
       }
     }
