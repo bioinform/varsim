@@ -14,6 +14,7 @@ import com.bina.varsim.types.variant.VariantOverallType;
 import com.bina.varsim.types.variant.VariantType;
 import com.bina.varsim.types.variant.alt.Alt;
 import com.bina.varsim.util.*;
+import com.bina.varsim.util.logging.LoggingCounter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+import static com.bina.varsim.constants.Constant.MAX_VCF_COMPARE_WARNING_REPEAT;
 import static com.bina.varsim.constants.Constant.DISTANCE_METRIC_BIN_COUNT;
 import static com.bina.varsim.constants.Constant.MAX_BIN_CAPACITY;
 import static com.bina.varsim.types.ComparisonResultWriter.*;
@@ -49,6 +51,7 @@ import static com.bina.varsim.util.VCFWriter.generateVCFHeader;
 // TODO this class does not yet compare the contents of the larger variants
     //TODO refactor variable naming
 public class VCFcompare extends VarSimTool {
+    private final LoggingCounter loggingCounter = new LoggingCounter(MAX_VCF_COMPARE_WARNING_REPEAT);
     static final double OVERLAP_ARG = 0.8;
     static final int WIGGLE_ARG = 20;
     static final byte[] ambiguousBase = "N".getBytes();
@@ -759,7 +762,9 @@ public class VCFcompare extends VarSimTool {
             intersector = new BedFile(bedFilename);
         } else {
             if (excludeTprFromBedFiltering || excludeFdfFromBedFiltering) {
-                log.warn("No BED file specified but used exclude parameters");
+                if (loggingCounter.isCountLeftAndDecrement()) {
+                    log.warn("No BED file specified but used exclude parameters");
+                }
             }
         }
 
@@ -853,7 +858,6 @@ public class VCFcompare extends VarSimTool {
             if (trueVariant == null ||
                 (!trueVariant.getGenotypes().isNonRef()) ||
                 (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName()))) {
-                log.info("skip line");
                 continue;
             }
 
@@ -1071,7 +1075,9 @@ public class VCFcompare extends VarSimTool {
                                 outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
                                 validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
                                 if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
-                                    log.warn("SNP with bad length: " + currentVariant);
+                                    if (loggingCounter.isCountLeftAndDecrement()) {
+                                        log.warn("SNP with bad length: " + currentVariant);
+                                    }
                                 }
                                 variant.output(fpWriter);
                             } else {
@@ -1115,7 +1121,9 @@ public class VCFcompare extends VarSimTool {
                         outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
                         validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
                         if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
-                            log.warn("SNP with bad length: " + variant);
+                            if (loggingCounter.isCountLeftAndDecrement()) {
+                                log.warn("SNP with bad length: " + variant);
+                            }
                         }
                         variant.output(fpWriter);
                     } else {

@@ -21,6 +21,8 @@ def process_args(args):
     outfile_maternal = args.prefix + ".maternal.map"
     with open(outfile, 'w') as fh, open(outfile_paternal, 'w') as fh_paternal, open(outfile_maternal, 'w') as fh_maternal:
         for l in args.map:
+            if not l.rstrip():
+                continue
             fields = l.split("\t")
             # exchange source and destination chromosomes
             fields[1], fields[3] = fields[3], fields[1]
