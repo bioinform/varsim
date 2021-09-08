@@ -18,11 +18,11 @@ import java.io.InputStreamReader;
 import java.rmi.UnexpectedException;
 import java.util.*;
 
-import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
+import static com.bina.varsim.constants.Constant.MAX_VCF_PARSER_WARNING_REPEAT;
 import static com.bina.varsim.types.VCFInfo.getType;
 
 public class VCFparser extends GzFileParser<Variant> {
-    private static final LoggingCounter loggingCounter = new LoggingCounter(MAX_WARNING_REPEAT);
+    private static final LoggingCounter loggingCounter = new LoggingCounter(MAX_VCF_PARSER_WARNING_REPEAT);
     public static final String DEFAULT_FILTER = "."; //default value for many columns
     private final static Logger log = Logger.getLogger(VCFparser.class.getName());
 
