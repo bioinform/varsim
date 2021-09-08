@@ -2,8 +2,6 @@ package com.bina.varsim.util.logging;
 
 import org.apache.log4j.Logger;
 
-import static com.bina.varsim.constants.Constant.MAX_WARNING_REPEAT;
-
 public class LoggingCounter {
     private int countDown;
     private final int maxWarnings;

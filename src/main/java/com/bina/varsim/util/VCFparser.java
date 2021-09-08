@@ -206,6 +206,7 @@ public class VCFparser extends GzFileParser<Variant> {
                     sampleId = toks[sampleIndex - 1];
                 }
             }
+            log.info("Reading header line.");
             return null;
         }
 

@@ -858,9 +858,6 @@ public class VCFcompare extends VarSimTool {
             if (trueVariant == null ||
                 (!trueVariant.getGenotypes().isNonRef()) ||
                 (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName()))) {
-                if (loggingCounter.isCountLeftAndDecrement()) {
-                    log.warn("skip line");
-                }
                 continue;
             }
 
