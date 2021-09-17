@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -ex
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"	
 OPT_DIR=${DIR}/../../opt
 WD=$1
