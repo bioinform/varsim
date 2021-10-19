@@ -827,7 +827,7 @@ public class VCFcompare extends VarSimTool {
         outputBlob.getParams().setTrueVcfFilename(trueVcfFilename);
         outputBlob.getParams().setWiggle(wiggle);
 
-        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false);
+        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false, ignoreInsertionLength);
 
         // allow duplicates, this is needed because insertions don't actually take up a location
         chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree = new chrSearchTree<>(true);
@@ -963,7 +963,7 @@ public class VCFcompare extends VarSimTool {
         traid2composingVariants.clear();
 
         for (String currentVcfFile : newVcfFilename) {
-            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
+            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered, ignoreInsertionLength);
 
             while (newParser.hasMoreInput()) {
                 Variant variant = newParser.parseLine();
@@ -1646,7 +1646,7 @@ public class VCFcompare extends VarSimTool {
         ImmutableList<String> predictSampleList = new ImmutableList.Builder<String>().add("predict").build(); //add default sample name
 
         //identity user input sample names in truth and predictions, respectively
-        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false);
+        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false, ignoreInsertionLength);
         while (trueVcfParser.hasMoreInput()) {
             Variant variant = trueVcfParser.parseLine();
             if (variant != null) {
@@ -1667,7 +1667,7 @@ public class VCFcompare extends VarSimTool {
         fnWriter.write(generateVCFHeader(reference, truthSampleList));
         Set<String> predictSampleUniqueNames = new HashSet<>();
         for (String currentVcfFile : newVcfFilename) {
-            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
+            VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered, ignoreInsertionLength);
             while (newParser.hasMoreInput()) {
                 Variant variant = newParser.parseLine();
                 if (newParser.getSampleId() != null) {

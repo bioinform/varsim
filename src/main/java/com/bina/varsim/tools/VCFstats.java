@@ -24,6 +24,9 @@ public class VCFstats extends VarSimTool {
     @Option(name = "-vcf", usage = "VCF file to analyse [Required]", metaVar = "VCF_file", required = true)
     String vcf_filename;
 
+    @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
+    boolean ignoreInsertionLength = false;
+
     public VCFstats(final String command, final String description) {
         super(command, description);
     }
@@ -49,7 +52,7 @@ public class VCFstats extends VarSimTool {
 
         ParentRecord data = new ParentRecord();
 
-        VCFparser parser = new VCFparser(vcf_filename, null, false);
+        VCFparser parser = new VCFparser(vcf_filename, null, false, ignoreInsertionLength);
 
         while (parser.hasMoreInput()) {
             Variant var = parser.parseLine();

@@ -73,9 +73,9 @@ public class VCFparserTest {
         assertTrue(v.getReference().length == 1); //[]
         assertTrue(v.getAlt(1).length() == 0); //"GT"
     }
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void SymbolicAlleleSVLenTest() throws UnexpectedException {
-        parser.processLine("1	3	.	T	<DUP:TANDEM>	.	PASS	SVTYPE=DUP;SVLEN=4,4	GT:CN	1|2:2|3");
+        assertTrue(parser.processLine("1	3	.	T	<DUP:TANDEM>	.	PASS	SVTYPE=DUP;SVLEN=4,4	GT:CN	1|2:2|3")==null);
     }
     @Test(expected = IllegalArgumentException.class)
     public void SymbolicAlleleMixWithNonSymbolicAlleleTest() throws IOException {
