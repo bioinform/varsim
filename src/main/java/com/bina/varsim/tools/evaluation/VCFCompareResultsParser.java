@@ -63,6 +63,9 @@ public class VCFCompareResultsParser extends VarSimTool {
     @Option(name = "-sv_length", usage = "SV length cutoff", metaVar = "SVLEN", hidden = false)
     public int SVLEN = Constant.SVLEN;
 
+    @Option(name = "-ignore_ins_len", usage = "Ignores insertion length when comparing")
+    boolean ignoreInsertionLength = false;
+
     @Option(name = "-bed", usage = "BED file to restrict the analysis [Optional]", metaVar = "BED_file")
     String bedFilename = null;
 
@@ -110,10 +113,10 @@ public class VCFCompareResultsParser extends VarSimTool {
         log.info("Using " + bedFilename + " to intersect.");
         BedFile intersector = bedFilename == null ? null : new BedFile(bedFilename, bedEither);
 
-        countVariants(StatsNamespace.TP, tpVcfFilename, outputBlob, intersector);
-        countVariants(StatsNamespace.FP, fpVcfFilename, outputBlob, intersector);
-        countVariants(StatsNamespace.FN, fnVcfFilename, outputBlob, intersector);
-        countVariants(StatsNamespace.T, tVcfFilename, outputBlob, intersector);
+        countVariants(StatsNamespace.TP, tpVcfFilename, outputBlob, intersector, ignoreInsertionLength);
+        countVariants(StatsNamespace.FP, fpVcfFilename, outputBlob, intersector, ignoreInsertionLength);
+        countVariants(StatsNamespace.FN, fnVcfFilename, outputBlob, intersector, ignoreInsertionLength);
+        countVariants(StatsNamespace.T, tVcfFilename, outputBlob, intersector, ignoreInsertionLength);
 
         try(
                 PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
@@ -156,8 +159,8 @@ public class VCFCompareResultsParser extends VarSimTool {
      * @param filename VCF containing variants
      * @param intersector BED file object
      */
-    private void countVariants(final StatsNamespace resultClass, final String filename, outputClass outputBlob, BedFile intersector) {
-        VCFparser vcfParser = new VCFparser(filename, null, false);
+    private void countVariants(final StatsNamespace resultClass, final String filename, outputClass outputBlob, BedFile intersector, boolean ignoreInsertionLength) {
+        VCFparser vcfParser = new VCFparser(filename, null, false, ignoreInsertionLength);
         PrintWriter vcfWriter = null;
         try {
             if (resultClass == StatsNamespace.TP) {

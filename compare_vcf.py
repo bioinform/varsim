@@ -98,10 +98,12 @@ class VCFComparator(object):
         return self.fn
 
 class VarSimVCFComparator(VCFComparator):
-    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java', sv_length = 100):
+    def __init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, disallow_partial_fp, match_geno, log_to_file, opts, java = 'java', sv_length = 100,
+                 ignore_ins_len = False):
         VCFComparator.__init__(self, prefix, true_vcf, reference, regions, sample, vcfs, exclude_filtered, match_geno, log_to_file, opts, java)
         self.disallow_partial_fp = disallow_partial_fp
         self.sv_length = sv_length
+        self.ignore_ins_len = ignore_ins_len
     def get_tp_predict(self):
         '''
         varsim does not generate TP based off of predictions
@@ -133,6 +135,8 @@ class VarSimVCFComparator(VCFComparator):
             cmd.append('-disallow_partial_fp')
         if str(self.sv_length):
             cmd.append('-sv_length {}'.format(self.sv_length))
+        if self.ignore_ins_len:
+            cmd.append('-ignore_ins_len')
         if self.opts:
             cmd.append(self.opts)
         cmd.extend(self.vcfs)
@@ -485,7 +489,8 @@ def parse_jsons(jsonfile, stats, count_sv = False, count_all = False):
                         print ("error in {}. No {} field".format(jsonfile, err))
                         stats[vt][mt] += 0
 
-def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False, java = 'java', bin_breaks = None):
+def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions = None, bed_either = False, java = 'java', bin_breaks = None,
+                      ignore_ins_len = False):
     '''
     count variants by type and tabulate
     :param augmented_tp:
@@ -505,7 +510,9 @@ def summarize_results(prefix, tp, fn, fp, t, var_types, sv_length = 100, regions
     if bed_either:
         cmd = cmd + ['-bed_either']
     if bin_breaks:
-            cmd = cmd + ['-bin_breaks', bin_breaks]
+        cmd = cmd + ['-bin_breaks', bin_breaks]
+    if ignore_ins_len:
+        cmd = cmd + ['-ignore_ins_len']
     utils.run_shell_command(cmd, cmd_stdout=sys.stdout, cmd_stderr=sys.stderr)
 
     tp = prefix + "_tp.vcf"
@@ -555,6 +562,7 @@ if __name__ == "__main__":
     main_parser.add_argument("--disallow_partial_fp", action = 'store_true', help="For a partially-matched false negative variant, output all matching variants as false positive", required = False)
     main_parser.add_argument("--match_geno", action = 'store_true', help="compare genotype in addition to alleles", required = False)
     main_parser.add_argument("--sv_length", type = int, help="length cutoff for SV (only effective for counting, not comparison). For comparison, please add -sv_length to --vcfcompare_options.", required = False, default = 100)
+    main_parser.add_argument("--ignore_ins_len", action = 'store_true', help="Ignore length of insertion (treat it as 0 length), otherwise ignore insertions and other SVs without proper SVLEN.", required = False)
     main_parser.add_argument('--version', action='version', version=utils.get_version())
     main_parser.add_argument("--log_to_file", metavar="LOGFILE", help="logfile. If not specified, log to stderr", required=False, type=str, default="")
     main_parser.add_argument("--loglevel", help="Set logging level", choices=["debug", "warn", "info"], default="info")

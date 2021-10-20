@@ -38,6 +38,7 @@ public class VCFparser extends GzFileParser<Variant> {
     private boolean isPassFilterRequired = false;
     private boolean chromLineSeen = false;
     private int illegalPhasingWarningCount = 0;
+    private boolean ignoreInsertionLength = false;
 
     public VCFparser() {
         sampleIndex = 10; // the first sample
@@ -51,12 +52,17 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param pass     If true, only output pass lines
      */
     public VCFparser(String fileName, String id, boolean pass, Random rand) {
-        this(new File(fileName), id, pass, rand);
+        this(new File(fileName), id, pass, rand, false);
+        log.info("Reading " + fileName);
+    }
+
+    public VCFparser(String fileName, String id, boolean pass, Random rand, boolean ignoreInsertionLength) {
+        this(new File(fileName), id, pass, rand, ignoreInsertionLength);
         log.info("Reading " + fileName);
     }
 
 
-    public VCFparser(File file, String id, boolean pass, Random rand) {
+    public VCFparser(File file, String id, boolean pass, Random rand, boolean ignoreInsertionLength) {
         random = rand;
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(decompressStream(file)));
@@ -67,6 +73,7 @@ public class VCFparser extends GzFileParser<Variant> {
         }
         sampleId = id;
         isPassFilterRequired = pass;
+        this.ignoreInsertionLength = ignoreInsertionLength;
 
         if (StringUtils.isEmpty(sampleId)) {
             sampleIndex = 10; // the first sample
@@ -80,12 +87,16 @@ public class VCFparser extends GzFileParser<Variant> {
      * @param id       ID of individual, essentially selects a column, null to use first ID column
      * @param pass     If true, only output pass lines
      */
+    public VCFparser(String fileName, String id, boolean pass, boolean ignoreInsertionLength) {
+        this(fileName, id, pass, null, ignoreInsertionLength);
+    }
+
     public VCFparser(String fileName, String id, boolean pass) {
-        this(fileName, id, pass, null);
+        this(fileName, id, pass, null, false);
     }
 
     public VCFparser(File file, String id, boolean pass) {
-        this(file, id, pass, null);
+        this(file, id, pass, null, false);
     }
 
     /**
@@ -330,18 +341,6 @@ public class VCFparser extends GzFileParser<Variant> {
         CAUTION: we assume symbolic alleles are not mixed
         with non-symbolic alleles.
          */
-        if (ALT.indexOf('<') != -1) {
-            String[] alternativeAlleles = StringUtilities.fastSplit(ALT, ",");
-            int[] svlen = info.getValue("SVLEN", int[].class);
-            if (alternativeAlleles.length != svlen.length) {
-                throw new IllegalArgumentException("ERROR: number of symbolic alleles is unequal to number of SV lengths.\n" + line);
-            }
-            for (int i = 0; i < alternativeAlleles.length; i++) {
-                if (!alternativeAlleles[i].startsWith("<")) {
-                    throw new IllegalArgumentException("ERROR: symbolic alleles are mixed with non-symbolic alleles.\n" + line);
-                }
-            }
-        }
         Alt[] alts = null;
         try {
             alts = string2Alt(ALT);
@@ -350,6 +349,31 @@ public class VCFparser extends GzFileParser<Variant> {
                 log.warn("ALT column is malformated: " + e.getMessage());
             }
             return null;
+        }
+        if (ALT.indexOf('<') != -1) {
+            String[] alternativeAlleles = StringUtilities.fastSplit(ALT, ",");
+            int[] svlen = info.getValue("SVLEN", int[].class);
+            // when number of SVLEN values is not equal to number of alternative alleles
+            // ignore this variant if it is insertion, unless we choose to ignore insertion
+            // lengths.
+            if ((svlen == null) || (alternativeAlleles.length != svlen.length)) {
+                if (ignoreInsertionLength &&
+                    alts[0].getSymbolicAllele() != null &&
+                    alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INS) {
+                    ;
+                } else {
+                    if (loggingCounter.isCountLeftAndDecrement()) {
+                        log.warn("WARNING: number of symbolic alleles is unequal to number of SV lengths.\n" +
+                                line + "\nFor symbolic insertions, can set -ignore_ins_len to ignore SVLEN.");
+                    }
+                    return null;
+                }
+            }
+            for (int i = 0; i < alternativeAlleles.length; i++) {
+                if (!alternativeAlleles[i].startsWith("<")) {
+                    throw new IllegalArgumentException("ERROR: symbolic alleles are mixed with non-symbolic alleles.\n" + line);
+                }
+            }
         }
 
       if (alts[0].getSymbolicAllele() != null) {
@@ -456,6 +480,21 @@ public class VCFparser extends GzFileParser<Variant> {
               }
           } else if (alts[0].getSymbolicAllele().getMajor() == Alt.SVType.INS) {
               // insertion SV
+              if (ignoreInsertionLength && (svlen == null || alts.length != svlen.length)) {
+                  int[] newSvlen = new int[alts.length];
+                  // try to recycle svlen values if svlen is not empty
+                  // otherwise fill with 1
+                  // because length is ignored, so the exact value to be filled
+                  // shouldn't affect comparison (might still change exact output).
+                  if (svlen == null || svlen.length == 0) {
+                      Arrays.fill(newSvlen, 1);
+                  } else {
+                      for (int i = 0; i < newSvlen.length; i++) {
+                          newSvlen[i] = svlen[i % svlen.length];
+                      }
+                  }
+                  svlen = newSvlen;
+              }
 
               if (svlen.length > 0) {
                   for (int i = 0; i < svlen.length; i++) {

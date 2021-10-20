@@ -578,8 +578,13 @@ public class Variant implements Comparable<Variant>{
     public boolean isSmallVariant(int genotype, int cutoff, boolean ignoreInsertionLength) {
         VariantType type = this.getType(genotype);
         SimpleInterval1D intervalForCompare = this.getVariantInterval(genotype, ignoreInsertionLength);
-        return ((type ==  VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex ) &&
-                intervalForCompare.right - intervalForCompare.left + 1 < cutoff);
+        if (ignoreInsertionLength) {
+            return ((type == VariantType.Deletion || type == VariantType.Complex) &&
+                    intervalForCompare.right - intervalForCompare.left + 1 < cutoff);
+        } else {
+            return ((type == VariantType.Insertion || type == VariantType.Deletion || type == VariantType.Complex) &&
+                    intervalForCompare.right - intervalForCompare.left + 1 < cutoff);
+        }
     }
 
     public Genotypes getGenotypes() {
