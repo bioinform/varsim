@@ -59,7 +59,7 @@ fi
 
 BZIP_DIR=${OPT_DIR}/bzip2-1.0.6
 if [[ ! -d ${BZIP_DIR} ]]; then
-    wget -O- https://www.sourceware.org/pub/bzip2/bzip2-1.0.6.tar.gz | tar zxvf -
+    wget -O- https://www.sourceware.org/pub/bzip2/bzip2-1.0.6.tar.gz --no-check-certificate | tar zxvf -
     pushd ${BZIP_DIR}
     make install PREFIX=${BZIP_DIR}_install CFLAGS=" -fPIC"
     popd
