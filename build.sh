@@ -24,7 +24,7 @@ SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}_install
 HTSLIB_DIR=${OPT_DIR}/htslib-1.9_install
 
 if [[ ! -d ${PYTHON_DIR} ]]; then
-wget -q https://repo.continuum.io/miniconda/${CONDA}\
+wget --no-check-certificate -q https://repo.continuum.io/miniconda/${CONDA}\
     && sh ${CONDA} -b -p ${PYTHON_DIR}\
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install pysam==0.15.0\
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install pyvcf==0.6.8\
@@ -50,16 +50,16 @@ fi
 
 MAVEN_DIR=${OPT_DIR}/apache-maven-3.5.4
 if [[ ! -d ${MAVEN_DIR} ]]; then
-wget -O- http://mirrors.sonic.net/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar zxvf -
+wget --no-check-certificate -O- http://mirrors.sonic.net/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar zxvf -
 fi
 ANT_DIR=${OPT_DIR}/apache-ant-1.9.13
 if [[ ! -d ${ANT_DIR} ]]; then
-wget -O- https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
+wget --no-check-certificate -O- https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.13-bin.tar.gz | tar zxvf -
 fi
 
 BZIP_DIR=${OPT_DIR}/bzip2-1.0.6
 if [[ ! -d ${BZIP_DIR} ]]; then
-    wget -O- https://www.sourceware.org/pub/bzip2/bzip2-1.0.6.tar.gz --no-check-certificate | tar zxvf -
+    wget --no-check-certificate -O- https://www.sourceware.org/pub/bzip2/bzip2-1.0.6.tar.gz --no-check-certificate | tar zxvf -
     pushd ${BZIP_DIR}
     make install PREFIX=${BZIP_DIR}_install CFLAGS=" -fPIC"
     popd
