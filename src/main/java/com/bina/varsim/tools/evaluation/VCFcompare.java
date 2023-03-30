@@ -25,6 +25,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.log4j.Logger;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.interfaces.MatchingAlgorithm;
+import org.jgrapht.alg.matching.MaximumWeightBipartiteMatching;
+import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.graph.builder.UndirectedWeightedGraphBuilderBase;
+import org.jgrapht.alg.interfaces.MatchingAlgorithm.Matching;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -737,6 +743,12 @@ public class VCFcompare extends VarSimTool {
         }
     }
 
+    /**
+     * match truth and test variants on a local basis, i.e.
+     * do not optimize matching to reduce global mismatches
+     *
+     * this is for preserving legacy behavior
+     */
     private void localMatching() {
 
         // these are the statistics we "ideally" want to collect
@@ -782,40 +794,6 @@ public class VCFcompare extends VarSimTool {
 
         // load true VCF into interval tree
         log.info("Load Truth VCF");
-
-        /**
-         * This is just for outputting to JSON
-         */
-        class outputClass {
-            CompareParams params;
-            @JsonProperty(value = "num_true_correct")
-            EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect;
-
-            outputClass(CompareParams params, EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
-                this.params = params;
-                this.numberOfTrueCorrect = numberOfTrueCorrect;
-            }
-
-            outputClass() {
-            }
-
-            public CompareParams getParams() {
-                return params;
-            }
-
-            public void setParams(CompareParams params) {
-                this.params = params;
-            }
-
-            public EnumStatsRatioCounter<VariantOverallType> getNumberOfTrueCorrect() {
-                return numberOfTrueCorrect;
-            }
-
-            public void setNumberOfTrueCorrect(EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
-                this.numberOfTrueCorrect = numberOfTrueCorrect;
-            }
-        }
-
 
         outputClass outputBlob = new outputClass();
 
@@ -1030,7 +1008,7 @@ public class VCFcompare extends VarSimTool {
 
                     if (currentVariant.isHom()) {
                         int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
-                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.isHomMatch() : resultComparator.isMatch();
+                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.firstHomMatch() : resultComparator.firstMatch();
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
                         if (dualIdx.isSplitVariantValid()) {
                             // validated
@@ -1063,7 +1041,7 @@ public class VCFcompare extends VarSimTool {
                             }
                         }
 
-                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.isHetMatch() : resultComparator.isMatch();
+                        final Variant matchedTrueVariant = matchGenotype ? resultComparator.firstHetMatch() : resultComparator.firstMatch();
                         final DualIdx dualIdx = matchedTrueVariant == null ? new DualIdx() : new DualIdx(matchedTrueVariant.splitVariantIndex, matchedTrueVariant.wholeVariantIndex);
 
                         if (dualIdx.isSplitVariantValid()) {
@@ -1283,7 +1261,544 @@ public class VCFcompare extends VarSimTool {
 
         log.info("Done!"); // used to record the time
     }
-    private void globalMatching() {}
+
+    /**
+     * globalMatching matches truth and test variants
+     * on a global basis, i.e. maximize overall matched
+     * variant pairs.
+     *
+     * some implementation details:
+     * *****************************************************
+     * *****CAUTION: subject to change without notice*******
+     * *****************************************************
+     * true variants and test variants are joined by edges if
+     * they match with each other based on user-specified
+     * criteria. The edges will be assigned weights, i.e.
+     * rankings among all the pairings based on degree of
+     * matching. The variants and pairings are used to construct
+     * an undirected weighted bipartite graph. Solution to
+     * maximum-weighted bipartite matching will be used to
+     * determine final pairing between true and test variants.
+     *
+     * note here, no more than one true/test variants will be
+     * paired with each test/true variant. In other words,
+     * degree of vertices is no more than 1.
+     */
+    private void globalMatching() {
+
+        // these are the statistics we "ideally" want to collect
+        // number of variants correct (either genotype) (for each type)
+        // number homozygous correct (for each type)
+        // number heterozygous correct (for each type)
+        // number homozygous genotype correct (for each type)
+        // number heterozyous genotype correct (for each type)
+
+
+        BedFile intersector = null;
+        boolean bedExists = false;
+        // check if the file exists
+        try {
+            File f = new File(bedFilename);
+            bedExists = f.exists();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (bedExists) {
+            log.info("Using " + bedFilename + " to intersect");
+            intersector = new BedFile(bedFilename);
+        } else {
+            if (excludeTprFromBedFiltering || excludeFdfFromBedFiltering) {
+                log.warn("No BED file specified but used exclude parameters");
+            }
+        }
+
+        Set<String> chrAcceptor = null;
+        //TODO: make chrAcceptor a class
+        if (chromosomeToBeIncluded != null) {
+            chrAcceptor = new HashSet<>(Arrays.asList(chromosomeToBeIncluded.split(",")));
+            log.info("Only accepting chromosomes: " + Arrays.toString(chrAcceptor.toArray()));
+        }
+
+        ConstraintValidator validator = new ConstraintValidator(constraintArgs);
+
+        // Load refernece genome
+        SimpleReference referenceGenome = reference == null ? null : new SimpleReference(reference);
+
+        // load true VCF into interval tree
+        log.info("Load Truth VCF");
+
+        outputClass outputBlob = new outputClass();
+
+        outputBlob.setParams(new CompareParams());
+        outputBlob.getParams().setBedFilename(bedFilename);
+        // TODO: make it output the full list if variants in JSON
+        outputBlob.getParams().setNewVcfFilename(newVcfFilename.get(0));
+        outputBlob.getParams().setOverlapPercent(overlapRatio);
+        outputBlob.getParams().setTrueVcfFilename(trueVcfFilename);
+        outputBlob.getParams().setWiggle(wiggle);
+
+        VCFparser trueVcfParser = new VCFparser(trueVcfFilename, null, false);
+
+        // allow duplicates, this is needed because insertions don't actually take up a location
+        chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree = new chrSearchTree<>(true);
+        int numReadOriginalVariant = 0;
+        int numAddedSplitVariant = 0;
+
+
+        //track TRAID-linked variants
+        Map<String, List<Variant>> traid2composingTrueVariants = new HashMap<>();
+
+        // this is for the original variants
+        // it stores the total length of the original variant in bases
+        // Still check for validation of canonical full variants
+        ArrayList<Integer> validatedTotalLength = new ArrayList<>();
+        ArrayList<Variant> trueVariantsForOutput = new ArrayList<>();
+
+        List<Variant> uncanonicalizedTrueVariants = new ArrayList<>();
+        List<Variant> uncanonicalizedTestVariants = new ArrayList<>();
+        List<Variant> canonicalizedTrueVariants = new ArrayList<>();
+        List<Variant> canonicalizedTestVariants = new ArrayList<>();
+        List<VariantPair> allCanonicalizedVariantPairs = new ArrayList<>();
+        UndirectedWeightedGraphBuilderBase weightedGraphBuilder = SimpleWeightedGraph.builder(VariantPair.class);
+        Graph<Variant, VariantPair> bipartiteTrueVsTestVariantGraph = null;
+
+        // For each true variant, if the number of bases validated is over a certain threshold
+        // call it correct
+        outputBlob.setNumberOfTrueCorrect(new EnumStatsRatioCounter<VariantOverallType>());
+
+        // For called variants, break down into canonical ones and count based on that
+        // if any called variant overlaps a complex variant or MNP, count it as "complex"
+        // otherwise, simple count them in their canonical forms
+
+        // store true variants as canonical ones, but remember original form
+        while (trueVcfParser.hasMoreInput()) {
+            Variant trueVariant = trueVcfParser.parseLine();
+            if (trueVariant == null ||
+                    (!trueVariant.getGenotypes().isNonRef()) ||
+                    (chrAcceptor != null && !chrAcceptor.contains(trueVariant.getChr().getName()))) {
+                log.info("skip line");
+                continue;
+            }
+
+            VariantOverallType trueVariantOriginalType = trueVariant.getType();
+
+            if (trueVariant.getTraid() != null) {
+                String currentTraid = trueVariant.getTraid();
+                if (traid2composingTrueVariants.containsKey(currentTraid)) {
+                    traid2composingTrueVariants.get(currentTraid).add(trueVariant);
+                    /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                    /*note here the trueVariant has been replaced here*/
+                    /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+                    trueVariant = new Variant.Builder().compositions(traid2composingTrueVariants.get(currentTraid)).build();
+                    traid2composingTrueVariants.remove(currentTraid);
+                } else {
+                    traid2composingTrueVariants.put(currentTraid, new ArrayList<Variant>());
+                    traid2composingTrueVariants.get(currentTraid).add(trueVariant);
+                    continue;
+                }
+            }
+            // determine max variant region
+            // when comparing genotypes, we need to individually compare
+            // to make sure they really overlap
+
+            //TODO: remove constructor here (because another copy will be created inside canonicalizeVariant
+            List<Variant> canonicalVariantList = canonicalizeVariant(new Variant(trueVariant));
+
+            int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
+            int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
+
+            // add to interval tree
+            for (Variant currentVariant : canonicalVariantList) {
+
+                ChrString chr = currentVariant.getChr();
+                SimpleInterval1D currentVariantInterval = null;
+                try {
+                    currentVariantInterval = currentVariant.getGenotypeUnionVariantInterval();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Original variant: " + trueVariant);
+                    log.error("Bad variant: " + currentVariant);
+                    System.exit(1);
+                }
+                currentVariant.splitVariantIndex = numAddedSplitVariant;
+                currentVariant.wholeVariantIndex = numReadOriginalVariant;
+                currentVariant.originalType = trueVariantOriginalType;
+
+                trueVariantIntervalTree.put(chr, new ValueInterval1D<>(currentVariantInterval, currentVariant));
+                canonicalizedTrueVariants.add(currentVariant);
+                numAddedSplitVariant++;
+            }
+
+            if (totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength && canonicalVariantList.size() > 1) {
+                // in this case we break down the variant into canoical forms since
+                // the original variant was probably a large deletion with a small insertion
+                for (Variant currentVariant : canonicalVariantList) {
+                    int currentLength = currentVariant.maxLen();
+                    validatedTotalLength.add(currentLength);
+                    trueVariantsForOutput.add(currentVariant);
+                    uncanonicalizedTrueVariants.add(currentVariant);
+                    numReadOriginalVariant++;
+                }
+            } else {
+                validatedTotalLength.add(totalLength);
+                trueVariantsForOutput.add(trueVariant);
+                uncanonicalizedTrueVariants.add(trueVariant);
+                numReadOriginalVariant++;
+            }
+        }
+
+<<<<<<< HEAD
+        log.info("Num read:  " + numReadOriginalVariant);
+        log.info("Num added: " + numAddedSplitVariant);
+        log.info("Num nodes: " + trueVariantIntervalTree.size());
+        log.info("Max depth: " + trueVariantIntervalTree.maxDepth());
+
+        // this is for the split variants
+        // set to true if the canonical original variant was validated true
+        BitSet validatedTrue = new BitSet(numAddedSplitVariant);
+
+        // this is for the original variants
+        // count of the number of bases validated for the original variant
+        int[] fullValidatedCount = new int[numReadOriginalVariant];
+
+        // generate the output files
+        try (
+                PrintWriter tpWriter = TP_WRITER.getWriter(outPrefix);
+                PrintWriter unknownTpWriter = UNKNOWN_TP_WRITER.getWriter(outPrefix);
+                PrintWriter fpWriter = FP_WRITER.getWriter(outPrefix);
+                PrintWriter unknownFpWriter = UNKNOWN_FP_WRITER.getWriter(outPrefix);
+                PrintWriter fnWriter = FN_WRITER.getWriter(outPrefix);
+                PrintWriter jsonWriter = JSON_WRITER.getWriter(outPrefix);) {
+
+
+            // for this case we add to false positives if the variant is not validated.
+            // However, do don't add to true positives, those that computed later
+
+            log.info("Load New VCF");
+            int numReadOriginalTestVariant = 0;
+            int numAddedSplitTestVariant = 0;
+            // iterate over new VCF and collect stats
+
+            Map<String, List<Variant>> traid2composingTestVariants = new HashMap<>();
+            MultiResultComparator multiResultComparator = new MultiResultComparator(trueVariantIntervalTree, overlapRatio,
+                    wiggle, ignoreInsertionLength, matchGenotype);
+
+            for (String currentVcfFile : newVcfFilename) {
+                VCFparser newParser = new VCFparser(currentVcfFile, sampleName, excludeFiltered);
+
+                while (newParser.hasMoreInput()) {
+                    Variant variant = newParser.parseLine();
+
+                    //TODO: wrap variant comparison into a method for easier reading
+                    if (variant == null ||
+                            (chrAcceptor != null && !chrAcceptor.contains(variant.getChr().getName()))) {
+                        log.info("skip line");
+                        continue;
+                    }
+                    if (variant.getTraid() != null) {
+                        String currentTraid = variant.getTraid();
+                        if (traid2composingTestVariants.containsKey(currentTraid)) {
+                            traid2composingTestVariants.get(currentTraid).add(variant);
+                            variant = new Variant.Builder().compositions(traid2composingTestVariants.get(currentTraid)).build();
+                            traid2composingTestVariants.remove(currentTraid);
+                        } else {
+                            traid2composingTestVariants.put(currentTraid, new ArrayList<Variant>());
+                            traid2composingTestVariants.get(currentTraid).add(variant);
+                            continue;
+                        }
+                    }
+                    // if called as complex variant convert to indel+snps
+                  /*
+                  here we need to figure out all possible pairings between current test variant
+                  and true variants, the pairings will be sorted later based on quality of matching
+
+                  we will examine all possible pairings regardless of TPR/FDR BED files
+                  because we consider global maximal matching as the ground truth
+                   */
+                    for (Variant currentVariant : canonicalizeVariant(variant)) {
+                        currentVariant.splitVariantIndex = numAddedSplitTestVariant;
+                        currentVariant.wholeVariantIndex = numReadOriginalTestVariant;
+                        currentVariant.originalType = variant.getType();
+
+                        canonicalizedTestVariants.add(currentVariant);
+                        allCanonicalizedVariantPairs.addAll(multiResultComparator.findAllPairs(currentVariant));
+                    }
+                    uncanonicalizedTestVariants.add(variant);
+                    numReadOriginalTestVariant++;
+                }
+            }
+            /*
+            now we have all possible pairings of true variants and test variants
+            let's sort them and construct weighted bipartite graph
+             */
+            VanillaVariantPairComparator vanillaVariantPairComparator = new VanillaVariantPairComparator();
+            Collections.sort(allCanonicalizedVariantPairs, vanillaVariantPairComparator);
+            int ranking = 0;
+            for (VariantPair p : allCanonicalizedVariantPairs) {
+                weightedGraphBuilder.addEdge(p.getTrueVariant(), p.getTestVariant(), ranking);
+                ranking++;
+            }
+            MaximumWeightBipartiteMatching maximumWeightBipartiteMatching = new MaximumWeightBipartiteMatching(weightedGraphBuilder.build(),
+                    canonicalizedTrueVariants, canonicalizedTestVariants);
+            //perform global matching
+          Matching<VariantPair> matching = maximumWeightBipartiteMatching.computeMatching();
+            for (VariantPair p : matching.getEdges()) {
+              Variant trueVariant = p.getTrueVariant();
+                Variant testVariant = p.getTestVariant();
+                boolean skipFP = false;
+
+                if (testVariant.getTraid() != null) {
+                    String currentTraid = testVariant.getTraid();
+                    if (traid2composingVariants.containsKey(currentTraid)) {
+                        traid2composingVariants.get(currentTraid).add(testVariant);
+                        variant = new Variant.Builder().compositions(traid2composingVariants.get(currentTraid)).build();
+                        traid2composingVariants.remove(currentTraid);
+                        if (intersector != null) {
+                            for (Variant c : variant.getCompositions()) {
+                                if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                                    skipFP = true;
+                                }
+                            }
+                        }
+                    } else {
+                        traid2composingVariants.put(currentTraid, new ArrayList<Variant>());
+                        traid2composingVariants.get(currentTraid).add(variant);
+                        continue;
+                    }
+                } else {
+                    if (intersector != null) {
+                        if (!excludeFdfFromBedFiltering && !intersector.containsEndpoints(variant.getChr(), variant.getGenotypeUnionAlternativeInterval(), bedEither)) {
+                            skipFP = true;
+                        }
+                    }
+                }
+
+                // the overall type of the called variant
+                VariantOverallType currentVariantType = variant.getType();
+
+                // if called as complex variant convert to indel+snps
+                List<Variant> canonicalVariantList = canonicalizeVariant(variant);
+
+                int totalLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).sum();
+                double validatedLength = 0;
+                int maxLength = canonicalVariantList.stream().mapToInt(v -> v.maxLen()).max().getAsInt();
+
+                // split up variants that are basically one big variant and one small one
+                //maxLength / totalLength >= overlapRatio, true if the longest canonicalized variant
+                //is longer than certain proportion of sum of lengths of all canonicalized variants.
+                boolean computeAsSplit = totalLength >= Constant.SVLEN && maxLength >= overlapRatio * totalLength  &&
+                        canonicalVariantList.size() > 1;
+
+                for (Variant currentVariant : canonicalVariantList) {
+                    canonicalizedTestVariants.add(currentVariant);
+                    // get genotype
+                    Genotypes geno = currentVariant.getGenotypes();
+                    //note here ResultComparator is created for each canonical variant
+                    ResultComparator resultComparator = new ResultComparator(trueVariantIntervalTree, overlapRatio, wiggle, ignoreInsertionLength);
+
+                    if (currentVariant.isHom()) {
+                        int maxTrueLength = resultComparator.compareVariant(currentVariant, geno.geno[0], validatedTrue);
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.isHomMatch() : resultComparator.firstMatch();
+                        if (dualIdx.isSplitVariantValid()) {
+                            // validated
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += maxTrueLength;// this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
+                            if (!skipFP) {
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), variant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), variant.maxLen());
+                                variant.output(fpWriter);
+                            } else {
+                                variant.output(unknownFpWriter);
+                            }
+                        }
+
+                    } else {
+                        // het
+                        //boolean matched = false;
+                        int maxTrueLen = 0;
+                        /*
+                        for heterozygous variants, all genotypes will be checked
+                        inside compareVariant, all genotypes of overlapping true variants will be checked, too
+                        so overall all possible combinations of genotype matching will be checked
+                        */
+                        for (int i = 0; i < 2; i++) {
+                            byte allele = geno.geno[i];
+                            if (allele > 0) {
+                                maxTrueLen = Math.max(resultComparator.compareVariant(currentVariant, allele, validatedTrue), maxTrueLen);
+                            }
+                        }
+
+                        final DualIdx dualIdx = matchGenotype ? resultComparator.firstHetMatch() : resultComparator.firstMatch();
+
+                        if (dualIdx.isSplitVariantValid()) {
+                            validatedTrue.set(dualIdx.splitVariantIndex);
+                            fullValidatedCount[dualIdx.wholeVariantIndex] += currentVariant.maxLen(); // this 'should' be overlap len
+                            validatedLength += currentVariant.maxLen();
+                        } else if (computeAsSplit) {
+                            if (!skipFP) {
+                                outputBlob.getNumberOfTrueCorrect().incFP(currentVariant.getType(), currentVariant.maxLen());
+                                validator.inc(StatsNamespace.FP, currentVariant.getType(), currentVariant.maxLen());
+                                if (currentVariant.getType() == VariantOverallType.SNP && currentVariant.maxLen() > 1) {
+                                    log.warn("SNP with bad length: " + currentVariant);
+                                }
+                                variant.output(fpWriter);
+                            } else {
+                                variant.output(unknownFpWriter);
+                            }
+                        }
+                    }
+                }
+
+                if (!computeAsSplit && validatedLength < (totalLength * overlapRatio)) {
+                    if (!skipFP) {
+                        // this is a false positive!
+                        outputBlob.getNumberOfTrueCorrect().incFP(currentVariantType, variant.maxLen());
+                        validator.inc(StatsNamespace.FP, currentVariantType, variant.maxLen());
+                        if (currentVariantType == VariantOverallType.SNP && variant.maxLen() > 1) {
+                            log.warn("SNP with bad length: " + variant);
+                        }
+                        variant.output(fpWriter);
+                    } else {
+                        variant.output(unknownFpWriter);
+                    }
+                }
+
+                numberOfNewVariants++;
+            }
+        }
+            }
+
+            log.info("Num new variants read: " + numReadOriginalTestVariant);
+
+            // read through again and compute for the true variants
+            int numRead2 = 0;
+            for (Variant var : trueVariantsForOutput) {
+
+                boolean isKnown = intersector == null || excludeTprFromBedFiltering;
+
+                if (var.getCompositions() == null) {
+                    isKnown = isKnown || intersector.containsEndpoints(var.getChr(), var.getGenotypeUnionAlternativeInterval(), bedEither);
+                } else {
+                    for (Variant c : var.getCompositions()) {
+                        isKnown = isKnown || intersector.containsEndpoints(c.getChr(), c.getGenotypeUnionAlternativeInterval(), bedEither);
+                    }
+                }
+                if (isKnown) {
+                    int totalLength = validatedTotalLength.get(numRead2);
+                    int validatedLength = fullValidatedCount[numRead2];
+
+                    //if a variant is canonicalized into a few smaller variants, validation
+                    //will be carried out on a per-variant basis. An original variant will
+                    //be considered a match only if the sum of lengths of all its VALIDATED
+                    //canonicalized variants is larger than overlapRatio * totalLength
+                    if (validatedLength >= (overlapRatio * totalLength)) {
+                        // validated
+                        outputBlob.getNumberOfTrueCorrect().incTP(var.getType(), var.maxLen());
+                        validator.inc(StatsNamespace.TP, var.getType(), var.maxLen());
+                        var.output(tpWriter);
+                    } else {
+                        var.output(fnWriter);
+                    }
+
+                    outputBlob.getNumberOfTrueCorrect().incT(var.getType(), var.maxLen());
+                    validator.inc(StatsNamespace.T, var.getType(), var.maxLen());
+                } else {
+                    var.output(unknownTpWriter);
+                }
+                numRead2++;
+            }
+
+            if (numReadOriginalVariant != numRead2) {
+                log.error("Number of variants read are inconsistent: " + numReadOriginalVariant + "," + numRead2);
+            }
+
+            // Compute and update the true negatives here so that we have specificity values
+            if (referenceGenome != null) {
+                final VariantOverallType variantOverallTypes[] = {VariantOverallType.SNP, VariantOverallType.Insertion, VariantOverallType.Deletion};
+                for (final VariantOverallType variantOverallType : variantOverallTypes) {
+                    if (outputBlob.getNumberOfTrueCorrect().getData().containsKey(variantOverallType)) {
+                        outputBlob.getNumberOfTrueCorrect().getData().get(variantOverallType).computeTN((int) referenceGenome.getNumNonNBases());
+                    }
+                }
+            }
+
+
+            // output the stats
+            System.err.println(outputBlob.getNumberOfTrueCorrect());
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+            String jsonStr = "";
+            try {
+                jsonStr = mapper.writeValueAsString(outputBlob);
+                jsonWriter.print(jsonStr);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (htmlFile != null) {
+                try {
+                    FileUtils.writeStringToFile(new File(outPrefix + "_varcomp.html"),
+                            JSONInserter.insertJSON(FileUtils.readFileToString(htmlFile), jsonStr));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        // Check the validity
+        try {
+            validator.testValidity();
+        } catch (UnsatisfiedConstraintException e) {
+            log.error("A number of constraints were not satisfied:");
+            for (UnsatisfiedConstraintException.valuePair constraint : e.getConstraints()) {
+                log.error(String.format("%.4f : %s", constraint.getActualValue(), constraint.getConstraint()));
+            }
+            System.exit(1);
+        }
+
+        log.info("Done!"); // used to record the time
+    }
+    /**
+     * This is just for outputting to JSON
+     */
+    class outputClass {
+        CompareParams params;
+        @JsonProperty(value = "num_true_correct")
+        EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect;
+
+        outputClass(CompareParams params, EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
+            this.params = params;
+            this.numberOfTrueCorrect = numberOfTrueCorrect;
+        }
+
+        outputClass() {
+        }
+
+        public CompareParams getParams() {
+            return params;
+        }
+
+        public void setParams(CompareParams params) {
+            this.params = params;
+        }
+
+        public EnumStatsRatioCounter<VariantOverallType> getNumberOfTrueCorrect() {
+            return numberOfTrueCorrect;
+        }
+
+        public void setNumberOfTrueCorrect(EnumStatsRatioCounter<VariantOverallType> numberOfTrueCorrect) {
+            this.numberOfTrueCorrect = numberOfTrueCorrect;
+        }
+    }
 
     class CompareParams {
         @JsonProperty(value = "true_vcf_filename")
@@ -1402,6 +1917,13 @@ public class VCFcompare extends VarSimTool {
         }
     }
 
+    /**
+     * inner class for finding a matched true variant
+     * only handles 1 matched variant
+     *
+     * main purpose is for backward compatibility
+     * should favor {@link MultiResultComparator}
+     */
     class ResultComparator {
 
         chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree; // true variants
@@ -1412,8 +1934,8 @@ public class VCFcompare extends VarSimTool {
 
         // Results to store
         // this stores the indexes of the true variants matched
-        List<Variant> homozygousMatches = new ArrayList<>();
-        List<List<Variant>> heterozygousMatches = Arrays.asList(new ArrayList<Variant>(), new ArrayList<Variant>()); // matches either parent
+        List<DualIdx> homozygousMatches = new ArrayList<>();
+        List<List<DualIdx>> heterozygousMatches = Arrays.asList(new ArrayList<DualIdx>(), new ArrayList<DualIdx>()); // matches either parent
 
         public ResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio, int wiggle, boolean ignoreInsLen) {
             this.trueVariantIntervalTree = trueVariantIntervalTree;
@@ -1423,12 +1945,11 @@ public class VCFcompare extends VarSimTool {
             overlapComplex = false;
             ignoreInsertionLength = ignoreInsLen;
         }
-
         /**
          * return homozygous match (empty if no match)
          * @return
          */
-        public Variant isHomMatch() {
+        public Variant firstHomMatch() {
             return homozygousMatches.isEmpty() ? null : homozygousMatches.get(0);
         }
 
@@ -1436,7 +1957,7 @@ public class VCFcompare extends VarSimTool {
          * return heterozygous match (empty if no match)
          * @return
          */
-        public Variant isHetMatch() {
+        public Variant firstHetMatch() {
             List<Variant> temp = new ArrayList<>(heterozygousMatches.get(0));
             temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
             //if there is a match in intersection, return the first one from the intersection
@@ -1467,15 +1988,15 @@ public class VCFcompare extends VarSimTool {
 
         /**
          * determine if there is a match regardless of genotype
-         * @return
+         * @return DualIdx of matched variant
          */
-        public Variant isMatch() {
-            Variant var = isHomMatch();
+        public Variant firstMatch() {
+            Variant var = firstHomMatch();
             DualIdx idx = var == null ? new DualIdx() : new DualIdx(var.splitVariantIndex, var.wholeVariantIndex);
             if (idx.isSplitVariantValid()) {
                 return var;
             }
-            var = isHetMatch();
+            var = firstHetMatch();
             idx = var == null ? new DualIdx() : new DualIdx(var.splitVariantIndex, var.wholeVariantIndex);
             if (idx.isSplitVariantValid()) {
                 return var;
@@ -1490,7 +2011,20 @@ public class VCFcompare extends VarSimTool {
          *
          * @param variant       variant we want to compare
          * @param genotype      allele of the variant to compare
+         * @return The maximum length of all true variants
+         */
+        public int compareVariant(Variant variant, int genotype) {
+            return compareVariant(variant, genotype, new BitSet());
+        }
+        /**
+         * Only compares one allele at a time
+         * - don't match variants in the bitset
+         * - if match set the bitset
+         *
+         * @param variant       variant we want to compare
+         * @param genotype      allele of the variant to compare
          * @param validated BitSet that records the true variants that have already been validated
+         *                  can be empty BitSet if we don't skip validated ones
          * @return The maximum length of all true variants
          */
         public int compareVariant(Variant variant, int genotype, BitSet validated) {
@@ -1727,4 +2261,267 @@ public class VCFcompare extends VarSimTool {
         return sb.toString();
     }
 
+    /**
+     * capable of recording multiple matched true variants
+     * should be favored over {@link ResultComparator}
+     */
+    class MultiResultComparator {
+        final chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree; // true variants
+        final double overlapRatio;
+        final int wiggle;
+        final boolean ignoreInsertionLength;
+        final boolean matchGenotype;
+
+        public MultiResultComparator(chrSearchTree<ValueInterval1D<Variant>> trueVariantIntervalTree, double overlapRatio,
+                                     int wiggle, boolean ignoreInsLen, boolean matchGenotype) {
+            this.trueVariantIntervalTree = trueVariantIntervalTree;
+            this.overlapRatio = overlapRatio;
+            this.wiggle = wiggle;
+            this.ignoreInsertionLength = ignoreInsLen;
+            this.matchGenotype = matchGenotype;
+        }
+
+        List<DualIdx> homozygousMatches = new ArrayList<>();
+        List<List<DualIdx>> heterozygousMatches = Arrays.asList(new ArrayList<DualIdx>(), new ArrayList<DualIdx>()); // matches either parent
+        public List<VariantPair> findAllPairs(Variant v) {
+            //boolean overlapComplex;
+            // Results to store
+            // this stores the indexes of the true variants matched
+
+            return new ArrayList<VariantPair>();
+        }
+
+        /**
+         * return first homozygous match (empty if no match)
+         * @return
+         */
+        public DualIdx firstHomMatch() {
+            return homozygousMatches.isEmpty() ? new DualIdx() : homozygousMatches.get(0);
+        }
+
+        /**
+         * return first heterozygous match (empty if no match)
+         * @return
+         */
+        public DualIdx firstHetMatch() {
+            List<DualIdx> temp = new ArrayList<>(heterozygousMatches.get(0));
+            temp.retainAll(heterozygousMatches.get(1)); //essentially get intersection
+            //if there is a match in intersection, return the first one from the intersection
+            if (!temp.isEmpty()) {
+                return temp.get(0);
+              /*
+              if no match in intersection, return the first one from the larger list (the genotype
+              containing more heterozygous matches).
+              since ResultComparator is created for each variant, heterzygousMatches will only
+              store matches for one variant against some true variants. Therefore, I think
+              one of the lists in heterozygousMatches will always be zero if there is no intersection
+              between them. And in such cases, we just return whatever we have in matches.
+
+              an example, compare these two lines:
+              1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
+              1	993	rs35493185	C	CA	.	.	SVLEN=1	GT	1|0
+
+               */
+            } else if (heterozygousMatches.stream().anyMatch(l -> !l.isEmpty())) {
+                if (heterozygousMatches.get(0).size() > heterozygousMatches.get(1).size()) {
+                    return heterozygousMatches.get(0).get(0);
+                } else {
+                    return heterozygousMatches.get(1).get(0);
+                }
+            }
+            return new DualIdx();
+        }
+
+        /**
+         * determine if there is a match regardless of genotype
+         * @return DualIdx of matched variant
+         */
+        public DualIdx firstMatch() {
+            DualIdx idx = firstHomMatch();
+            if (idx.isSplitVariantValid()) {
+                return idx;
+            }
+            idx = firstHetMatch();
+            if (idx.isSplitVariantValid()) {
+                return idx;
+            }
+            return idx;
+        }
+
+        /**
+         * Only compares one allele at a time
+         * - don't match variants in the bitset
+         * - if match set the bitset
+         *
+         * @param variant       variant we want to compare
+         * @param genotype      allele of the variant to compare
+         * @return The maximum length of all true variants
+         */
+        public int compareVariant(Variant variant, int genotype) {
+            return compareVariant(variant, genotype, new BitSet());
+        }
+        /**
+         * Only compares one allele at a time
+         * - don't match variants in the bitset
+         * - if match set the bitset
+         *
+         * @param variant       variant we want to compare
+         * @param genotype      allele of the variant to compare
+         * @param validated BitSet that records the true variants that have already been validated
+         *                  can be empty BitSet if we don't skip validated ones
+         * @return The maximum length of all true variants
+         */
+        public int compareVariant(Variant variant, int genotype, BitSet validated) {
+            //TODO: consider type to change overlap percent
+            VariantType type = variant.getType(genotype);
+            ChrString chr = variant.getChr();
+            SimpleInterval1D intervalForCompare = variant.getVariantInterval(genotype, ignoreInsertionLength);
+
+            int maxTrueVarianLength = 0;
+
+            // sometimes MNPs are called as SNPs?
+            if (type == VariantType.SNP) {
+                // handle SNPs differently
+                // require SNP content to match
+                Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompare);
+
+                if (overlaps == null) {
+                    // nothing found
+                    return maxTrueVarianLength;
+                }
+
+                byte alternativeAlleleFirstBase = variant.getAlt(genotype).getSequence()[0];
+
+                int numberOfSnpMatches = 0;
+                for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                    Variant trueVariant = trueVariantInterval.getContent();
+                    boolean hasSnp = false;
+                    int splitVariantIndex = trueVariant.splitVariantIndex;
+                    int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
+
+                    if (validated.get(splitVariantIndex)) {
+                        // skip ones already validated
+                        continue;
+                    }
+
+                    // check genotype
+                    for (int parent = 0; parent < 2; parent++) {
+                        int allele = trueVariant.getAllele(parent);
+                        //true variant is heterozygous, so only one allele has non-reference sequence
+                        if (trueVariant.isHom() || allele > 0) {
+                            if (trueVariant.getType(allele) == VariantType.SNP
+                                    && variant.getPos() == trueVariant.getPos()) {
+                                if (alternativeAlleleFirstBase == trueVariant.getAlt(allele).getSequence()[0]) {
+                                    if (trueVariant.isHom())
+                                        homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                    else
+                                        heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                                }
+                                hasSnp = true;
+                            }
+                        }
+                        if (trueVariant.isHom())
+                            break;
+                    }
+
+                    if (hasSnp) {
+                        numberOfSnpMatches++;
+                        maxTrueVarianLength = 1;
+                    }
+                }
+
+                if (numberOfSnpMatches > 1) {
+                    log.info("Something strange, multiple SNP matches in true set: " + numberOfSnpMatches);
+                }
+            } else {
+                // Non-SNPs
+                SimpleInterval1D intervalForCompareWithWiggle = new SimpleInterval1D(intervalForCompare.left - wiggle, intervalForCompare.right + wiggle);
+                Iterable<ValueInterval1D<Variant>> overlaps = trueVariantIntervalTree.getOverlaps(chr, intervalForCompareWithWiggle);
+
+                if (overlaps == null) {
+                    // nothing found
+                    return maxTrueVarianLength;
+                }
+
+                for (ValueInterval1D<Variant> trueVariantInterval : overlaps) {
+                    Variant trueVariant = trueVariantInterval.getContent();
+                    int splitVariantIndex = trueVariant.splitVariantIndex;
+                    int wholeVariantIndex = trueVariant.wholeVariantIndex;
+                    overlapComplex = trueVariant.originalType == VariantOverallType.Complex;
+
+                    if (validated.get(splitVariantIndex)) {
+                        // skip ones already validated
+                        continue;
+                    }
+
+                    //all genotypes in the overlapping true variant will be checked
+                    for (int parent = 0; parent < 2; parent++) {
+                        int allele = trueVariant.getAllele(parent);
+
+                        if (allele == 0 || // reference allele
+                                type != trueVariant.getType(allele) ||
+                                variant.getAlt(allele) == null ||
+                                trueVariant.getAlt(allele) == null) { // need type to be the same
+                            continue;
+                        }
+
+                        Alt.Breakend currentBreakend = variant.getAlt(allele).getBreakend();
+                        Alt.Breakend trueBreakend = trueVariant.getAlt(allele).getBreakend();
+                        boolean overlap = trueVariant.getVariantInterval(allele, ignoreInsertionLength).
+                                intersects(intervalForCompare, overlapRatio, wiggle);
+                        boolean breakendMatch =  trueVariant.getType(allele) == VariantType.Breakend &&
+                                Alt.Breakend.looseEquals(currentBreakend, trueBreakend, overlapRatio, wiggle);
+                        boolean matched = trueVariant.getType(allele) == VariantType.Breakend ? breakendMatch : overlap;
+
+                        if (matched) {
+                            if (trueVariant.isHom()) {
+                                homozygousMatches.add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                            } else {
+                                heterozygousMatches.get(parent).add(new DualIdx(splitVariantIndex, wholeVariantIndex));
+                            }
+                            maxTrueVarianLength = Math.max(trueVariant.maxLen(allele), maxTrueVarianLength);
+                        }
+                        //for homozygous variants, we only check the first allele
+                        if (trueVariant.isHom())
+                            break;
+                    }
+                }
+
+            }
+
+            return maxTrueVarianLength;
+        }
+    }
+
+    /**
+     * store a pair of matched variants
+     * can perform detailed matching (homo, hetero)
+     */
+    class VariantPair {
+        final Variant trueVariant;
+        final Variant testVariant;
+        public VariantPair(Variant trueVariant, Variant testVariant) {
+            this.trueVariant = trueVariant;
+            this.testVariant = testVariant;
+        }
+        public Variant getTrueVariant() {
+            return trueVariant;
+        }
+        public Variant getTestVariant() {
+            return testVariant;
+        }
+    }
+
+    /**
+     * determine how pairs of matched variants are sorted
+     * the better the match is, the ranking should be larger
+     * (not higher)
+     */
+    class VanillaVariantPairComparator implements Comparator<VariantPair> {
+        @Override
+        public int compare(VariantPair o1, VariantPair o2) {
+            return 0;
+        }
+    }
 }
