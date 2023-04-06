@@ -7,17 +7,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class DWGSIMPairedFastqReader implements PairedFastqReader {
-    private DWGSIMFastqReader r1;
-    private DWGSIMFastqReader r2;
+    private DWGSIMFastqReader dwgsimFastqReader1;
+    private DWGSIMFastqReader dwgsimFastqReader2;
 
-    public DWGSIMPairedFastqReader(final BufferedReader br1, final BufferedReader br2, final boolean forceFiveBaseEncoding) {
-        r1 = new DWGSIMFastqReader(br1, forceFiveBaseEncoding);
-        r2 = new DWGSIMFastqReader(br2, forceFiveBaseEncoding);
+    public DWGSIMPairedFastqReader(final BufferedReader br1, final BufferedReader br2,
+            final boolean forceFiveBaseEncoding) {
+        dwgsimFastqReader1 = new DWGSIMFastqReader(br1, forceFiveBaseEncoding);
+        dwgsimFastqReader2 = new DWGSIMFastqReader(br2, forceFiveBaseEncoding);
     }
 
     public SimulatedReadPair getNextReadPair() throws IOException {
-        final SimulatedRead read1 = r1.getNextRead();
-        final SimulatedRead read2 = r2.getNextRead();
+        final SimulatedRead read1 = dwgsimFastqReader1.getNextRead();
+        final SimulatedRead read2 = dwgsimFastqReader2.getNextRead();
 
         if (read1 == null || read2 == null) {
             return null;
