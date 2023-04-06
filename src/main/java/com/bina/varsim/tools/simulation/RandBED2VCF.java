@@ -82,81 +82,145 @@ public class RandBED2VCF extends RandVCFgenerator {
 
     }
 
-    // remember BED is 0-based
-    Variant parseBedLine(String line, VariantType type) {
+    // Parses a BED line into a Variant object, based on the input line and
+    // VariantType
+    private String[] splitLine(String line) {
         line = line.trim();
-        String[] ll = line.split("\t");
-        if (ll.length < 4) return new Variant(rand);
+        return line.split("\t");
+    }
 
-        if (ll[0].charAt(0) == '#') {
+    // Checks whether the first element of an array of strings is a comment (starts
+    // with '#')
+    private boolean isComment(String[] ll) {
+        return ll[0].charAt(0) == '#';
+    }
+
+    // Constructs a new ChrString object with the given input string
+    private ChrString getChrString(String chrString) {
+        return new ChrString(chrString);
+    }
+
+    // Parses an integer from the input string and adds 1 to it
+    private int getPos(String posString) {
+        return Integer.parseInt(posString) + 1;
+    }
+
+    // Gets the byte array of the insertion sequence from the given array of strings
+    private byte[] getInsertionSequence(String[] meta) {
+        try {
+            return meta[1].getBytes("US-ASCII");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
             return null;
         }
+    }
 
-        ChrString chr = new ChrString(ll[0]);
-
-        int pos = Integer.parseInt(ll[1]) + 1; //0-indexed
-        //int end = Integer.parseInt(ll[2]);
-        String[] meta = ll[3].split(",");
-        byte[] ins_seq = null;
-        int len = 1;
-        if (meta[0].equals("seq")) {
-            // this is an insertion and we have the insertion sequence
-            try {
-                ins_seq = meta[1].getBytes("US-ASCII");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        } else {
-            len = Integer.parseInt(meta[0]);
-        }
-
-        if (pos == 0 || len > max_length_lim || len < min_length_lim) return null;
-
+    // Creates an array of Alt objects based on the given VariantType, length, and
+    // insertion sequence
+    private Alt[] createAlts(VariantType type, int len, byte[] ins_seq) {
         Alt[] alts = new Alt[1];
-        String var_idx_str;
-        byte[] ref_seq;
         if (type == VariantType.Deletion) {
             alts[0] = new Alt(new FlexSeq());
-            var_idx_str = "del_";
-            ref_seq = ref.byteRange(chr, pos, pos + len);
-
-            if (ref_seq == null) {
-                log.error("Range error: " + line);
-            }
-
         } else if (type == VariantType.Insertion) {
             if (ins_seq != null) {
                 alts[0] = new Alt(new FlexSeq(ins_seq));
             } else {
                 alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INS, len));
             }
-            var_idx_str = "ins_";
-            ref_seq = new byte[0];
         } else if (type == VariantType.Tandem_Duplication) {
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.TANDEM_DUP, len, 2));
-            var_idx_str = "dup_";
-            ref_seq = new byte[0];
         } else if (type == VariantType.Inversion) {
             alts[0] = new Alt(new FlexSeq(FlexSeq.Type.INV, len));
+        } else {
+            log.error("Bad type!");
+            return null;
+        }
+        return alts;
+    }
+
+    // Gets the byte array of the reference sequence based on the given ChrString,
+    // position, length, and VariantType
+    private byte[] getReferenceSequence(ChrString chr, int pos, int len, VariantType type) {
+        if (type == VariantType.Deletion) {
+            return ref.byteRange(chr, pos, pos + len);
+        } else {
+            return new byte[0];
+        }
+    }
+
+    // Generates a unique identifier for the Variant based on the given VariantType
+    private String getVarId(VariantType type) {
+        String var_idx_str;
+        if (type == VariantType.Deletion) {
+            var_idx_str = "del_";
+        } else if (type == VariantType.Insertion) {
+            var_idx_str = "ins_";
+        } else if (type == VariantType.Tandem_Duplication) {
+            var_idx_str = "dup_";
+        } else if (type == VariantType.Inversion) {
             var_idx_str = "inv_";
-            ref_seq = new byte[0];
         } else {
             log.error("Bad type!");
             return null;
         }
         var_idx_str += var_idx;
         var_idx++;
+        return var_idx_str;
+    }
+
+    // Parses a BED line into a Variant object, based on the input line and
+    // VariantType
+    Variant parseBedLine(String line, VariantType type) {
+        String[] ll = splitLine(line);
+        if (ll.length < 4)
+            return new Variant(rand);
+
+        if (isComment(ll)) {
+            return null;
+        }
+
+        ChrString chr = getChrString(ll[0]);
+        int pos = getPos(ll[1]);
+        String[] meta = ll[3].split(",");
+        byte[] ins_seq = null;
+        int len = 1;
+        if (meta[0].equals("seq")) {
+            ins_seq = getInsertionSequence(meta);
+        } else {
+            len = Integer.parseInt(meta[0]);
+        }
+
+        if (pos == 0 || len > max_length_lim || len < min_length_lim)
+            return null;
+
+        Alt[] alts = createAlts(type, len, ins_seq);
+
+        if (alts == null) {
+            return null;
+        }
+
+        byte[] ref_seq = getReferenceSequence(chr, pos, len, type);
+
+        if (ref_seq == null && type == VariantType.Deletion) {
+            log.error("Range error: " + line);
+            return null;
+        }
+
+        String var_idx_str = getVarId(type);
+
+        if (var_idx_str == null) {
+            return null;
+        }
 
         Genotypes geno = new Genotypes(chr, gender, 1, rand);
 
-        assert ref_seq != null;
         /*return new Variant(chr, pos, ref_seq.length, ref_seq, alts,
                 geno.geno, false, var_idx_str, "PASS", String.valueOf(ref
                 .charAt(chr, pos - 1)), _rand);*/
-        return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(ref_seq.length).
-                ref(ref_seq).alts(alts).phase(geno.geno).isPhased(false).varId(var_idx_str).
-                filter("PASS").refDeleted(String.valueOf(ref.charAt(chr, pos - 1))).randomNumberGenerator(rand).
-                build();
+        return new Variant.Builder().chr(chr).pos(pos).referenceAlleleLength(ref_seq.length)
+                .ref(ref_seq).alts(alts).phase(geno.geno).isPhased(false).varId(var_idx_str)
+                .filter("PASS").refDeleted(String.valueOf(ref.charAt(chr, pos - 1))).randomNumberGenerator(rand)
+                .build();
     }
 
     private void process_bed(BufferedWriter out, BufferedReader bed_reader, VariantType type)
