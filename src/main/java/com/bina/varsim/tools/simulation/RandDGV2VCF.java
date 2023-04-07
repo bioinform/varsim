@@ -80,7 +80,7 @@ public class RandDGV2VCF extends RandVCFgenerator {
     }
 
     Map<VariantType, Integer> countVariantsInDGV(final String dgvFilename, final SimpleReference reference,
-                                                 final List<Genotypes> selectedGenotypes) {
+            final List<Genotypes> selectedGenotypes) {
         // count the number of variants
         log.info("Counting variants and assigning genotypes");
 
@@ -151,8 +151,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
     }
 
     void sampleFromDGV(final String dgvFilename, final SimpleReference reference, final byte[] insertSeq,
-                       final List<Genotypes> selectedGenotypes, final Map<VariantType, Integer> variantCounts,
-                       final OutputStream outputStream) throws IOException {
+            final List<Genotypes> selectedGenotypes, final Map<VariantType, Integer> variantCounts,
+            final OutputStream outputStream) throws IOException {
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
 
         final String VCF_HEADER = "##fileformat=VCFv4.0\n" +
@@ -185,9 +185,8 @@ public class RandDGV2VCF extends RandVCFgenerator {
             final Genotypes geno = selectedGenotypes.get(genoIdx);
             genoIdx++;
 
-            if (prevVar.getPos() >= 0 && var.getPos() >= 0 &&
-                    prevVar.getChr() != null && prevVar.getChr().equals(var.getChr()) &&
-                    (prevVar.getPos() > var.getPos())) {
+            if (isValidPosition(prevVar, var) && isValidChromosome(prevVar, var)
+                    && isPrevVarPositionGreater(prevVar, var)) {
                 throw new IllegalArgumentException("input must be sorted by position in ascending order.");
             }
             if (prevVar.getChr() != null && prevVar.getChr().equals(var.getChr()) && prevVar.getPos() == var.getPos()) {
@@ -223,10 +222,32 @@ public class RandDGV2VCF extends RandVCFgenerator {
         out.close();
     }
 
+    // This method checks whether the positions of two variants are valid or not
+    private boolean isValidPosition(Variant prevVar, Variant var) {
+        // It returns true if both the positions are greater than or equal to zero
+        return prevVar.getPos() >= 0 && var.getPos() >= 0;
+    }
+
+    // This method checks if the chromosome of the current and the previous variant
+    // matches
+    private boolean isValidChromosome(Variant prevVar, Variant var) {
+        // It returns true if the chromosome is not null and the previous variant's
+        // chromosome is equal to current variant's chromosome
+        return prevVar.getChr() != null && prevVar.getChr().equals(var.getChr());
+    }
+
+    // This method checks whether the position of previous variant is greater than
+    // that of the current variant
+    private boolean isPrevVarPositionGreater(Variant prevVar, Variant var) {
+        // It returns true if the position of previous variant is greater than the
+        // position of the current variant
+        return prevVar.getPos() > var.getPos();
+    }
+
     // outputs VCF record with random phase
     void randOutputVcfRecord(BufferedWriter bw, Variant var,
-                             SimpleReference ref, byte[] insertSeq, double ratioNovel,
-                             Genotypes geno) throws IOException {
+            SimpleReference ref, byte[] insertSeq, double ratioNovel,
+            Genotypes geno) throws IOException {
 
         ChrString chr = var.getChr();
 
