@@ -81,4 +81,17 @@ public class Constraint {
     public double getCutoff() {
         return cutoff;
     }
+
+    // This method checks if a given value satisfies a condition based on the
+    // operation and cutoff point provided.
+    public boolean isSatisfied(double value) {
+        switch (operation) {
+            case GT:
+                return value > cutoff;
+            case LT:
+                return value < cutoff;
+            default:
+                throw new RuntimeException("Null operation");
+        }
+    }
 }

@@ -51,7 +51,7 @@ public class ConstraintRecord {
      * @return
      */
     public boolean isValid(){
-        return isSatisfied(getStatsValue());
+        return constraint.isSatisfied(getStatsValue());
     }
 
     public double getStatsValue(){
@@ -66,17 +66,6 @@ public class ConstraintRecord {
                 return stats.getFDR();
             default:
                 throw new RuntimeException("Null metric");
-        }
-    }
-
-    public boolean isSatisfied(double value){
-        switch (constraint.getOperation()){
-            case GT:
-                return value > constraint.getCutoff();
-            case LT:
-                return value < constraint.getCutoff();
-            default:
-                throw new RuntimeException("Null operation");
         }
     }
 
