@@ -9,7 +9,7 @@ import time
 import itertools
 import glob
 import re
-from distutils.version import LooseVersion
+from setuptools._distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, get_version, check_java, get_loglevel, makedirs, RandVCFOptions, RandDGVOptions
