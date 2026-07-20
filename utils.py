@@ -5,7 +5,7 @@ import sys
 import re
 import warnings
 import pysam
-from distutils.version import LooseVersion
+from setuptools._distutils.version import LooseVersion
 # Check java version to make sure it is Java 8
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 VARSIMJAR = os.path.realpath(os.path.join(MY_DIR, "VarSim.jar"))
