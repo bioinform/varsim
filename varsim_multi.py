@@ -14,7 +14,7 @@ import itertools
 import glob
 import tempfile
 import re
-from distutils.version import LooseVersion
+from setuptools._distutils.version import LooseVersion
 from liftover_restricted_vcf_map import lift_vcfs, lift_maps
 from generate_small_test_ref import gen_restricted_ref_and_vcfs 
 from varsim import varsim_main, RandVCFOptions, RandDGVOptions, run_randvcf, run_randdgv, randdgv_options2randvcf_options, convertCN
